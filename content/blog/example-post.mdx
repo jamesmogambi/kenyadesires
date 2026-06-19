@@ -1,0 +1,102 @@
+---
+title: "Getting Started with Your Blog"
+description: "Learn how to write and publish your first blog post using MDX and Next.js."
+date: "2025-10-15"
+author: "Your Name"
+tags: ["Getting-started", "Tutorial", "MDX"]
+# Optional: Add a cover image
+# image: "/blog/example-post.jpg"
+# imageAlt: "Getting started with blogging"
+---
+
+This is an example blog post written in MDX format. MDX allows you to use JSX components right in your markdown content. Notice the **Table of Contents** on the right side that auto-generates from the headings below!
+
+## What is MDX?
+
+MDX is markdown for the component era. It lets you write JSX embedded inside markdown. That's a great combination because it allows you to use markdown's often terse syntax (such as # heading) for the little things and JSX for more advanced or reusable components.
+
+## Writing Your First Post
+
+To create a new blog post:
+
+1. Create a new `.mdx` file in the `content/blog` directory
+2. Add frontmatter at the top with post metadata
+3. Write your content using markdown and JSX
+4. Your post will automatically appear on your blog!
+
+### Frontmatter Example
+
+```yaml
+---
+title: "My Blog Post Title"
+description: "A brief description of your post"
+date: "2025-10-15"
+author: "Your Name"
+tags: ["Tag1", "Tag2"]
+# Optional: Add a cover image
+image: "/blog/my-post-image.jpg"
+imageAlt: "Description of the image"
+---
+```
+
+### Adding Images
+
+To add a cover image to your blog post:
+
+1. Place your image in the `public/blog/` directory
+2. Add the `image` field to your frontmatter: `image: "/blog/your-image.jpg"`
+3. Optionally add `imageAlt` for accessibility
+
+If you don't add an image, a nice placeholder will be shown instead!
+
+## Markdown Features
+
+You can use all standard markdown features:
+
+### Lists
+
+- Unordered list item 1
+- Unordered list item 2
+- Unordered list item 3
+
+1. Ordered list item 1
+2. Ordered list item 2
+3. Ordered list item 3
+
+### Code Blocks
+
+You can include code with syntax highlighting:
+
+```javascript
+function hello() {
+  console.log("Hello, World!");
+}
+```
+
+### Blockquotes
+
+> This is a blockquote. Use it to highlight important information or quotes.
+
+### Tables
+
+| Feature             | Supported |
+| ------------------- | --------- |
+| Markdown            | ✅        |
+| MDX Components      | ✅        |
+| Syntax Highlighting | ✅        |
+| Images              | ✅        |
+
+## Links and Emphasis
+
+You can add [links](https://example.com), **bold text**, _italic text_, and `inline code`.
+
+## Next Steps
+
+Now that you understand the basics, you can:
+
+- Delete this example post
+- Create your own blog posts
+- Customize the styling
+- Add your own components
+
+Happy blogging!

@@ -2,24 +2,14 @@ import { cn, slugify } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 
-export interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  description: string;
-  colorCode: string;
-  icon: string;
-  isActive: boolean;
-  parentId: string | null;
-  level: 0 | 1; // 0 = main category, 1 = subcategory
-  order: number;
-  createdAt?: Date; // Optional if you add timestamps later
-  updatedAt?: Date; // Optional if you add timestamps later
+export interface BlogCategory{
+  name:string,
+  slug:string
 }
 interface Prop {
   className?: string;
   title: string;
-  categories: Category[];
+  categories: BlogCategory[];
 }
 const CategorySection = ({ categories, title, className }: Prop) => {
   return (
