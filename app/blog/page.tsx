@@ -86,7 +86,7 @@ const page = async ({ searchParams }: PageProps) => {
       <div className="flex w-full mx-auto flex-col-reverse lg:max-w-[80%] min-h-screen lg:flex-row gap-2">
         {/* categories section */}
         <aside className="basis-full space-y-7 lg:basis-1/3 p-6 border-green-600">
-          <CategorySection title="Sexypedia" categories={firstSeven} />
+          <CategorySection title="Kenyan Categories" categories={firstSeven} />
           {/* <CategorySection title="Magazine" categories={nextThree} /> */}
         </aside>
 
