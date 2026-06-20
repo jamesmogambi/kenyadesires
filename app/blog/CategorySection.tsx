@@ -3,9 +3,9 @@ import { Category } from "@/types/sanity";
 import Link from "next/link";
 import React from "react";
 
-export interface BlogCategory{
-  name:string,
-  slug:string
+export interface BlogCategory {
+  name: string;
+  slug: string;
 }
 interface Prop {
   className?: string;
@@ -30,7 +30,7 @@ const CategorySection = ({ categories, title, className }: Prop) => {
       {categories.map((category, _) => (
         <Link
           className="p-5 text-base font-medium py-2.5"
-          href={`/blog/${slugify(category.name)}`}
+          href={`/blog/category/${slugify(category.name)}`}
           key={category._id}
         >
           {category.name}

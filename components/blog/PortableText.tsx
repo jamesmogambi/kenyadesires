@@ -138,7 +138,7 @@ const components = {
 
   list: {
     bullet: ({ children }: any) => (
-      <ul className="space-y-2 my-4 list-none">
+      <ul className="space-y-1 my-4 list-none">
         {children}
       </ul>
     ),
@@ -155,7 +155,7 @@ const components = {
         ? wrapNumbersInSpan(children)
         : children
       return (
-        <li className="flex items-start gap-1.5 text-white/80">
+        <li className="flex items-center  gap-1.5 text-white/80">
           <span className="text-primary text-4xl font-extrabold shrink-0">•</span>
           <span className='text-lg  font-medium'>{processed}</span>
         </li>
