@@ -31,6 +31,7 @@ const CategorySection = ({ categories, title, className }: Prop) => {
         <Link
           className="p-5 text-base font-medium py-2.5"
           href={`/blog/${slugify(category.name)}`}
+          key={category._id}
         >
           {category.name}
         </Link>

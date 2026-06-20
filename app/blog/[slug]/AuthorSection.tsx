@@ -1,15 +1,17 @@
+import { urlFor } from "@/lib/sanity/client";
 import { cn } from "@/lib/utils";
+import { Author } from "@/types/sanity";
 import Image from "next/image";
 import React from "react";
 
 interface Prop {
   className?: string;
-  author: any;
+  author: Author ;
 }
 const AuthorSection = ({ author, className }: Prop) => {
   console.log("author==>", author);
 
-  const { role, name, avatar, bio, _id } = author;
+  const {  name, bio, _id,image } = author;
   return (
     <div
       className={cn(
@@ -21,12 +23,12 @@ const AuthorSection = ({ author, className }: Prop) => {
       <div className="basis-full md:basis-3/4">
         <h3 className="text-2xl font-semibold text-primary">{name}</h3>
 
-        <p className="text-base text-gray-1 font-semibold">{bio}</p>
+        <p className="text-base text-white/50 mt-2   font-medium">{bio}</p>
       </div>
       {/* avatar */}
-      <div className="relative basis-full h-48  md:basis-1/4  ">
+      <div className="relative basis-full h-42   md:basis-1/5  ">
         <Image
-          src={avatar}
+          src={image ? urlFor(image) : "/og-default.png"}
           alt={name}
           fill // This makes the image fill the parent container
           className="object-cover" // This ensures the image covers the area

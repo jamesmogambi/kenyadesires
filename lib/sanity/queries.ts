@@ -338,3 +338,54 @@ export async function getPostsByCategory(categorySlug: string): Promise<Post[]> 
     { categoryId: category._id }
   )
 }
+
+
+
+
+// Get a single post by slug
+export const SINGLE_POST_QUERY = `*[_type == "post" && slug.current == $slug][0] {
+  _id,
+  title,
+  slug,
+  excerpt,
+  mainImage {
+    asset-> {
+      _id,
+      url
+    },
+    alt,
+    caption
+  },
+  body,
+  _createdAt,
+  _updatedAt,
+  featured,
+  author-> {
+    _id,
+    name,
+    image {
+      asset-> {
+        _id,
+        url
+      },
+      alt
+    },
+    bio,
+    email,
+    socialLinks
+  },
+  categories[]-> {
+    _id,
+    name,
+    slug,
+    description,
+    icon,
+    color
+  },
+  "estimatedReadingTime": round(length(pt::text(body)) / 200)
+}`
+
+
+export async function getBlogBySlug(slug: string): Promise<Post | null> {
+  return await client.fetch(SINGLE_POST_QUERY, { slug })
+}
