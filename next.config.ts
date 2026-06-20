@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
                 pathname: "/thumbs/static/**",
                 search: "",
             },
+             {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+        port: '',
+        pathname: '/images/**',
+      },
             {
                 protocol: "https",
                 hostname: "iptn.m3pd.com",

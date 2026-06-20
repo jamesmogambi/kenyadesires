@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "fix-ages": "tsx scripts/fix-invalid-ages.ts"
+    "fix-ages": "tsx scripts/fix-invalid-ages.ts",
+    "studio": "sanity start"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.876.0",
@@ -17,6 +18,7 @@
     "@mux/mux-player": "^3.5.3",
     "@mux/mux-player-react": "^3.5.3",
     "@neondatabase/serverless": "^1.0.1",
+    "@portabletext/react": "^6.2.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-collapsible": "^1.1.11",
@@ -27,6 +29,8 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.12",
     "@react-email/components": "^0.5.2",
+    "@sanity/client": "^7.23.0",
+    "@sanity/image-url": "^2.1.1",
     "@tiptap/react": "^3.3.0",
     "@tiptap/starter-kit": "^3.3.0",
     "@types/mongoose": "^5.11.97",
