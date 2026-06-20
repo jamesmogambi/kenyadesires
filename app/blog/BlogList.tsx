@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 import BlogLIstItem from "./BlogLIstItem";
+import { Post } from "@/types/sanity";
 
 interface Prop {
   className?: string;
-  blogList: any;
+  blogList: Post[];
 }
 const BlogList = ({ blogList, className }: Prop) => {
   return (

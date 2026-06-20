@@ -147,7 +147,7 @@ export async function getBlogCategories() {
     }
 }
 
-export async function getFeaturedPosts(limitCount = 3) {
+export async function getFeaturedPosts(limitCount = 20) {
     return getBlogPosts({featuredOnly: true, limit: limitCount});
 }
 

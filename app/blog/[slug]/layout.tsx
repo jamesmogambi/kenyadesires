@@ -23,7 +23,7 @@ const layout = async ({children, params}: Prop) => {
                 className="flex w-full mx-auto flex-col-reverse  lg:max- w-[80%] min-h-screen lg;flex-col lg:flex-row gap-2 ">
                 {/* categories section*/}
                 <aside className=" basis-full space-y-7 lg:basis-1/3 p-6  border-green-600">
-                    <CategorySection title="Kenya Categories" categories={categories}/>
+                    <CategorySection title="Kenya Categories" categories={[]}/>
                     {/* <CategorySection title="Magazine" categories={nextThree}/> */}
                 </aside>
 

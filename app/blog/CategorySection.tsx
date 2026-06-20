@@ -1,4 +1,5 @@
 import { cn, slugify } from "@/lib/utils";
+import { Category } from "@/types/sanity";
 import Link from "next/link";
 import React from "react";
 
@@ -9,7 +10,7 @@ export interface BlogCategory{
 interface Prop {
   className?: string;
   title: string;
-  categories: BlogCategory[];
+  categories: Category[];
 }
 const CategorySection = ({ categories, title, className }: Prop) => {
   return (

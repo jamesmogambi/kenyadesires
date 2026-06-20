@@ -2,11 +2,17 @@ import React from "react";
 
 import { categories } from "@/lib/blog/categories";
 import CategorySection from "./CategorySection";
-import { getBlogPosts } from "@/server-actions/blog.action";
 import { notFound } from "next/navigation";
 import { ShowMoreButton } from "./ShowMOreButton";
 import BlogList from "./BlogList";
 import { Metadata } from "next";
+
+import type { Category } from "@/types/sanity";
+
+
+// Sanity imports
+import { getAllCategories, getFeaturedPostsWithLimit, getPostsWithPagination } from "@/lib/sanity/queries";
+
 
 export const metadata: Metadata = {
   title: "Blog | Latest Articles & Insights | escortKE",
@@ -63,48 +69,45 @@ interface PageProps {
 const page = async ({ searchParams }: PageProps) => {
   const currentPage = parseInt(searchParams.page || "1");
 
-  // Using slice to get sections from the categories array
-  const firstSeven = categories.slice(0, 7);
-  const nextThree = categories.slice(7, 10);
+ 
 
-  const blogRes: any = await getBlogPosts({
-    page: currentPage,
-    limit: 20,
-    sortBy: "newest",
-  });
+ // ============================================
+  // STEP 1: FETCH ALL DATA IN PARALLEL
+  // ============================================
 
-  if (!blogRes.success) {
-    return notFound();
-  }
+ const [categories, featuredPosts] = await Promise.all([
+    getAllCategories(),
+    getFeaturedPostsWithLimit(20),
+    // getPostsWithPagination(1, 6),
+  ]);
 
-  const { posts, pagination } = blogRes.data;
-  const nextPage = currentPage + 1;
-  const hasMore = currentPage < pagination.totalPages;
+  console.log("Featured Posts:", featuredPosts);
+//   console.log("Categories:", categories);
 
   return (
     <>
       <div className="flex w-full mx-auto flex-col-reverse lg:max-w-[80%] min-h-screen lg:flex-row gap-2">
         {/* categories section */}
         <aside className="basis-full space-y-7 lg:basis-1/3 p-6 border-green-600">
-          <CategorySection title="Kenyan Categories" categories={firstSeven} />
+          <CategorySection title="Kenyan Categories" categories={categories} />
           {/* <CategorySection title="Magazine" categories={nextThree} /> */}
         </aside>
 
         {/* blogs list */}
         <div className="basis-full p-8 border-amber-300 lg:flex-1">
-          <BlogList blogList={posts} />
-
-          {/* Show More Button (Client Component) */}
+          <BlogList blogList={featuredPosts} />
+{/* 
+          Show More Button (Client Component)
           {hasMore && (
             <ShowMoreButton
               nextPage={nextPage}
               totalPosts={pagination.total}
               currentCount={posts.length}
             />
-          )}
+          )} */}
 
           {/* No more posts */}
-          {!hasMore && posts.length > 0 && (
+          {/* {!hasMore && posts.length > 0 && (
             <div className="text-center py-8">
               <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full">
                 <span className="text-xl">✅</span>
@@ -115,7 +118,7 @@ const page = async ({ searchParams }: PageProps) => {
                 </p>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </>

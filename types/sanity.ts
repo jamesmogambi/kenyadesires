@@ -1,32 +1,16 @@
-// Sanity image type used by @sanity/image-url
-export interface SanityImage {
-  _type?: 'image'
-  asset?: {
-    _ref: string
-    _type?: 'reference'
-    url?: string
-  }
-  alt?: string
-  crop?: {
-    top: number
-    bottom: number
-    left: number
-    right: number
-  }
-  hotspot?: {
-    x: number
-    y: number
-    width: number
-    height: number
-  }
-}
-
 export interface Category {
-  _id?: string
+  _id: string
   name: string
-  slug: string
+  slug: {
+    current: string
+    _type: 'slug'
+  }
   description?: string
-  _createdAt?: string
+  icon?: string
+  color?: string
+  order?: number
+  featured?: boolean
+  count?: number
 }
 
 export interface Author {
@@ -57,68 +41,48 @@ export interface Post {
     }
     alt?: string
   }
-  body?: any // Portable Text content
+  body?: any
   _createdAt: string
   _updatedAt?: string
   author?: Author
   categories: Category[]
-  relatedPosts?: Post[]
-  readingTime?: number
+  featured?: boolean
 }
 
-export interface CategoryPageProps {
-  params: {
-    category: string
-  }
+export interface PostsResponse {
+  posts: Post[]
+  total: number
+  totalPages: number
+  currentPage: number
 }
 
-export interface PostPageProps {
-  params: {
-    slug: string
-  }
-}
-
-// Your static categories
-export const CATEGORIES: Category[] = [
-  {
-    name: "Online Dating Kenya",
-    slug: "online-dating-kenya",
-    description: "Everything about online dating in Kenya. Find the best apps, safety tips, and dating advice for Kenyan singles."
-  },
-  {
-    name: "Relationships in Kenya",
-    slug: "relationships-kenya",
-    description: "Understanding relationships in Kenya. From dating culture to marriage, explore modern Kenyan relationships."
-  },
-  {
-    name: "Social & Telegram Kenya",
-    slug: "social-kenya",
-    description: "Social media and Telegram in Kenya. Discover how Kenyans connect online and build communities."
-  },
-  {
-    name: "Safety & Guides Kenya",
-    slug: "safety-kenya",
-    description: "Stay safe while dating online in Kenya. Learn to avoid scams and protect your privacy."
-  },
-  {
-    name: "Trends Kenya",
-    slug: "trends-kenya",
-    description: "Latest dating and social trends in Kenya. Stay updated with what's happening in Kenyan dating culture."
-  },
-]
-
+// Category Colors Mapping
 export const CATEGORY_COLORS: Record<string, string> = {
-  "online-dating-kenya": "blue",
-  "relationships-kenya": "purple",
-  "social-kenya": "pink",
-  "safety-kenya": "green",
-  "trends-kenya": "orange",
+  blue: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+  purple: 'bg-purple-100 text-purple-800 hover:bg-purple-200',
+  pink: 'bg-pink-100 text-pink-800 hover:bg-pink-200',
+  green: 'bg-green-100 text-green-800 hover:bg-green-200',
+  orange: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
+  red: 'bg-red-100 text-red-800 hover:bg-red-200',
+  yellow: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
 }
 
-export const CATEGORY_ICONS: Record<string, string> = {
-  "online-dating-kenya": "💕",
-  "relationships-kenya": "❤️",
-  "social-kenya": "📱",
-  "safety-kenya": "🛡️",
-  "trends-kenya": "📈",
+export const CATEGORY_BORDER_COLORS: Record<string, string> = {
+  blue: 'border-blue-500',
+  purple: 'border-purple-500',
+  pink: 'border-pink-500',
+  green: 'border-green-500',
+  orange: 'border-orange-500',
+  red: 'border-red-500',
+  yellow: 'border-yellow-500',
+}
+
+export const CATEGORY_GRADIENT_COLORS: Record<string, string> = {
+  blue: 'from-blue-500/20 to-blue-600/10',
+  purple: 'from-purple-500/20 to-purple-600/10',
+  pink: 'from-pink-500/20 to-pink-600/10',
+  green: 'from-green-500/20 to-green-600/10',
+  orange: 'from-orange-500/20 to-orange-600/10',
+  red: 'from-red-500/20 to-red-600/10',
+  yellow: 'from-yellow-500/20 to-yellow-600/10',
 }
