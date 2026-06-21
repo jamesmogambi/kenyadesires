@@ -6,14 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MessageAlert from "@/components/MessageAlert";
 import "quill/dist/quill.core.css";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 

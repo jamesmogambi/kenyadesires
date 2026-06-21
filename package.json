@@ -61,7 +61,6 @@
     "reading-time": "^1.5.0",
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
-    "resend": "^6.0.2",
     "sonner": "^2.0.7",
     "swiper": "^12.2.0",
     "tailwind-merge": "^3.3.1",

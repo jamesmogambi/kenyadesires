@@ -7,6 +7,11 @@ import NotFoundList from "@/components/NotFoundList";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscorts } from "@/server-actions/escort.action";
 import { notFound } from "next/navigation";
+import { getCachedEscorts } from "@/lib/cache";
+import { REVALIDATE_TIME } from "@/lib/cache-config";
+
+// ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
+export const revalidate = REVALIDATE_TIME; // 7 days in seconds
 
 interface PageProps {
   searchParams: Promise<{
@@ -26,7 +31,7 @@ export default async function Home({ searchParams }: PageProps) {
     totalPages,
     page: currentPage,
     hasMore,
-  } = await getEscorts({
+  } = await getCachedEscorts({
     county: params.county,
     region: params.region,
     practice: params.practice,
