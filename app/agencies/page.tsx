@@ -16,6 +16,7 @@ import { generateBreadcrumbList } from "../girls/seo-utils";
 import { getCachedAgencies } from "@/lib/cache";
 import { getAgenciesCount, getFirstAgency } from "@/lib/metadata-helper";
 import { Metadata, ResolvingMetadata } from "next";
+import { IAgency } from "@/types/agency.types";
 
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;
@@ -27,7 +28,7 @@ export const revalidate = 604800; // 7 days in seconds
 
 // ============ TYPES ============
 type Props = {
-  searchParams: Promise<{
+  searchParams: {
     county?: string;
     region?: string;
     business?: string;
@@ -36,7 +37,7 @@ type Props = {
     featured?: string;
     search?: string;
     page?: string;
-  }>;
+  };
 };
 
 interface FilterParams {
@@ -48,6 +49,14 @@ interface FilterParams {
   featured?: string;
   search?: string;
   page?: string;
+}
+
+interface AgenciesData {
+  agencies: IAgency[];
+  hasMore: boolean;
+  totalPages: number;
+  page: number;
+  total: number;
 }
 
 // ============ HELPERS ============
@@ -87,7 +96,9 @@ function formatBusinessType(type?: string): string {
   );
 }
 
-function extractFilterParams(searchParams: any): FilterParams {
+function extractFilterParams(
+  searchParams: Props["searchParams"],
+): FilterParams {
   return {
     county: searchParams.county,
     region: searchParams.region,
@@ -129,8 +140,7 @@ export async function generateMetadata(
   { searchParams }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const params = await searchParams;
-  const filterParams = extractFilterParams(params);
+  const filterParams = extractFilterParams(searchParams);
   const pageNumber = parsePageNumber(filterParams.page);
 
   // ✅ Fetch lightweight data for metadata only
@@ -270,8 +280,7 @@ export async function generateMetadata(
 // ============================================
 const AgenciesPage = async ({ searchParams }: Props) => {
   try {
-    const params = await searchParams;
-    const filterParams = extractFilterParams(params);
+    const filterParams = extractFilterParams(searchParams);
     const currentPage = parsePageNumber(filterParams.page);
 
     // Format values for display
@@ -279,13 +288,29 @@ const AgenciesPage = async ({ searchParams }: Props) => {
     const formattedRegion = formatLocationName(filterParams.region);
     const formattedBusiness = formatBusinessType(filterParams.business);
 
-    // ✅ Use cached version
+    // ✅ Use cached version with proper typing
+    const agenciesData: AgenciesData = {
+      agencies: [],
+      hasMore: false,
+      totalPages: 0,
+      page: 1,
+      total: 0,
+    };
+
     const { data, success } = await getCachedAgencies(
       currentPage,
       ITEMS_PER_PAGE,
     );
 
-    if (!success || !data) {
+    if (success && data) {
+      agenciesData.agencies = data.agencies;
+      agenciesData.hasMore = data.hasMore;
+      agenciesData.totalPages = data.totalPages;
+      agenciesData.page = data.page;
+      agenciesData.total = data.total;
+    }
+
+    if (!agenciesData.agencies || agenciesData.agencies.length === 0) {
       return notFound();
     }
 
@@ -400,15 +425,15 @@ const AgenciesPage = async ({ searchParams }: Props) => {
             </nav>
 
             {/* Agency List */}
-            <AgencyList agencies={data.agencies} title={displayTitle} />
+            <AgencyList agencies={agenciesData.agencies} title={displayTitle} />
 
             {/* Pagination */}
-            {data.hasMore && (
+            {agenciesData.hasMore && (
               <div className="mt-8">
                 <ClientPaginationWrapper
-                  totalPages={data.totalPages}
-                  currentPage={data.page}
-                  totalItems={data.total}
+                  totalPages={agenciesData.totalPages}
+                  currentPage={agenciesData.page}
+                  totalItems={agenciesData.total}
                   itemsPerPage={ITEMS_PER_PAGE}
                 />
               </div>

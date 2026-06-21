@@ -10,12 +10,12 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
 
 # next.js
 /.next/
 /out/
+dist/
+build/
 
 # production
 /build
@@ -46,13 +46,25 @@ next-env.d.ts
 /.clerk/
 
 
+
 # Firebase service account (keep secret!)
 config/service-account.json
+
+# next.js
+/.next/
+/out/
+dist/
+build/
+
+# production
+/build
+
 *.key.json
 *service-account*.json
 
 
-
+"
 
 # Firebase credentials
 *firebase-adminsdk*.json
+

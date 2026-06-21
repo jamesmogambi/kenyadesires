@@ -93,21 +93,36 @@ async function getAgenciesFromAPI(
   page: number = 1,
   limit: number = 12,
 ): Promise<AgenciesResponse> {
+  // Use internal URL for server-side fetching
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:4000";
-  const res = await fetch(
-    `${baseUrl}/api/agencies?page=${page}&limit=${limit}&status=active`,
-    {
+
+  // In production, use the internal API route
+  const url =
+    process.env.NODE_ENV === "production"
+      ? `${baseUrl}/api/agencies?page=${page}&limit=${limit}&status=active`
+      : `http://localhost:4000/api/agencies?page=${page}&limit=${limit}&status=active`;
+
+  try {
+    const res = await fetch(url, {
       next: {
         revalidate: REVALIDATE_TIME, // 7 days
       },
-    },
-  );
+      // Add headers for internal fetch
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch agencies");
+    if (!res.ok) {
+      console.error(`API fetch failed: ${res.status} ${res.statusText}`);
+      throw new Error(`Failed to fetch agencies: ${res.status}`);
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching agencies:", error);
+    throw error;
   }
-
-  return res.json();
 }
 
 // ✅ NEW: Cache individual agency - 7 days

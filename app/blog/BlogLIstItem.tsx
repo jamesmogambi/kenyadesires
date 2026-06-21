@@ -15,7 +15,7 @@ const BlogListItem = ({ blog, className }: Prop) => {
       href={`/blog/${blog.slug?.current}`}
       className={cn("w-full", className)}
     >
-      <div className="relative w-full h-48 bg-gray-100">
+      <div className="relative w-full h-48 bg-transparent">
         <SanityImage
           image={blog.mainImage}
           alt={blog.mainImage?.alt || blog.title || "Blog post image"}
