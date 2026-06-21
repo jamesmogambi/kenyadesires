@@ -6,12 +6,12 @@ import React from "react";
 
 interface Prop {
   className?: string;
-  author: Author ;
+  author: Author;
 }
 const AuthorSection = ({ author, className }: Prop) => {
   console.log("author==>", author);
 
-  const {  name, bio, _id,image } = author;
+  const { name, bio, _id, image } = author;
   return (
     <div
       className={cn(

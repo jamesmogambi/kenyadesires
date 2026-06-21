@@ -1,36 +1,35 @@
 import SectionCard from "@/components/SectionCard";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import AuthorSection from "./AuthorSection";
 import { Post } from "@/types/sanity";
-import { urlFor } from "@/lib/sanity/client";
 import PortableText from "@/components/blog/PortableText";
+import SanityImage from "@/components/blog/SanityImage";
 
 interface Prop {
   blog: Post;
   className?: string;
+  showBackButton?: boolean;
 }
-const BlogArticle = ({ blog, className }: Prop) => {
-    const { _createdAt: createdAt, title, slug, excerpt, mainImage, body  : content, author } = blog;
 
-      const imageUrl = blog.mainImage ? urlFor(blog.mainImage) : null;
-      
+const BlogArticle = ({ blog, className, showBackButton = true }: Prop) => {
+  const { _createdAt: createdAt, title, mainImage, body, author } = blog;
 
   const formatter = new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-    timeZone: "UTC", // Important for consistent results
+    timeZone: "UTC",
   });
 
   const formattedDate = formatter.format(new Date(createdAt));
+
   return (
     <article className={cn("", className)}>
-      {/* header */}
-      <div className=" lg:ml-10 border-green-700 w-fit flex justify-center items-center  flex-col">
-        <p className="text-primary font-bold text-base    uppercase">
+      {/* Header */}
+      <div className="lg:ml-10 border-green-700 w-fit flex justify-center items-center flex-col">
+        <p className="text-primary font-bold text-base uppercase">
           published : {formattedDate}
         </p>
         <h4 className="lg:text-2xl text-xl text-center mb-6 font-bold">
@@ -38,8 +37,6 @@ const BlogArticle = ({ blog, className }: Prop) => {
         </h4>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          //   width="8"
-          //   height="8"
           viewBox="0 0 8 8"
           className="size-10 text-stone-500"
         >
@@ -50,38 +47,43 @@ const BlogArticle = ({ blog, className }: Prop) => {
         </svg>
       </div>
 
-      {/* rest section */}
+      {/* Main Content Section */}
       <SectionCard className="md:p-12 p-6 my-8">
-        <div className="relative w-full mb-5 h-48 md:h-[350px] ">
-          <Image
-            src={imageUrl || "/og-default.jpg"} // Fallback to a default image if mainImage is not available
+        {/* ✅ Featured Image - Using SanityImage */}
+        <div className="relative w-full mb-5 h-48 md:h-[350px]">
+          <SanityImage
+            image={mainImage}
             alt={mainImage?.alt || title || "Blog post image"}
-            fill // This makes the image fill the parent container
-            className="object-cover" // This ensures the image covers the area
-            sizes="100vw" // Tell Next.js this image is full width
-            priority // Optional: if it's above the fold
-            quality={90}
+            fill
+            className="object-cover rounded-lg"
+            priority
+            sizes="100vw"
+            fallback="/og-default.jpg"
+            quality={75}
           />
         </div>
 
-        {/* Render HTML content */}
-        <PortableText  content={blog.body} />
+        {/* ✅ Blog Content - Using PortableText */}
+        <PortableText content={blog.body} />
 
-        {/* // render author */}
+        {/* ✅ Author Section */}
         {blog.author && <AuthorSection author={blog.author} />}
 
-        {/* // section */}
-        <div className="border-b border-gray-1 "></div>
-        <div className="border-b border-gray-1 mt-14 "></div>
+        {/* Divider */}
+        <div className="border-b border-gray-1"></div>
+        <div className="border-b border-gray-1 mt-14"></div>
 
-        <div className="flex my-8 justify-center items-center p-4">
-          <Link
-            href="/blog"
-            className="text-white uppercase font-bold rounded-md px-6 text-base p-4 bg-primary"
-          >
-            back to the blog
-          </Link>
-        </div>
+        {/* ✅ Back Button */}
+        {showBackButton && (
+          <div className="flex my-8 justify-center items-center p-4">
+            <Link
+              href="/blog"
+              className="text-white uppercase font-bold rounded-md px-6 text-base p-4 bg-primary hover:bg-primary/80 transition"
+            >
+              back to the blog
+            </Link>
+          </div>
+        )}
       </SectionCard>
     </article>
   );

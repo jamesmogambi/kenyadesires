@@ -1,50 +1,52 @@
 import React from "react";
-
-import { categories } from "@/lib/blog/categories";
-import CategorySection from "./CategorySection";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import CategorySection from "./CategorySection";
 import { ShowMoreButton } from "./ShowMOreButton";
 import BlogList from "./BlogList";
-import { Metadata } from "next";
+import {
+  getCachedBlogCategories,
+  getCachedFeaturedPosts,
+  getCachedBlogPosts,
+} from "@/lib/cache";
+import { REVALIDATE_TIME } from "@/lib/cache-config";
 
-import type { Category } from "@/types/sanity";
-
-
-// Sanity imports
-import { getAllCategories, getFeaturedPostsWithLimit, getPostsWithPagination } from "@/lib/sanity/queries";
-
+// ✅ ISR - 7 days
+export const revalidate = REVALIDATE_TIME;
 
 export const metadata: Metadata = {
-  title: "Blog | Latest Articles & Insights | escortKE",
+  title: "Blog | Latest Articles & Insights | Kenyan Dating Blog",
   description:
-    "Discover our latest blog posts, articles, and insights. Stay updated with trending topics, tutorials, and industry news.",
-
+    "Discover our latest blog posts about dating, relationships, and social connections in Kenya. Stay updated with expert advice and trending topics.",
   openGraph: {
     title: "Latest Blog Posts & Articles",
-    description: "Explore our collection of blog posts and articles",
+    description:
+      "Explore our collection of blog posts and articles about dating in Kenya",
     type: "website",
-    url: "https://yoursite.com/blog",
-    siteName: "Your Site Name",
+    url: "https://yourdomain.com/blog",
+    siteName: "Kenyan Dating Blog",
     images: [
       {
-        url: "https://yoursite.com/images/blog-og-image.jpg",
+        url: "https://yourdomain.com/images/blog-og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Blog Posts Overview",
       },
     ],
   },
-
   twitter: {
     card: "summary_large_image",
     title: "Latest Blog Posts & Articles",
     description: "Explore our collection of blog posts and articles",
-    images: ["https://yoursite.com/images/blog-twitter-image.jpg"],
+    images: ["https://yourdomain.com/images/blog-twitter-image.jpg"],
     creator: "@yourtwitterhandle",
   },
-
-  keywords: ["blog", "articles", "posts", "tutorials", "insights", "news"],
-
+  keywords: [
+    "dating blog Kenya",
+    "relationships Kenya",
+    "online dating Kenya",
+    "dating advice",
+  ],
   robots: {
     index: true,
     follow: true,
@@ -56,9 +58,8 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-
   alternates: {
-    canonical: "https://yoursite.com/blog",
+    canonical: "https://yourdomain.com/blog",
   },
 };
 
@@ -68,57 +69,70 @@ interface PageProps {
 
 const page = async ({ searchParams }: PageProps) => {
   const currentPage = parseInt(searchParams.page || "1");
+  const POSTS_PER_PAGE = 20;
 
- 
-
- // ============================================
-  // STEP 1: FETCH ALL DATA IN PARALLEL
-  // ============================================
-
- const [categories, featuredPosts] = await Promise.all([
-    getAllCategories(),
-    getFeaturedPostsWithLimit(20),
-    // getPostsWithPagination(1, 6),
+  // ✅ Fetch ALL data in parallel with caching
+  const [categories, featuredPosts, postsData] = await Promise.all([
+    getCachedBlogCategories(),
+    getCachedFeaturedPosts(20), // Get up to 20 featured posts
+    getCachedBlogPosts(currentPage, POSTS_PER_PAGE),
   ]);
 
-  console.log("Featured Posts:", featuredPosts);
-//   console.log("Categories:", categories);
+  const { posts, total, totalPages, currentPage: page } = postsData;
+  const nextPage = currentPage + 1;
+  const hasMore = currentPage < totalPages;
 
   return (
     <>
       <div className="flex w-full mx-auto flex-col-reverse lg:max-w-[80%] min-h-screen lg:flex-row gap-2">
-        {/* categories section */}
+        {/* Categories Section */}
         <aside className="basis-full space-y-7 lg:basis-1/3 p-6 border-green-600">
           <CategorySection title="Kenyan Categories" categories={categories} />
-          {/* <CategorySection title="Magazine" categories={nextThree} /> */}
         </aside>
 
-        {/* blogs list */}
+        {/* Blog List */}
         <div className="basis-full p-8 border-amber-300 lg:flex-1">
-          <BlogList blogList={featuredPosts} />
-{/* 
-          Show More Button (Client Component)
+          {/* Show featured posts section if there are any */}
+          {featuredPosts.length > 0 && (
+            <div className="mb-8">
+              {/* <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                <span className="text-yellow-500">⭐</span> Featured Articles
+              </h2> */}
+              <BlogList blogList={featuredPosts} />
+            </div>
+          )}
+
+          {/* Regular posts */}
+          {posts.length > 0 && (
+            <div>
+              {featuredPosts.length > 0 && (
+                <h2 className="text-2xl font-bold mb-4">All Posts</h2>
+              )}
+              <BlogList blogList={posts} />
+            </div>
+          )}
+
+          {/* Show More Button */}
           {hasMore && (
             <ShowMoreButton
               nextPage={nextPage}
-              totalPosts={pagination.total}
+              totalPosts={total}
               currentCount={posts.length}
             />
-          )} */}
+          )}
 
           {/* No more posts */}
-          {/* {!hasMore && posts.length > 0 && (
+          {!hasMore && posts.length > 0 && (
             <div className="text-center py-8">
               <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full">
                 <span className="text-xl">✅</span>
                 <p className="font-medium">
-                  All{" "}
-                  <span className="text-primary text-xl">{posts.length} </span>
+                  All <span className="text-primary text-xl">{total} </span>
                   posts loaded
                 </p>
               </div>
             </div>
-          )} */}
+          )}
         </div>
       </div>
     </>

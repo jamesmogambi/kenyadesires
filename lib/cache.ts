@@ -7,6 +7,13 @@ import {
 } from "@/server-actions/escort.action";
 import { REVALIDATE_TIME } from "./cache-config";
 import { AgenciesResponse, IAgency } from "@/types/agency.types";
+import {
+  getAllCategories,
+  getAllPosts,
+  getBlogBySlug,
+  getFeaturedPostsWithLimit,
+  getPostsWithPagination,
+} from "./sanity/queries";
 
 export const getCachedEscorts = unstable_cache(
   async (params: any) => {
@@ -125,3 +132,68 @@ async function getAgencyFromAPI(
 
   return res.json();
 }
+
+// ✅ NEW: Cache blog categories - 7 days
+export const getCachedBlogCategories = unstable_cache(
+  async () => {
+    console.log("🔄 Fetching fresh blog categories...");
+    return await getAllCategories();
+  },
+  ["blog-categories"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["blog-categories"],
+  },
+);
+
+// ✅ NEW: Cache featured blog posts - 7 days
+export const getCachedFeaturedPosts = unstable_cache(
+  async (limit: number = 20) => {
+    console.log(`🔄 Fetching fresh featured posts (limit: ${limit})...`);
+    return await getFeaturedPostsWithLimit(limit);
+  },
+  ["blog-featured-posts"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["blog-featured-posts"],
+  },
+);
+
+// ✅ NEW: Cache all blog posts with pagination - 7 days
+export const getCachedBlogPosts = unstable_cache(
+  async (page: number, limit: number) => {
+    console.log(`🔄 Fetching fresh blog posts (page: ${page})...`);
+    return await getPostsWithPagination(page, limit);
+  },
+  ["blog-posts"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["blog-posts"],
+  },
+);
+
+// ✅ NEW: Cache single blog post - 7 days
+export const getCachedBlogPost = unstable_cache(
+  async (slug: string) => {
+    console.log(`🔄 Fetching fresh blog post: ${slug}...`);
+    return await getBlogBySlug(slug);
+  },
+  ["blog-post"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["blog-post"],
+  },
+);
+
+// ✅ Cache all blog posts for static params - 7 days
+export const getCachedAllBlogPosts = unstable_cache(
+  async () => {
+    console.log("🔄 Fetching all blog posts for static params...");
+    return await getAllPosts();
+  },
+  ["blog-all-posts"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["blog-all-posts"],
+  },
+);

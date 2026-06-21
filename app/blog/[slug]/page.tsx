@@ -1,7 +1,9 @@
 import { Metadata, ResolvingMetadata } from "next";
 import React from "react";
 import { notFound } from "next/navigation";
-import { getBlogBySlug,  getAllPosts } from "@/lib/sanity/queries";
+import { getBlogBySlug, getAllPosts } from "@/lib/sanity/queries";
+import { getCachedBlogPost, getCachedAllBlogPosts } from "@/lib/cache";
+import { REVALIDATE_TIME } from "@/lib/cache-config";
 import type { Post } from "@/types/sanity";
 import BlogArticle from "./BlogArticle";
 
@@ -9,6 +11,9 @@ type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
+
+// ✅ ISR - 7 days (increased from 1 hour)
+export const revalidate = REVALIDATE_TIME;
 
 // ============================================
 // GENERATE METADATA FOR SEO
@@ -19,7 +24,9 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   try {
     const { slug } = await params;
-    const post = await getBlogBySlug(slug);
+
+    // ✅ Use cached version
+    const post = await getCachedBlogPost(slug);
 
     if (!post) {
       return {
@@ -32,8 +39,8 @@ export async function generateMetadata(
     const postUrl = `${baseUrl}/blog/${slug}`;
 
     // Get image URL from Sanity
-    const imageUrl = post.mainImage?.asset?.url 
-      ? post.mainImage.asset.url 
+    const imageUrl = post.mainImage?.asset?.url
+      ? post.mainImage.asset.url
       : `${baseUrl}/og-default.jpg`;
 
     // Get parent metadata
@@ -89,7 +96,8 @@ export async function generateMetadata(
 // ============================================
 export async function generateStaticParams() {
   try {
-    const posts = await getAllPosts();
+    // ✅ Use cached version
+    const posts = await getCachedAllBlogPosts();
 
     return posts.map((post) => ({
       slug: post.slug.current,
@@ -101,27 +109,21 @@ export async function generateStaticParams() {
 }
 
 // ============================================
-// REVALIDATE EVERY HOUR (ISR)
-// ============================================
-export const revalidate = 3600;
-
-// ============================================
 // PAGE COMPONENT
 // ============================================
 const Page = async ({ params }: Props) => {
   try {
     const { slug } = await params;
-    
-    // Fetch the post using getBlogBySlug
-    const post = await getBlogBySlug(slug);
-    
+
+    // ✅ Use cached version
+    const post = await getCachedBlogPost(slug);
+
     if (!post) {
       notFound();
     }
 
- 
-
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://kenyadivas.com";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || "https://kenyadivas.com";
 
     // Generate JSON-LD structured data
     const jsonLd = {
@@ -158,11 +160,9 @@ const Page = async ({ params }: Props) => {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        
+
         {/* Blog Article Component */}
-        <BlogArticle 
-          blog={post} 
-        />
+        <BlogArticle blog={post} />
       </>
     );
   } catch (error) {
