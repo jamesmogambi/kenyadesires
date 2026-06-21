@@ -1,3 +1,4 @@
+// ✅ ISR - 7 days
 import React from "react";
 import BDSMHeader from "./BDSMHeader";
 import BDSMFilterInput from "./BDSMFilterInput";
@@ -11,10 +12,8 @@ import { generateBDSMStructuredData } from "./seo-utils";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { getCachedBDSMEscorts } from "@/lib/cache";
 import { getBDSMEscortCount, getFirstBDSMEscort } from "@/lib/metadata-helper";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
 
-// ✅ ISR - 7 days
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   searchParams: Promise<{

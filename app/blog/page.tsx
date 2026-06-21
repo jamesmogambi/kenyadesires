@@ -1,5 +1,4 @@
 import React from "react";
-import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import CategorySection from "./CategorySection";
 import { ShowMoreButton } from "./ShowMOreButton";
@@ -9,10 +8,13 @@ import {
   getCachedFeaturedPosts,
   getCachedBlogPosts,
 } from "@/lib/cache";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
+import {
+  getAllCategories,
+  getFeaturedPostsWithLimit,
+} from "@/lib/sanity/queries";
 
 // ✅ ISR - 7 days
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800;
 
 export const metadata: Metadata = {
   title: "Blog | Latest Articles & Insights | Kenyan Dating Blog",
@@ -64,56 +66,50 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: { page?: string };
+  searchParams: Promise<{ page?: string }>; // ✅ Mark as Promise
 }
 
 const page = async ({ searchParams }: PageProps) => {
-  const currentPage = parseInt(searchParams.page || "1");
+  // ✅ Await searchParams before using it
+  const params = await searchParams;
+  const currentPage = parseInt(params.page || "1");
   const POSTS_PER_PAGE = 20;
 
   // ✅ Fetch ALL data in parallel with caching
-  const [categories, featuredPosts, postsData] = await Promise.all([
+  const [categories, featuredPosts] = await Promise.all([
     getCachedBlogCategories(),
-    getCachedFeaturedPosts(20), // Get up to 20 featured posts
-    getCachedBlogPosts(currentPage, POSTS_PER_PAGE),
+    getCachedFeaturedPosts(),
+    // getCachedBlogPosts(currentPage, POSTS_PER_PAGE),
   ]);
 
-  const { posts, total, totalPages, currentPage: page } = postsData;
-  const nextPage = currentPage + 1;
-  const hasMore = currentPage < totalPages;
+  // const { posts, total, totalPages, currentPage: page } = featuredPosts;
+  // const nextPage = currentPage + 1;
+  // const hasMore = currentPage < totalPages;
 
   return (
     <>
       <div className="flex w-full mx-auto flex-col-reverse lg:max-w-[80%] min-h-screen lg:flex-row gap-2">
-        {/* Categories Section */}
         <aside className="basis-full space-y-7 lg:basis-1/3 p-6 border-green-600">
           <CategorySection title="Kenyan Categories" categories={categories} />
         </aside>
 
-        {/* Blog List */}
         <div className="basis-full p-8 border-amber-300 lg:flex-1">
-          {/* Show featured posts section if there are any */}
           {featuredPosts.length > 0 && (
             <div className="mb-8">
-              {/* <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <span className="text-yellow-500">⭐</span> Featured Articles
-              </h2> */}
               <BlogList blogList={featuredPosts} />
             </div>
           )}
 
-          {/* Regular posts */}
-          {posts.length > 0 && (
+          {/* {posts.length > 0 && (
             <div>
               {featuredPosts.length > 0 && (
                 <h2 className="text-2xl font-bold mb-4">All Posts</h2>
               )}
               <BlogList blogList={posts} />
             </div>
-          )}
+          )} */}
 
-          {/* Show More Button */}
-          {hasMore && (
+          {/* {hasMore && (
             <ShowMoreButton
               nextPage={nextPage}
               totalPosts={total}
@@ -121,7 +117,6 @@ const page = async ({ searchParams }: PageProps) => {
             />
           )}
 
-          {/* No more posts */}
           {!hasMore && posts.length > 0 && (
             <div className="text-center py-8">
               <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full">
@@ -132,7 +127,7 @@ const page = async ({ searchParams }: PageProps) => {
                 </p>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </>

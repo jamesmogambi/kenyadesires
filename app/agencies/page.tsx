@@ -15,7 +15,6 @@ import AgencyFilterInput from "./AgencyFilterInput";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { getCachedAgencies } from "@/lib/cache";
 import { getAgenciesCount, getFirstAgency } from "@/lib/metadata-helper";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
 import { Metadata, ResolvingMetadata } from "next";
 
 // ============ CONSTANTS ============
@@ -24,7 +23,7 @@ const SITE_NAME = "KENYADIVAS";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
 
 // ✅ ISR - 7 days
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800; // 7 days in seconds
 
 // ============ TYPES ============
 type Props = {

@@ -11,9 +11,16 @@ import {
   getAllCategories,
   getAllPosts,
   getBlogBySlug,
+  getCategoryBySlug,
   getFeaturedPostsWithLimit,
+  getPostsByCategory,
   getPostsWithPagination,
 } from "./sanity/queries";
+import {
+  getAllRegions,
+  getPopularCounties,
+} from "@/server-actions/region.action";
+import { getAllLookupData } from "@/server-actions/lookup.action";
 
 export const getCachedEscorts = unstable_cache(
   async (params: any) => {
@@ -195,5 +202,73 @@ export const getCachedAllBlogPosts = unstable_cache(
   {
     revalidate: REVALIDATE_TIME,
     tags: ["blog-all-posts"],
+  },
+);
+
+// ✅ Cache popular counties - 7 days
+export const getCachedPopularCounties = unstable_cache(
+  async (limit?: number) => {
+    console.log(
+      `🔄 Fetching fresh popular counties (limit: ${limit || "all"})...`,
+    );
+    const result = await getPopularCounties({ limit, forceRefresh: true });
+    return result;
+  },
+  ["popular-counties"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["popular-counties"],
+  },
+);
+
+// ✅ Cache regions - 7 days
+export const getCachedRegions = unstable_cache(
+  async () => {
+    console.log("🔄 Fetching fresh regions...");
+    return await getAllRegions();
+  },
+  ["regions"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["regions"],
+  },
+);
+
+// ✅ Cache all lookup data - 7 days
+export const getCachedLookupData = unstable_cache(
+  async () => {
+    console.log("🔄 Fetching fresh lookup data...");
+    return await getAllLookupData();
+  },
+  ["lookup-data"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["lookup-data"],
+  },
+);
+
+// ✅ Cache single category by slug - 7 days
+export const getCachedCategoryBySlug = unstable_cache(
+  async (slug: string) => {
+    console.log(`🔄 Fetching fresh category: ${slug}...`);
+    return await getCategoryBySlug(slug);
+  },
+  ["category-detail"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["category"],
+  },
+);
+
+// ✅ Cache posts by category - 7 days
+export const getCachedPostsByCategory = unstable_cache(
+  async (slug: string) => {
+    console.log(`🔄 Fetching fresh posts for category: ${slug}...`);
+    return await getPostsByCategory(slug);
+  },
+  ["category-posts"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["category-posts"],
   },
 );

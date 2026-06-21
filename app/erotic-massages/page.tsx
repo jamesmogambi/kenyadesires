@@ -17,9 +17,8 @@ import {
   getMassageEscortCount,
   getFirstMassageEscort,
 } from "@/lib/metadata-helper";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
 
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   searchParams: Promise<{

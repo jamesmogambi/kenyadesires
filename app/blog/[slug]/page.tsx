@@ -3,8 +3,6 @@ import React from "react";
 import { notFound } from "next/navigation";
 import { getBlogBySlug, getAllPosts } from "@/lib/sanity/queries";
 import { getCachedBlogPost, getCachedAllBlogPosts } from "@/lib/cache";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
-import type { Post } from "@/types/sanity";
 import BlogArticle from "./BlogArticle";
 
 type Props = {
@@ -13,7 +11,7 @@ type Props = {
 };
 
 // ✅ ISR - 7 days (increased from 1 hour)
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800; // 7 days in seconds
 
 // ============================================
 // GENERATE METADATA FOR SEO

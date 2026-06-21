@@ -212,17 +212,24 @@ const GirlFilterInput = ({ className }: Prop) => {
               <span className="text-slate-100 text-lg font-bold">
                 {county.name}
               </span>
-              {county && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+              {/* ✅ Use span instead of button to avoid nested buttons */}
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearCounty();
+                }}
+                className="ml-2 text-white/50 hover:text-white cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
                     clearCounty();
-                  }}
-                  className="ml-2 text-white/50 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+                  }
+                }}
+              >
+                <X className="h-4 w-4" />
+              </span>
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">County</span>
@@ -272,17 +279,24 @@ const GirlFilterInput = ({ className }: Prop) => {
               <span className="text-slate-100 text-lg font-bold">
                 {region.name}
               </span>
-              {region && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+              {/* ✅ Use span instead of button */}
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearRegion();
+                }}
+                className="ml-2 text-white/50 hover:text-white cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
                     clearRegion();
-                  }}
-                  className="ml-2 text-white/50 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+                  }
+                }}
+              >
+                <X className="h-4 w-4" />
+              </span>
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">
@@ -339,17 +353,24 @@ const GirlFilterInput = ({ className }: Prop) => {
               <span className="text-slate-100 text-lg font-bold capitalize">
                 {practice}
               </span>
-              {practice && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+              {/* ✅ Use span instead of button */}
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  clearPractice();
+                }}
+                className="ml-2 text-white/50 hover:text-white cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
                     clearPractice();
-                  }}
-                  className="ml-2 text-white/50 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+                  }
+                }}
+              >
+                <X className="h-4 w-4" />
+              </span>
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">Practice</span>

@@ -6,10 +6,9 @@ import AgencyProfile from "./AgencyDetailCard";
 import { IAgency } from "@/types/agency.types";
 import { getCachedAgencyBySlug } from "@/lib/cache";
 import { getAgencyForMetadata } from "@/lib/metadata-helper";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
 
 // ✅ ISR - 7 days
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -24,7 +23,7 @@ export async function generateStaticParams() {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:4000";
     const res = await fetch(`${baseUrl}/api/agencies?limit=100&status=active`, {
       next: {
-        revalidate: REVALIDATE_TIME,
+        revalidate: 604800, // 7 days in seconds
       },
     });
 

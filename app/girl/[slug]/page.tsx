@@ -12,10 +12,9 @@ import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
 import { getCachedEscortById } from "@/lib/cache";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
 
 // ✅ ISR - Rebuild page after revalidate time (data doesn't change frequently)
-export const revalidate = REVALIDATE_TIME;
+export const revalidate = 604800; // 7 days in seconds
 
 // Generate metadata for the escort profile page
 export async function generateMetadata(

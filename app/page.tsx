@@ -5,13 +5,10 @@ import GirlList from "@/components/GirlList";
 import GirlRegions from "@/components/GirlRegions";
 import NotFoundList from "@/components/NotFoundList";
 import { ITEMS_PER_PAGE } from "@/constants";
-import { getEscorts } from "@/server-actions/escort.action";
-import { notFound } from "next/navigation";
 import { getCachedEscorts } from "@/lib/cache";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
-export const revalidate = REVALIDATE_TIME; // 7 days in seconds
+export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   searchParams: Promise<{

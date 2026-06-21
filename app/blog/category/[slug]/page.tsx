@@ -1,45 +1,42 @@
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-
-// Sanity imports
-import {
-  getAllCategories,
-  getCategoryBySlug,
-  getPostsByCategory,
-} from "@/lib/sanity/queries";
-
-// Components
-import TelegramCTA from "@/components/blog/TelegramCTA";
-
-// Types
 import BlogList from "../../BlogList";
+import TelegramCTA from "@/components/blog/TelegramCTA";
+import {
+  getCachedCategoryBySlug,
+  getCachedPostsByCategory,
+  getCachedBlogCategories,
+} from "@/lib/cache";
+
+// ✅ ISR - 7 days
+export const revalidate = 604800; // 7 days in seconds
 
 interface CategoryPageProps {
-  params: {
-    slug: string;
-  };
-  searchParams: {
-    page?: string;
-  };
+  params: Promise<{ slug: string }>; // ✅ Now a Promise
+  searchParams: Promise<{ page?: string }>; // ✅ Now a Promise
 }
 
 // ============================================
 // GENERATE STATIC PATHS
 // ============================================
 export async function generateStaticParams() {
-  const categories = await getAllCategories();
+  const categories = await getCachedBlogCategories();
   return categories.map((category) => ({
     slug: category.slug.current,
   }));
 }
 
 // ============================================
-// GENERATE METADATA
+// GENERATE METADATA - AWAIT params
 // ============================================
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
-  const category = await getCategoryBySlug(params.slug);
+  // ✅ Await params before using
+  const { slug } = await params;
+
+  // ✅ Use cached version
+  const category = await getCachedCategoryBySlug(slug);
 
   if (!category) {
     return {
@@ -56,7 +53,7 @@ export async function generateMetadata({
       description:
         category.description || `Articles about ${category.name} in Kenya`,
       type: "website",
-      url: `https://kenyadivas.com/category/${params.slug}`,
+      url: `https://kenyadivas.com/category/${slug}`, // ✅ Use slug from awaited params
     },
   };
 }
@@ -68,18 +65,20 @@ export default async function CategoryPage({
   params,
   searchParams,
 }: CategoryPageProps) {
+  // ✅ Await both params and searchParams
   const { slug } = await params;
-  const currentPage = parseInt((await searchParams).page || "1");
+  const { page } = await searchParams;
+  const currentPage = parseInt(page || "1");
 
-  // Get category and posts
-  const category = await getCategoryBySlug(slug);
+  // ✅ Use cached versions
+  const [category, posts] = await Promise.all([
+    getCachedCategoryBySlug(slug),
+    getCachedPostsByCategory(slug),
+  ]);
 
   if (!category) {
     notFound();
   }
-
-  // Get posts for this category with pagination
-  const posts = await getPostsByCategory(slug);
 
   return (
     <main className="">
