@@ -4,18 +4,19 @@ import "./globals.css";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import MessageAlert from "@/components/MessageAlert";
 import "quill/dist/quill.core.css";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  getCachedLookupData,
+  getCachedPopularCounties,
+  getCachedRegions,
+} from "@/lib/cache";
+import LocationInitializer from "@/components/FileInputInitializer";
+
+// ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
+export const revalidate = 604800; // 7 days in seconds
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,6 +52,14 @@ export const metadata: Metadata = {
     "Nairobi escorts",
     "Mombasa escorts",
     "Kisumu escorts",
+    "Nakuru escorts",
+    "premium escorts Kenya",
+    "verified escorts Nairobi",
+    "high class escorts Kenya",
+    "Kiambu escorts",
+    "Eldoret escorts",
+    "Kakamega esorts",
+    "Bungoma escorts",
     "premium companions Kenya",
     "verified escorts Nairobi",
     "high class escorts Kenya",
@@ -365,11 +374,17 @@ const organizationSchema = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // ✅ Pre-fetch on server
+  const [counties, regions, lookup] = await Promise.all([
+    getCachedPopularCounties(),
+    getCachedRegions(),
+    getCachedLookupData(),
+  ]);
   return (
     <ClerkProvider>
       <html lang="en-KE">
@@ -468,7 +483,7 @@ export default function RootLayout({
               alt="KENYADIVAS Background"
               fill
               priority
-              quality={100}
+              quality={50}
               style={{
                 objectFit: "cover",
                 filter: "grayscale(100%)",
@@ -483,6 +498,11 @@ export default function RootLayout({
           {/* Main Content */}
           <main className="bg-black/80  flex-1 py-4 w-full">
             <TooltipProvider>{children}</TooltipProvider>
+            <LocationInitializer
+              initialCounties={counties.data}
+              initialRegions={regions.data}
+              initialLookup={lookup.data}
+            />
           </main>
 
           <div>

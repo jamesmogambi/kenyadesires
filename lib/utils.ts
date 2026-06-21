@@ -181,3 +181,35 @@ export function formatSlugToTitle(slug: any) {
 // Example usage:
 // formatSlugToTitle('big-ass-porn') => "Big Ass Porn"
 // formatSlugToTitle('african porn videos') => "African Porn Videos"
+
+
+export function formatDate(date: string): string {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+export function formatDateShort(date: string): string {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+// export function slugify(text: string): string {
+//   return text
+//     .toLowerCase()
+//     .replace(/[^a-z0-9]+/g, '-')
+//     .replace(/^-|-$/g, '')
+// }
+
+// export function truncateText(text: string, maxLength: number = 160): string {
+//   if (!text) return ''
+//   if (text.length <= maxLength) return text
+//   return text.slice(0, maxLength) + '...'
+// }

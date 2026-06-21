@@ -1,20 +1,11 @@
 import { cn, slugify } from "@/lib/utils";
+import { Category } from "@/types/sanity";
 import Link from "next/link";
 import React from "react";
 
-export interface Category {
-  _id: string;
+export interface BlogCategory {
   name: string;
   slug: string;
-  description: string;
-  colorCode: string;
-  icon: string;
-  isActive: boolean;
-  parentId: string | null;
-  level: 0 | 1; // 0 = main category, 1 = subcategory
-  order: number;
-  createdAt?: Date; // Optional if you add timestamps later
-  updatedAt?: Date; // Optional if you add timestamps later
 }
 interface Prop {
   className?: string;
@@ -39,7 +30,8 @@ const CategorySection = ({ categories, title, className }: Prop) => {
       {categories.map((category, _) => (
         <Link
           className="p-5 text-base font-medium py-2.5"
-          href={`/blog/${slugify(category.name)}`}
+          href={`/blog/category/${slugify(category.name)}`}
+          key={category._id}
         >
           {category.name}
         </Link>

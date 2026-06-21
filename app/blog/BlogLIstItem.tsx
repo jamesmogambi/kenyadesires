@@ -1,25 +1,29 @@
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { Post } from "@/types/sanity";
 import Link from "next/link";
 import React from "react";
+import SanityImage from "@/components/blog/SanityImage";
 
 interface Prop {
-  blog: any;
+  blog: Post;
   className?: string;
 }
-const BlogLIstItem = ({ blog, className }: Prop) => {
-  return (
-    <Link href={`/blog/${blog.slug}`} className={cn("w-full", className)}>
-      {/* BlogLIstItem: {blog.slug} */}
 
-      <div className="relative w-full h-48 ">
-        <Image
-          src={blog.featuredImage}
-          alt={blog.slug}
-          fill // This makes the image fill the parent container
-          className="object-cover" // This ensures the image covers the area
-          sizes="100vw" // Tell Next.js this image is full width
-          priority // Optional: if it's above the fold
+const BlogListItem = ({ blog, className }: Prop) => {
+  return (
+    <Link
+      href={`/blog/${blog.slug?.current}`}
+      className={cn("w-full", className)}
+    >
+      <div className="relative w-full h-48 bg-gray-100">
+        <SanityImage
+          image={blog.mainImage}
+          alt={blog.mainImage?.alt || blog.title || "Blog post image"}
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority
+          fallback="/og-default.jpg"
         />
       </div>
 
@@ -30,4 +34,4 @@ const BlogLIstItem = ({ blog, className }: Prop) => {
   );
 };
 
-export default BlogLIstItem;
+export default BlogListItem;

@@ -1,4 +1,3 @@
-// app/massage-escorts/page.tsx
 import { AppPagination } from "@/components/AppPagination";
 import { ClientPaginationWrapper } from "@/components/ClientPaginationWrapper";
 import FilterInput from "@/components/FilterInput";
@@ -7,15 +6,19 @@ import ListHeader from "@/components/ListHeader";
 import React from "react";
 import SectionArticle from "./SectionArticle";
 import MassageTypeFilterInput from "./MassageFilterInput";
-import { fetchMassageEscorts } from "@/actions/masseuse.action";
 import { ITEMS_PER_PAGE } from "@/constants";
 import NotFoundList from "@/components/NotFoundList";
 import { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import { generateMassageStructuredData } from "./seo-utils";
 import { generateBreadcrumbList } from "../girls/seo-utils";
-import { getEroticMassageEscortsClientSide } from "@/server-actions/escort.action";
-// import { generateMassageStructuredData, generateBreadcrumbList } from "@/lib/seo-utils";
+import { getCachedMassageEscorts } from "@/lib/cache";
+import {
+  getMassageEscortCount,
+  getFirstMassageEscort,
+} from "@/lib/metadata-helper";
+
+export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   searchParams: Promise<{
@@ -27,7 +30,7 @@ interface PageProps {
 }
 
 // Helper function to format location names
-const formatLocationName = (str: string): string => {
+const formatLocationName = (str?: string): string => {
   if (!str || str === "all") return "";
   return str
     .split("-")
@@ -36,7 +39,7 @@ const formatLocationName = (str: string): string => {
 };
 
 // Helper function to format massage type names
-const formatMassageType = (type: string): string => {
+const formatMassageType = (type?: string): string => {
   if (!type || type === "all") return "";
 
   const massageTypes: Record<string, string> = {
@@ -61,53 +64,24 @@ const formatMassageType = (type: string): string => {
   );
 };
 
-// Generate dynamic metadata
+// ✅ OPTIMIZED: Generate dynamic metadata using lightweight helpers
 export async function generateMetadata(
   { searchParams }: PageProps,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const params: any = await searchParams;
+  const params = await searchParams;
   const { county, region, massageType, page } = params;
   const pageNumber = page ? parseInt(page) : 1;
 
-  // Fetch data for metadata generation
-  let totalMasseuses = 0;
-  let firstMasseuse = null;
-  let uniqueLocations: string[] = [];
-
-  try {
-    const {
-      escorts,
-      total,
-      totalPages,
-      page: currentPageFromResponse,
-      hasMore,
-    } = await getEroticMassageEscortsClientSide({
-      page: params.page ? parseInt(params.page) : 1,
-      limit: ITEMS_PER_PAGE,
-      county: params.county,
-      region: params.region,
-      isActive: true,
-    });
-    if (escorts) {
-      totalMasseuses = total || 0;
-      if (escorts && escorts.length > 0) {
-        firstMasseuse = escorts[0];
-
-        // Extract unique locations for keywords
-        const locations = escorts
-          .map((e: any) => e.town || e.workingAreas?.[0]?.countyName)
-          .filter(Boolean);
-        uniqueLocations = [...new Set(locations)] as string[];
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching data for metadata:", error);
-  }
+  // ✅ Fetch lightweight data for metadata only (not the full list)
+  const [totalMasseuses, firstMasseuse] = await Promise.all([
+    getMassageEscortCount({ county, region, massageType }),
+    getFirstMassageEscort({ county, region, massageType }),
+  ]);
 
   // Format filter values for display
-  const formattedCounty = formatLocationName(county);
-  const formattedRegion = formatLocationName(region);
+  const formattedCounty = formatLocationName(county || "");
+  const formattedRegion = formatLocationName(region || "");
   const formattedMassageType = formatMassageType(massageType || "");
 
   // Build dynamic title
@@ -197,11 +171,10 @@ export async function generateMetadata(
       keywords.add(`massage in ${formattedRegion}`);
     }
 
-    // Add unique locations from actual masseuses
-    uniqueLocations.slice(0, 5).forEach((location) => {
-      keywords.add(`${location} massage`);
-      keywords.add(`massage in ${location}`);
-    });
+    // Add unique locations from actual masseuses (if available)
+    if (firstMasseuse?.name) {
+      keywords.add(`${firstMasseuse.name} massage`);
+    }
 
     return Array.from(keywords).join(", ");
   };
@@ -217,7 +190,6 @@ export async function generateMetadata(
     if (massageType && massageType !== "all")
       params.append("massageType", massageType);
 
-    // Only add page parameter for pages > 1
     if (pageNumber > 1) params.append("page", pageNumber.toString());
 
     const queryString = params.toString();
@@ -240,7 +212,6 @@ export async function generateMetadata(
     });
   }
 
-  // Always add default OG image
   ogImages.push({
     url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/og-massage.jpg`,
     width: 1200,
@@ -248,7 +219,6 @@ export async function generateMetadata(
     alt: "KENYADIVAS Massage - Professional Massage Therapists in Kenya",
   });
 
-  // Calculate pagination URLs
   const totalPages = Math.ceil(totalMasseuses / ITEMS_PER_PAGE);
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
 
@@ -267,7 +237,6 @@ export async function generateMetadata(
     title,
     description,
     keywords,
-
     openGraph: {
       type: "website",
       locale: "en_KE",
@@ -278,7 +247,6 @@ export async function generateMetadata(
       images: ogImages,
       countryName: "Kenya",
     },
-
     twitter: {
       card: "summary_large_image",
       site: "@kenyadivas",
@@ -287,7 +255,6 @@ export async function generateMetadata(
       description,
       images: ogImages.map((img) => img.url),
     },
-
     robots: {
       index: true,
       follow: true,
@@ -299,57 +266,26 @@ export async function generateMetadata(
         "max-snippet": -1,
       },
     },
-
     alternates: {
       canonical: canonicalUrl,
-      ...(pageNumber > 1 && {
-        prev: buildPageUrl(pageNumber - 1),
-      }),
-      ...(pageNumber < totalPages && {
-        next: buildPageUrl(pageNumber + 1),
-      }),
+      ...(pageNumber > 1 && { prev: buildPageUrl(pageNumber - 1) }),
+      ...(pageNumber < totalPages && { next: buildPageUrl(pageNumber + 1) }),
     },
-
-    // Pagination metadata
-    ...(pageNumber > 1 && {
-      title: `${title} - Page ${pageNumber}`,
-    }),
-
-    // Service-specific metadata
+    ...(pageNumber > 1 && { title: `${title} - Page ${pageNumber}` }),
     category: "Massage Services",
-
     other: {
       "geo.region": "KE",
       "geo.placename": formattedCounty || "Kenya",
-      "geo.position":
-        formattedCounty?.toLowerCase() === "nairobi"
-          ? "-1.286389;36.817223"
-          : "",
-      ICBM:
-        formattedCounty?.toLowerCase() === "nairobi"
-          ? "-1.286389, 36.817223"
-          : "",
-      rating: "RTA-5042-1996-1400-1577-RTA",
       classification: "Adult Massage Services",
-      distribution: "global",
-      language: "English",
       author: "KENYADIVAS Massage",
-      copyright: `© ${new Date().getFullYear()} KENYADIVAS. All rights reserved.`,
       "og:price:currency": "KES",
-      "twitter:app:country": "KE",
-      "business:contact_data:country": "Kenya",
       "service:type": massageType || "erotic massage",
-      "business:hours:start": "00:00",
-      "business:hours:end": "23:59",
     },
   };
 }
 
 /**
  * Generate h1 title for the page (displayed in ListHeader)
- */
-/**
- * Generate h1 title for the page (displayed in ListHeader) - CLEAN VERSION
  */
 const generateListHeaderTitle = (params: {
   county?: string;
@@ -358,14 +294,12 @@ const generateListHeaderTitle = (params: {
 }): string => {
   const { county, region, massageType } = params;
 
-  // Build location part
   const locationParts = [];
   if (region) locationParts.push(formatLocationName(region));
   if (county) locationParts.push(`${formatLocationName(county)} County`);
   const locationText =
     locationParts.length > 0 ? `in ${locationParts.join(", ")}` : "";
 
-  // Build massage type part
   let massageText = "";
   if (massageType) {
     const formatted = formatMassageType(massageType);
@@ -378,62 +312,23 @@ const generateListHeaderTitle = (params: {
 
   return `${massageText} ${locationText}`.trim();
 };
-// const generateListHeaderTitle = (params: {
-//   county?: string;
-//   region?: string;
-//   massageType?: string;
-//   total?: number;
-// }): string => {
-//   const { county, region, massageType, total } = params;
-//   const parts = [];
-
-//   // Add total count if available (for SEO and user clarity)
-//   if (total !== undefined) {
-//     parts.push(`${total} Masseuse${total !== 1 ? "s" : ""}`);
-//   }
-
-//   // Add massage type or default to "Erotic"
-//   if (massageType) {
-//     parts.push(formatMassageType(massageType));
-//   } else {
-//     parts.push("Erotic");
-//   }
-
-//   parts.push("Massages");
-
-//   // Add location
-//   if (county && region) {
-//     parts.push(
-//       `in ${formatLocationName(region)}, ${formatLocationName(county)} County`,
-//     );
-//   } else if (county) {
-//     parts.push(`in ${formatLocationName(county)} County`);
-//   } else if (region) {
-//     parts.push(`in ${formatLocationName(region)}`);
-//   } else {
-//     parts.push("in Kenya");
-//   }
-
-//   return parts.join(" ");
-// };
 
 const MassageEscortsPage = async ({ searchParams }: PageProps) => {
-  const params: any = await searchParams;
+  const params = await searchParams;
   const currentPage = params.page ? parseInt(params.page) : 1;
 
-  // Format values for display
   const formattedCounty = formatLocationName(params.county);
   const formattedRegion = formatLocationName(params.region);
   const formattedMassageType = formatMassageType(params.massageType || "");
 
-  // Fetch massage escorts based on filters
+  // ✅ Use cached version (already optimized)
   const {
     escorts,
     total,
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getEroticMassageEscortsClientSide({
+  } = await getCachedMassageEscorts({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     county: params.county,
@@ -441,15 +336,12 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
     isActive: true,
   });
 
-  // Generate dynamic title
   const listHeaderTitle = generateListHeaderTitle({
     county: params.county,
     region: params.region,
     massageType: params.massageType,
-    // total: data.total,
   });
 
-  // Generate structured data
   const structuredData = generateMassageStructuredData({
     title: listHeaderTitle,
     description: `Find professional ${formattedMassageType || "erotic"} massage therapists ${formattedCounty ? `in ${formattedCounty}` : "across Kenya"}.`,
@@ -464,7 +356,6 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
     items: escorts?.slice(0, 10) || [],
   });
 
-  // Generate breadcrumb structured data
   const breadcrumbData = generateBreadcrumbList([
     { name: "Home", url: "/" },
     { name: "Massage Escorts", url: "/massage-escorts" },
@@ -504,7 +395,6 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
 
   return (
     <>
-      {/* Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
@@ -514,7 +404,6 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
       />
 
-      {/* Hidden SEO elements */}
       <div className="sr-only">
         <h1>{listHeaderTitle} | KENYADIVAS Massage</h1>
         <p>
@@ -524,14 +413,12 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
         </p>
       </div>
 
-      {/* Filter Section */}
       <div className="bg-black p-5 pb-6 -mt-4.5">
         <div className="max-w-2/3 mx-auto">
           <MassageTypeFilterInput />
         </div>
       </div>
 
-      {/* Results Header */}
       <ListHeader
         title={listHeaderTitle}
         subTitle={
@@ -541,11 +428,9 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
         }
       />
 
-      {/* Results List */}
       {total === 0 && <NotFoundList />}
       {total > 0 && <GirlList girls={escorts as any} />}
 
-      {/* Pagination */}
       <ClientPaginationWrapper
         totalPages={totalPages}
         currentPage={currentPage}
@@ -553,7 +438,6 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
         itemsPerPage={ITEMS_PER_PAGE}
       />
 
-      {/* SEO Content Section */}
       <SectionArticle />
     </>
   );

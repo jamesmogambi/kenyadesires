@@ -1,35 +1,42 @@
-export const dynamic = "force-dynamic";
 import React from "react";
 import { notFound } from "next/navigation";
-import { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ClientPaginationWrapper } from "@/components/ClientPaginationWrapper";
 import SectionArticle from "./SectionArticle";
 import AgencyList from "./AgencyList";
 import AgencyFilterInput from "./AgencyFilterInput";
-import { AgenciesResponse, GetAgenciesResponse } from "@/types/agency.types";
-import { generateAgencyStructuredData } from "./seo-utils";
 import { generateBreadcrumbList } from "../girls/seo-utils";
+import { getCachedAgencies } from "@/lib/cache";
+import { getAgenciesCount, getFirstAgency } from "@/lib/metadata-helper";
+import { Metadata, ResolvingMetadata } from "next";
 
 // ============ CONSTANTS ============
-const ITEMS_PER_PAGE = 12;
-const DEFAULT_TITLE = "Erotic Businesses";
-const DEFAULT_BREADCRUMB = "Erotic Privates";
+const ITEMS_PER_PAGE = 24;
 const SITE_NAME = "KENYADIVAS";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
 
+// ✅ ISR - 7 days
+export const revalidate = 604800; // 7 days in seconds
+
 // ============ TYPES ============
 type Props = {
-  params: Promise<{ [key: string]: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: Promise<{
+    county?: string;
+    region?: string;
+    business?: string;
+    town?: string;
+    verified?: string;
+    featured?: string;
+    search?: string;
+    page?: string;
+  }>;
 };
 
 interface FilterParams {
@@ -43,17 +50,13 @@ interface FilterParams {
   page?: string;
 }
 
-/**
- * Parse and validate page number
- */
+// ============ HELPERS ============
+
 function parsePageNumber(page?: string): number {
   const parsed = page ? parseInt(page) : 1;
   return isNaN(parsed) || parsed < 1 ? 1 : parsed;
 }
 
-/**
- * Format location name for display
- */
 function formatLocationName(str?: string): string {
   if (!str || str === "all") return "";
   return str
@@ -62,9 +65,6 @@ function formatLocationName(str?: string): string {
     .join(" ");
 }
 
-/**
- * Format business type for display
- */
 function formatBusinessType(type?: string): string {
   if (!type || type === "all") return "";
 
@@ -87,9 +87,19 @@ function formatBusinessType(type?: string): string {
   );
 }
 
-/**
- * Build filter options for the page title display
- */
+function extractFilterParams(searchParams: any): FilterParams {
+  return {
+    county: searchParams.county,
+    region: searchParams.region,
+    business: searchParams.business,
+    town: searchParams.town,
+    verified: searchParams.verified,
+    featured: searchParams.featured,
+    search: searchParams.search,
+    page: searchParams.page,
+  };
+}
+
 function buildTitleParts(params: FilterParams): {
   practice?: string;
   location?: string;
@@ -112,78 +122,176 @@ function buildTitleParts(params: FilterParams): {
   };
 }
 
-/**
- * Extract filter params from searchParams
- */
-function extractFilterParams(
-  searchParams: Awaited<Props["searchParams"]>,
-): FilterParams {
+// ============================================
+// GENERATE METADATA
+// ============================================
+export async function generateMetadata(
+  { searchParams }: Props,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const params = await searchParams;
+  const filterParams = extractFilterParams(params);
+  const pageNumber = parsePageNumber(filterParams.page);
+
+  // ✅ Fetch lightweight data for metadata only
+  const [totalAgencies, firstAgency] = await Promise.all([
+    getAgenciesCount({
+      county: filterParams.county,
+      region: filterParams.region,
+      business: filterParams.business,
+    }),
+    getFirstAgency({
+      county: filterParams.county,
+      region: filterParams.region,
+      business: filterParams.business,
+    }),
+  ]);
+
+  const formattedCounty = formatLocationName(filterParams.county);
+  const formattedRegion = formatLocationName(filterParams.region);
+  const formattedBusiness = formatBusinessType(filterParams.business);
+
+  const buildTitle = () => {
+    const parts = [];
+    if (formattedBusiness) {
+      parts.push(formattedBusiness);
+    } else {
+      parts.push("Erotic Businesses");
+    }
+    const locationParts = [];
+    if (formattedRegion) locationParts.push(formattedRegion);
+    if (formattedCounty) locationParts.push(formattedCounty);
+    if (locationParts.length > 0) {
+      parts.push(`in ${locationParts.join(", ")}`);
+    } else {
+      parts.push("in Kenya");
+    }
+    const baseTitle = parts.join(" ");
+    return pageNumber > 1
+      ? `${baseTitle} - Page ${pageNumber} | ${SITE_NAME}`
+      : `${baseTitle} | ${SITE_NAME}`;
+  };
+
+  const buildDescription = () => {
+    const businessText = formattedBusiness?.toLowerCase() || "erotic business";
+    const locationPhrase = [];
+    if (formattedCounty && formattedRegion) {
+      locationPhrase.push(`in ${formattedRegion}, ${formattedCounty}`);
+    } else if (formattedCounty) {
+      locationPhrase.push(`in ${formattedCounty} County`);
+    } else if (formattedRegion) {
+      locationPhrase.push(`in ${formattedRegion}`);
+    } else {
+      locationPhrase.push("across Kenya");
+    }
+    return `KENYADIVAS - Find verified ${businessText} venues ${locationPhrase.join(" ")}. Browse ${totalAgencies}+ professional adult entertainment venues with real photos, reviews, and discreet services.`;
+  };
+
+  const title = buildTitle();
+  const description = buildDescription();
+  const canonicalUrl = `${SITE_URL}/agencies`;
+
+  const ogImages = [];
+  if (firstAgency?.previewPhoto) {
+    ogImages.push({
+      url: firstAgency.previewPhoto,
+      width: 1200,
+      height: 630,
+      alt: `${firstAgency.name} - Agency on KENYADIVAS`,
+    });
+  }
+
+  ogImages.push({
+    url: `${SITE_URL}/og-agencies.jpg`,
+    width: 1200,
+    height: 630,
+    alt: "KENYADIVAS - Erotic Businesses in Kenya",
+  });
+
   return {
-    county:
-      typeof searchParams.county === "string" ? searchParams.county : undefined,
-    region:
-      typeof searchParams.region === "string" ? searchParams.region : undefined,
-    business:
-      typeof searchParams.business === "string"
-        ? searchParams.business
-        : undefined,
-    town: typeof searchParams.town === "string" ? searchParams.town : undefined,
-    verified:
-      typeof searchParams.verified === "string"
-        ? searchParams.verified
-        : undefined,
-    featured:
-      typeof searchParams.featured === "string"
-        ? searchParams.featured
-        : undefined,
-    search:
-      typeof searchParams.search === "string" ? searchParams.search : undefined,
-    page: typeof searchParams.page === "string" ? searchParams.page : undefined,
+    title,
+    description,
+    keywords: [
+      "KENYADIVAS",
+      "erotic businesses Kenya",
+      formattedBusiness && `${formattedBusiness.toLowerCase()} Kenya`,
+      formattedCounty && `${formattedCounty} erotic business`,
+      formattedRegion && `${formattedRegion} erotic business`,
+      "adult entertainment Kenya",
+      "private rooms Kenya",
+    ]
+      .filter(Boolean)
+      .join(", "),
+    openGraph: {
+      type: "website",
+      locale: "en_KE",
+      siteName: SITE_NAME,
+      title,
+      description,
+      url: canonicalUrl,
+      images: ogImages,
+      countryName: "Kenya",
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: "@kenyadivas",
+      creator: "@kenyadivas",
+      title,
+      description,
+      images: ogImages.map((img) => img.url),
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    category: "Adult Entertainment",
+    other: {
+      "geo.region": "KE",
+      "geo.placename": formattedCounty || "Kenya",
+      classification: "Adult Entertainment",
+      author: SITE_NAME,
+      "og:price:currency": "KES",
+    },
   };
 }
 
-async function getAgencies(
-  page: number = 1,
-  limit: number = 12,
-): Promise<AgenciesResponse> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:4000";
-  const res = await fetch(
-    `${baseUrl}/api/agencies?page=${page}&limit=${limit}&status=active`,
-    {
-      next: {
-        revalidate: 3600, // Revalidate every hour
-      },
-    },
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch agencies");
-  }
-
-  return res.json();
-}
-// ============ MAIN COMPONENT ============
+// ============================================
+// MAIN PAGE COMPONENT
+// ============================================
 const AgenciesPage = async ({ searchParams }: Props) => {
   try {
-    const rawParams = await searchParams;
-    const params = extractFilterParams(rawParams);
-    const currentPage = parsePageNumber(params.page);
+    const params = await searchParams;
+    const filterParams = extractFilterParams(params);
+    const currentPage = parsePageNumber(filterParams.page);
 
     // Format values for display
-    const formattedCounty = formatLocationName(params.county);
-    const formattedRegion = formatLocationName(params.region);
-    const formattedBusiness = formatBusinessType(params.business);
+    const formattedCounty = formatLocationName(filterParams.county);
+    const formattedRegion = formatLocationName(filterParams.region);
+    const formattedBusiness = formatBusinessType(filterParams.business);
 
-    const { data, success } = await getAgencies(currentPage, ITEMS_PER_PAGE);
+    // ✅ Use cached version
+    const { data, success } = await getCachedAgencies(
+      currentPage,
+      ITEMS_PER_PAGE,
+    );
 
-    if (!success) {
+    if (!success || !data) {
       return notFound();
     }
 
     // Build title parts for display
-    const { practice, location } = buildTitleParts(params);
+    const { practice, location } = buildTitleParts(filterParams);
 
-    // Build display title without counts
     const displayTitleParts = [];
     if (practice) {
       displayTitleParts.push(practice);
@@ -207,7 +315,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
         ? [
             {
               name: `${formattedCounty} Private Rooms`,
-              url: `/agencies?county=${params.county}`,
+              url: `/agencies?county=${filterParams.county}`,
             },
           ]
         : []),
@@ -215,15 +323,15 @@ const AgenciesPage = async ({ searchParams }: Props) => {
         ? [
             {
               name: `${formattedRegion} Private Rooms`,
-              url: `/agencies?region=${params.region}`,
+              url: `/agencies?region=${filterParams.region}`,
             },
           ]
         : []),
       ...(formattedBusiness
         ? [
             {
-              name: `${formattedBusiness}`,
-              url: `/agencies?business=${params.business}`,
+              name: formattedBusiness,
+              url: `/agencies?business=${filterParams.business}`,
             },
           ]
         : []),
@@ -253,7 +361,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
         <div className="min-h-screen bg-transparent">
           {/* Header Section */}
           <header className="w-full -mt-4 bg-black">
-            <div className="container max-w-2/3  mx-auto px-4 py-6">
+            <div className="container max-w-2/3 mx-auto px-4 py-6">
               <AgencyFilterInput className="border-0" />
             </div>
           </header>
@@ -292,7 +400,6 @@ const AgenciesPage = async ({ searchParams }: Props) => {
             </nav>
 
             {/* Agency List */}
-
             <AgencyList agencies={data.agencies} title={displayTitle} />
 
             {/* Pagination */}

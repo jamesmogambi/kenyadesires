@@ -56,21 +56,6 @@ export async function getPopularCounties(options?: {
   limit?: number;
 }) {
   try {
-    // Check cache
-    if (
-      !options?.forceRefresh &&
-      cachedPopularCounties &&
-      Date.now() - cachedPopularCounties.timestamp < CACHE_DURATION
-    ) {
-      console.log("Returning cached popular counties");
-      return {
-        success: true,
-        data: cachedPopularCounties.data,
-        count: cachedPopularCounties.data.length,
-        fromCache: true,
-      };
-    }
-
     // Build query
     const countiesRef = collection(db, "counties");
     const constraints: any[] = [
@@ -89,12 +74,6 @@ export async function getPopularCounties(options?: {
       popularCounties = popularCounties.slice(0, options.limit);
     }
 
-    // Update cache
-    cachedPopularCounties = {
-      data: popularCounties,
-      timestamp: Date.now(),
-    };
-
     return {
       success: true,
       data: popularCounties,
@@ -110,6 +89,10 @@ export async function getPopularCounties(options?: {
     };
   }
 }
+
+// ✅ Remove these manual cache variables
+// const CACHE_DURATION = 60000;
+// let cachedPopularCounties: { data: ICounty[]; timestamp: number } | null = null;
 
 // Optional: Function to clear cache
 export async function clearPopularCountiesCache() {

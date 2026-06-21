@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import Link from "next/link";
@@ -13,7 +11,10 @@ import GirlProfile from "../GirlProfile";
 import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
-import { getEscortById } from "@/server-actions/escort.action";
+import { getCachedEscortById } from "@/lib/cache";
+
+// ✅ ISR - Rebuild page after revalidate time (data doesn't change frequently)
+export const revalidate = 604800; // 7 days in seconds
 
 // Generate metadata for the escort profile page
 export async function generateMetadata(
@@ -23,9 +24,10 @@ export async function generateMetadata(
   const { slug } = await params;
 
   try {
-    const result = await getEscortById(slug);
+    // ✅ Use cached version
+    const result = await getCachedEscortById(slug);
 
-    if (!result || !result) {
+    if (!result) {
       return {
         title: "Profile Not Found | KENYADIVAS Kenya",
         description:
@@ -85,7 +87,7 @@ export async function generateMetadata(
         type: "profile",
         title: `${displayName} - Premium Escort in ${location} | KENYADIVAS`,
         description: generateDescription().substring(0, 200),
-        url: `${process.env.NEXT_PUBLIC_SITE_URL}/girls/${escort.username}`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/girl/${escort.id}`,
         siteName: "KENYADIVAS Kenya",
         images: primaryImage
           ? [
@@ -130,7 +132,7 @@ export async function generateMetadata(
       },
 
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/girls/${escort.username}`,
+        canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/girl/${escort.id}`,
       },
 
       category: "Adult Entertainment",
@@ -163,9 +165,10 @@ interface EscortPageProps {
 const EscortProfilePage = async ({ params }: EscortPageProps) => {
   const { slug } = await params;
 
-  const result = await getEscortById(slug);
+  // ✅ Use cached version
+  const result = await getCachedEscortById(slug);
 
-  if (!result || !result) {
+  if (!result) {
     notFound();
   }
 
@@ -207,7 +210,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         "@type": "ListItem",
         position: escort.county ? 4 : 3,
         name: displayName,
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/girls/${escort.username}`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/girl/${escort.id}`,
       },
     ],
   };
@@ -277,20 +280,20 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
           <BreadcrumbList className="items-center text-lg flex-nowrap overflow-x-auto pb-2 scrollbar-hide">
             <BreadcrumbItem>
               <Link
-                className="text-primary font-bold text-lg hover:text-primary/80 bg-transparent  transition-colors whitespace-nowrap"
+                className="text-primary font-bold text-lg hover:text-primary/80 bg-transparent transition-colors whitespace-nowrap"
                 href="/"
                 aria-label="Home"
               >
                 Introduction
               </Link>
             </BreadcrumbItem>
-            <BreadcrumbSeparator className="text-white/60 ">
+            <BreadcrumbSeparator className="text-white/60">
               -
             </BreadcrumbSeparator>
 
             <BreadcrumbItem>
               <Link
-                className="text-primary text-lg  hover:text-primary/80 bg-transparent font-bold transition-colors whitespace-nowrap"
+                className="text-primary text-lg hover:text-primary/80 bg-transparent font-bold transition-colors whitespace-nowrap"
                 href={`/girls?region=${encodeURIComponent(escort.primaryRegion)}`}
                 aria-label={`${escort.county} Escorts`}
               >
@@ -299,13 +302,13 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
                 <span className="capitalize">{escort.primaryRegion}</span>
               </Link>
             </BreadcrumbItem>
-            <BreadcrumbSeparator className="text-white/60  lg:text-base">
+            <BreadcrumbSeparator className="text-white/60 lg:text-base">
               -
             </BreadcrumbSeparator>
 
             <BreadcrumbItem>
               <span
-                className="text-white/80 bg-transparent text-lg  font-bold whitespace-nowrap"
+                className="text-white/80 bg-transparent text-lg font-bold whitespace-nowrap"
                 aria-current="page"
               >
                 {displayName}
@@ -314,7 +317,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Hidden h1 for SEO (visible to search engines but visually hidden) */}
+        {/* Hidden h1 for SEO */}
         <h1 className="sr-only">
           {displayName} - Premium Escort in {location} | KENYADIVAS Kenya
         </h1>

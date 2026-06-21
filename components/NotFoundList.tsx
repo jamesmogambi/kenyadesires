@@ -3,12 +3,13 @@ import GirlList from "./GirlList";
 import { cn } from "@/lib/utils";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscorts } from "@/server-actions/escort.action";
+import { getCachedEscorts } from "@/lib/cache";
 
 interface Prop {
   className?: string;
 }
 const NotFoundList = async ({ className }: Prop) => {
-  const res = await getEscorts({
+  const res = await getCachedEscorts({
     sortBy: "createdAt",
     limit: ITEMS_PER_PAGE,
   });

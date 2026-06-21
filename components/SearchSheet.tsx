@@ -111,7 +111,7 @@ const SearchSheet = () => {
         saveToRecentSearches(result.name || result.username);
 
         if (result.type === "escort") {
-            router.push(`/girls/${result.username}`);
+            router.push(`/girl/${result.id}`);
         } else if (result.type === "location") {
             router.push(`/search?location=${encodeURIComponent(result.name)}`);
         }

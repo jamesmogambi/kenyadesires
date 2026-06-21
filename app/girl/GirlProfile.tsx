@@ -11,6 +11,7 @@ interface Prop {
   girl: Escort;
   // girl: Girl;
 }
+
 const GirlProfile = ({ girl, className }: Prop) => {
   const {
     images,
@@ -59,7 +60,7 @@ const GirlProfile = ({ girl, className }: Prop) => {
 
         <Link
           className="text-primary lg:text-lg hover:underline gap-2 pb-1.5 flex items-center font-bold "
-          href={`/girls/${slugify(girl.primaryRegion)}`}
+          href={`/girls?region=${slugify(girl.primaryRegion)}`}
         >
           back to list of girls
           <svg

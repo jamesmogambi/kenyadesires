@@ -33,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         escortRoutes = escortsSnapshot.docs.map((doc) => {
             const data = doc.data();
             return {
-                url: `${baseUrl}/girl/${data.slug || data.username}`,
+                url: `${baseUrl}/girl/${data.id}`,
                 lastModified: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(),
                 changeFrequency: "weekly" as const,
                 priority: 0.7,

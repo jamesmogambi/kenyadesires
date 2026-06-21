@@ -1,10 +1,9 @@
-// "use client";
-import { cn, formatSlugToTitle, slugify } from "@/lib/utils";
+import { cn, formatSlugToTitle } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 import GirlImageSwiper from "./GirlImageSwiper";
-import { Images, X } from "lucide-react";
-import { convertToLocalPhone, formatPhoneNumber } from "@/lib/phone";
+import { Images } from "lucide-react";
+import { formatPhoneNumber } from "@/lib/phone";
 import { Escort } from "@/server-actions/escort.action";
 
 interface GirlItemProps {
@@ -13,6 +12,7 @@ interface GirlItemProps {
   handlePress?: () => void;
   path?: string;
 }
+
 const GirlItem = ({
   girl,
   className,
@@ -31,33 +31,26 @@ const GirlItem = ({
     county,
   } = girl;
 
-  // const router = useRouter();
-
-  // const handleClick = () => {
-  //   router.push(`girl/${userName}`);
-  // };\
-
   const escortName = name || "Escort";
 
   return (
     <div
-      // onClick={handleClick}
       className={cn(
         "text-4xl font-bold hover:shadow-xl shadow-stone-200/60 relative cursor-pointer border-[0.2px] p-0 rounded-md overflow-hidden border-gray-500",
         className,
       )}
     >
       <Link href={path}>
-        {/* header */}
+        {/* Header - Image */}
         <GirlImageSwiper images={images} />
 
-        {/* footer */}
+        {/* Footer */}
         <div className="p-4">
           <h4 className="text-primary ml-2 mb-1 text-nowrap text-base lg:text-xl font-bold capitalize">
             {escortName.split(" ").slice(0, 2).join(" ") || "Escort"}
           </h4>
 
-          <div className="flex  w-full flex-nowrap overflow-hidden   border-b-[0.2px] border-gray-500 pb-2.5 font-medium lg:items-center justify-between">
+          <div className="flex w-full flex-nowrap overflow-hidden border-b-[0.2px] border-gray-500 pb-2.5 font-medium lg:items-center justify-between">
             <div className="flex items-center gap-1">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -72,7 +65,7 @@ const GirlItem = ({
                 />
               </svg>
 
-              <span className="text-white text-sm font-semibold  lg:text-lg">
+              <span className="text-white text-sm font-semibold lg:text-lg">
                 {formatSlugToTitle(`${primaryRegion}` || "Not Specified")}
               </span>
             </div>
@@ -82,17 +75,16 @@ const GirlItem = ({
             </span>
           </div>
 
-          <p className="text-lg font-semibold mt-2 lg:mt-3  ">
+          <p className="text-lg font-semibold mt-2 lg:mt-3">
             {formatPhoneNumber(telephone || whatsappPhone)}
-            {/* {telephone || whatsappPhone} */}
           </p>
         </div>
       </Link>
 
-      {/* display number of media */}
+      {/* Display number of media */}
       <div className="fiex top-0 -left-2 absolute z-10">
         {videos.length > 0 ? (
-          <div className=" flex items-center rounded-br-lg gap-4 p-2 px-  bg-red-700 text-white/80">
+          <div className="flex items-center rounded-br-lg gap-4 p-2 px- bg-red-700 text-white/80">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -105,9 +97,9 @@ const GirlItem = ({
             <span className="text-xl">{videos.length}</span>
           </div>
         ) : (
-          <div className=" hidden lg:flex items-center rounded-br-lg gap-4 p-2 px-6 bg-stone-300/65   text-black/60">
+          <div className="hidden lg:flex items-center rounded-br-lg gap-4 p-2 px-6 bg-stone-300/65 text-black/60">
             <Images className="h-8 w-10" />
-            <span className="text-2xl ">
+            <span className="text-2xl">
               {images.length > 0 ? images.length : 1}
               <span className="text-[18px] uppercase">x</span>
             </span>

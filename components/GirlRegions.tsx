@@ -3,12 +3,16 @@ import SectionCard from "./SectionCard";
 import Link from "next/link";
 import Image from "next/image";
 import GirlFilterInput from "@/app/girls/GirlFIlterInput";
-import { getPopularCounties } from "@/server-actions/region.action";
+import { getCachedPopularCounties } from "@/lib/cache";
 
 const GirlRegions = async () => {
-  const { data: popularCounties, success, error } = await getPopularCounties();
+  // ✅ Use cached version
+  const {
+    data: popularCounties,
+    success,
+    error,
+  } = await getCachedPopularCounties(16);
 
-  // console.log("counties from firebase", popularCounties);
   return (
     <div>
       <SectionCard className="">
@@ -27,13 +31,12 @@ const GirlRegions = async () => {
           />
         </div>
 
-        {/* // render most popular counties */}
-
+        {/* Render most popular counties */}
         <div className="md:flex hidden gap-2 gap-y-2 mb-4 flex-wrap">
-          {popularCounties.slice(0, 16).map((county) => (
+          {popularCounties?.slice(0, 16).map((county) => (
             <Link
               key={county.code}
-              className="text-primary  uppercase font-bold text-base  bg-gray-1/35 rounded-md p-1.5 px-5"
+              className="text-primary uppercase font-bold text-base bg-gray-1/35 rounded-md p-1.5 px-5"
               href={`/girls?county=${county?.name}`}
             >
               sex {county.name}
@@ -41,7 +44,6 @@ const GirlRegions = async () => {
           ))}
         </div>
 
-        {/* <FilterInput className="lg:mt-9 mt-4   flex " /> */}
         <GirlFilterInput />
       </SectionCard>
     </div>
