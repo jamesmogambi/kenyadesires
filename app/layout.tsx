@@ -10,8 +10,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   getCachedLookupData,
-  getCachedPopularCounties,
   getCachedRegions,
+  getCachedPopularCounties,
 } from "@/lib/cache";
 import LocationInitializer from "@/components/FileInputInitializer";
 
@@ -36,14 +36,13 @@ export const metadata: Metadata = {
 
   // Title configuration with brand name
   title: {
-    default:
-      "Over 900 girls for sex from all over KENYA  | Verified Companions",
+    default: "Nairobi Sex Girls  | Verified Companions",
     template: "%s | KENYADIVAS Kenya",
   },
 
   // Enhanced description
   description:
-    "KENYADIVAS connects you with verified premium escorts in Kenya. Browse real photos, read authentic reviews, check rates, and contact Nairobi's finest companions. Discreet, safe, and professional service.",
+    "Over 900 girls for sex from all over KENYA  | Verified Companions",
 
   // Expanded keywords for better reach
   keywords: [
@@ -130,13 +129,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // Verification codes (replace with actual codes)
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || "your-google-code",
-    yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || "your-yandex-code",
-    yahoo: "your-yahoo-code",
-  },
-
   // Manifest and PWA
   manifest: "/manifest.json",
 
@@ -148,9 +140,6 @@ export const metadata: Metadata = {
       "en-US": "https://kenyadivas.com/en",
     },
   },
-
-  // Category
-  category: "Adult Entertainment",
 
   // Apple web app
   appleWebApp: {
@@ -171,7 +160,6 @@ export const metadata: Metadata = {
   // Other metadata
   other: {
     rating: "RTA-5042-1996-1400-1577-RTA",
-    classification: "Adult Entertainment",
     distribution: "global",
     language: "English",
     "revisit-after": "7 days",
@@ -187,8 +175,8 @@ export const metadata: Metadata = {
     "twitter:app:country": "KE",
     "business:contact_data:country": "Kenya",
     "business:contact_data:region": "Nairobi",
-    "business:contact_data:email": "contact@kenyadivas.com",
-    "business:contact_data:phone_number": "+254700000000",
+    "business:contact_data:email": "support@cabsandmore.com",
+    "business:contact_data:phone_number": "+254743129621",
     "pinterest-rich-pin": "enabled",
   },
 };
@@ -385,6 +373,7 @@ export default async function RootLayout({
     getCachedRegions(),
     getCachedLookupData(),
   ]);
+
   return (
     <ClerkProvider>
       <html lang="en-KE">
@@ -492,7 +481,8 @@ export default async function RootLayout({
           </div>
 
           <header>
-            <Header />
+            <Header initialCounties={counties.data} />
+            {/* <PopularCountiesInitializer counties={counties.data} /> */}
           </header>
 
           {/* Main Content */}

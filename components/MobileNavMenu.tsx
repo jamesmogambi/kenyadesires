@@ -1,32 +1,30 @@
+// components/MobileNavMenu.tsx
 "use client";
 import Link from "next/link";
-import React, { useEffect } from "react";
-import { Minus, PhoneCall, Plus } from "lucide-react";
-import { usePopularCounties } from "@/hooks/usePopularCounties";
+import React from "react";
+import { Minus, Plus } from "lucide-react";
+import { usePopularCounties } from "@/store/countyStore";
 
-interface Prop {
-  onClose: any;
+interface Props {
+  onClose: () => void;
 }
-const MobileNavMenu = ({ onClose }: Prop) => {
+
+const MobileNavMenu = ({ onClose }: Props) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const counties = usePopularCounties();
 
-  // Use the custom hook
-  const { counties, loading, error, refetch } = usePopularCounties(15);
-
-  // Create a wrapper function for handling link clicks
-  const handleLinkClick = (e: any) => {
-    if (onClose) {
-      onClose(); // Close the sidebar
-    }
+  const handleLinkClick = () => {
+    onClose?.();
   };
 
   return (
     <div className="bg-dark-slate">
       <ul>
+        {/* Erection Support */}
         <li>
           <Link
             className="flex items-center gap-2"
-            href={"/erection-support"}
+            href="/erection-support"
             onClick={handleLinkClick}
           >
             <svg
@@ -38,9 +36,9 @@ const MobileNavMenu = ({ onClose }: Prop) => {
             >
               <path
                 fill="currentColor"
-                fill-rule="evenodd"
+                fillRule="evenodd"
                 d="M13.087 6.846c1.1-.674 2.354-.846 3.47-.846H39a3 3 0 0 1 3 3v17c0 4.71-4.54 8-9 8s-9-3.29-9-8v-8.86a5.2 5.2 0 0 0-1.732.834C21.433 18.594 21 19.33 21 20v9c.756.357 1.313.827 1.641 1.51c.36.748.36 1.627.36 2.409v.08c0 2.19-.881 4.412-2.284 6.091c-1.196 1.432-2.833 2.537-4.717 2.832V16a4 4 0 0 1 4-4h15v-2H20a6 6 0 0 0-6 6v25.922c-1.884-.295-3.521-1.4-4.717-2.832C7.88 37.411 7 35.188 7 33v-.081c0-.782 0-1.66.359-2.41c.328-.682.885-1.152 1.641-1.51V14c0-3.184 1.652-5.66 4.087-7.153"
-                clip-rule="evenodd"
+                clipRule="evenodd"
               />
             </svg>
             <div className="flex-1 font-medium text-base py-3 uppercase border-y-2 text-white">
@@ -49,8 +47,9 @@ const MobileNavMenu = ({ onClose }: Prop) => {
           </Link>
         </li>
 
+        {/* Girls for Sex */}
         <li>
-          <Link href="" className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="48"
@@ -65,10 +64,9 @@ const MobileNavMenu = ({ onClose }: Prop) => {
                 clipRule="evenodd"
               />
             </svg>
-            <div className="flex-1 flex pr-5 items-center justify-between  font-medium text-base py-3 uppercase border-b-2 text-white">
+            <div className="flex-1 flex pr-5 items-center justify-between font-medium text-base py-3 uppercase border-b-2 text-white">
               <span>girls for sex</span>
-
-              <button onClick={() => setIsOpen(!isOpen)} className="">
+              <button onClick={() => setIsOpen(!isOpen)}>
                 {isOpen ? (
                   <Minus className="h-6 w-6" />
                 ) : (
@@ -76,26 +74,29 @@ const MobileNavMenu = ({ onClose }: Prop) => {
                 )}
               </button>
             </div>
-          </Link>
-          {/* render locations */}
-          <div className=" ml-8  w-full border-white">
+          </div>
+
+          {/* Counties List */}
+          <div className="ml-8 w-full border-white">
             {isOpen &&
-              counties.map((item) => (
+              counties.map((county) => (
                 <Link
+                  key={county.id}
                   className="text-primary my-2 text-lg font-semibold flex flex-col uppercase"
-                  href={`/girls?county=${item.name}`}
+                  href={`/girls?county=${county.name}`}
                   onClick={handleLinkClick}
                 >
-                  {`Sex ${item.name}`}
+                  {`Sex ${county.name}`}
                 </Link>
               ))}
           </div>
         </li>
 
+        {/* Erotic Massages */}
         <li>
           <Link
             className="flex items-center gap-2"
-            href={"/erotic-massages"}
+            href="/erotic-massages"
             onClick={handleLinkClick}
           >
             <svg
@@ -119,10 +120,12 @@ const MobileNavMenu = ({ onClose }: Prop) => {
             </div>
           </Link>
         </li>
+
+        {/* BDSM */}
         <li>
           <Link
             className="flex items-center gap-2"
-            href={"/bdsm"}
+            href="/bdsm"
             onClick={handleLinkClick}
           >
             <svg
@@ -146,11 +149,13 @@ const MobileNavMenu = ({ onClose }: Prop) => {
             </div>
           </Link>
         </li>
+
+        {/* Erotic Businesses */}
         <li>
           <Link
             className="flex items-center gap-2"
+            href="/agencies"
             onClick={handleLinkClick}
-            href={"/agencies"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -162,26 +167,26 @@ const MobileNavMenu = ({ onClose }: Prop) => {
                 d="m14.925 19.15l4.95-4.95q.3-.3.713-.287t.712.312t.3.7t-.3.7l-5.675 5.65q-.15.15-.325.225t-.375.075t-.375-.075t-.325-.225L11.4 18.45q-.3-.3-.3-.7t.3-.7t.7-.3t.7.3zM6 20q-.825 0-1.412-.587T4 18v-7.375L3 11.4q-.325.25-.737.2t-.663-.4q-.25-.325-.187-.725t.387-.65l8.975-6.9q.275-.2.588-.3t.637-.1t.638.1t.587.3L22.2 9.8q.325.25.388.65t-.213.75q-.25.325-.638.388T21 11.4l-.675-.5l-5.4 5.425l-.675-.675q-.875-.9-2.15-.9t-2.15.9q-.875.875-.85 2.175T10 20z"
                 strokeWidth={0.5}
                 stroke="currentColor"
-              ></path>
+              />
             </svg>
             <div className="flex-1 font-medium text-base py-3 uppercase border-b-2 text-white">
               erotic businesses
             </div>
           </Link>
         </li>
+
+        {/* Blog */}
         <li>
           <Link
             className="flex items-center gap-2"
+            href="/blog"
             onClick={handleLinkClick}
-            href={"/blog"}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              // height={3}
-              // width={35}
               fill="currentColor"
-              className=" size-10  text-stone-400/30 group-hover:text-primary "
+              className="size-10 text-stone-400/30 group-hover:text-primary"
             >
               <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32l8.4-8.4Z" />
               <path d="M5.25 5.25a3 3 0 0 0-3 3v10.5a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3V13.5a.75.75 0 0 0-1.5 0v5.25a1.5 1.5 0 0 1-1.5 1.5H5.25a1.5 1.5 0 0 1-1.5-1.5V8.25a1.5 1.5 0 0 1 1.5-1.5h5.25a.75.75 0 0 0 0-1.5H5.25Z" />
@@ -191,13 +196,14 @@ const MobileNavMenu = ({ onClose }: Prop) => {
             </div>
           </Link>
         </li>
+
+        {/* Contact */}
         <li>
           <Link
             className="flex items-center gap-2"
-            href={"/contact"}
+            href="/contact"
             onClick={handleLinkClick}
           >
-            {/* <PhoneCall className="" /> */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"

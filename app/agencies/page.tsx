@@ -1,3 +1,4 @@
+// app/agencies/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -13,18 +14,22 @@ import SectionArticle from "./SectionArticle";
 import AgencyList from "./AgencyList";
 import AgencyFilterInput from "./AgencyFilterInput";
 import { generateBreadcrumbList } from "../girls/seo-utils";
-import { getCachedAgencies } from "@/lib/cache";
-import { getAgenciesCount, getFirstAgency } from "@/lib/metadata-helper";
 import { Metadata, ResolvingMetadata } from "next";
 import { IAgency } from "@/types/agency.types";
+import {
+  getCachedAgencies,
+  getAgenciesCount,
+  getFirstAgency,
+} from "../../server-actions/agency.action";
+
+// ✅ OPTION 1: Force dynamic with ISR
+export const dynamic = "force-dynamic";
+export const revalidate = 604800; // 7 days in seconds
 
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;
 const SITE_NAME = "KENYADIVAS";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
-
-// ✅ ISR - 7 days
-export const revalidate = 604800; // 7 days in seconds
 
 // ============ TYPES ============
 type Props = {
@@ -140,10 +145,12 @@ export async function generateMetadata(
   { searchParams }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  const filterParams = extractFilterParams(searchParams);
+  // ✅ Await searchParams
+  const params = await searchParams;
+  const filterParams = extractFilterParams(params);
   const pageNumber = parsePageNumber(filterParams.page);
 
-  // ✅ Fetch lightweight data for metadata only
+  // ✅ Fetch lightweight data for metadata only using server actions
   const [totalAgencies, firstAgency] = await Promise.all([
     getAgenciesCount({
       county: filterParams.county,
@@ -202,9 +209,9 @@ export async function generateMetadata(
   const canonicalUrl = `${SITE_URL}/agencies`;
 
   const ogImages = [];
-  if (firstAgency?.previewPhoto) {
+  if (firstAgency?.logo) {
     ogImages.push({
-      url: firstAgency.previewPhoto,
+      url: firstAgency.logo,
       width: 1200,
       height: 630,
       alt: `${firstAgency.name} - Agency on KENYADIVAS`,
@@ -280,7 +287,9 @@ export async function generateMetadata(
 // ============================================
 const AgenciesPage = async ({ searchParams }: Props) => {
   try {
-    const filterParams = extractFilterParams(searchParams);
+    // ✅ Await searchParams
+    const params = await searchParams;
+    const filterParams = extractFilterParams(params);
     const currentPage = parsePageNumber(filterParams.page);
 
     // Format values for display
@@ -288,7 +297,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
     const formattedRegion = formatLocationName(filterParams.region);
     const formattedBusiness = formatBusinessType(filterParams.business);
 
-    // ✅ Use cached version with proper typing
+    // ✅ Use server action to fetch agencies
     const agenciesData: AgenciesData = {
       agencies: [],
       hasMore: false,
@@ -297,7 +306,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
       total: 0,
     };
 
-    const { data, success } = await getCachedAgencies(
+    const { success, data } = await getCachedAgencies(
       currentPage,
       ITEMS_PER_PAGE,
     );
@@ -331,44 +340,6 @@ const AgenciesPage = async ({ searchParams }: Props) => {
     }
 
     const displayTitle = displayTitleParts.join(" ");
-
-    // Generate breadcrumb structured data
-    const breadcrumbData = generateBreadcrumbList([
-      { name: "Home", url: "/" },
-      { name: "Private Rooms", url: "/agencies" },
-      ...(formattedCounty
-        ? [
-            {
-              name: `${formattedCounty} Private Rooms`,
-              url: `/agencies?county=${filterParams.county}`,
-            },
-          ]
-        : []),
-      ...(formattedRegion
-        ? [
-            {
-              name: `${formattedRegion} Private Rooms`,
-              url: `/agencies?region=${filterParams.region}`,
-            },
-          ]
-        : []),
-      ...(formattedBusiness
-        ? [
-            {
-              name: formattedBusiness,
-              url: `/agencies?business=${filterParams.business}`,
-            },
-          ]
-        : []),
-      ...(currentPage > 1
-        ? [
-            {
-              name: `Page ${currentPage}`,
-              url: `/agencies?page=${currentPage}`,
-            },
-          ]
-        : []),
-    ]);
 
     return (
       <>

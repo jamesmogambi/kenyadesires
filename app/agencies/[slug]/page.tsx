@@ -1,46 +1,19 @@
+// app/agencies/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import React from "react";
 import { Metadata, ResolvingMetadata } from "next";
 import Header from "./Header";
 import AgencyProfile from "./AgencyDetailCard";
 import { IAgency } from "@/types/agency.types";
-import { getCachedAgencyBySlug } from "@/lib/cache";
-import { getAgencyForMetadata } from "@/lib/metadata-helper";
+import { getCachedAgencyBySlug } from "@/server-actions/agency.action";
 
-// ✅ ISR - 7 days
+// ✅ OPTION 1: Force dynamic with ISR
+export const dynamic = "force-dynamic";
 export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-// ============================================
-// GENERATE STATIC PARAMS (Optional)
-// ============================================
-export async function generateStaticParams() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:4000";
-    const res = await fetch(`${baseUrl}/api/agencies?limit=100&status=active`, {
-      next: {
-        revalidate: 604800, // 7 days in seconds
-      },
-    });
-
-    if (!res.ok) {
-      return [];
-    }
-
-    const data = await res.json();
-    const agencies = data.agencies || [];
-
-    return agencies.map((agency: any) => ({
-      slug: agency.slug,
-    }));
-  } catch (error) {
-    console.error("Error generating static params:", error);
-    return [];
-  }
 }
 
 // ============================================
@@ -53,10 +26,10 @@ export async function generateMetadata(
   const { slug } = await params;
 
   try {
-    // ✅ Fetch lightweight data for metadata
-    const agency = await getAgencyForMetadata(slug);
+    // ✅ Use server action instead of fetch
+    const result = await getCachedAgencyBySlug(slug);
 
-    if (!agency) {
+    if (!result || !result.success || !result.data) {
       return {
         title: "Agency Not Found | KENYADIVAS",
         description: "The requested agency could not be found.",
@@ -67,20 +40,24 @@ export async function generateMetadata(
       };
     }
 
+    const agency = result.data;
     const displayName = agency.name;
     const location = agency.region || agency.county || "Kenya";
     const imageUrl =
-      agency.previewPhoto ||
+      agency.coverImage ||
       agency.logo ||
-      `${process.env.NEXT_PUBLIC_SITE_URL}/og-agency.jpg`;
+      agency.coverImage ||
+      `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/og-agency.jpg`;
 
-    // Build description
     const buildDescription = () => {
       if (agency.description) {
         return `${agency.description.substring(0, 160)}... Visit ${displayName} for premium adult entertainment services in ${location}.`;
       }
       return `KENYADIVAS - ${displayName} is a verified adult entertainment venue based in ${location}. Professional, discreet, and safe environment. Book your experience today.`;
     };
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
 
     return {
       title: `${displayName} - Premium Adult Entertainment in ${location} | KENYADIVAS`,
@@ -102,7 +79,7 @@ export async function generateMetadata(
         siteName: "KENYADIVAS",
         title: `${displayName} - Premium Adult Entertainment in ${location}`,
         description: buildDescription(),
-        url: `${process.env.NEXT_PUBLIC_SITE_URL}/agency/${slug}`,
+        url: `${siteUrl}/agency/${slug}`,
         images: [
           {
             url: imageUrl,
@@ -133,7 +110,7 @@ export async function generateMetadata(
         },
       },
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/agency/${slug}`,
+        canonical: `${siteUrl}/agency/${slug}`,
       },
       category: "Adult Entertainment",
       other: {
@@ -160,10 +137,10 @@ const BusinessPage = async ({ params }: PageProps) => {
   const { slug } = await params;
 
   try {
-    // ✅ Use cached version
+    // ✅ Use server action instead of fetch
     const result = await getCachedAgencyBySlug(slug);
 
-    if (!result || !result.success) {
+    if (!result || !result.success || !result.data) {
       return notFound();
     }
 

@@ -10,13 +10,22 @@ import SearchSheet from "./SearchSheet";
 import { useUser } from "@clerk/nextjs";
 import LoginFormSheet from "@/app/(auth)/LoginFormSheet";
 import Logo from "./Logo";
+import { ICounty } from "@/server-actions/region.action";
+import PopularCountiesInitializer from "./PopularCountiesInitializer";
 
-const Header = () => {
+interface Prop {
+  initialCounties?: ICounty[];
+}
+const Header = ({ initialCounties }: Prop) => {
   const { isSignedIn } = useUser();
+
+  // set to zustand store
 
   return (
     <>
       <MobileHeader />
+      <PopularCountiesInitializer counties={initialCounties || []} />
+
       <div className="lg:flex  hidden items-center gap-12 w-full px-12 bg-dark-slate">
         {/* logo */}
         <Logo />
