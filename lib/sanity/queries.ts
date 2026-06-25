@@ -3,18 +3,6 @@ import type { Category, Post } from "@/types/sanity";
 
 // ==================== CATEGORY QUERIES ====================
 
-export const ALL_CATEGORIES_QUERY = `*[_type == "category"] | order(order asc, name asc) {
-  _id,
-  name,
-  slug,
-  description,
-  icon,
-  color,
-  order,
-  featured,
-  "count": count(*[_type == "post" && references(^._id)])
-}`;
-
 export const FEATURED_CATEGORIES_QUERY = `*[_type == "category" && featured == true] | order(order asc, name asc) {
   _id,
   name,
@@ -244,8 +232,38 @@ export const ALL_POSTS_QUERY = `*[_type == "post"] | order(featured desc, _creat
 
 // ==================== FETCH FUNCTIONS ====================
 
-// Categories
-export async function getAllCategories(): Promise<Category[]> {
+// Combined query for both featured and non-featured (optional)
+export const ALL_CATEGORIES_QUERY = `
+  {
+    "featured": *[_type == "category" && featured == true] | order(order asc) {
+      _id,
+      name,
+      slug,
+      description,
+      icon,
+      color,
+      order,
+      featured,
+      count
+    },
+    "nonFeatured": *[_type == "category" && featured != true] | order(order asc) {
+      _id,
+      name,
+      slug,
+      description,
+      icon,
+      color,
+      order,
+      featured,
+      count
+    }
+  }
+`;
+// Get both featured and non-featured categories in one query
+export async function getAllCategories(): Promise<{
+  featured: Category[];
+  nonFeatured: Category[];
+}> {
   return await client.fetch(ALL_CATEGORIES_QUERY);
 }
 

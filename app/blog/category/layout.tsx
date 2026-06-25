@@ -15,6 +15,7 @@ const layout = async ({ children, params }: Prop) => {
   // Await the params promise
   const { slug } = await params;
 
+  // TODO:// get featured categories as well as non-featured categories
   const [categories, featuredPosts] = await Promise.all([
     getAllCategories(),
     getFeaturedPostsWithLimit(20),
@@ -27,8 +28,10 @@ const layout = async ({ children, params }: Prop) => {
       <div className="flex w-full mx-auto flex-col-reverse  lg:max-w-[80%] min-h-screen lg;flex-col lg:flex-row gap-2 ">
         {/* categories section*/}
         <aside className=" basis-full space-y-7 lg:basis-1/3 p-6  border-green-600">
+          {/* // featured categories */}
           <CategorySection title="Kenya Categories" categories={categories} />
-          {/* <CategorySection title="Magazine" categories={nextThree}/> */}
+          {/* // non-featured categories */}
+          <CategorySection title="Magazine" categories={[]} />
         </aside>
 
         {/* render blog */}
