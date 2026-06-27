@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "fix-ages": "tsx scripts/fix-invalid-ages.ts",
-    "studio": "sanity start"
+    "studio": "sanity start",
+    "sitemap:generate": "next build && node scripts/generate-sitemap.js",
+    "sitemap:validate": "node scripts/validate-sitemap.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
