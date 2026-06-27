@@ -28,79 +28,107 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Enhanced metadata with KENYADIVAS branding
+// Enhanced metadata with KENYADESIRES branding - Kenya-wide focus
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com",
   ),
 
-  // Title configuration with brand name
+  // Title configuration with Kenya-wide reach
   title: {
-    default: "Nairobi Sex Girls  | Verified Companions",
-    template: "%s | KENYADIVAS Kenya",
+    default: "Kenya Escorts | Verified Companions Across Kenya",
+    template: "%s | KenyaDesires - Premium Escorts Kenya",
   },
 
-  // Enhanced description
+  // Enhanced description with Kenya-wide focus
   description:
-    "Over 900 girls for sex from all over KENYA  | Verified Companions",
+    "Discover 900+ verified escorts across Kenya. Find premium companions in Nairobi, Mombasa, Kisumu, Nakuru, Eldoret & all major cities. Real photos, authentic reviews.",
 
-  // Expanded keywords for better reach
+  // Expanded keywords with Kenya-wide coverage
   keywords: [
-    "KENYADIVAS",
+    // Brand
+    "KenyaDesires",
+
+    // National coverage
     "Kenya escorts",
+    "escorts in Kenya",
+    "Kenya call girls",
+    "verified escorts Kenya",
+    "premium escorts Kenya",
+    "high class escorts Kenya",
+    "Kenya companion services",
+    "Kenya adult entertainment",
+    "Kenya escort directory",
+
+    // Major cities
     "Nairobi escorts",
     "Mombasa escorts",
     "Kisumu escorts",
     "Nakuru escorts",
-    "premium escorts Kenya",
-    "verified escorts Nairobi",
-    "high class escorts Kenya",
-    "Kiambu escorts",
     "Eldoret escorts",
-    "Kakamega esorts",
+    "Kiambu escorts",
+    "Thika escorts",
+    "Malindi escorts",
+    "Kitale escorts",
+    "Kakamega escorts",
     "Bungoma escorts",
+    "Meru escorts",
+    "Nyeri escorts",
+    "Embu escorts",
+    "Machakos escorts",
+    "Kisii escorts",
+    "Vihiga escorts",
+    "Busia escorts",
+    "Homa Bay escorts",
+    "Migori escorts",
+    "Siaya escorts",
+    "Turkana escorts",
+    "Garissa escorts",
+    "Wajir escorts",
+    "Mandera escorts",
+
+    // Service types
     "premium companions Kenya",
-    "verified escorts Nairobi",
-    "high class escorts Kenya",
-    "Kenya call girls",
-    "Nairobi call girls",
-    "escort services Nairobi",
-    "Kenya adult entertainment",
-    "discreet companions Kenya",
-    "elite escorts Nairobi",
+    "elite escorts Kenya",
     "luxury escorts Kenya",
     "international escorts Kenya",
-    "Kenya escort directory",
-    "Nairobi nightlife",
-    "Kenya companions",
-    "VIP escorts Nairobi",
+    "VIP escorts Kenya",
     "Kenya female escorts",
-    "Nairobi model escorts",
+    "Kenya model escorts",
+    "discreet companions Kenya",
+
+    // Additional keywords
+    "Nairobi call girls",
+    "escort services Nairobi",
+    "Kenya nightlife",
+    "Kenya companions",
     "Kenya escort reviews",
     "real escort photos Kenya",
+    "verified companion directory",
+    "trusted escorts Kenya",
   ].join(", "),
 
   // Authors
-  authors: [{ name: "KENYADIVAS", url: "https://kenyadivas.com" }],
+  authors: [{ name: "KenyaDesires", url: "https://kenyadesires.com" }],
 
-  // Open Graph with KENYADIVAS branding
+  // Open Graph with Kenya-wide branding
   openGraph: {
     type: "website",
     locale: "en_KE",
-    url: "https://kenyadivas.com",
-    siteName: "KENYADIVAS Kenya",
-    title: "Over 800 girls for sex from all over KENYA| Verified Companions",
+    url: "https://kenyadesires.com",
+    siteName: "KenyaDesires - Premium Escorts Kenya",
+    title: "Kenya Escorts | 900+ Verified Companions Across Kenya",
     description:
-      "Discover KENYADIVAS - Kenya's premier escort directory. Browse verified companions with real photos, authentic reviews, and transparent rates in Nairobi, Mombasa, and across Kenya.",
+      "Find premium verified escorts across Kenya. Browse 900+ companions with real photos, authentic reviews, and transparent rates in Nairobi, Mombasa, Kisumu, and all major cities.",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "KENYADIVAS - Premium Escorts in Kenya",
+        alt: "KenyaDesires - Premium Escorts Directory Kenya",
       },
     ],
-    emails: ["contact@kenyadivas.com"],
+    emails: ["contact@kenyadesires.com"],
     phoneNumbers: ["+254701694004"],
     countryName: "Kenya",
   },
@@ -108,11 +136,11 @@ export const metadata: Metadata = {
   // Twitter card
   twitter: {
     card: "summary_large_image",
-    site: "@kenyadivas",
-    creator: "@kenyadivas",
-    title: "KENYADIVAS - Premium Escorts in Kenya",
+    site: "@kenyadesires",
+    creator: "@kenyadesires",
+    title: "KenyaDesires - Premium Escorts Across Kenya",
     description:
-      "Kenya's most trusted escort directory. Verified companions, real photos, authentic reviews.",
+      "Kenya's most trusted escort directory. 900+ verified companions across Nairobi, Mombasa, Kisumu & all major cities. Real photos, authentic reviews.",
     images: ["/twitter-image.jpg"],
   },
 
@@ -134,17 +162,17 @@ export const metadata: Metadata = {
 
   // Canonical and alternates
   alternates: {
-    canonical: "https://kenyadivas.com",
+    canonical: "https://kenyadesires.com",
     languages: {
-      "en-KE": "https://kenyadivas.com",
-      "en-US": "https://kenyadivas.com/en",
+      "en-KE": "https://kenyadesires.com",
+      "en-US": "https://kenyadesires.com/en",
     },
   },
 
   // Apple web app
   appleWebApp: {
     capable: true,
-    title: "KENYADIVAS",
+    title: "KenyaDesires",
     statusBarStyle: "black-translucent",
   },
 
@@ -163,10 +191,10 @@ export const metadata: Metadata = {
     distribution: "global",
     language: "English",
     "revisit-after": "7 days",
-    author: "KENYADIVAS",
-    copyright: `© ${new Date().getFullYear()} KENYADIVAS. All rights reserved.`,
-    "geo.region": "KE-30", // Nairobi region code
-    "geo.placename": "Nairobi, Kenya",
+    author: "KenyaDesires",
+    copyright: `© ${new Date().getFullYear()} KenyaDesires. All rights reserved.`,
+    "geo.region": "KE", // National level
+    "geo.placename": "Kenya",
     "geo.position": "-1.286389;36.817223",
     ICBM: "-1.286389, 36.817223",
     "og:price:currency": "KES",
@@ -175,47 +203,48 @@ export const metadata: Metadata = {
     "twitter:app:country": "KE",
     "business:contact_data:country": "Kenya",
     "business:contact_data:region": "Nairobi",
-    "business:contact_data:email": "support@cabsandmore.com",
+    "business:contact_data:email": "support@kenyadesires.com",
     "business:contact_data:phone_number": "+254743129621",
     "pinterest-rich-pin": "enabled",
   },
 };
 
-// JSON-LD Structured Data for homepage with KENYADIVAS branding
+// JSON-LD Structured Data with Kenya-wide focus
 const structuredData = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://kenyadivas.com/#website",
-      name: "KENYADIVAS",
-      description: "Premium Escort Directory in Kenya",
-      url: "https://kenyadivas.com",
+      "@id": "https://kenyadesires.com/#website",
+      name: "KenyaDesires - Kenya Escorts | Premium Verified Companions Across Kenyam| Nairobi Hot Escorts | Nairobi Escorts | Mombasa Escorts | Kisumu Escorts | Nakuru Escorts | Eldoret Escorts",
+      description:
+        "Find verified escorts and companions across Kenya. Premium companions in Nairobi, Mombasa, Kisumu, Nakuru, Eldoret and all major cities.",
+      url: "https://kenyadesires.com",
       potentialAction: {
         "@type": "SearchAction",
         target: {
           "@type": "EntryPoint",
-          urlTemplate: "https://kenyadivas.com/search?q={search_term_string}",
+          urlTemplate: "https://kenyadesires.com/search?q={search_term_string}",
         },
         "query-input": "required name=search_term_string",
       },
       publisher: {
         "@type": "Organization",
-        "@id": "https://kenyadivas.com/#organization",
-        name: "KENYADIVAS",
-        url: "https://kenyadivas.com",
+        "@id": "https://kenyadesires.com/#organization",
+        name: "KenyaDesires",
+        url: "https://kenyadesires.com",
         logo: {
           "@type": "ImageObject",
-          url: "https://kenyadivas.com/logo.png",
+          url: "https://kenyadesires.com/logo.png",
           width: 600,
           height: 60,
         },
         sameAs: [
-          "https://twitter.com/kenyadivas",
-          "https://www.instagram.com/kenyadivas",
-          "https://www.facebook.com/kenyadivas",
+          "https://twitter.com/kenyadesires",
+          "https://www.instagram.com/kenyadesires",
+          "https://www.facebook.com/kenyadesires",
         ],
-        email: "contact@kenyadivas.com",
+        email: "contact@kenyadesires.com",
         telephone: "+254700000000",
         address: {
           "@type": "PostalAddress",
@@ -227,14 +256,19 @@ const structuredData = {
     },
     {
       "@type": "LocalBusiness",
-      "@id": "https://kenyadivas.com/#business",
-      name: "KENYADIVAS Escort Directory",
+      "@id": "https://kenyadesires.com/#business",
+      name: "KenyaDesires Escort Directory",
       description:
-        "Premium escort directory connecting clients with verified companions across Kenya",
-      url: "https://kenyadivas.com",
+        "Premium escort directory connecting clients with verified companions across all counties in Kenya",
+      url: "https://kenyadesires.com",
       telephone: "+254700000000",
-      email: "contact@kenyadivas.com",
+      email: "contact@kenyadesires.com",
       areaServed: [
+        {
+          "@type": "Country",
+          name: "Kenya",
+          sameAs: "https://www.wikidata.org/wiki/Q114",
+        },
         {
           "@type": "City",
           name: "Nairobi",
@@ -251,9 +285,34 @@ const structuredData = {
           sameAs: "https://www.wikidata.org/wiki/Q220624",
         },
         {
-          "@type": "Country",
-          name: "Kenya",
-          sameAs: "https://www.wikidata.org/wiki/Q114",
+          "@type": "City",
+          name: "Nakuru",
+          sameAs: "https://www.wikidata.org/wiki/Q1385858",
+        },
+        {
+          "@type": "City",
+          name: "Eldoret",
+          sameAs: "https://www.wikidata.org/wiki/Q860587",
+        },
+        {
+          "@type": "City",
+          name: "Kiambu",
+          sameAs: "https://www.wikidata.org/wiki/Q6403752",
+        },
+        {
+          "@type": "City",
+          name: "Malindi",
+          sameAs: "https://www.wikidata.org/wiki/Q752790",
+        },
+        {
+          "@type": "City",
+          name: "Kitale",
+          sameAs: "https://www.wikidata.org/wiki/Q1019439",
+        },
+        {
+          "@type": "City",
+          name: "Garissa",
+          sameAs: "https://www.wikidata.org/wiki/Q848323",
         },
       ],
       address: {
@@ -287,39 +346,53 @@ const structuredData = {
     },
     {
       "@type": "BreadcrumbList",
-      "@id": "https://kenyadivas.com/#breadcrumb",
+      "@id": "https://kenyadesires.com/#breadcrumb",
       itemListElement: [
         {
           "@type": "ListItem",
           position: 1,
           name: "Home",
-          item: "https://kenyadivas.com",
+          item: "https://kenyadesires.com",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Escorts in Kenya",
+          item: "https://kenyadesires.com/escorts",
         },
       ],
     },
     {
       "@type": "FAQPage",
-      "@id": "https://kenyadivas.com/#faq",
+      "@id": "https://kenyadesires.com/#faq",
       mainEntity: [
         {
           "@type": "Question",
-          name: "What is KENYADIVAS?",
+          name: "What is KenyaDesires?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "KENYADIVAS is Kenya's premier escort directory connecting clients with verified, high-quality companions in Nairobi, Mombasa, and across Kenya.",
+            text: "KenyaDesires is Kenya's premier escort directory connecting clients with verified, high-quality companions across all major cities and counties in Kenya.",
           },
         },
         {
           "@type": "Question",
-          name: "Are the escorts on KENYADIVAS verified?",
+          name: "Are the escorts on KenyaDesires verified?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes, all escorts featured on KENYADIVAS go through a strict verification process to ensure authenticity and quality service.",
+            text: "Yes, all escorts featured on KenyaDesires go through a strict verification process to ensure authenticity and quality service across Kenya.",
           },
         },
         {
           "@type": "Question",
-          name: "How do I book an escort on KENYADIVAS?",
+          name: "What cities in Kenya does KenyaDesires cover?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "KenyaDesires covers all major cities and counties including Nairobi, Mombasa, Kisumu, Nakuru, Eldoret, Kiambu, Thika, Malindi, Kitale, and many more across Kenya.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How do I book an escort on KenyaDesires?",
           acceptedAnswer: {
             "@type": "Answer",
             text: "Browse our verified listings, view real photos and reviews, and contact escorts directly through their preferred contact method listed on their profile.",
@@ -327,10 +400,10 @@ const structuredData = {
         },
         {
           "@type": "Question",
-          name: "Is KENYADIVAS discreet?",
+          name: "Is KenyaDesires discreet?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes, we prioritize client and escort privacy with discreet booking processes and secure communication channels.",
+            text: "Yes, we prioritize client and escort privacy with discreet booking processes and secure communication channels across Kenya.",
           },
         },
       ],
@@ -342,23 +415,23 @@ const structuredData = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "KENYADIVAS",
-  url: "https://kenyadivas.com",
-  logo: "https://kenyadivas.com/logo.png",
+  name: "KenyaDesires",
+  url: "https://kenyadesires.com",
+  logo: "https://kenyadesires.com/logo.png",
   contactPoint: [
     {
       "@type": "ContactPoint",
       telephone: "+254700000000",
       contactType: "customer service",
-      email: "support@kenyadivas.com",
+      email: "support@kenyadesires.com",
       availableLanguage: ["English", "Swahili"],
       areaServed: "KE",
     },
   ],
   sameAs: [
-    "https://twitter.com/kenyadivas",
-    "https://www.instagram.com/kenyadivas",
-    "https://www.facebook.com/kenyadivas",
+    "https://twitter.com/kenyadesires",
+    "https://www.instagram.com/kenyadesires",
+    "https://www.facebook.com/kenyadesires",
   ],
 };
 
@@ -406,17 +479,12 @@ export default async function RootLayout({
 
           {/* Apple Touch Icon */}
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-          <meta name="apple-mobile-web-app-title" content="KENYADIVAS" />
+          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
           />
-          {/* // zoom in on  mount to fit browser */}
-          {/* <meta
-            name="viewport"
-            content="width=device-width, initial-scale=0.75, minimum-scale=0.75, maximum-scale=1"
-          /> */}
 
           {/* Microsoft Tiles */}
           <meta name="msapplication-TileColor" content="#000000" />
@@ -426,7 +494,7 @@ export default async function RootLayout({
           {/* Additional meta tags */}
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="application-name" content="KENYADIVAS" />
+          <meta name="application-name" content="KenyaDesires" />
 
           {/* Language and region */}
           <meta name="language" content="English" />
@@ -440,7 +508,7 @@ export default async function RootLayout({
           <link
             rel="alternate"
             type="application/rss+xml"
-            title="KENYADIVAS - Latest Escorts"
+            title="KenyaDesires - Latest Escorts"
             href="/rss.xml"
           />
 
@@ -453,7 +521,7 @@ export default async function RootLayout({
           />
         </head>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased  text-white bg-dark-slate min-h-screen flex flex-col`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
           {/* Fixed Grayscale Background */}
           <div
@@ -469,7 +537,7 @@ export default async function RootLayout({
           >
             <Image
               src="/background.jpg"
-              alt="KENYADIVAS Background"
+              alt="KenyaDesires Background"
               fill
               priority
               quality={50}
@@ -482,11 +550,10 @@ export default async function RootLayout({
 
           <header>
             <Header initialCounties={counties.data} />
-            {/* <PopularCountiesInitializer counties={counties.data} /> */}
           </header>
 
           {/* Main Content */}
-          <main className="bg-black/80  flex-1 py-4 w-full">
+          <main className="bg-black/80 flex-1 py-4 w-full">
             <TooltipProvider>{children}</TooltipProvider>
             <LocationInitializer
               initialCounties={counties.data}

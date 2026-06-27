@@ -22,6 +22,8 @@ const layout = async ({ children, params }: Prop) => {
     // getPostsWithPagination(1, 6),
   ]);
 
+  const { featured, nonFeatured } = categories;
+
   return (
     <>
       <BreadCrumbHeader title={featuredPosts[0]?.title} />
@@ -29,9 +31,9 @@ const layout = async ({ children, params }: Prop) => {
         {/* categories section*/}
         <aside className=" basis-full space-y-7 lg:basis-1/3 p-6  border-green-600">
           {/* // featured categories */}
-          <CategorySection title="Kenya Categories" categories={categories} />
+          <CategorySection title="Kenya Categories" categories={featured} />
           {/* // non-featured categories */}
-          <CategorySection title="Magazine" categories={[]} />
+          <CategorySection title="Magazine" categories={nonFeatured} />
         </aside>
 
         {/* render blog */}

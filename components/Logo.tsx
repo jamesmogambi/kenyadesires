@@ -77,12 +77,12 @@ const Logo = ({
           />
         </svg>
       </div>
-      <h4 className="text-white text-xl md:text-2xl uppercase font-semibold">
-        kenyadivas<span className="text-red-700">.ke</span>
+      <h4 className="text-white leaing-tight text-lg md:text-2xl uppercase font-bold">
+        kenyadesires<span className="text-red-700">.ke</span>
       </h4>
       {/* <Image
         alt="logo"
-        width={width}
+        width={width} 
         height={height}
         src={"/logo.jpg"}
         priority
