@@ -12,7 +12,7 @@ const WhyProfile = ({ className }: Prop) => {
       <SectionCard>
         <h4 className="text-center text-3xl  mb-14 font-semibold  text-white">
           Why have a profile on{" "}
-          <span className="text-primary">kenyadivas.com?</span>
+          <span className="text-primary">kenyadesires.co.ke?</span>
         </h4>
 
         <div className=" flex justify-center">

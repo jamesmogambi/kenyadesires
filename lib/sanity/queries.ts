@@ -3,18 +3,6 @@ import type { Category, Post } from "@/types/sanity";
 
 // ==================== CATEGORY QUERIES ====================
 
-export const ALL_CATEGORIES_QUERY = `*[_type == "category"] | order(order asc, name asc) {
-  _id,
-  name,
-  slug,
-  description,
-  icon,
-  color,
-  order,
-  featured,
-  "count": count(*[_type == "post" && references(^._id)])
-}`;
-
 export const FEATURED_CATEGORIES_QUERY = `*[_type == "category" && featured == true] | order(order asc, name asc) {
   _id,
   name,
@@ -244,8 +232,38 @@ export const ALL_POSTS_QUERY = `*[_type == "post"] | order(featured desc, _creat
 
 // ==================== FETCH FUNCTIONS ====================
 
-// Categories
-export async function getAllCategories(): Promise<Category[]> {
+// Combined query for both featured and non-featured (optional)
+export const ALL_CATEGORIES_QUERY = `
+  {
+    "featured": *[_type == "category" && featured == true] | order(order asc) {
+      _id,
+      name,
+      slug,
+      description,
+      icon,
+      color,
+      order,
+      featured,
+      count
+    },
+    "nonFeatured": *[_type == "category" && featured != true] | order(order asc) {
+      _id,
+      name,
+      slug,
+      description,
+      icon,
+      color,
+      order,
+      featured,
+      count
+    }
+  }
+`;
+// Get both featured and non-featured categories in one query
+export async function getAllCategories(): Promise<{
+  featured: Category[];
+  nonFeatured: Category[];
+}> {
   return await client.fetch(ALL_CATEGORIES_QUERY);
 }
 
@@ -397,4 +415,98 @@ export const SINGLE_POST_QUERY = `*[_type == "post" && slug.current == $slug][0]
 
 export async function getBlogBySlug(slug: string): Promise<Post | null> {
   return await client.fetch(SINGLE_POST_QUERY, { slug });
+}
+
+// ==================== SITEMAP QUERIES ====================
+
+/**
+ * Get all blog posts with minimal data for sitemap
+ * Optimized for performance - only fetches what's needed
+ */
+export const SITEMAP_BLOG_QUERY = `*[_type == "post"] | order(_updatedAt desc) {
+  _id,
+  slug,
+  _updatedAt,
+  publishedAt,
+  "isPublished": defined(publishedAt)
+}`;
+
+/**
+ * Get blog posts with pagination for large sites
+ * Use this if you have more than 1000 posts
+ */
+export const SITEMAP_BLOG_PAGINATED_QUERY = (start: number, end: number) =>
+  `*[_type == "post"] | order(_updatedAt desc)[${start}...${end}] {
+    _id,
+    slug,
+    _updatedAt,
+    publishedAt,
+    "isPublished": defined(publishedAt)
+  }`;
+
+/**
+ * Count total blog posts for sitemap statistics
+ */
+export const SITEMAP_BLOG_COUNT_QUERY = `count(*[_type == "post"])`;
+
+/**
+ * Get featured blog posts (higher priority in sitemap)
+ */
+export const SITEMAP_FEATURED_BLOG_QUERY = `*[_type == "post" && featured == true] {
+  _id,
+  slug,
+  _updatedAt,
+  publishedAt
+}`;
+
+/**
+ * Get recent blog posts (for news sitemap)
+ */
+export const SITEMAP_RECENT_BLOG_QUERY = `*[_type == "post"] | order(_createdAt desc)[0...50] {
+  _id,
+  slug,
+  _createdAt,
+  _updatedAt,
+  title
+}`;
+
+// ==================== SITEMAP FUNCTIONS ====================
+
+export async function getBlogPostsForSitemap(): Promise<any[]> {
+  try {
+    return await client.fetch(SITEMAP_BLOG_QUERY);
+  } catch (error) {
+    console.error("Error fetching blog posts for sitemap:", error);
+    return [];
+  }
+}
+
+export async function getBlogPostsForSitemapPaginated(
+  start: number,
+  end: number,
+): Promise<any[]> {
+  try {
+    return await client.fetch(SITEMAP_BLOG_PAGINATED_QUERY(start, end));
+  } catch (error) {
+    console.error("Error fetching paginated blog posts for sitemap:", error);
+    return [];
+  }
+}
+
+export async function getBlogPostsCountForSitemap(): Promise<number> {
+  try {
+    return await client.fetch(SITEMAP_BLOG_COUNT_QUERY);
+  } catch (error) {
+    console.error("Error counting blog posts for sitemap:", error);
+    return 0;
+  }
+}
+
+export async function getFeaturedBlogPostsForSitemap(): Promise<any[]> {
+  try {
+    return await client.fetch(SITEMAP_FEATURED_BLOG_QUERY);
+  } catch (error) {
+    console.error("Error fetching featured blog posts for sitemap:", error);
+    return [];
+  }
 }

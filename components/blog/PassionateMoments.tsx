@@ -63,16 +63,16 @@ const PassionateMoments = ({ className }: Prop) => {
               <Link
                 passHref
                 rel="noopener noreferrer"
-                href={"https://kenyadivas.com/"}
+                href={"https://kenyadesires.com/"}
               >
-                kenyadivas.com
+                kenyadesires.com
               </Link>
             </span>
             .
           </p>
 
           <p className="text-sm mt-16">
-            The operator of the Dobryprivat.ke website does not guarantee that
+            The operator of the kenyadesires.ke website does not guarantee that
             the advertisements published here are up-to-date and veratrue. Each
             advertisement is the full responsibility of its owner. This site is
             primarily used to present advertisements and as an information

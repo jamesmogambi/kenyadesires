@@ -21,7 +21,9 @@ interface CategoryPageProps {
 // ============================================
 export async function generateStaticParams() {
   const categories = await getCachedBlogCategories();
-  return categories.map((category) => ({
+  const allCategories = [...categories.featured, ...categories.nonFeatured];
+
+  return allCategories.map((category: { slug: { current: string } }) => ({
     slug: category.slug.current,
   }));
 }

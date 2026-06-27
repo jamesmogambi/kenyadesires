@@ -6,7 +6,7 @@ const FooterBottom = () => {
     <div className="w-full bg-primary">
       <div className="lg:max-w-[1400] flex-col lg:flex-row flex justify-between items-center w-full text-white mx-auto py-3">
         <span className="text-sm font-medium">
-          Copyright 2026 © - www.kenyadivas.co.ke |{" "}
+          Copyright 2026 © - www.kenyadesires.co.ke |{" "}
           <Link href={""} className="font-bold">
             Sex Kenya
           </Link>
