@@ -55,7 +55,7 @@ const BlogArticle = ({ blog, className, showBackButton = true }: Prop) => {
             image={mainImage}
             alt={mainImage?.alt || title || "Blog post image"}
             fill
-            className="object-cover rounded-lg"
+            className="object-cover rounded-none"
             priority
             sizes="100vw"
             fallback="/og-default.jpg"

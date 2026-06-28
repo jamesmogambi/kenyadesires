@@ -96,16 +96,36 @@ function createHeading(level: "h1" | "h2" | "h3" | "h4", className: string) {
 
 const components = {
   types: {
-    image: ({ value }: any) => (
-      <div className="my-8">
-        <SanityImage
-          image={value}
-          className="w-full rounded-lg"
-          width={800}
-          height={500}
-        />
-      </div>
-    ),
+    image: ({ value }: any) => {
+      // Get image dimensions from Sanity
+      const dimensions = value?.asset?.metadata?.dimensions;
+      const isPortrait = dimensions && dimensions.height > dimensions.width;
+
+      // Determine appropriate sizing
+      const imageWidth = isPortrait ? 600 : 800;
+      const imageHeight = isPortrait ? 800 : 500;
+
+      return (
+        <figure className="my-8 w-full max-w-full">
+          <div className="relative w-full">
+            <SanityImage
+              image={value}
+              alt={value?.alt || "Article image"}
+              width={imageWidth}
+              height={imageHeight}
+              className="w-full h-auto rounded-none shadow-md"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+              priority={false}
+            />
+            {value?.caption && (
+              <figcaption className="mt-3 text-center text-sm text-white/60">
+                {value.caption}
+              </figcaption>
+            )}
+          </div>
+        </figure>
+      );
+    },
   },
 
   block: {

@@ -33,7 +33,8 @@ export async function generateMetadata(
       };
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://yoursite.com";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL || "https://kenyadesires.com";
     const postUrl = `${baseUrl}/blog/${slug}`;
 
     // Get image URL from Sanity
@@ -121,7 +122,7 @@ const Page = async ({ params }: Props) => {
     }
 
     const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL || "https://kenyadivas.com";
+      process.env.NEXT_PUBLIC_BASE_URL || "https://kenyadesires.com";
 
     // Generate JSON-LD structured data
     const jsonLd = {

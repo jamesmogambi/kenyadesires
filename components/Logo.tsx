@@ -77,7 +77,7 @@ const Logo = ({
           />
         </svg>
       </div>
-      <h4 className="text-white leaing-tight text-lg md:text-2xl uppercase font-bold">
+      <h4 className="text-white  tracking-tighter  text-xl md:text-2xl uppercase font-bold">
         kenyadesires<span className="text-red-700">.ke</span>
       </h4>
       {/* <Image

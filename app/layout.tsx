@@ -463,6 +463,14 @@ export default async function RootLayout({
               __html: JSON.stringify(organizationSchema),
             }}
           />
+          {/* DNS Prefetching for Sanity CDN */}
+          <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+          <link rel="preconnect" href="https://cdn.sanity.io" />
+          <link
+            rel="preconnect"
+            href="https://cdn.sanity.io"
+            crossOrigin="anonymous"
+          />
 
           {/* ✅ Use the dynamic icon - this works on Firebase */}
           <link rel="icon" href="/icon" type="image/png" sizes="36x36" />

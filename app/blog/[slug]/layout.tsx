@@ -5,6 +5,7 @@ import {
   getAllCategories,
   getFeaturedPostsWithLimit,
 } from "@/lib/sanity/queries";
+import Head from "next/head";
 
 interface Prop {
   children: React.ReactNode;
