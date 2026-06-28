@@ -14,6 +14,7 @@ import {
   getCachedPopularCounties,
 } from "@/lib/cache";
 import LocationInitializer from "@/components/FileInputInitializer";
+import Head from "next/head";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
@@ -450,7 +451,7 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en-KE">
-        <head>
+        <Head>
           {/* Structured Data */}
           <script
             type="application/ld+json"
@@ -462,6 +463,11 @@ export default async function RootLayout({
               __html: JSON.stringify(organizationSchema),
             }}
           />
+
+          {/* ✅ Use the dynamic icon - this works on Firebase */}
+          <link rel="icon" href="/icon" type="image/png" sizes="36x36" />
+          <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+          <link rel="apple-touch-icon" href="/icon" type="image/png" />
 
           {/* Preconnect to important domains */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -519,7 +525,7 @@ export default async function RootLayout({
             title="Sitemap"
             href="/sitemap.xml"
           />
-        </head>
+        </Head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >

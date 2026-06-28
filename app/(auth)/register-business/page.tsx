@@ -1,7 +1,8 @@
+import { notFound } from "next/navigation";
 import React from "react";
 
 const page = () => {
-  return <div>Business REGISTRATION</div>;
+  return notFound();
 };
 
 export default page;

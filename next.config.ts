@@ -117,9 +117,27 @@ const nextConfig: NextConfig = {
   },
   allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev"],
 
+  // Redirect favicon.ico to the dynamic icon
+  async rewrites() {
+    return [
+      {
+        source: "/favicon.ico",
+        destination: "/icon",
+      },
+    ];
+  },
   // Add headers for better image caching
   async headers() {
     return [
+      {
+        source: "/icon",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [
