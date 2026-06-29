@@ -31,7 +31,7 @@ export async function generateMetadata(
 
     if (!result || !result.success || !result.data) {
       return {
-        title: "Agency Not Found | KENYADIVAS",
+        title: "Agency Not Found | KenyaDesires",
         description: "The requested agency could not be found.",
         robots: {
           index: false,
@@ -47,27 +47,27 @@ export async function generateMetadata(
       agency.coverImage ||
       agency.logo ||
       agency.coverImage ||
-      `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/og-agency.jpg`;
+      `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/og-agency.jpg`;
 
     const buildDescription = () => {
       if (agency.description) {
         return `${agency.description.substring(0, 160)}... Visit ${displayName} for premium adult entertainment services in ${location}.`;
       }
-      return `KENYADIVAS - ${displayName} is a verified adult entertainment venue based in ${location}. Professional, discreet, and safe environment. Book your experience today.`;
+      return `KenyaDesires - ${displayName} is a verified adult entertainment venue based in ${location}. Professional, discreet, and safe environment. Book your experience today.`;
     };
 
     const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
     return {
-      title: `${displayName} - Premium Adult Entertainment in ${location} | KENYADIVAS`,
+      title: `${displayName} - Premium Adult Entertainment in ${location} | KenyaDesires`,
       description: buildDescription(),
       keywords: [
         displayName,
         `${displayName} adult entertainment`,
         `${location} adult entertainment`,
         `${location} private rooms`,
-        "KENYADIVAS",
+        "KenyaDesires",
         "adult entertainment Kenya",
         "verified venues",
       ]
@@ -76,7 +76,7 @@ export async function generateMetadata(
       openGraph: {
         type: "website",
         locale: "en_KE",
-        siteName: "KENYADIVAS",
+        siteName: "KenyaDesires",
         title: `${displayName} - Premium Adult Entertainment in ${location}`,
         description: buildDescription(),
         url: `${siteUrl}/agency/${slug}`,
@@ -123,9 +123,9 @@ export async function generateMetadata(
   } catch (error) {
     console.error("Error generating metadata:", error);
     return {
-      title: "Agency | KENYADIVAS",
+      title: "Agency | KenyaDesires",
       description:
-        "View verified adult entertainment venue details on KENYADIVAS.",
+        "View verified adult entertainment venue details on KenyaDesires.",
     };
   }
 }

@@ -45,9 +45,9 @@ export async function generateMetadata(
 
     if (!result || !result) {
       return {
-        title: "Profile Not Found | KENYADIVAS Kenya",
+        title: "Profile Not Found | KenyaDesires Kenya",
         description:
-          "The requested escort profile could not be found. Browse other verified companions on KENYADIVAS.",
+          "The requested escort profile could not be found. Browse other verified companions on KenyaDesires.",
         robots: {
           index: false,
           follow: true,
@@ -70,7 +70,7 @@ export async function generateMetadata(
         return `${escort.about.substring(0, 160)}... Book ${displayName} for an unforgettable experience in ${location}.`;
       }
 
-      return `${displayName} is a ${age} ${categories} based in ${location}. ${escort.measurements ? `Measurements: ${escort.measurements}. ` : ""}Verified companion on KENYADIVAS. Available for incall and outcall services.`;
+      return `${displayName} is a ${age} ${categories} based in ${location}. ${escort.measurements ? `Measurements: ${escort.measurements}. ` : ""}Verified companion on KenyaDesires. Available for incall and outcall services.`;
     };
 
     // Get primary image
@@ -80,14 +80,14 @@ export async function generateMetadata(
       escort.images?.[0]?.url;
 
     return {
-      title: `${displayName} - ${location} | Premium Escort | KENYADIVAS`,
+      title: `${displayName} - ${location} | Premium Escort | KenyaDesires`,
       description: generateDescription(),
 
       keywords: [
         displayName,
         `${displayName} escort`,
         `${location} escorts`,
-        "KENYADIVAS",
+        "KenyaDesires",
         "Kenya escorts",
         "premium companions",
         "verified escorts",
@@ -102,10 +102,10 @@ export async function generateMetadata(
 
       openGraph: {
         type: "profile",
-        title: `${displayName} - Premium Escort in ${location} | KENYADIVAS`,
+        title: `${displayName} - Premium Escort in ${location} | KenyaDesires`,
         description: generateDescription().substring(0, 200),
         url: `${process.env.NEXT_PUBLIC_SITE_URL}/girls/${escort.username}`,
-        siteName: "KENYADIVAS Kenya",
+        siteName: "KenyaDesires Kenya",
         images: primaryImage
           ? [
               {
@@ -120,7 +120,7 @@ export async function generateMetadata(
                 url: `${process.env.NEXT_PUBLIC_SITE_URL}/og-image.jpg`,
                 width: 1200,
                 height: 630,
-                alt: "KENYADIVAS - Premium Escorts Kenya",
+                alt: "KenyaDesires - Premium Escorts Kenya",
               },
             ],
         locale: "en_KE",
@@ -129,7 +129,7 @@ export async function generateMetadata(
 
       twitter: {
         card: primaryImage ? "summary_large_image" : "summary",
-        title: `${displayName} - ${location} Escort | KENYADIVAS`,
+        title: `${displayName} - ${location} Escort | KenyaDesires`,
         description: generateDescription().substring(0, 150),
         images: primaryImage ? [primaryImage] : undefined,
         site: "@kenyadivas",
@@ -166,9 +166,9 @@ export async function generateMetadata(
   } catch (error) {
     console.error("Error generating metadata:", error);
     return {
-      title: "Escort Profile | KENYADIVAS Kenya",
+      title: "Escort Profile | KenyaDesires Kenya",
       description:
-        "View verified escort profile details, photos, and services on KENYADIVAS - Kenya's premier escort directory.",
+        "View verified escort profile details, photos, and services on KenyaDesires - Kenya's premier escort directory.",
     };
   }
 }
@@ -200,13 +200,13 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Escorts",
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/girls`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls`,
       },
       ...(escort.county
         ? [
@@ -214,7 +214,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
               "@type": "ListItem",
               position: 3,
               name: `${escort.county} Escorts`,
-              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/girls?county=${encodeURIComponent(escort.county)}`,
+              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls?county=${encodeURIComponent(escort.county)}`,
             },
           ]
         : []),
@@ -222,7 +222,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         "@type": "ListItem",
         position: escort.county ? 4 : 3,
         name: displayName,
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/girls/${escort.username}`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls/${escort.username}`,
       },
     ],
   };
@@ -255,15 +255,15 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         name: `How can I book ${displayName}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `You can book ${displayName} through KENYADIVAS by contacting them directly via the contact information provided on their profile.`,
+          text: `You can book ${displayName} through KenyaDesires by contacting them directly via the contact information provided on their profile.`,
         },
       },
       {
         "@type": "Question",
-        name: `Is ${displayName} verified on KENYADIVAS?`,
+        name: `Is ${displayName} verified on KenyaDesires?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes, all escorts on KENYADIVAS go through a strict verification process to ensure authenticity and quality service.",
+          text: "Yes, all escorts on KenyaDesires go through a strict verification process to ensure authenticity and quality service.",
         },
       },
     ],
@@ -331,7 +331,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
 
         {/* Hidden h1 for SEO (visible to search engines but visually hidden) */}
         <h1 className="sr-only">
-          {displayName} - Premium Escort in {location} | KENYADIVAS Kenya
+          {displayName} - Premium Escort in {location} | KenyaDesires Kenya
         </h1>
 
         {/* Main Profile Component */}

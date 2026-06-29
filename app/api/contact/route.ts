@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import {adminDb} from "@/lib/firebase-admin";
 import {FieldValue} from "firebase-admin/firestore";
 
-const supportAdmin = process.env.CONTACT_EMAIL || "support@kenyadivas.com";
+const supportAdmin = process.env.CONTACT_EMAIL || "support@kenyadesires.com";
 
 export async function POST(req: NextRequest) {
     try {
@@ -49,10 +49,10 @@ export async function POST(req: NextRequest) {
             });
 
             const mailOptions = {
-                from: `"KenyaDivas Contact" <no-reply@kenyadivas.com>`,
+                from: `"KenyaDesires Contact" <no-reply@kenyadesires.com>`,
                 replyTo: email,
                 to: supportAdmin,
-                subject: `KenyaDivas - New message from ${name}`,
+                subject: `KenyaDesires - New message from ${name}`,
                 text: `New Contact Form Submission\n\nName: ${name}\nEmail: ${email}\nMessage: ${message}\n\nUser ID: ${clerkUserId || "Anonymous"}`,
                 html: `
                     <h3>New Contact Form Submission</h3>

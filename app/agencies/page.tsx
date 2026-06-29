@@ -28,8 +28,8 @@ export const revalidate = 604800; // 7 days in seconds
 
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;
-const SITE_NAME = "KENYADIVAS";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+const SITE_NAME = "KenyaDesires";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
 // ============ TYPES ============
 type Props = {
@@ -201,7 +201,7 @@ export async function generateMetadata(
     } else {
       locationPhrase.push("across Kenya");
     }
-    return `KENYADIVAS - Find verified ${businessText} venues ${locationPhrase.join(" ")}. Browse ${totalAgencies}+ professional adult entertainment venues with real photos, reviews, and discreet services.`;
+    return `KenyaDesires - Find verified ${businessText} venues ${locationPhrase.join(" ")}. Browse ${totalAgencies}+ professional adult entertainment venues with real photos, reviews, and discreet services.`;
   };
 
   const title = buildTitle();
@@ -214,7 +214,7 @@ export async function generateMetadata(
       url: firstAgency.logo,
       width: 1200,
       height: 630,
-      alt: `${firstAgency.name} - Agency on KENYADIVAS`,
+      alt: `${firstAgency.name} - Agency on KenyaDesires`,
     });
   }
 
@@ -222,14 +222,14 @@ export async function generateMetadata(
     url: `${SITE_URL}/og-agencies.jpg`,
     width: 1200,
     height: 630,
-    alt: "KENYADIVAS - Erotic Businesses in Kenya",
+    alt: "KenyaDesires - Erotic Businesses in Kenya",
   });
 
   return {
     title,
     description,
     keywords: [
-      "KENYADIVAS",
+      "KenyaDesires",
       "erotic businesses Kenya",
       formattedBusiness && `${formattedBusiness.toLowerCase()} Kenya`,
       formattedCounty && `${formattedCounty} erotic business`,

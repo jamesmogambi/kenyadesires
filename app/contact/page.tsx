@@ -4,7 +4,7 @@ import ContactForm from "./ContactForm";
 import BottomSection from "./BottomSection";
 
 export const metadata = {
-    title: "Contact - support Mon-Sun(08-22) 💖 | KenyaDivas.com.com",
+    title: "Contact - support Mon-Sun(08-22) 💖 | KenyaDesires",
 };
 const page = () => {
     return (

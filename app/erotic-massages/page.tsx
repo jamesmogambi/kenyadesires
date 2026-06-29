@@ -109,8 +109,8 @@ export async function generateMetadata(
       formattedCounty || formattedRegion ? "" : " in Kenya";
 
     return pageNumber > 1
-      ? `${baseTitle}${locationSuffix} - Page ${pageNumber} | KENYADIVAS Massage`
-      : `${baseTitle}${locationSuffix} | KENYADIVAS Massage`;
+      ? `${baseTitle}${locationSuffix} - Page ${pageNumber} | KenyaDesires Massage`
+      : `${baseTitle}${locationSuffix} | KenyaDesires Massage`;
   };
 
   // Build dynamic description
@@ -128,13 +128,13 @@ export async function generateMetadata(
       locationPhrase.push("across Kenya");
     }
 
-    return `KENYADIVAS Massage - Find professional ${massageWord} massage therapists ${locationPhrase.join(" ")}. Browse ${totalMasseuses}+ verified masseuses offering sensual, tantric, nuru, and erotic massage services. Real photos, authentic reviews, and discreet booking.`;
+    return `KenyaDesires Massage - Find professional ${massageWord} massage therapists ${locationPhrase.join(" ")}. Browse ${totalMasseuses}+ verified masseuses offering sensual, tantric, nuru, and erotic massage services. Real photos, authentic reviews, and discreet booking.`;
   };
 
   // Build comprehensive keywords
   const buildKeywords = () => {
     const keywords = new Set<string>([
-      "KENYADIVAS Massage",
+      "KenyaDesires Massage",
       "erotic massage Kenya",
       "sensual massage",
       "tantric massage",
@@ -182,7 +182,7 @@ export async function generateMetadata(
   // Build canonical URL
   const buildCanonicalUrl = () => {
     const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
     const params = new URLSearchParams();
 
     if (county && county !== "all") params.append("county", county);
@@ -208,19 +208,19 @@ export async function generateMetadata(
       url: firstMasseuse.previewPhoto,
       width: 1200,
       height: 630,
-      alt: `${firstMasseuse.name || firstMasseuse.username} - Massage Therapist on KENYADIVAS`,
+      alt: `${firstMasseuse.name || firstMasseuse.username} - Massage Therapist on KenyaDesires`,
     });
   }
 
   ogImages.push({
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/og-massage.jpg`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/og-massage.jpg`,
     width: 1200,
     height: 630,
-    alt: "KENYADIVAS Massage - Professional Massage Therapists in Kenya",
+    alt: "KenyaDesires Massage - Professional Massage Therapists in Kenya",
   });
 
   const totalPages = Math.ceil(totalMasseuses / ITEMS_PER_PAGE);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();
@@ -240,7 +240,7 @@ export async function generateMetadata(
     openGraph: {
       type: "website",
       locale: "en_KE",
-      siteName: "KENYADIVAS Massage",
+      siteName: "KenyaDesires Massage",
       title,
       description,
       url: canonicalUrl,
@@ -277,7 +277,7 @@ export async function generateMetadata(
       "geo.region": "KE",
       "geo.placename": formattedCounty || "Kenya",
       classification: "Adult Massage Services",
-      author: "KENYADIVAS Massage",
+      author: "KenyaDesires Massage",
       "og:price:currency": "KES",
       "service:type": massageType || "erotic massage",
     },
@@ -405,7 +405,7 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
       />
 
       <div className="sr-only">
-        <h1>{listHeaderTitle} | KENYADIVAS Massage</h1>
+        <h1>{listHeaderTitle} | KenyaDesires Massage</h1>
         <p>
           Professional massage therapy services across Kenya. Find verified
           masseuses offering {formattedMassageType || "erotic"}, tantric, and

@@ -17,7 +17,7 @@ export function formatSlugToTitle(slug: string): string {
 
 // Generate structured data for escort profile
 export function generateEscortStructuredData(escort: any) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
     const profileUrl = `${siteUrl}/girl/${escort.id}`;
     const displayName = formatSlugToTitle(escort.name || escort.username);
     const location =
@@ -46,7 +46,7 @@ export function generateEscortStructuredData(escort: any) {
         jobTitle: "Premium Escort",
         worksFor: {
             "@type": "Organization",
-            name: "KENYADIVAS",
+            name: "KenyaDesires",
             url: siteUrl,
         },
         homeLocation: {

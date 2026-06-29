@@ -100,7 +100,7 @@ export async function generateMetadata(
       parts.push("in Kenya");
     }
     const baseTitle = parts.join(" ");
-    const withBrand = `${baseTitle} | KENYADIVAS BDSM`;
+    const withBrand = `${baseTitle} | KenyaDesires BDSM`;
     return pageNumber > 1 ? `${withBrand} - Page ${pageNumber}` : withBrand;
   };
 
@@ -117,7 +117,7 @@ export async function generateMetadata(
     } else {
       locationPhrase.push("across Kenya");
     }
-    return `KENYADIVAS BDSM - Discover professional ${practiceText} practitioners ${locationPhrase.join(" ")}. Browse ${totalBDSM}+ verified dominatrix, submissive, and kink-friendly escorts. Real photos, authentic reviews, and discreet BDSM experiences.`;
+    return `KenyaDesires BDSM - Discover professional ${practiceText} practitioners ${locationPhrase.join(" ")}. Browse ${totalBDSM}+ verified dominatrix, submissive, and kink-friendly escorts. Real photos, authentic reviews, and discreet BDSM experiences.`;
   };
 
   const title = buildTitle();
@@ -126,7 +126,7 @@ export async function generateMetadata(
   // Build canonical URL
   const buildCanonicalUrl = () => {
     const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
     const params = new URLSearchParams();
     if (county && county !== "all") params.append("county", county);
     if (region && region !== "all") params.append("region", region);
@@ -145,19 +145,19 @@ export async function generateMetadata(
       url: firstBDSM.previewPhoto,
       width: 1200,
       height: 630,
-      alt: `${firstBDSM.name || firstBDSM.username} - BDSM Practitioner on KENYADIVAS`,
+      alt: `${firstBDSM.name || firstBDSM.username} - BDSM Practitioner on KenyaDesires`,
     });
   }
 
   ogImages.push({
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/og-bdsm.jpg`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/og-bdsm.jpg`,
     width: 1200,
     height: 630,
-    alt: "KENYADIVAS BDSM - Professional BDSM Services in Kenya",
+    alt: "KenyaDesires BDSM - Professional BDSM Services in Kenya",
   });
 
   const totalPages = Math.ceil(totalBDSM / ITEMS_PER_PAGE);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();
@@ -173,7 +173,7 @@ export async function generateMetadata(
     title,
     description,
     keywords: [
-      "KENYADIVAS BDSM",
+      "KenyaDesires BDSM",
       "BDSM Kenya",
       "dominatrix Kenya",
       formattedPractice && `${formattedPractice.toLowerCase()} Kenya`,
@@ -185,7 +185,7 @@ export async function generateMetadata(
     openGraph: {
       type: "website",
       locale: "en_KE",
-      siteName: "KENYADIVAS BDSM",
+      siteName: "KenyaDesires BDSM",
       title,
       description,
       url: canonicalUrl,
@@ -221,7 +221,7 @@ export async function generateMetadata(
       "geo.region": "KE",
       "geo.placename": formattedCounty || "Kenya",
       classification: "Adult BDSM Services",
-      author: "KENYADIVAS BDSM",
+      author: "KenyaDesires BDSM",
       "og:price:currency": "KES",
       "service:type": practice || "BDSM",
       "bdsm:specialty": formattedPractice || "BDSM",
@@ -340,7 +340,7 @@ const BDSMPage = async ({ searchParams }: PageProps) => {
       />
 
       <div className="sr-only">
-        <h1>{title} | KENYADIVAS BDSM</h1>
+        <h1>{title} | KenyaDesires BDSM</h1>
         <p>
           Professional BDSM services in Kenya. Find verified dominatrix,
           submissive, and kink-friendly practitioners for safe, consensual

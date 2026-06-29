@@ -25,7 +25,7 @@ export function generateMassageStructuredData({
                                                   filters,
                                                   items,
                                               }: MassageStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
     const massageType = filters.massageType?.toLowerCase() || "erotic";
 
     return {
@@ -76,11 +76,11 @@ export function generateMassageStructuredData({
             {
                 "@type": "LocalBusiness",
                 "@id": `${baseUrl}/massage-escorts#business`,
-                name: "KENYADIVAS Massage",
+                name: "KenyaDesires Massage",
                 description: "Premium massage therapy directory in Kenya",
                 url: `${baseUrl}/massage-escorts`,
                 telephone: "+254700000000",
-                email: "massage@kenyadivas.com",
+                email: "massage@kenyadesires.com",
                 priceRange: "$$",
                 areaServed: filters.county || filters.region || "Kenya",
                 hasOfferCatalog: {

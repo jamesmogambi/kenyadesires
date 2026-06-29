@@ -32,7 +32,7 @@ const ITEMS_PER_PAGE = 24;
 
 const defaultTitle = "Premium Escorts in Kenya";
 const defaultDescription =
-  "KENYADIVAS - Kenya's premier escort directory. Browse verified premium escorts in Nairobi, Mombasa, Kisumu and across Kenya. Real photos, authentic reviews, and transparent rates.";
+  "KenyaDesires - Kenya's premier escort directory. Browse verified premium escorts in Nairobi, Mombasa, Kisumu and across Kenya. Real photos, authentic reviews, and transparent rates.";
 
 const formatLocationName = (str: string): string => {
   return str
@@ -69,12 +69,12 @@ export async function generateMetadata(
     if (formattedRegion) parts.push(formattedRegion);
     if (formattedCounty) parts.push(formattedCounty);
 
-    if (parts.length === 0) return `Premium Escorts in Kenya | KENYADIVAS`;
+    if (parts.length === 0) return `Premium Escorts in Kenya | KenyaDesires`;
 
     const baseTitle = `${parts.join(" ")} Escorts in Kenya`;
     return pageNumber > 1
-      ? `${baseTitle} - Page ${pageNumber} | KENYADIVAS`
-      : `${baseTitle} | KENYADIVAS`;
+      ? `${baseTitle} - Page ${pageNumber} | KenyaDesires`
+      : `${baseTitle} | KenyaDesires`;
   };
 
   const buildDescription = () => {
@@ -93,18 +93,18 @@ export async function generateMetadata(
       ? `Find verified ${formattedPractice.toLowerCase()} escorts ${locationPhrase.join(" ")}.`
       : `Discover premium escort services ${locationPhrase.join(" ")}.`;
 
-    return `KENYADIVAS - ${servicePhrase} Browse ${totalEscorts}+ verified profiles with real photos, authentic reviews, rates, and discreet contact information.`;
+    return `KenyaDesires - ${servicePhrase} Browse ${totalEscorts}+ verified profiles with real photos, authentic reviews, rates, and discreet contact information.`;
   };
 
   const title = buildTitle();
   const description = buildDescription();
-  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}/girls`;
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls`;
 
   return {
     title,
     description,
     keywords: [
-      "KENYADIVAS",
+      "KenyaDesires",
       "Kenya escorts",
       "premium escorts Kenya",
       formattedCounty && `${formattedCounty} escorts`,
@@ -116,7 +116,7 @@ export async function generateMetadata(
     openGraph: {
       type: "website",
       locale: "en_KE",
-      siteName: "KENYADIVAS Kenya",
+      siteName: "KenyaDesires Kenya",
       title,
       description,
       url: canonicalUrl,
@@ -161,7 +161,7 @@ export async function generateMetadata(
       "geo.region": "KE",
       "geo.placename": formattedCounty || "Kenya",
       classification: "Adult Entertainment",
-      author: "KENYADIVAS",
+      author: "KenyaDesires",
       "og:price:currency": "KES",
     },
   };
@@ -269,7 +269,7 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
       />
 
       <div className="sr-only">
-        <h1>{title} | KENYADIVAS Kenya</h1>
+        <h1>{title} | KenyaDesires Kenya</h1>
         <p>{defaultDescription}</p>
       </div>
 

@@ -55,7 +55,7 @@ export async function generateMetadata({
       description:
         category.description || `Articles about ${category.name} in Kenya`,
       type: "website",
-      url: `https://kenyadivas.com/category/${slug}`, // ✅ Use slug from awaited params
+      url: `https://kenyadesires.com/category/${slug}`, // ✅ Use slug from awaited params
     },
   };
 }

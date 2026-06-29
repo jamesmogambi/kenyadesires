@@ -37,7 +37,8 @@ export const metadata: Metadata = {
 
   // Title configuration with Kenya-wide reach
   title: {
-    default: "Kenya Escorts | Verified Companions Across Kenya",
+    default:
+      "Kenya Hot Escorts | Nairobi Hot Escorts | Verified Companions Across Kenya",
     template: "%s | KenyaDesires - Premium Escorts Kenya",
   },
 
@@ -60,6 +61,7 @@ export const metadata: Metadata = {
     "Kenya companion services",
     "Kenya adult entertainment",
     "Kenya escort directory",
+    "Nairobi Hot Escorts",
 
     // Major cities
     "Nairobi escorts",
@@ -472,27 +474,9 @@ export default async function RootLayout({
             crossOrigin="anonymous"
           />
 
-          {/* ✅ Use the dynamic icon - this works on Firebase */}
-          <link rel="icon" href="/icon" type="image/png" sizes="36x36" />
-          <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+{/* Icons - using dynamic icon route */}
+          <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
           <link rel="apple-touch-icon" href="/icon" type="image/png" />
-
-          {/* Preconnect to important domains */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
-          <link rel="preconnect" href="https://images.unsplash.com" />
-          <link rel="preconnect" href="https://client.crisp.chat" />
-
-          {/* Preload critical assets */}
-          <link rel="preload" href="/background.jpg" as="image" />
-          <link rel="preload" href="/logo.png" as="image" />
-
-          {/* Apple Touch Icon */}
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
           <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta

@@ -25,7 +25,7 @@ export function generateBDSMStructuredData({
                                                filters,
                                                items,
                                            }: BDSMStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
     const practice = filters.practice?.toLowerCase() || "bdsm";
 
     return {
@@ -77,11 +77,11 @@ export function generateBDSMStructuredData({
             {
                 "@type": "LocalBusiness",
                 "@id": `${baseUrl}/bdsm-escorts#business`,
-                name: "KENYADIVAS BDSM",
+                name: "KenyaDesires BDSM",
                 description: "Premier BDSM and kink-friendly escort directory in Kenya",
                 url: `${baseUrl}/bdsm-escorts`,
                 telephone: "+254700000000",
-                email: "bdsm@kenyadivas.com",
+                email: "bdsm@kenyadesires.com",
                 priceRange: "$$$",
                 areaServed: filters.county || filters.region || "Kenya",
                 hasOfferCatalog: {

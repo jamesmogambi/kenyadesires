@@ -13,7 +13,7 @@ export function generateBreadcrumbList(items: BreadcrumbItem[]) {
             "@type": "ListItem",
             position: index + 1,
             name: item.name,
-            item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com"}${item.url}`,
+            item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}${item.url}`,
         })),
     };
 }
@@ -41,7 +41,7 @@ export function generateListStructuredData({
                                                filters,
                                                items,
                                            }: ListStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
     return {
         "@context": "https://schema.org",
@@ -88,7 +88,7 @@ export function generateListStructuredData({
             {
                 "@type": "WebSite",
                 "@id": `${baseUrl}/#website`,
-                name: "KENYADIVAS",
+                name: "KenyaDesires",
                 description: "Premium Escort Directory in Kenya",
                 url: baseUrl,
                 potentialAction: {
@@ -103,7 +103,7 @@ export function generateListStructuredData({
             {
                 "@type": "Organization",
                 "@id": `${baseUrl}/#organization`,
-                name: "KENYADIVAS",
+                name: "KenyaDesires",
                 url: baseUrl,
                 logo: {
                     "@type": "ImageObject",
@@ -120,7 +120,7 @@ export function generateListStructuredData({
                     "@type": "ContactPoint",
                     telephone: "+254700000000",
                     contactType: "customer service",
-                    email: "contact@kenyadivas.com",
+                    email: "contact@kenyadesires.com",
                     availableLanguage: ["English", "Swahili"],
                     areaServed: "KE",
                 },
@@ -148,7 +148,7 @@ export function generateListStructuredData({
 }
 
 export function generateFilterStructuredData(filters: any) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadivas.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
     return {
         "@context": "https://schema.org",

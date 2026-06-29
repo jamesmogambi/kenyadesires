@@ -1,6 +1,6 @@
-# KenyaDivas Site
+# KenyaDesires
 
-KenyaDivas is a modern web application built with **Next.js 15**, providing a platform for connecting users with
+KenyaDesires is a modern web application built with **Next.js 15**, providing a platform for connecting users with
 services in Kenya. It features a robust administration dashboard, complex search capabilities, and integrations with
 multiple cloud services for media and data management.
 
@@ -32,10 +32,10 @@ multiple cloud services for media and data management.
 ## 🛠️ Setup & Installation
 
 1. **Clone the repository**:
-   ```bash
-   git clone git@github.com:jamesmogambi/escortKE.git
-   cd kenyadivas
-   ```
+    ```bash
+    git clone git@github.com:jamesmogambi/kenyaDesires.git
+    cd kenyadesires
+    ```
 
 2. **Install dependencies**:
    ```bash
