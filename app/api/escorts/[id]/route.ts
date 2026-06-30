@@ -48,8 +48,11 @@ export async function DELETE(
     request: Request,
     {params}: { params: Promise<{ id: string }> }
 ) {
+    let id: string | undefined;
+
     try {
-        const {id} = await params;
+        const paramsResult = await params;
+        id = paramsResult.id;
 
         if (!id) {
             return NextResponse.json(
@@ -75,7 +78,7 @@ export async function DELETE(
             message: `Escort with ID ${id} deleted successfully`,
         });
     } catch (error) {
-        console.error(`Failed to delete escort ${id}:`, error);
+        console.error(`Failed to delete escort ${id ?? "unknown"}:`, error);
         return NextResponse.json(
             {
                 success: false,
