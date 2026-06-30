@@ -1,0 +1,49 @@
+{
+  "total": 5,
+  "processed": 5,
+  "successful": 5,
+  "failed": 0,
+  "details": [
+    {
+      "escortId": "%d8%a7%d9%84%d8%b9%d9%86%d9%88%d8%af-al3unood",
+      "success": true,
+      "test": true,
+      "total": 4,
+      "processed": 4
+    },
+    {
+      "escortId": "",
+      "success": true,
+      "test": true,
+      "total": 2,
+      "processed": 2
+    },
+    {
+      "escortId": "3-young-beautiful-somalis-arabs-video-calls-massage-happy-ending",
+      "success": true,
+      "test": true,
+      "total": 1,
+      "processed": 1
+    },
+    {
+      "escortId": "3sam-party",
+      "success": true,
+      "test": true,
+      "total": 2,
+      "processed": 2
+    },
+    {
+      "escortId": "",
+      "success": true,
+      "test": true,
+      "total": 1,
+      "processed": 1
+    }
+  ],
+  "totalImages": 10,
+  "processedImages": 10,
+  "startTime": 1782855381264,
+  "endTime": 1782855384264,
+  "duration": 3,
+  "successRate": 100
+}
