@@ -40,7 +40,7 @@
     "@tiptap/starter-kit": "^3.3.0",
     "@types/mongoose": "^5.11.97",
     "@types/quill": "^2.0.14",
-    "axios": "^1.11.0",
+    "axios": "^1.18.1",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.9.0",
