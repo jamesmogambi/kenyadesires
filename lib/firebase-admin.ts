@@ -1,6 +1,7 @@
 import "./polyfill";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 
 // Initialize Firebase Admin with environment variables
 const app = !getApps().length
@@ -15,6 +16,8 @@ const app = !getApps().length
             ).replace(/^"|"$/g, "")
           : undefined,
       }),
+      // Use the correct bucket name from environment
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
     })
   : getApps()[0];
 
@@ -25,6 +28,14 @@ const COLLECTIONS = {
   PROCESSING_QUEUE: "processing_queue",
   PROCESSING_LOGS: "processing_logs",
 } as const;
+
+// Initialize Firestore
 const adminDb = getFirestore(app);
 
-export { adminDb, COLLECTIONS };
+// Initialize Storage with explicit bucket name from environment
+const adminStorage = getStorage(app);
+const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
+
+console.log(`[Firebase] Initialized with bucket: ${bucket.name}`);
+
+export { adminDb, COLLECTIONS, adminStorage, bucket };
