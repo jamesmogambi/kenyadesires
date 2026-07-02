@@ -61,6 +61,23 @@ export interface Escort {
   totalViews: number;
   createdAt: Date;
   updatedAt: Date;
+
+  // Watermark tracking fields
+  watermarkStatus?: "pending" | "processing" | "completed" | "failed";
+  watermarkError?: string;
+  lastProcessedAt?: Date;
+  imagesMetadata?: {
+    [imageUrl: string]: {
+      cleanedUrl?: string;
+      status: "pending" | "processing" | "completed" | "failed";
+      errorMessage?: string;
+      processedAt?: Date;
+      fileSize?: number;
+      mimeType?: string;
+    };
+  };
+  totalImagesProcessed?: number;
+  totalImagesFailed?: number;
 }
 
 export interface Location {
