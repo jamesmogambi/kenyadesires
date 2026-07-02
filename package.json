@@ -11,10 +11,8 @@
     "studio": "sanity start",
     "sitemap:generate": "next build && node scripts/generate-sitemap.js",
     "sitemap:validate": "node scripts/validate-sitemap.js",
-    "process-escorts": "node scripts/process-escorts-standalone.js",
-    "process-escorts-test": "node scripts/process-escorts-standalone.js test",
-    "process-escorts-resume": "node scripts/process-escorts-standalone.js resume",
-    "process-escorts-report": "node scripts/process-escorts-standalone.js report"
+    "process:batch": "ts-node scripts/process-all.ts",
+    "monitor:batch": "ts-node scripts/monitor-batch.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
