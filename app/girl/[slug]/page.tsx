@@ -12,6 +12,7 @@ import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
 import { getCachedEscortById } from "@/lib/cache";
+import { getEscortById } from "@/server-actions/girl.action";
 
 // ✅ ISR - Rebuild page after revalidate time (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
@@ -166,7 +167,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
   const { slug } = await params;
 
   // ✅ Use cached version
-  const result = await getCachedEscortById(slug);
+  const result = await getEscortById(slug);
 
   if (!result) {
     notFound();
