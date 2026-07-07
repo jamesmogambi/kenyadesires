@@ -14,6 +14,7 @@ import {
   getCachedPopularCounties,
 } from "@/lib/cache";
 import LocationInitializer from "@/components/FileInputInitializer";
+import AgeVerificationModal from "@/components/AgeVerificationModal";
 import Head from "next/head";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
@@ -565,6 +566,8 @@ export default async function RootLayout({
           </div>
 
           <Toaster position="bottom-left" />
+
+          <AgeVerificationModal />
         </body>
       </html>
     </ClerkProvider>
