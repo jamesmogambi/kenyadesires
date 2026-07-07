@@ -10,11 +10,11 @@ import {
   generateBreadcrumbList,
   generateListStructuredData,
 } from "./seo-utils";
-import { getEscortsWithOnlyCleanedImages } from "@/server-actions/cleaned-escorts.action";
 import {
   getEscortCountForMetadata,
   getFirstEscortForMetadata,
 } from "@/lib/metadata-helper";
+import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 
 // ✅ ISR - 7 days
 export const revalidate = 604800; // 7 days in seconds
@@ -203,7 +203,7 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getEscortsWithOnlyCleanedImages({
+  } = await getEscortsWithCleanedImages({
     county: params.county,
     region: params.region,
     practice: params.practice,

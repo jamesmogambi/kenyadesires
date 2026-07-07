@@ -4,7 +4,8 @@ import GirlList from "@/components/GirlList";
 import GirlRegions from "@/components/GirlRegions";
 import NotFoundList from "@/components/NotFoundList";
 import { ITEMS_PER_PAGE } from "@/constants";
-import { getEscortsWithOnlyCleanedImages } from "@/server-actions/cleaned-escorts.action";
+import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
+// import { getEscortsWithOnlyCleanedImages } from "@/server-actions/cleaned-escorts.action";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
@@ -22,10 +23,7 @@ export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
 
   // Get only 20 escorts with cleaned images - no pagination controls
-  const {
-    escorts,
-    total,
-  } = await getEscortsWithOnlyCleanedImages({
+  const { escorts, total } = await getEscortsWithCleanedImages({
     county: params.county,
     region: params.region,
     practice: params.practice,

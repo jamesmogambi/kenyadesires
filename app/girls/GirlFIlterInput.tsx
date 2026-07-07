@@ -402,7 +402,9 @@ const GirlFilterInput = ({ className }: Prop) => {
                 }}
                 key={item.id}
               >
-                {item.name}
+                {item.name.split(" ").length > 10
+                  ? item.name.split(" ").slice(0, 10).join(" ") + "..."
+                  : item.name}
               </DropdownMenuItem>
             ))}
           </div>

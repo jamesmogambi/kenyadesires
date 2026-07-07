@@ -1,14 +1,527 @@
-// server-actions/cleaned-escorts.action.ts
+// // app/actions/get-escorts.ts
+// "use server";
+
+// import { adminDb } from "@/lib/firebase-admin";
+// import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
+
+// // Helper to convert Firestore doc to plain serializable object
+// function convertDocToEscort(
+//   doc:
+//     | FirebaseFirestore.DocumentSnapshot
+//     | FirebaseFirestore.QueryDocumentSnapshot,
+// ): Escort {
+//   const data = (doc.data() || {}) as { [key: string]: any };
+
+//   // Helper to convert Timestamp to ISO string
+//   const convertTimestamp = (value: any): any => {
+//     if (!value) return value;
+//     if (value.toDate && typeof value.toDate === "function") {
+//       return value.toDate().toISOString();
+//     }
+//     if (Array.isArray(value)) {
+//       return value.map(convertTimestamp);
+//     }
+//     if (value && typeof value === "object") {
+//       const result: any = {};
+//       for (const key in value) {
+//         if (Object.prototype.hasOwnProperty.call(value, key)) {
+//           result[key] = convertTimestamp(value[key]);
+//         }
+//       }
+//       return result;
+//     }
+//     return value;
+//   };
+
+//   const convertedData = convertTimestamp(data);
+
+//   return {
+//     id: doc.id,
+//     ...convertedData,
+//   } as Escort;
+// }
+
+// /**
+//  * Get escorts that have cleaned images (processed by dewatermark API)
+//  * Fetches ALL escorts first, then filters for cleaned images
+//  */
+// export async function getEscortsWithCleanedImages(
+//   params: GetEscortsParams = {},
+// ): Promise<GetEscortsResponse> {
+//   try {
+//     const {
+//       page = 1,
+//       limit = 20,
+//       county,
+//       region,
+//       town,
+//       estate,
+//       practice,
+//       practices,
+//       category,
+//       categories,
+//       nationality,
+//       minAge,
+//       maxAge,
+//       isActive = true,
+//       isVerified,
+//       isFeatured,
+//       search,
+//       minRating,
+//       sortBy = "createdAt",
+//       sortOrder = "desc",
+//     } = params;
+
+//     const validPage = Math.max(1, page);
+//     const validLimit = Math.min(100, Math.max(1, limit));
+
+//     // ✅ Build query
+//     let query: FirebaseFirestore.Query = adminDb.collection("escorts");
+
+//     // Apply filters
+//     if (isActive !== undefined) {
+//       query = query.where("isActive", "==", isActive);
+//     }
+
+//     if (isVerified !== undefined) {
+//       query = query.where("isVerified", "==", isVerified);
+//     }
+
+//     if (isFeatured !== undefined) {
+//       query = query.where("isFeatured", "==", isFeatured);
+//     }
+
+//     if (county && county !== "all") {
+//       query = query.where("county", "==", county);
+//     }
+
+//     // ✅ Apply sorting
+//     const validSortFields = [
+//       "createdAt",
+//       "updatedAt",
+//       "age",
+//       "totalViews",
+//       "rating",
+//       "totalBookings",
+//     ];
+//     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+//     query = query.orderBy(sortField, sortOrder);
+
+//     // ✅ IMPORTANT: Get ALL documents (no limit) to properly filter for cleaned images
+//     const allDocsSnapshot = await query.get();
+
+//     // ✅ Convert ALL data
+//     let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscort);
+
+//     // ✅ Filter: Only escorts with cleaned images
+//     let escortsWithCleanedImages = allEscorts.filter((escort) => {
+//       if (!escort.imagesMetadata) return false;
+
+//       const hasCleanedImages = Object.values(escort.imagesMetadata).some(
+//         (metadata: any) =>
+//           metadata.status === "completed" && metadata.cleanedUrl,
+//       );
+
+//       return hasCleanedImages;
+//     });
+
+//     // ✅ Apply additional filters client-side
+//     if (region && region !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.regions?.includes(region),
+//       );
+//     }
+
+//     if (town && town !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.locations?.some((loc) => loc.town === town),
+//       );
+//     }
+
+//     if (estate && estate !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.locations?.some((loc) => loc.estate === estate),
+//       );
+//     }
+
+//     if (practice && practice !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.practices?.includes(practice),
+//       );
+//     }
+
+//     if (practices && practices.length > 0) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         practices.some((p) => e.practices?.includes(p)),
+//       );
+//     }
+
+//     if (category && category !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.categories?.includes(category),
+//       );
+//     }
+
+//     if (categories && categories.length > 0) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         categories.some((c) => e.categories?.includes(c)),
+//       );
+//     }
+
+//     if (nationality && nationality !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => e.nationality === nationality,
+//       );
+//     }
+
+//     if (minAge) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => parseInt(e.age) >= minAge,
+//       );
+//     }
+
+//     if (maxAge) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => parseInt(e.age) <= maxAge,
+//       );
+//     }
+
+//     if (minRating) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => (e.rating || 0) >= minRating,
+//       );
+//     }
+
+//     if (search) {
+//       const searchLower = search.toLowerCase();
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) =>
+//           e.name?.toLowerCase().includes(searchLower) ||
+//           e.username?.toLowerCase().includes(searchLower) ||
+//           e.about?.toLowerCase().includes(searchLower),
+//       );
+//     }
+
+//     // ✅ Total count (all escorts with cleaned images that match filters)
+//     const total = escortsWithCleanedImages.length;
+
+//     // ✅ Apply pagination
+//     const startIndex = (validPage - 1) * validLimit;
+//     const endIndex = Math.min(startIndex + validLimit, total);
+//     const paginatedEscorts = escortsWithCleanedImages.slice(
+//       startIndex,
+//       endIndex,
+//     );
+
+//     return {
+//       escorts: paginatedEscorts,
+//       total,
+//       page: validPage,
+//       totalPages: Math.max(1, Math.ceil(total / validLimit)),
+//       hasMore: endIndex < total,
+//     };
+//   } catch (error) {
+//     console.error("Error fetching escorts with cleaned images:", error);
+//     return {
+//       escorts: [],
+//       total: 0,
+//       page: params.page || 1,
+//       totalPages: 0,
+//       hasMore: false,
+//     };
+//   }
+// }
+
+// /**
+//  * Get cleaned images for a specific escort
+//  */
+// export async function getCleanedImagesForEscort(
+//   escortId: string,
+// ): Promise<string[]> {
+//   try {
+//     const doc = await adminDb.collection("escorts").doc(escortId).get();
+
+//     if (!doc.exists) {
+//       return [];
+//     }
+
+//     const escort = convertDocToEscort(doc);
+
+//     if (!escort.imagesMetadata) {
+//       return [];
+//     }
+
+//     const cleanedImages = Object.values(escort.imagesMetadata)
+//       .filter(
+//         (metadata: any) =>
+//           metadata.status === "completed" && metadata.cleanedUrl,
+//       )
+//       .map((metadata: any) => metadata.cleanedUrl!);
+
+//     return cleanedImages;
+//   } catch (error) {
+//     console.error("Error fetching cleaned images:", error);
+//     return [];
+//   }
+// }
+
+// /**
+//  * Get count of escorts with cleaned images by category/type
+//  */
+// export async function getCleanedImagesStats() {
+//   try {
+//     const snapshot = await adminDb.collection("escorts").get();
+//     const escorts: Escort[] = snapshot.docs.map(convertDocToEscort);
+
+//     const stats = {
+//       totalEscorts: escorts.length,
+//       escortsWithCleanedImages: 0,
+//       totalCleanedImages: 0,
+//       byCategory: {} as Record<string, number>,
+//       byCounty: {} as Record<string, number>,
+//     };
+
+//     escorts.forEach((escort) => {
+//       if (!escort.imagesMetadata) return;
+
+//       const cleanedImages = Object.values(escort.imagesMetadata).filter(
+//         (metadata: any) =>
+//           metadata.status === "completed" && metadata.cleanedUrl,
+//       );
+
+//       if (cleanedImages.length > 0) {
+//         stats.escortsWithCleanedImages++;
+//         stats.totalCleanedImages += cleanedImages.length;
+
+//         escort.categories?.forEach((category) => {
+//           stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+//         });
+
+//         if (escort.county) {
+//           stats.byCounty[escort.county] =
+//             (stats.byCounty[escort.county] || 0) + 1;
+//         }
+//       }
+//     });
+
+//     return stats;
+//   } catch (error) {
+//     console.error("Error fetching cleaned images stats:", error);
+//     return null;
+//   }
+// }
+
+// /**
+//  * Get all practices from escorts with cleaned images
+//  * Returns a sorted list of unique practices with counts
+//  */
+// export async function getPracticesFromCleanedEscorts(
+//   params: Omit<
+//     GetEscortsParams,
+//     "practice" | "practices" | "page" | "limit"
+//   > = {},
+// ): Promise<{ practice: string; count: number }[]> {
+//   try {
+//     const {
+//       county,
+//       region,
+//       town,
+//       estate,
+//       category,
+//       categories,
+//       nationality,
+//       minAge,
+//       maxAge,
+//       isActive = true,
+//       isVerified,
+//       isFeatured,
+//       search,
+//       minRating,
+//     } = params;
+
+//     // ✅ Build query to get all escorts with the base filters
+//     let query: FirebaseFirestore.Query = adminDb.collection("escorts");
+
+//     if (isActive !== undefined) {
+//       query = query.where("isActive", "==", isActive);
+//     }
+
+//     if (isVerified !== undefined) {
+//       query = query.where("isVerified", "==", isVerified);
+//     }
+
+//     if (isFeatured !== undefined) {
+//       query = query.where("isFeatured", "==", isFeatured);
+//     }
+
+//     if (county && county !== "all") {
+//       query = query.where("county", "==", county);
+//     }
+
+//     // ✅ Get ALL documents
+//     const allDocsSnapshot = await query.get();
+
+//     // ✅ Convert ALL data
+//     let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscort);
+
+//     // ✅ Filter: Only escorts with cleaned images
+//     let escortsWithCleanedImages = allEscorts.filter((escort) => {
+//       if (!escort.imagesMetadata) return false;
+
+//       const hasCleanedImages = Object.values(escort.imagesMetadata).some(
+//         (metadata: any) =>
+//           metadata.status === "completed" && metadata.cleanedUrl,
+//       );
+
+//       return hasCleanedImages;
+//     });
+
+//     // ✅ Apply additional filters (same as main function)
+//     if (region && region !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.regions?.includes(region),
+//       );
+//     }
+
+//     if (town && town !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.locations?.some((loc) => loc.town === town),
+//       );
+//     }
+
+//     if (estate && estate !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.locations?.some((loc) => loc.estate === estate),
+//       );
+//     }
+
+//     if (category && category !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         e.categories?.includes(category),
+//       );
+//     }
+
+//     if (categories && categories.length > 0) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+//         categories.some((c) => e.categories?.includes(c)),
+//       );
+//     }
+
+//     if (nationality && nationality !== "all") {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => e.nationality === nationality,
+//       );
+//     }
+
+//     if (minAge) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => parseInt(e.age) >= minAge,
+//       );
+//     }
+
+//     if (maxAge) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => parseInt(e.age) <= maxAge,
+//       );
+//     }
+
+//     if (minRating) {
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) => (e.rating || 0) >= minRating,
+//       );
+//     }
+
+//     if (search) {
+//       const searchLower = search.toLowerCase();
+//       escortsWithCleanedImages = escortsWithCleanedImages.filter(
+//         (e) =>
+//           e.name?.toLowerCase().includes(searchLower) ||
+//           e.username?.toLowerCase().includes(searchLower) ||
+//           e.about?.toLowerCase().includes(searchLower),
+//       );
+//     }
+
+//     // ✅ Extract and count all practices
+//     const practiceCounts: Record<string, number> = {};
+
+//     escortsWithCleanedImages.forEach((escort) => {
+//       if (escort.practices && Array.isArray(escort.practices)) {
+//         escort.practices.forEach((practice) => {
+//           if (practice) {
+//             practiceCounts[practice] = (practiceCounts[practice] || 0) + 1;
+//           }
+//         });
+//       }
+//     });
+
+//     // ✅ Convert to array and sort by count (descending) or alphabetically
+//     const result = Object.entries(practiceCounts)
+//       .map(([practice, count]) => ({ practice, count }))
+//       .sort((a, b) => {
+//         // Sort by count descending first
+//         if (b.count !== a.count) {
+//           return b.count - a.count;
+//         }
+//         // If counts are equal, sort alphabetically
+//         return a.practice.localeCompare(b.practice);
+//       });
+
+//     return result;
+//   } catch (error) {
+//     console.error("Error fetching practices from cleaned escorts:", error);
+//     return [];
+//   }
+// }
+
+
+
+
+// app/actions/get-escorts.ts
+"use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
+import { unstable_cache } from "next/cache";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
-// ============================================
-// OPTIMIZED: GET ESCORTS WITH ONLY CLEANED IMAGES
-// ============================================
+// Helper to convert Firestore doc to plain serializable object
+function convertDocToEscort(
+  doc:
+    | FirebaseFirestore.DocumentSnapshot
+    | FirebaseFirestore.QueryDocumentSnapshot,
+): Escort {
+  const data = (doc.data() || {}) as { [key: string]: any };
 
-export async function getEscortsWithOnlyCleanedImages(
+  // Helper to convert Timestamp to ISO string
+  const convertTimestamp = (value: any): any => {
+    if (!value) return value;
+    if (value.toDate && typeof value.toDate === "function") {
+      return value.toDate().toISOString();
+    }
+    if (Array.isArray(value)) {
+      return value.map(convertTimestamp);
+    }
+    if (value && typeof value === "object") {
+      const result: any = {};
+      for (const key in value) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+          result[key] = convertTimestamp(value[key]);
+        }
+      }
+      return result;
+    }
+    return value;
+  };
+
+  const convertedData = convertTimestamp(data);
+
+  return {
+    id: doc.id,
+    ...convertedData,
+  } as Escort;
+}
+
+// Internal function that does the actual fetching
+async function fetchEscortsWithCleanedImages(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   try {
@@ -17,23 +530,31 @@ export async function getEscortsWithOnlyCleanedImages(
       limit = 20,
       county,
       region,
+      town,
+      estate,
       practice,
+      practices,
+      category,
+      categories,
+      nationality,
+      minAge,
+      maxAge,
       isActive = true,
       isVerified,
       isFeatured,
+      search,
+      minRating,
       sortBy = "createdAt",
       sortOrder = "desc",
-      minAge,
-      maxAge,
     } = params;
 
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limit));
 
-    // ✅ Start building query
+    // ✅ Build query
     let query: FirebaseFirestore.Query = adminDb.collection("escorts");
 
-    // Apply Firestore filters FIRST to reduce data loaded
+    // Apply filters
     if (isActive !== undefined) {
       query = query.where("isActive", "==", isActive);
     }
@@ -46,118 +567,134 @@ export async function getEscortsWithOnlyCleanedImages(
       query = query.where("isFeatured", "==", isFeatured);
     }
 
-    // ✅ Apply county filter at database level (case-sensitive)
-    // For case-insensitive, store a lowercase version of county
-    if (county && county !== "all" && county !== "") {
-      const searchCounty = county.toLowerCase().trim();
-      query = query.where("countyLower", "==", searchCounty);
+    if (county && county !== "all") {
+      query = query.where("county", "==", county);
     }
 
-    // ✅ Apply sorting at database level
+    // ✅ Apply sorting
     const validSortFields = [
       "createdAt",
       "updatedAt",
-      "rating",
+      "age",
       "totalViews",
+      "rating",
       "totalBookings",
     ];
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
     query = query.orderBy(sortField, sortOrder);
 
-    // ✅ Execute query with pagination at database level
-    // We need to fetch extra for filtering, but we'll use a cursor approach
-    const snapshot = await query.get();
-    let allDocs = snapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    // ✅ IMPORTANT: Get ALL documents (no limit) to properly filter for cleaned images
+    const allDocsSnapshot = await query.get();
 
-    // ✅ Filter by region (still in memory, but data is already filtered by county)
-    if (region && region !== "all" && region !== "") {
-      const searchRegion = region.toLowerCase().trim();
-      allDocs = allDocs.filter((doc: any) => {
-        if (!doc.regionsLower || !Array.isArray(doc.regionsLower)) return false;
-        return doc.regionsLower.some((r: string) => r === searchRegion);
-      });
-    }
+    // ✅ Convert ALL data
+    let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscort);
 
-    // ✅ Filter by practice (still in memory, but data is already filtered)
-    if (practice && practice !== "all" && practice !== "") {
-      const searchPractice = practice.toLowerCase().trim();
-      allDocs = allDocs.filter((doc: any) => {
-        if (!doc.practicesLower || !Array.isArray(doc.practicesLower))
-          return false;
-        return doc.practicesLower.some((p: string) => p === searchPractice);
-      });
-    }
+    // ✅ Filter: Only escorts with cleaned images
+    let escortsWithCleanedImages = allEscorts.filter((escort) => {
+      if (!escort.imagesMetadata) return false;
 
-    // ✅ Filter by age
-    if (minAge && minAge > 0) {
-      allDocs = allDocs.filter(
-        (doc: any) => doc.age && parseInt(doc.age) >= minAge,
+      const hasCleanedImages = Object.values(escort.imagesMetadata).some(
+        (metadata: any) =>
+          metadata.status === "completed" && metadata.cleanedUrl,
+      );
+
+      return hasCleanedImages;
+    });
+
+    // ✅ Apply additional filters client-side
+    if (region && region !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.regions?.includes(region),
       );
     }
 
-    if (maxAge && maxAge > 0) {
-      allDocs = allDocs.filter(
-        (doc: any) => doc.age && parseInt(doc.age) <= maxAge,
+    if (town && town !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.locations?.some((loc) => loc.town === town),
       );
     }
 
-    // ✅ Filter: Only include escorts with cleaned images
-    const escortsWithCleanedImages = allDocs
-      .filter((doc: any) => {
-        if (!doc.imagesMetadata) return false;
-        return Object.values(doc.imagesMetadata).some(
-          (img: any) => img.status === "completed" && img.cleanedUrl,
-        );
-      })
-      .map((doc: any) => {
-        // Transform to only include cleaned images
-        const cleanedImages: string[] = [];
-        const cleanedImagesMetadata: any = {};
+    if (estate && estate !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.locations?.some((loc) => loc.estate === estate),
+      );
+    }
 
-        if (doc.imagesMetadata) {
-          for (const [originalUrl, info] of Object.entries(
-            doc.imagesMetadata,
-          )) {
-            const imageInfo = info as any;
-            if (imageInfo.status === "completed" && imageInfo.cleanedUrl) {
-              cleanedImages.push(imageInfo.cleanedUrl);
-              cleanedImagesMetadata[originalUrl] = imageInfo;
-            }
-          }
-        }
+    if (practice && practice !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.practices?.includes(practice),
+      );
+    }
 
-        return {
-          ...doc,
-          images: cleanedImages,
-          imagesMetadata: cleanedImagesMetadata,
-          previewPhoto:
-            cleanedImages.length > 0 ? cleanedImages[0] : doc.previewPhoto,
-          totalImagesProcessed: cleanedImages.length,
-        };
-      });
+    if (practices && practices.length > 0) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        practices.some((p) => e.practices?.includes(p)),
+      );
+    }
 
-    // ✅ Pagination after all filtering
+    if (category && category !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.categories?.includes(category),
+      );
+    }
+
+    if (categories && categories.length > 0) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        categories.some((c) => e.categories?.includes(c)),
+      );
+    }
+
+    if (nationality && nationality !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => e.nationality === nationality,
+      );
+    }
+
+    if (minAge) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => parseInt(e.age) >= minAge,
+      );
+    }
+
+    if (maxAge) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => parseInt(e.age) <= maxAge,
+      );
+    }
+
+    if (minRating) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => (e.rating || 0) >= minRating,
+      );
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) =>
+          e.name?.toLowerCase().includes(searchLower) ||
+          e.username?.toLowerCase().includes(searchLower) ||
+          e.about?.toLowerCase().includes(searchLower),
+      );
+    }
+
+    // ✅ Total count (all escorts with cleaned images that match filters)
     const total = escortsWithCleanedImages.length;
-    const startAt = (validPage - 1) * validLimit;
-    const paginatedDocs = escortsWithCleanedImages.slice(
-      startAt,
-      startAt + validLimit,
-    );
 
-    // Convert to Escort objects
-    const escorts = paginatedDocs.map((doc: any) =>
-      convertDocToEscortFast(doc),
+    // ✅ Apply pagination
+    const startIndex = (validPage - 1) * validLimit;
+    const endIndex = Math.min(startIndex + validLimit, total);
+    const paginatedEscorts = escortsWithCleanedImages.slice(
+      startIndex,
+      endIndex,
     );
 
     return {
-      escorts,
+      escorts: paginatedEscorts,
       total,
       page: validPage,
-      totalPages: Math.ceil(total / validLimit),
-      hasMore: validPage * validLimit < total,
+      totalPages: Math.max(1, Math.ceil(total / validLimit)),
+      hasMore: endIndex < total,
     };
   } catch (error) {
     console.error("Error fetching escorts with cleaned images:", error);
@@ -171,250 +708,288 @@ export async function getEscortsWithOnlyCleanedImages(
   }
 }
 
-// ============================================
-// OPTIMIZED: Helper functions using aggregate queries
-// ============================================
+// ✅ Cached version - 1 week
+export const getEscortsWithCleanedImages = unstable_cache(
+  fetchEscortsWithCleanedImages,
+  // Cache key based on params
+  (/** cast to any to satisfy unstable_cache typings */
+  ((params: GetEscortsParams) => {
+    const p = params || {};
+    return [
+      "escorts-cleaned",
+      String(p.page || 1),
+      String(p.limit || 20),
+      String(p.county || "all"),
+      String(p.region || "all"),
+      String(p.town || "all"),
+      String(p.estate || "all"),
+      String(p.practice || "all"),
+      String(p.practices?.join(",") || "all"),
+      String(p.category || "all"),
+      String(p.categories?.join(",") || "all"),
+      String(p.nationality || "all"),
+      String(p.minAge || "all"),
+      String(p.maxAge || "all"),
+      String(p.isActive?.toString() || "true"),
+      String(p.isVerified?.toString() || "all"),
+      String(p.isFeatured?.toString() || "all"),
+      String(p.search || "all"),
+      String(p.minRating || "all"),
+      String(p.sortBy || "createdAt"),
+      String(p.sortOrder || "desc"),
+    ];
+  }) as any),
+  {
+    revalidate: 604800, // 1 week in seconds
+    tags: ["escorts", "cleaned-images"],
+  }
+);
 
+// Internal function for practices
+async function fetchPracticesFromCleanedEscorts(
+  params: Omit<
+    GetEscortsParams,
+    "practice" | "practices" | "page" | "limit"
+  > = {},
+): Promise<{ practice: string; count: number }[]> {
+  try {
+    const {
+      county,
+      region,
+      town,
+      estate,
+      category,
+      categories,
+      nationality,
+      minAge,
+      maxAge,
+      isActive = true,
+      isVerified,
+      isFeatured,
+      search,
+      minRating,
+    } = params;
+
+    // ✅ Build query to get all escorts with the base filters
+    let query: FirebaseFirestore.Query = adminDb.collection("escorts");
+
+    if (isActive !== undefined) {
+      query = query.where("isActive", "==", isActive);
+    }
+
+    if (isVerified !== undefined) {
+      query = query.where("isVerified", "==", isVerified);
+    }
+
+    if (isFeatured !== undefined) {
+      query = query.where("isFeatured", "==", isFeatured);
+    }
+
+    if (county && county !== "all") {
+      query = query.where("county", "==", county);
+    }
+
+    // ✅ Get ALL documents
+    const allDocsSnapshot = await query.get();
+
+    // ✅ Convert ALL data
+    let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscort);
+
+    // ✅ Filter: Only escorts with cleaned images
+    let escortsWithCleanedImages = allEscorts.filter((escort) => {
+      if (!escort.imagesMetadata) return false;
+
+      const hasCleanedImages = Object.values(escort.imagesMetadata).some(
+        (metadata: any) =>
+          metadata.status === "completed" && metadata.cleanedUrl,
+      );
+
+      return hasCleanedImages;
+    });
+
+    // ✅ Apply additional filters (same as main function)
+    if (region && region !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.regions?.includes(region),
+      );
+    }
+
+    if (town && town !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.locations?.some((loc) => loc.town === town),
+      );
+    }
+
+    if (estate && estate !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.locations?.some((loc) => loc.estate === estate),
+      );
+    }
+
+    if (category && category !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        e.categories?.includes(category),
+      );
+    }
+
+    if (categories && categories.length > 0) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
+        categories.some((c) => e.categories?.includes(c)),
+      );
+    }
+
+    if (nationality && nationality !== "all") {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => e.nationality === nationality,
+      );
+    }
+
+    if (minAge) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => parseInt(e.age) >= minAge,
+      );
+    }
+
+    if (maxAge) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => parseInt(e.age) <= maxAge,
+      );
+    }
+
+    if (minRating) {
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) => (e.rating || 0) >= minRating,
+      );
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      escortsWithCleanedImages = escortsWithCleanedImages.filter(
+        (e) =>
+          e.name?.toLowerCase().includes(searchLower) ||
+          e.username?.toLowerCase().includes(searchLower) ||
+          e.about?.toLowerCase().includes(searchLower),
+      );
+    }
+
+    // ✅ Extract and count all practices
+    const practiceCounts: Record<string, number> = {};
+
+    escortsWithCleanedImages.forEach((escort) => {
+      if (escort.practices && Array.isArray(escort.practices)) {
+        escort.practices.forEach((practice) => {
+          if (practice) {
+            practiceCounts[practice] = (practiceCounts[practice] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    // ✅ Convert to array and sort by count (descending) or alphabetically
+    const result = Object.entries(practiceCounts)
+      .map(([practice, count]) => ({ practice, count }))
+      .sort((a, b) => {
+        // Sort by count descending first
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        // If counts are equal, sort alphabetically
+        return a.practice.localeCompare(b.practice);
+      });
+
+    return result;
+  } catch (error) {
+    console.error("Error fetching practices from cleaned escorts:", error);
+    return [];
+  }
+}
+
+// ✅ Cached version - 1 week
+export const getPracticesFromCleanedEscorts = unstable_cache(
+  fetchPracticesFromCleanedEscorts,
+  ["practices-cleaned"],
+  {
+    revalidate: 604800, // 1 week in seconds
+    tags: ["practices", "cleaned-images"],
+  }
+);
+
+// ⚠️ These functions are NOT cached (they're fast and should always be fresh)
 /**
- * Get all regions for a specific county - OPTIMIZED with index
+ * Get cleaned images for a specific escort
  */
-export async function getRegionsByCounty(
-  countyName: string,
+export async function getCleanedImagesForEscort(
+  escortId: string,
 ): Promise<string[]> {
   try {
-    if (!countyName || countyName === "all" || countyName === "") {
+    const doc = await adminDb.collection("escorts").doc(escortId).get();
+
+    if (!doc.exists) {
       return [];
     }
 
-    const searchCounty = countyName.toLowerCase().trim();
+    const escort = convertDocToEscort(doc);
 
-    // ✅ Use a more efficient query with select
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .where("countyLower", "==", searchCounty)
-      .select("regions")
-      .get();
-
-    const regionsSet = new Set<string>();
-
-    snapshot.docs.forEach((doc) => {
-      const data = doc.data();
-      const regions = data.regions || [];
-      if (Array.isArray(regions)) {
-        regions.forEach((region: string) => {
-          if (region) regionsSet.add(region);
-        });
-      }
-    });
-
-    return Array.from(regionsSet).sort();
-  } catch (error) {
-    console.error("Error fetching regions by county:", error);
-    return [];
-  }
-}
-
-/**
- * Get all practices for a specific county and region - OPTIMIZED
- */
-export async function getPracticesByCountyAndRegion(
-  countyName: string,
-  regionName: string,
-): Promise<string[]> {
-  try {
-    const searchCounty = countyName?.toLowerCase().trim() || "";
-    const searchRegion = regionName?.toLowerCase().trim() || "";
-
-    // ✅ Build query with filters
-    let query: FirebaseFirestore.Query = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (searchCounty) {
-      query = query.where("countyLower", "==", searchCounty);
+    if (!escort.imagesMetadata) {
+      return [];
     }
 
-    // We still need to filter region in memory since Firestore doesn't support array contains with case-insensitive
-    const snapshot = await query.select("regions", "practices").get();
+    const cleanedImages = Object.values(escort.imagesMetadata)
+      .filter(
+        (metadata: any) =>
+          metadata.status === "completed" && metadata.cleanedUrl,
+      )
+      .map((metadata: any) => metadata.cleanedUrl!);
 
-    const practicesSet = new Set<string>();
+    return cleanedImages;
+  } catch (error) {
+    console.error("Error fetching cleaned images:", error);
+    return [];
+  }
+}
 
-    snapshot.docs.forEach((doc) => {
-      const data = doc.data();
+/**
+ * Get count of escorts with cleaned images by category/type
+ */
+export async function getCleanedImagesStats() {
+  try {
+    const snapshot = await adminDb.collection("escorts").get();
+    const escorts: Escort[] = snapshot.docs.map(convertDocToEscort);
 
-      // Check region match
-      if (searchRegion) {
-        const regions = data.regions || [];
-        if (
-          !Array.isArray(regions) ||
-          !regions.some((r: string) => r.toLowerCase().trim() === searchRegion)
-        ) {
-          return;
+    const stats = {
+      totalEscorts: escorts.length,
+      escortsWithCleanedImages: 0,
+      totalCleanedImages: 0,
+      byCategory: {} as Record<string, number>,
+      byCounty: {} as Record<string, number>,
+    };
+
+    escorts.forEach((escort) => {
+      if (!escort.imagesMetadata) return;
+
+      const cleanedImages = Object.values(escort.imagesMetadata).filter(
+        (metadata: any) =>
+          metadata.status === "completed" && metadata.cleanedUrl,
+      );
+
+      if (cleanedImages.length > 0) {
+        stats.escortsWithCleanedImages++;
+        stats.totalCleanedImages += cleanedImages.length;
+
+        escort.categories?.forEach((category) => {
+          stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+        });
+
+        if (escort.county) {
+          stats.byCounty[escort.county] =
+            (stats.byCounty[escort.county] || 0) + 1;
         }
       }
-
-      // Add practices
-      const practices = data.practices || [];
-      if (Array.isArray(practices)) {
-        practices.forEach((practice: string) => {
-          if (practice) practicesSet.add(practice);
-        });
-      }
     });
 
-    return Array.from(practicesSet).sort();
+    return stats;
   } catch (error) {
-    console.error("Error fetching practices:", error);
-    return [];
+    console.error("Error fetching cleaned images stats:", error);
+    return null;
   }
-}
-
-/**
- * Get all counties - OPTIMIZED with index
- */
-export async function getAllCounties(): Promise<string[]> {
-  try {
-    // ✅ Use a more efficient query with select and limit
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .select("county")
-      .get();
-
-    const countiesSet = new Set<string>();
-
-    snapshot.docs.forEach((doc) => {
-      const county = doc.data().county;
-      if (county) {
-        countiesSet.add(county);
-      }
-    });
-
-    return Array.from(countiesSet).sort();
-  } catch (error) {
-    console.error("Error fetching counties:", error);
-    return [];
-  }
-}
-
-// ============================================
-// NEW: Cached helper functions for dropdowns
-// ============================================
-
-let countiesCache: string[] | null = null;
-let countiesCacheTime = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-/**
- * Get all counties with caching
- */
-export async function getAllCountiesCached(): Promise<string[]> {
-  const now = Date.now();
-
-  if (countiesCache && now - countiesCacheTime < CACHE_TTL) {
-    return countiesCache;
-  }
-
-  const counties = await getAllCounties();
-  countiesCache = counties;
-  countiesCacheTime = now;
-
-  return counties;
-}
-
-// Cache for regions by county
-const regionsCache = new Map<string, { data: string[]; time: number }>();
-
-/**
- * Get regions by county with caching
- */
-export async function getRegionsByCountyCached(
-  countyName: string,
-): Promise<string[]> {
-  const key = countyName || "all";
-  const cached = regionsCache.get(key);
-  const now = Date.now();
-
-  if (cached && now - cached.time < CACHE_TTL) {
-    return cached.data;
-  }
-
-  const regions = await getRegionsByCounty(countyName);
-  regionsCache.set(key, { data: regions, time: now });
-
-  return regions;
-}
-
-// Helper function for fast conversion
-function convertDocToEscortFast(doc: any): Escort {
-  const data = doc.data ? doc.data() : doc;
-  return {
-    id: doc.id || data.id || "",
-    name: data.name || "",
-    username: data.username || "",
-    previewPhoto: data.previewPhoto || "",
-    labels: data.labels || [],
-    email: data.email || "",
-    age: data.age || "",
-    telephone: data.telephone || "",
-    whatsappPhone: data.whatsappPhone || "",
-    images: data.images || [],
-    videos: data.videos || [],
-    about: data.about || "",
-    availability: data.availability || [],
-    ethnicity: data.ethnicity || "",
-    nationality: data.nationality || "",
-    bustSize: data.bustSize || "",
-    weight: data.weight || "",
-    zodiacSign: data.zodiacSign || "",
-    sexualOrientation: data.sexualOrientation || "",
-    gender: data.gender || "",
-    languages: data.languages || [],
-    categories: data.categories || [],
-    country: data.country || "",
-    county: data.county || "",
-    countyCode: data.countyCode || "",
-    regions: data.regions || [],
-    primaryRegion: data.primaryRegion || "",
-    locations: data.locations || [],
-    source: data.source || "",
-    practices: data.practices || [],
-    bdsm: data.bdsm || [],
-    massage: data.massage || [],
-    extraServices: data.extraServices || [],
-    slug: data.slug || "",
-    role: data.role || "",
-    openingHours: data.openingHours || {
-      monday: "Not Specified",
-      tuesday: "Not Specified",
-      wednesday: "Not Specified",
-      thursday: "Not Specified",
-      friday: "Not Specified",
-      saturday: "Not Specified",
-      sunday: "Not Specified",
-    },
-    rates: data.rates || [],
-    breastSize: data.breastSize || "",
-    ageCategory: data.ageCategory || "",
-    character: data.character || "",
-    hairColor: data.hairColor || "",
-    experience: data.experience || "",
-    workType: data.workType || "",
-    isAgencyFeatured: data.isAgencyFeatured || false,
-    isActive: data.isActive !== undefined ? data.isActive : true,
-    isVerified: data.isVerified || false,
-    isFeatured: data.isFeatured || false,
-    plan: data.plan || { type: "free", isActive: true, features: [] },
-    totalBookings: data.totalBookings || 0,
-    totalReviews: data.totalReviews || 0,
-    rating: data.rating || 0,
-    totalViews: data.totalViews || 0,
-    cleaningHistory: data.cleaningHistory || [],
-    imagesMetadata: data.imagesMetadata || {},
-    totalImagesProcessed: data.totalImagesProcessed || 0,
-    totalImagesFailed: data.totalImagesFailed || 0,
-    createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
-    updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
-  };
 }
