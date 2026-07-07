@@ -104,13 +104,23 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
       },
+     
+        {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
     qualities: [25, 50, 75, 90, 100],
   },
-  eslint: {
-    // Only disable for production builds, keep during development
-    ignoreDuringBuilds: process.env.NODE_ENV === "production",
-  },
+
   typescript: {
     // Only disable for production builds, keep during development
     ignoreBuildErrors: true,

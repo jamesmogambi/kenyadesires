@@ -39,7 +39,7 @@ const GirlImageSwiper = ({ images }: Prop) => {
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full relative bg-transparent rounded-t-lg flex items-center justify-center h-[200px] lg:h-[300px]">
+      <div className="w-full relative bg-transparent rounded-t-lg flex items-center justify-center h-50 lg:h-75">
         <span className="text-gray-400">No images available</span>
       </div>
     );
@@ -63,8 +63,8 @@ const GirlImageSwiper = ({ images }: Prop) => {
 
             return (
               <SwiperSlide key={index}>
-                <div className="relative w-full h-[200px] lg:h-[300px] bg-transparent">
-                  <div className="absolute inset-0 pb-[5px]">
+                <div className="relative w-full h-50 lg:h-75 bg-transparent">
+                  <div className="absolute inset-0 pb-1.25">
                     <Image
                       src={imageSrc}
                       alt={`Slide ${index + 1}`}
@@ -77,33 +77,30 @@ const GirlImageSwiper = ({ images }: Prop) => {
                       onError={() => handleImageError(index)}
                     />
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-primary"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-1.25 bg-primary"></div>
                 </div>
               </SwiperSlide>
             );
           })}
         </Swiper>
 
-        {images.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={handlePrev}
-              className="custom-swiper-button-prev"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              type="button"
-              onClick={handleNext}
-              className="custom-swiper-button-next"
-              aria-label="Next slide"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </>
-        )}
+        {/* ✅ Always show navigation buttons, even for single image */}
+        <button
+          type="button"
+          onClick={handlePrev}
+          className="custom-swiper-button-prev"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <button
+          type="button"
+          onClick={handleNext}
+          className="custom-swiper-button-next"
+          aria-label="Next slide"
+        >
+          <ChevronRight size={20} />
+        </button>
       </div>
 
       <style jsx global>{`

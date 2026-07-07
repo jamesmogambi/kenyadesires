@@ -1,3 +1,5 @@
+
+
 import { cn, formatSlugToTitle } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
@@ -29,9 +31,34 @@ const GirlItem = ({
     whatsappPhone,
     videos,
     county,
+    imagesMetadata, // Add this to access cleaned images metadata
   } = girl;
 
   const escortName = name || "Escort";
+
+  // Helper function to get cleaned images or fallback to original images
+  const getDisplayImages = () => {
+    // If imagesMetadata exists, extract cleaned images
+    if (imagesMetadata) {
+      const cleanedUrls: string[] = [];
+      for (const [originalUrl, info] of Object.entries(imagesMetadata)) {
+        const imageInfo = info as any;
+        if (imageInfo.status === "completed" && imageInfo.cleanedUrl) {
+          cleanedUrls.push(imageInfo.cleanedUrl);
+        }
+      }
+      // If there are cleaned images, use them
+      if (cleanedUrls.length > 0) {
+        return cleanedUrls;
+      }
+    }
+    // Fallback to original images if no cleaned images
+    return images || [];
+  };
+
+  const displayImages = getDisplayImages();
+  const hasCleanedImages = displayImages.length > 0 && 
+    displayImages.some(url => url.includes('cleaned_images'));
 
   return (
     <div
@@ -41,8 +68,8 @@ const GirlItem = ({
       )}
     >
       <Link href={path}>
-        {/* Header - Image */}
-        <GirlImageSwiper images={images} />
+        {/* Header - Image - Now using cleaned images */}
+        <GirlImageSwiper images={displayImages} />
 
         {/* Footer */}
         <div className="p-4">
@@ -99,13 +126,22 @@ const GirlItem = ({
         ) : (
           <div className="hidden lg:flex items-center rounded-br-lg gap-4 p-2 px-6 bg-stone-300/65 text-black/60">
             <Images className="h-8 w-10" />
-            <span className="text-2xl">
-              {images.length > 0 ? images.length : 1}
-              <span className="text-[18px] uppercase">x</span>
+            <span className="text-xl">
+              {displayImages.length > 0 ? displayImages.length : 1}
+              <span className="text-lg uppercase">x</span>
             </span>
           </div>
         )}
       </div>
+
+      {/* Cleaned Images Badge - shows if this escort has cleaned images */}
+      {/* TODO: IN future show verified badge if the escort has been verified by admin */}
+      {/* {hasCleanedImages && (
+        <div className="absolute bottom-2 right-2 bg-green-500/90 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg">
+          <span>✨</span>
+          Verified
+        </div>
+      )} */}
     </div>
   );
 };
