@@ -16,6 +16,7 @@ import {
 import LocationInitializer from "@/components/FileInputInitializer";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import Head from "next/head";
+import { getAllCounties } from "@/server-actions/region.action";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
@@ -445,10 +446,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // ✅ Pre-fetch on server
-  const [counties, regions, lookup] = await Promise.all([
+  const [counties, regions, lookup, allCounties] = await Promise.all([
     getCachedPopularCounties(),
     getCachedRegions(),
     getCachedLookupData(),
+    getAllCounties(),
   ]);
 
   return (
@@ -475,7 +477,7 @@ export default async function RootLayout({
             crossOrigin="anonymous"
           />
 
-{/* Icons - using dynamic icon route */}
+          {/* Icons - using dynamic icon route */}
           <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
           <link rel="apple-touch-icon" href="/icon" type="image/png" />
           <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
@@ -555,7 +557,7 @@ export default async function RootLayout({
           <main className="bg-black/80 flex-1 py-4 w-full">
             <TooltipProvider>{children}</TooltipProvider>
             <LocationInitializer
-              initialCounties={counties.data}
+              initialCounties={allCounties.data}
               initialRegions={regions.data}
               initialLookup={lookup.data}
             />

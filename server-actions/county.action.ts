@@ -56,6 +56,6 @@ export async function getPopularCounties(limitCount: number = 15) {
 export async function revalidateCounties() {
   "use server";
   revalidatePath("/");
-  revalidateTag("counties");
+  revalidateTag("counties", "layout");
   return { success: true };
 }
