@@ -16,7 +16,7 @@ import {
 import LocationInitializer from "@/components/FileInputInitializer";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import Head from "next/head";
-import { getAllCounties } from "@/server-actions/region.action";
+import { getAllCounties } from "@/server-actions/county.action";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds

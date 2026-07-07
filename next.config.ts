@@ -110,6 +110,7 @@ const nextConfig: NextConfig = {
         hostname: "localhost",
       },
     ],
+    qualities: [50, 75, 60, 90],
   },
 
   typescript: {

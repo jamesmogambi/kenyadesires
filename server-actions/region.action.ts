@@ -11,6 +11,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { serializeDoc, serializeDocs } from "@/lib/firebase-serializer";
+import { getAllCounties } from "./county.action";
 
 export interface ICounty {
   id: string;
@@ -98,30 +99,6 @@ export async function getPopularCounties(options?: {
 export async function clearPopularCountiesCache() {
   cachedPopularCounties = null;
   return { success: true, message: "Cache cleared" };
-}
-
-export async function getAllCounties() {
-  try {
-    const countiesRef = collection(db, "counties");
-    const q = query(countiesRef, orderBy("name", "asc"));
-    const querySnapshot = await getDocs(q);
-
-    // Serialize the documents (convert Timestamps to ISO strings)
-    const counties = serializeDocs<ICounty>(querySnapshot.docs);
-
-    return {
-      success: true,
-      data: counties,
-      count: counties.length,
-    };
-  } catch (error) {
-    console.error("Error fetching all counties:", error);
-    return {
-      success: false,
-      error: "Failed to fetch counties",
-      data: [],
-    };
-  }
 }
 
 // Get county by ID
