@@ -17,6 +17,7 @@ import {
   getMassageEscortCount,
   getFirstMassageEscort,
 } from "@/lib/metadata-helper";
+import { getEroticMassageEscorts } from "@/server-actions/erotic-massage.action";
 
 export const revalidate = 604800; // 7 days in seconds
 
@@ -153,6 +154,8 @@ export async function generateMetadata(
       "wellness massage",
       "spa services Kenya",
       "therapeutic massage",
+      "massage",
+      "massage services",
     ]);
 
     if (formattedMassageType) {
@@ -220,7 +223,8 @@ export async function generateMetadata(
   });
 
   const totalPages = Math.ceil(totalMasseuses / ITEMS_PER_PAGE);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();
@@ -328,7 +332,7 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getCachedMassageEscorts({
+  } = await getEroticMassageEscorts({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     county: params.county,

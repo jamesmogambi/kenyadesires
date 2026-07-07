@@ -12,6 +12,7 @@ import { generateBDSMStructuredData } from "./seo-utils";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { getCachedBDSMEscorts } from "@/lib/cache";
 import { getBDSMEscortCount, getFirstBDSMEscort } from "@/lib/metadata-helper";
+import { getBDSMEscorts } from "@/server-actions/bdsm.action";
 
 export const revalidate = 604800; // 7 days in seconds
 
@@ -157,7 +158,8 @@ export async function generateMetadata(
   });
 
   const totalPages = Math.ceil(totalBDSM / ITEMS_PER_PAGE);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
 
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();
@@ -263,7 +265,7 @@ const BDSMPage = async ({ searchParams }: PageProps) => {
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getCachedBDSMEscorts({
+  } = await getBDSMEscorts({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     county: params.county === "all" ? undefined : params.county,
