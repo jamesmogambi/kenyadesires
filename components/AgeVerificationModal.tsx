@@ -1,27 +1,60 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Logo from "./Logo";
 
 const STORAGE_KEY = "kd_age_verified";
+const EXPIRY_DAYS = 30; // Age verification expires after 30 days
+
+interface VerificationData {
+  verified: boolean;
+  timestamp: string;
+}
 
 export default function AgeVerificationModal() {
-  const [show, setShow] = React.useState(true);
-  const [denied, setDenied] = React.useState(false);
+  const [show, setShow] = useState(false);
+  const [denied, setDenied] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    setIsClient(true);
+
     try {
-      if (localStorage.getItem(STORAGE_KEY) !== "true") {
-        setShow(true);
+      const stored = localStorage.getItem(STORAGE_KEY);
+
+      if (stored) {
+        const data = JSON.parse(stored) as VerificationData;
+
+        // Check if verification is still valid
+        if (data.verified && data.timestamp) {
+          const expiryDate = new Date(data.timestamp);
+          const now = new Date();
+          const daysDiff =
+            (now.getTime() - expiryDate.getTime()) / (1000 * 60 * 60 * 24);
+
+          // If within expiry period, don't show modal
+          if (daysDiff < EXPIRY_DAYS) {
+            setShow(false);
+            return;
+          }
+        }
       }
+
+      // Show modal if no valid verification found
+      setShow(true);
     } catch {
+      // If any error (corrupted storage, etc.), show modal
       setShow(true);
     }
   }, []);
 
   const handleConfirm = () => {
     try {
-      localStorage.setItem(STORAGE_KEY, "true");
+      const data: VerificationData = {
+        verified: true,
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       // ignore storage errors
     }
@@ -32,11 +65,15 @@ export default function AgeVerificationModal() {
     setDenied(true);
   };
 
+  // Don't render anything on server to avoid hydration mismatch
+  if (!isClient) return null;
+
+  // Don't show if user already verified
   if (!show) return null;
 
   return (
-    <div className="fixed outline-0 border-0 inset-0 z-100 flex items-center justify-center bg-black/95 p-4">
-      <div className="w-full max-w-md rounded-none border border-white/10 bg-dark-slate p-6 text-center shadow-2xl">
+    <div className="fixed outline-0 border-0 inset-0 z-200 flex items-center justify-center bg-black/95 p-4">
+      <div className="w-full max-w-md rounded-none border border-none bg-dark-slate p-6 text-center shadow-2xl">
         {!denied ? (
           <>
             {/* <h1 className="text-2xl font-bold text-white">

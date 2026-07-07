@@ -18,6 +18,11 @@ import AgeVerificationModal from "@/components/AgeVerificationModal";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 
+import { ConsentProvider, CookieBanner } from "@convective/gdpr-consent";
+import { headers } from "next/headers";
+import { GoogleAnalytics } from "./GoogleAnalytics";
+import { CustomCookieBanner } from "./CustomCookieBanner";
+
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
 
@@ -445,6 +450,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+
+  // This is the key for Firebase Hosting
+  // The cloudfront-viewer-country header is set by Firebase Hosting's CDN
+  const countryCode = headersList.get("cloudfront-viewer-country");
   // ✅ Pre-fetch on server
   const [counties, regions, lookup, allCounties] = await Promise.all([
     getCachedPopularCounties(),
@@ -521,56 +531,68 @@ export default async function RootLayout({
             href="/sitemap.xml"
           />
         </Head>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
+        <ConsentProvider
+          countryCode={countryCode}
+          config={{
+            // In development, you might want to force the banner to show for testing
+            defaultIsEU: process.env.NODE_ENV === "production",
+          }}
         >
-          {/* Fixed Grayscale Background */}
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100vw",
-              height: "100vh",
-              zIndex: -1,
-              overflow: "hidden",
-            }}
+          <GoogleAnalytics />
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
           >
-            <Image
-              src="/background.jpg"
-              alt="KenyaDesires Background"
-              fill
-              priority
-              quality={50}
+            {/* Fixed Grayscale Background */}
+            <div
               style={{
-                objectFit: "cover",
-                filter: "grayscale(100%)",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: -1,
+                overflow: "hidden",
               }}
-            />
-          </div>
+            >
+              <Image
+                src="/background.jpg"
+                alt="KenyaDesires Background"
+                fill
+                priority
+                quality={50}
+                style={{
+                  objectFit: "cover",
+                  filter: "grayscale(100%)",
+                }}
+              />
+            </div>
 
-          <header>
-            <Header initialCounties={counties.data} />
-          </header>
+            <header>
+              <Header initialCounties={counties.data} />
+            </header>
 
-          {/* Main Content */}
-          <main className="bg-black/80 flex-1 py-4 w-full">
-            <TooltipProvider>{children}</TooltipProvider>
-            <LocationInitializer
-              initialCounties={allCounties.data}
-              initialRegions={regions.data}
-              initialLookup={lookup.data}
-            />
-          </main>
+            {/* Main Content */}
+            <main className="bg-black/80 flex-1 py-4 w-full">
+              {/* <CookieBanner privacyPolicyUrl="/privacy" /> */}
 
-          <div>
-            <Footer />
-          </div>
+              <TooltipProvider>{children}</TooltipProvider>
+              <LocationInitializer
+                initialCounties={allCounties.data}
+                initialRegions={regions.data}
+                initialLookup={lookup.data}
+              />
+            </main>
 
-          <Toaster position="bottom-left" />
+            <div>
+              <Footer />
+            </div>
 
-          <AgeVerificationModal />
-        </body>
+            <Toaster position="bottom-left" />
+
+            <AgeVerificationModal />
+          </body>
+          <CustomCookieBanner />
+        </ConsentProvider>
       </html>
     </ClerkProvider>
   );
