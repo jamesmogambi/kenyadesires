@@ -19,6 +19,7 @@ import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 
 import { headers } from "next/headers";
+import { PostHogProvider } from "./PostHogProvider";
 // import { GoogleAnalytics } from "./GoogleAnalytics";
 // import { CustomCookieBanner } from "./CustomCookieBanner";
 
@@ -568,7 +569,9 @@ export default async function RootLayout({
           <main className="bg-black/80 flex-1 py-4 w-full">
             {/* <CookieBanner privacyPolicyUrl="/privacy" /> */}
 
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <PostHogProvider>{children}</PostHogProvider>
+            </TooltipProvider>
             <LocationInitializer
               initialCounties={allCounties.data}
               initialRegions={regions.data}

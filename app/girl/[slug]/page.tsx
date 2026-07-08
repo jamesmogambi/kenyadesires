@@ -1,3 +1,4 @@
+// app/girl/[slug]/page.tsx
 import React from "react";
 import { notFound } from "next/navigation";
 import {
@@ -11,10 +12,10 @@ import GirlProfile from "../GirlProfile";
 import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
-import { getCachedEscortById } from "@/lib/cache";
-import { getEscortById } from "@/server-actions/girl.action";
+import { getEscortByIdentifier } from "@/server-actions/girl.action";
+// import { getEscortByIdentifier } from "@/server-actions/get-escorts";
 
-// ✅ ISR - Rebuild page after revalidate time (data doesn't change frequently)
+// ✅ ISR - Rebuild page after revalidate time
 export const revalidate = 604800; // 7 days in seconds
 
 // Generate metadata for the escort profile page
@@ -25,8 +26,8 @@ export async function generateMetadata(
   const { slug } = await params;
 
   try {
-    // ✅ Use cached version
-    const result = await getCachedEscortById(slug);
+    // ✅ Get escort by identifier (handles ID, slug, or username)
+    const result = await getEscortByIdentifier(slug);
 
     if (!result) {
       return {
@@ -40,9 +41,55 @@ export async function generateMetadata(
       };
     }
 
-    const escort: any = result;
-    const displayName = formatSlugToTitle(escort.name || escort.username);
-    const location = escort.town || escort.primaryRegion || "Kenya";
+    const escort = result;
+    const displayName = formatSlugToTitle(
+      escort.name || escort.username || "Escort",
+    );
+    const location =
+      escort.primaryRegion || escort.locations?.[0]?.region || "Kenya";
+
+    // Get cleaned images for metadata
+    const getCleanedImages = () => {
+      if (!escort.imagesMetadata) return [];
+
+      const cleanedUrls: string[] = [];
+      Object.values(escort.imagesMetadata).forEach((metadata: any) => {
+        if (metadata.status === "completed" && metadata.cleanedUrl) {
+          cleanedUrls.push(metadata.cleanedUrl);
+        }
+      });
+      return cleanedUrls;
+    };
+
+    const cleanedImages = getCleanedImages();
+
+    // Use cleaned preview photo if available
+    const getCleanedPreviewPhoto = () => {
+      if (!escort.imagesMetadata || !escort.previewPhoto)
+        return escort.previewPhoto;
+
+      const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
+      if (
+        previewMetadata?.status === "completed" &&
+        previewMetadata?.cleanedUrl
+      ) {
+        return previewMetadata.cleanedUrl;
+      }
+      return escort.previewPhoto;
+    };
+
+    const primaryImage =
+      getCleanedPreviewPhoto() ||
+      cleanedImages[0] ||
+      escort.previewPhoto ||
+      escort.images?.[0];
+
+    const priceAmount =
+      (
+        (escort as any).ratePerHour ??
+        (escort as any).pricePerHour ??
+        (escort as any).hourlyRate
+      )?.toString() || "";
 
     // Generate description
     const generateDescription = () => {
@@ -54,14 +101,8 @@ export async function generateMetadata(
         return `${escort.about.substring(0, 160)}... Book ${displayName} for an unforgettable experience in ${location}.`;
       }
 
-      return `${displayName} is a ${age} ${categories} based in ${location}. ${escort.measurements ? `Measurements: ${escort.measurements}. ` : ""}Verified companion on KenyaDesires. Available for incall and outcall services.`;
+      return `${displayName} is a ${age} ${categories} based in ${location}. Verified companion on KenyaDesires. Available for incall and outcall services.`;
     };
-
-    // Get primary image
-    const primaryImage =
-      escort.images?.find((img: any) => img.isPrimary)?.url ||
-      escort.previewPhoto ||
-      escort.images?.[0]?.url;
 
     return {
       title: `${displayName} - ${location} | Premium Escort | KenyaDesires`,
@@ -88,7 +129,7 @@ export async function generateMetadata(
         type: "profile",
         title: `${displayName} - Premium Escort in ${location} | KenyaDesires`,
         description: generateDescription().substring(0, 200),
-        url: `${process.env.NEXT_PUBLIC_SITE_URL}/girl/${escort.id}`,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL}/girl/${escort.id || slug}`,
         siteName: "KenyaDesires Kenya",
         images: primaryImage
           ? [
@@ -133,7 +174,7 @@ export async function generateMetadata(
       },
 
       alternates: {
-        canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/girl/${escort.id}`,
+        canonical: `${process.env.NEXT_PUBLIC_SITE_URL}/girl/${escort.id || slug}`,
       },
 
       category: "Adult Entertainment",
@@ -143,7 +184,7 @@ export async function generateMetadata(
         "profile:gender": "female",
         "profile:age": escort.age?.toString() || "",
         "og:availability": "available",
-        "og:price:amount": escort.ratePerHour?.toString() || "",
+        "og:price:amount": (escort as any).ratePerHour?.toString() || "",
         "og:price:currency": "KES",
       },
     };
@@ -166,19 +207,46 @@ interface EscortPageProps {
 const EscortProfilePage = async ({ params }: EscortPageProps) => {
   const { slug } = await params;
 
-  // ✅ Use cached version
-  const result = await getEscortById(slug);
+  // ✅ Validate slug
+  if (!slug || slug.trim() === "") {
+    notFound();
+  }
+
+  // ✅ Get escort by identifier (handles ID, slug, or username)
+  const result = await getEscortByIdentifier(slug);
 
   if (!result) {
     notFound();
   }
 
   const escort = result;
-  const displayName = formatSlugToTitle(escort.name || escort.username);
-  const location = escort.primaryRegion || escort.locations?.[0] || "Kenya";
+  const displayName = formatSlugToTitle(
+    escort.name || escort.username || "Escort",
+  );
+  const location =
+    escort.primaryRegion || escort.locations?.[0]?.region || "Kenya";
 
-  // Generate structured data
-  const structuredData = generateEscortStructuredData(escort);
+  // Helper to get cleaned images
+  const getCleanedImages = () => {
+    if (!escort.imagesMetadata) return [];
+
+    const cleanedUrls: string[] = [];
+    Object.values(escort.imagesMetadata).forEach((metadata: any) => {
+      if (metadata.status === "completed" && metadata.cleanedUrl) {
+        cleanedUrls.push(metadata.cleanedUrl);
+      }
+    });
+    return cleanedUrls;
+  };
+
+  const cleanedImages = getCleanedImages();
+  const hasCleanedImages = cleanedImages.length > 0;
+
+  // Generate structured data with cleaned images
+  const structuredData = generateEscortStructuredData({
+    ...escort,
+    images: hasCleanedImages ? cleanedImages : escort.images,
+  });
 
   // Generate breadcrumb structured data
   const breadcrumbData = {
@@ -202,16 +270,16 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
             {
               "@type": "ListItem",
               position: 3,
-              name: `${escort.county} Escorts`,
-              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls?county=${encodeURIComponent(escort.county)}`,
+              name: `${escort.county || escort.primaryRegion} Escorts`,
+              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls?region=${encodeURIComponent(escort.primaryRegion)}`,
             },
           ]
         : []),
       {
         "@type": "ListItem",
-        position: escort.county ? 4 : 3,
+        position: escort.primaryRegion ? 4 : 3,
         name: displayName,
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girl/${escort.id}`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girl/${escort.id || slug}`,
       },
     ],
   };
@@ -258,6 +326,9 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
     ],
   };
 
+  // Get the identifier for display (use ID if available, otherwise use the slug)
+  const profileIdentifier = escort.id || slug;
+
   return (
     <>
       {/* Structured Data Scripts */}
@@ -295,12 +366,14 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
             <BreadcrumbItem>
               <Link
                 className="text-primary text-lg hover:text-primary/80 bg-transparent font-bold transition-colors whitespace-nowrap"
-                href={`/girls?region=${encodeURIComponent(escort.primaryRegion)}`}
-                aria-label={`${escort.county} Escorts`}
+                href={`/girls?region=${encodeURIComponent(escort.primaryRegion || "")}`}
+                aria-label={`${escort.county || escort.primaryRegion} Escorts`}
               >
                 <span className="text-white font-bold">sex</span>
                 {"   "}
-                <span className="capitalize">{escort.primaryRegion}</span>
+                <span className="capitalize">
+                  {escort.primaryRegion || "Kenya"}
+                </span>
               </Link>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="text-white/60 lg:text-base">
@@ -322,6 +395,17 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         <h1 className="sr-only">
           {displayName} - Premium Escort in {location} | KenyaDesires Kenya
         </h1>
+
+        {/* TODO: add verification badge in future */}
+        {/* Cleaned Images Badge */}
+        {/* {hasCleanedImages && (
+          <div className="mb-4 flex items-center gap-2 bg-green-500/20 text-green-300 px-4 py-2 rounded-lg border border-green-500/30">
+            <span className="text-lg">✨</span>
+            <span className="text-sm font-medium">
+              This escort has {cleanedImages.length} verified cleaned images
+            </span>
+          </div>
+        )} */}
 
         {/* Main Profile Component */}
         <GirlProfile girl={escort} />

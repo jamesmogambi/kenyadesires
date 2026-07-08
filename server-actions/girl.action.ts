@@ -88,44 +88,37 @@ function getCleanedPreviewPhoto(escort: Escort): string | undefined {
 
 /**
  * Internal function that fetches escort by ID with cleaned images
- * This is the actual function that does the work (not cached)
  */
 async function fetchEscortById(id: string): Promise<Escort | null> {
   try {
-    // ✅ Early validation
     if (!id || id.trim() === "") {
       return null;
     }
 
-    // ✅ Single query
     const doc = await adminDb.collection("escorts").doc(id).get();
 
     if (!doc.exists) {
       return null;
     }
 
-    // ✅ Convert to Escort
     const escort = convertDocToEscort(doc);
 
-    // ✅ Fire and forget - increment view count
+    // Fire and forget - increment view count
     adminDb
       .collection("escorts")
       .doc(id)
       .update({
         totalViews: FieldValue.increment(1),
       })
-      .catch(() => {}); // Silent fail
+      .catch(() => {});
 
-    // ✅ If no cleaned images, return null
     if (!hasCleanedImages(escort)) {
       return null;
     }
 
-    // ✅ Get cleaned image URLs
     const cleanedImages = getCleanedImageUrls(escort);
     const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
 
-    // ✅ Return escort with only cleaned images
     return {
       ...escort,
       images: cleanedImages,
@@ -139,51 +132,202 @@ async function fetchEscortById(id: string): Promise<Escort | null> {
 }
 
 /**
+ * Internal function that fetches escort by Slug
+ */
+async function fetchEscortBySlug(slug: string): Promise<Escort | null> {
+  try {
+    if (!slug || slug.trim() === "") {
+      return null;
+    }
+
+    const snapshot = await adminDb
+      .collection("escorts")
+      .where("slug", "==", slug)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    const doc = snapshot.docs[0];
+    const escort = convertDocToEscort(doc);
+
+    // Fire and forget - increment view count
+    adminDb
+      .collection("escorts")
+      .doc(doc.id)
+      .update({
+        totalViews: FieldValue.increment(1),
+      })
+      .catch(() => {});
+
+    if (!hasCleanedImages(escort)) {
+      return null;
+    }
+
+    const cleanedImages = getCleanedImageUrls(escort);
+    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
+
+    return {
+      ...escort,
+      images: cleanedImages,
+      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
+      imagesMetadata: escort.imagesMetadata,
+    };
+  } catch (error) {
+    console.error("Error fetching escort by slug:", error);
+    return null;
+  }
+}
+
+/**
+ * Internal function that fetches escort by Username
+ */
+async function fetchEscortByUsername(username: string): Promise<Escort | null> {
+  try {
+    if (!username || username.trim() === "") {
+      return null;
+    }
+
+    const snapshot = await adminDb
+      .collection("escorts")
+      .where("username", "==", username)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    const doc = snapshot.docs[0];
+    const escort = convertDocToEscort(doc);
+
+    // Fire and forget - increment view count
+    adminDb
+      .collection("escorts")
+      .doc(doc.id)
+      .update({
+        totalViews: FieldValue.increment(1),
+      })
+      .catch(() => {});
+
+    if (!hasCleanedImages(escort)) {
+      return null;
+    }
+
+    const cleanedImages = getCleanedImageUrls(escort);
+    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
+
+    return {
+      ...escort,
+      images: cleanedImages,
+      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
+      imagesMetadata: escort.imagesMetadata,
+    };
+  } catch (error) {
+    console.error("Error fetching escort by username:", error);
+    return null;
+  }
+}
+
+/**
+ * Get a single escort by any identifier (ID, Slug, or Username)
+ * Tries ID first, then Slug, then Username
+ */
+export async function getEscortByIdentifier(
+  identifier: string,
+): Promise<Escort | null> {
+  if (!identifier || identifier.trim() === "") {
+    return null;
+  }
+
+  // Try by ID first
+  let escort = await getEscortById(identifier);
+  if (escort) return escort;
+
+  // Try by Slug
+  escort = await getEscortBySlug(identifier);
+  if (escort) return escort;
+
+  // Try by Username
+  escort = await getEscortByUsername(identifier);
+  if (escort) return escort;
+
+  return null;
+}
+
+/**
  * Get a single escort by ID with only cleaned images
- * Returns the escort with images filtered to only cleaned ones
- * Cached for 2 weeks (1209600 seconds)
+ * Cached for 2 weeks
  */
 export const getEscortById = unstable_cache(
   fetchEscortById,
-  // Cache key
-  ["escort-cleaned"],
+  ["escort-cleaned-id"],
   {
-    revalidate: 1209600, // 2 weeks in seconds (14 days * 24 hours * 60 minutes * 60 seconds)
+    revalidate: 1209600,
     tags: ["escorts", "cleaned-images", "escort-detail"],
   },
 );
 
 /**
+ * Get a single escort by Slug with only cleaned images
+ * Cached for 2 weeks
+ */
+export const getEscortBySlug = unstable_cache(
+  fetchEscortBySlug,
+  ["escort-cleaned-slug"],
+  {
+    revalidate: 1209600,
+    tags: ["escorts", "cleaned-images", "escort-detail"],
+  },
+);
+
+/**
+ * Get a single escort by Username with only cleaned images
+ * Cached for 2 weeks
+ */
+export const getEscortByUsername = unstable_cache(
+  fetchEscortByUsername,
+  ["escort-cleaned-username"],
+  {
+    revalidate: 1209600,
+    tags: ["escorts", "cleaned-images", "escort-detail"],
+  },
+);
+
+/**
+ * Get a single escort by ID with cleaned images (returns null if no cleaned images)
+ * Alias for getEscortById for clarity
+ */
+export const getEscortByIdWithCleanedImages = getEscortById;
+
+/**
  * Get a single escort by ID (returns original images, not cleaned)
- * Use this when you need the full escort data with original images
  * Not cached - always fresh
  */
 export async function getEscortByIdOriginal(
   id: string,
 ): Promise<Escort | null> {
   try {
-    // ✅ Early validation
     if (!id || id.trim() === "") {
       return null;
     }
 
-    // ✅ Single query
     const doc = await adminDb.collection("escorts").doc(id).get();
 
     if (!doc.exists) {
       return null;
     }
 
-    // ✅ Fire and forget - increment view count
     adminDb
       .collection("escorts")
       .doc(id)
       .update({
         totalViews: FieldValue.increment(1),
       })
-      .catch(() => {}); // Silent fail
+      .catch(() => {});
 
-    // ✅ Fast sync conversion
     return convertDocToEscortFast(doc);
   } catch (error) {
     console.error("Error fetching escort:", error);
@@ -192,15 +336,7 @@ export async function getEscortByIdOriginal(
 }
 
 /**
- * Get a single escort by ID with cleaned images (returns null if no cleaned images)
- * Alias for getEscortById for clarity
- * Cached for 2 weeks
- */
-export const getEscortByIdWithCleanedImages = getEscortById;
-
-/**
  * Get a single escort by ID and also get cleaned images separately
- * Returns both the escort and cleaned images
  * Cached for 2 weeks
  */
 export const getEscortByIdWithSeparateCleanedImages = unstable_cache(
@@ -208,35 +344,29 @@ export const getEscortByIdWithSeparateCleanedImages = unstable_cache(
     id: string,
   ): Promise<{ escort: Escort | null; cleanedImages: string[] }> => {
     try {
-      // ✅ Early validation
       if (!id || id.trim() === "") {
         return { escort: null, cleanedImages: [] };
       }
 
-      // ✅ Single query
       const doc = await adminDb.collection("escorts").doc(id).get();
 
       if (!doc.exists) {
         return { escort: null, cleanedImages: [] };
       }
 
-      // ✅ Convert to Escort
       const escort = convertDocToEscort(doc);
 
-      // ✅ Fire and forget - increment view count
       adminDb
         .collection("escorts")
         .doc(id)
         .update({
           totalViews: FieldValue.increment(1),
         })
-        .catch(() => {}); // Silent fail
+        .catch(() => {});
 
-      // ✅ Get cleaned images
       const cleanedImages = getCleanedImageUrls(escort);
       const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
 
-      // ✅ Return both
       return {
         escort: {
           ...escort,
@@ -250,10 +380,9 @@ export const getEscortByIdWithSeparateCleanedImages = unstable_cache(
       return { escort: null, cleanedImages: [] };
     }
   },
-  // Cache key
   ["escort-cleaned-separate"],
   {
-    revalidate: 1209600, // 2 weeks
+    revalidate: 1209600,
     tags: ["escorts", "cleaned-images", "escort-detail"],
   },
 );
@@ -324,14 +453,22 @@ export async function hasEscortCleanedImages(
   }
 }
 
-// Function to manually revalidate escort cache
+/**
+ * Manually revalidate escort cache
+ */
 export async function revalidateEscortCache(id: string) {
   "use server";
 
   const { revalidateTag } = await import("next/cache");
-  for (const tag of ["escorts", "cleaned-images", "escort-detail"]) {
-    revalidateTag(tag, undefined as any);
-  }
+  // revalidateTag requires two arguments in this Next.js version: tag and options.
+  // Provide an empty options object to satisfy the type.
+  revalidateTag("escorts", {});
+  revalidateTag("cleaned-images", {});
+  revalidateTag("escort-detail", {});
+  revalidateTag("escort-cleaned-id", {});
+  revalidateTag("escort-cleaned-slug", {});
+  revalidateTag("escort-cleaned-username", {});
+  revalidateTag("escort-cleaned-separate", {});
 
   return { success: true };
 }
