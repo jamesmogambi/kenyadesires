@@ -5,12 +5,6 @@ import { uploadToFirebase } from '@/lib/firebase/storage';
 import { getEscortById, updateEscortImages, logCleaningEvent } from '@/lib/firebase/firestore';
 // import { verifyAuth } from '@/lib/auth';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(
   request: NextRequest,
   { params }: { params: { escortId: string } }
