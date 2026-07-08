@@ -3,8 +3,8 @@
   "version": "1.3.3",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev ",
+    "build": "next build ",
     "start": "next start",
     "lint": "next lint",
     "fix-ages": "tsx scripts/fix-invalid-ages.ts",
@@ -46,7 +46,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "firebase": "^12.12.0",
-    "firebase-admin": "^13.10.0",
+    "firebase-admin": "^10.3.0",
     "gray-matter": "^4.0.3",
     "https-proxy-agent": "^9.0.0",
     "input-otp": "^1.4.2",
@@ -56,7 +56,7 @@
     "next-mdx-remote": "^6.0.0",
     "next-themes": "^0.4.6",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^8.0.10",
+    "nodemailer": "^9.0.3",
     "posthog-js": "^1.398.3",
     "posthog-node": "^5.21.2",
     "quill": "^2.0.2",
@@ -94,11 +94,22 @@
     "typescript": "^5"
   },
   "main": "index.js",
-  "repository": "git@github.com:jamesmogambi/escortKE.git",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jamesmogambi/escortKE.git"
+  },
   "author": "Jimmy <mugambijames96@gmail.com>",
   "license": "MIT",
   "resolutions": {
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3"
-  }
+  },
+  "description": "KenyaDesires is a modern web application built with **Next.js 15**, providing a platform for connecting users with services in Kenya. It features a robust administration dashboard, complex search capabilities, and integrations with multiple cloud services for media and data management.",
+  "directories": {
+    "lib": "lib"
+  },
+  "bugs": {
+    "url": "https://github.com/jamesmogambi/escortKE/issues"
+  },
+  "homepage": "https://github.com/jamesmogambi/escortKE#readme"
 }
