@@ -60,7 +60,9 @@ const Footer = () => {
                   d="M24 33a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
                 ></path>
               </svg>{" "}
-              <span className=" group-hover:text-primary">create an ad</span>
+              <span className=" group-hover:text-primary">
+                create an advertisement
+              </span>
             </Link>
 
             <Link
@@ -85,7 +87,7 @@ const Footer = () => {
             </Link>
 
             <Link
-              href={"#"}
+              href={"/privacy-policy"}
               className="uppercase group font-medium flex items-center  gap-2 lg:py-5 text-base lg:text-lg   "
             >
               <svg
@@ -102,9 +104,7 @@ const Footer = () => {
                   d="M24 33a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
                 ></path>
               </svg>{" "}
-              <span className=" group-hover:text-primary">
-                personal data protection
-              </span>
+              <span className=" group-hover:text-primary">privacy policy</span>
             </Link>
           </div>
         </div>
