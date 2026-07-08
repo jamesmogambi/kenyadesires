@@ -18,10 +18,9 @@ import AgeVerificationModal from "@/components/AgeVerificationModal";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 
-import { ConsentProvider, CookieBanner } from "@convective/gdpr-consent";
 import { headers } from "next/headers";
-import { GoogleAnalytics } from "./GoogleAnalytics";
-import { CustomCookieBanner } from "./CustomCookieBanner";
+// import { GoogleAnalytics } from "./GoogleAnalytics";
+// import { CustomCookieBanner } from "./CustomCookieBanner";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
@@ -531,68 +530,61 @@ export default async function RootLayout({
             href="/sitemap.xml"
           />
         </Head>
-        <ConsentProvider
-          countryCode={countryCode}
-          config={{
-            // In development, you might want to force the banner to show for testing
-            defaultIsEU: process.env.NODE_ENV === "production",
-          }}
+
+        {/* <GoogleAnalytics /> */}
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
-          <GoogleAnalytics />
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
+          {/* Fixed Grayscale Background */}
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              zIndex: -1,
+              overflow: "hidden",
+            }}
           >
-            {/* Fixed Grayscale Background */}
-            <div
+            <Image
+              src="/background.jpg"
+              alt="KenyaDesires Background"
+              fill
+              priority
+              quality={50}
               style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100vw",
-                height: "100vh",
-                zIndex: -1,
-                overflow: "hidden",
+                objectFit: "cover",
+                filter: "grayscale(100%)",
               }}
-            >
-              <Image
-                src="/background.jpg"
-                alt="KenyaDesires Background"
-                fill
-                priority
-                quality={50}
-                style={{
-                  objectFit: "cover",
-                  filter: "grayscale(100%)",
-                }}
-              />
-            </div>
+            />
+          </div>
 
-            <header>
-              <Header initialCounties={counties.data} />
-            </header>
+          <header>
+            <Header initialCounties={counties.data} />
+          </header>
 
-            {/* Main Content */}
-            <main className="bg-black/80 flex-1 py-4 w-full">
-              {/* <CookieBanner privacyPolicyUrl="/privacy" /> */}
+          {/* Main Content */}
+          <main className="bg-black/80 flex-1 py-4 w-full">
+            {/* <CookieBanner privacyPolicyUrl="/privacy" /> */}
 
-              <TooltipProvider>{children}</TooltipProvider>
-              <LocationInitializer
-                initialCounties={allCounties.data}
-                initialRegions={regions.data}
-                initialLookup={lookup.data}
-              />
-            </main>
+            <TooltipProvider>{children}</TooltipProvider>
+            <LocationInitializer
+              initialCounties={allCounties.data}
+              initialRegions={regions.data}
+              initialLookup={lookup.data}
+            />
+          </main>
 
-            <div>
-              <Footer />
-            </div>
+          <div>
+            <Footer />
+          </div>
 
-            <Toaster position="bottom-left" />
+          <Toaster position="bottom-left" />
 
-            <AgeVerificationModal />
-          </body>
-          <CustomCookieBanner />
-        </ConsentProvider>
+          <AgeVerificationModal />
+        </body>
+        {/* <CustomCookieBanner /> */}
       </html>
     </ClerkProvider>
   );
