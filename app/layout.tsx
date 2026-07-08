@@ -15,6 +15,7 @@ import {
 } from "@/lib/cache";
 import LocationInitializer from "@/components/FileInputInitializer";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
+import ScrollToTopBottom from "@/components/ScrollToTopBottom";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 
@@ -584,6 +585,8 @@ export default async function RootLayout({
           </div>
 
           <Toaster position="bottom-left" />
+
+          <ScrollToTopBottom />
 
           <AgeVerificationModal />
         </body>
