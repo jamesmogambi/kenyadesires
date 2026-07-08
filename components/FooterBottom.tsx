@@ -13,21 +13,18 @@ const FooterBottom = () => {
         </span>
 
         <div className="flex mt-4 lg:mt-0 justify-center items-center flex-wrap  lg:gap-5">
-          <Link
+          {/* <Link
             href={
               "terms-of-use-for-the-web-interface-for-advertisers-and-users"
             }
             className="font-light"
           >
             Terms and Conditions
-          </Link>
-          <Link href={"/withdrawal-from-the-contract"} className="font-light">
+          </Link> */}
+          <Link href={"/withdrawal-contract"} className="font-light">
             Withdrawal from the Contract
           </Link>
-          <Link
-            href={"/terms of use of the web interface for users"}
-            className="font-light"
-          >
+          <Link href={"/terms"} className="font-light">
             Terms of Use of the Web Interface
           </Link>
         </div>

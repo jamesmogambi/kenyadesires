@@ -14,7 +14,14 @@ import {
   getCachedPopularCounties,
 } from "@/lib/cache";
 import LocationInitializer from "@/components/FileInputInitializer";
+import AgeVerificationModal from "@/components/AgeVerificationModal";
 import Head from "next/head";
+import { getAllCounties } from "@/server-actions/county.action";
+
+import { headers } from "next/headers";
+import { PostHogProvider } from "./PostHogProvider";
+// import { GoogleAnalytics } from "./GoogleAnalytics";
+// import { CustomCookieBanner } from "./CustomCookieBanner";
 
 // ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
 export const revalidate = 604800; // 7 days in seconds
@@ -443,11 +450,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+
+  // This is the key for Firebase Hosting
+  // The cloudfront-viewer-country header is set by Firebase Hosting's CDN
+  const countryCode = headersList.get("cloudfront-viewer-country");
   // ✅ Pre-fetch on server
-  const [counties, regions, lookup] = await Promise.all([
+  const [counties, regions, lookup, allCounties] = await Promise.all([
     getCachedPopularCounties(),
     getCachedRegions(),
     getCachedLookupData(),
+    getAllCounties(),
   ]);
 
   return (
@@ -474,7 +487,7 @@ export default async function RootLayout({
             crossOrigin="anonymous"
           />
 
-{/* Icons - using dynamic icon route */}
+          {/* Icons - using dynamic icon route */}
           <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
           <link rel="apple-touch-icon" href="/icon" type="image/png" />
           <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
@@ -518,6 +531,8 @@ export default async function RootLayout({
             href="/sitemap.xml"
           />
         </Head>
+
+        {/* <GoogleAnalytics /> */}
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
@@ -552,9 +567,13 @@ export default async function RootLayout({
 
           {/* Main Content */}
           <main className="bg-black/80 flex-1 py-4 w-full">
-            <TooltipProvider>{children}</TooltipProvider>
+            {/* <CookieBanner privacyPolicyUrl="/privacy" /> */}
+
+            <TooltipProvider>
+              <PostHogProvider>{children}</PostHogProvider>
+            </TooltipProvider>
             <LocationInitializer
-              initialCounties={counties.data}
+              initialCounties={allCounties.data}
               initialRegions={regions.data}
               initialLookup={lookup.data}
             />
@@ -565,7 +584,10 @@ export default async function RootLayout({
           </div>
 
           <Toaster position="bottom-left" />
+
+          <AgeVerificationModal />
         </body>
+        {/* <CustomCookieBanner /> */}
       </html>
     </ClerkProvider>
   );

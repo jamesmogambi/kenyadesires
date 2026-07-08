@@ -1,0 +1,50 @@
+{
+  "total": 5,
+  "processed": 5,
+  "successful": 3,
+  "failed": 2,
+  "details": [
+    {
+      "escortId": "%d8%a7%d9%84%d8%b9%d9%86%d9%88%d8%af-al3unood",
+      "success": true,
+      "total": 4,
+      "processed": 0,
+      "failed": 4,
+      "processingTime": 2970
+    },
+    {
+      "escortId": "",
+      "success": false,
+      "error": "Value for argument \"documentPath\" is not a valid resource path. Path must be a non-empty string.",
+      "processingTime": 0
+    },
+    {
+      "escortId": "3-young-beautiful-somalis-arabs-video-calls-massage-happy-ending",
+      "success": true,
+      "total": 1,
+      "processed": 0,
+      "failed": 1,
+      "processingTime": 1927
+    },
+    {
+      "escortId": "3sam-party",
+      "success": true,
+      "total": 2,
+      "processed": 0,
+      "failed": 2,
+      "processingTime": 1400
+    },
+    {
+      "escortId": "",
+      "success": false,
+      "error": "Value for argument \"documentPath\" is not a valid resource path. Path must be a non-empty string.",
+      "processingTime": 1
+    }
+  ],
+  "totalImages": 7,
+  "processedImages": 0,
+  "startTime": 1782855684444,
+  "endTime": 1782855691816,
+  "duration": 7.372,
+  "successRate": 60
+}

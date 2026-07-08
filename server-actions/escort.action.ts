@@ -6,6 +6,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 
 // Types
 export interface Escort {
+  cleaningHistory: never[];
   id: string;
   name: string;
   username: string;
@@ -60,6 +61,23 @@ export interface Escort {
   totalViews: number;
   createdAt: Date;
   updatedAt: Date;
+
+  // Watermark tracking fields
+  watermarkStatus?: "pending" | "processing" | "completed" | "failed";
+  watermarkError?: string;
+  lastProcessedAt?: Date;
+  imagesMetadata?: {
+    [imageUrl: string]: {
+      cleanedUrl?: string;
+      status: "pending" | "processing" | "completed" | "failed";
+      errorMessage?: string;
+      processedAt?: Date;
+      fileSize?: number;
+      mimeType?: string;
+    };
+  };
+  totalImagesProcessed?: number;
+  totalImagesFailed?: number;
 }
 
 export interface Location {
@@ -144,6 +162,7 @@ export const convertDocSnapshotToEscort = async (
   if (!data) return null;
 
   return {
+    cleaningHistory: data.cleaningHistory || [],
     id: doc.id,
     name: data.name,
     username: data.username,
@@ -214,6 +233,7 @@ export const convertQueryDocToEscort = async (
 ): Promise<Escort> => {
   const data = doc.data();
   return {
+    cleaningHistory: data.cleaningHistory || [],
     id: doc.id,
     name: data.name,
     username: data.username,
@@ -724,6 +744,7 @@ function convertDocToEscortFast(doc: any): Escort {
     totalReviews: data.totalReviews || 0,
     rating: data.rating || 0,
     totalViews: data.totalViews || 0,
+    cleaningHistory: data.cleaningHistory || [],
     createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
     updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
   };

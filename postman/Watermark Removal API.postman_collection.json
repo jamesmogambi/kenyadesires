@@ -1,0 +1,88 @@
+{
+  "info": {
+    "name": "Watermark Removal API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Start Processing",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "x-api-key", "value": "{{internal_api_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"start\",\n  \"limit\": 50,\n  \"batchSize\": 5,\n  \"maxConcurrent\": 3\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/dewatermark/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "dewatermark", "batch"]
+        }
+      }
+    },
+    {
+      "name": "Check Status",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "x-api-key", "value": "{{internal_api_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"status\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/dewatermark/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "dewatermark", "batch"]
+        }
+      }
+    },
+    {
+      "name": "Stop Processing",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "x-api-key", "value": "{{internal_api_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"stop\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/dewatermark/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "dewatermark", "batch"]
+        }
+      }
+    },
+    {
+      "name": "Reset Checkpoint",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "x-api-key", "value": "{{internal_api_key}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"reset\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/dewatermark/batch",
+          "host": ["{{base_url}}"],
+          "path": ["api", "dewatermark", "batch"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:4000" },
+    { "key": "internal_api_key", "value": "your_secure_internal_api_key" }
+  ]
+}

@@ -249,7 +249,7 @@ const GirlFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1 max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
           <div className="flex flex-row w-full gap-1.5 flex-wrap">
             {counties.map((item: ICounty) => (
               <DropdownMenuItem
@@ -271,7 +271,7 @@ const GirlFilterInput = ({ className }: Prop) => {
       {/* Region/City Filter */}
       <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
         <DropdownMenuTrigger
-          className="self-end text-nowrap overflow-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md"
+          className="self-end text-nowrap text-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md"
           disabled={!county}
         >
           {region ? (
@@ -318,7 +318,7 @@ const GirlFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1 max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
           {regions.length === 0 ? (
             <div className="text-white/50 text-center py-4">
               {county
@@ -390,7 +390,7 @@ const GirlFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1 max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
           <div className="flex flex-wrap gap-1.5">
             {variantPractices?.map((item: any) => (
               <DropdownMenuItem
@@ -402,7 +402,9 @@ const GirlFilterInput = ({ className }: Prop) => {
                 }}
                 key={item.id}
               >
-                {item.name}
+                {item.name.split(" ").length > 10
+                  ? item.name.split(" ").slice(0, 10).join(" ") + "..."
+                  : item.name}
               </DropdownMenuItem>
             ))}
           </div>

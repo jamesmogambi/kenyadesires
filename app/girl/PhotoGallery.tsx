@@ -49,7 +49,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
 
   if (!photos || photos.length === 0) {
     return (
-      <div className="mt-5 w-full bg-transparent rounded-lg flex items-center justify-center h-[400px]">
+      <div className="mt-5 w-full bg-transparent rounded-lg flex items-center justify-center h-100">
         <span className="text-gray-400">No photos available</span>
       </div>
     );
@@ -58,7 +58,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
   return (
     <div className="mt-5 w-full group">
       {/* Main Image Swiper */}
-      <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-transparent rounded-t-lg overflow-hidden">
+      <div className="relative w-full h-100 md:h-125 lg:h-150 bg-transparent rounded-t-lg overflow-hidden">
         <Swiper
           modules={[Navigation, Pagination, Scrollbar, A11y]}
           spaceBetween={0}
@@ -73,7 +73,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           {photos.map((src, index) => (
             <SwiperSlide key={index}>
               <div className="relative w-full h-full bg-transparent">
-                <div className="absolute inset-0 pb-[5px]">
+                <div className="absolute inset-0 pb-1.25">
                   <Image
                     src={src}
                     alt={`${title} - Image ${index + 1}`}
@@ -82,14 +82,14 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
                     sizes="100vw"
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
-                    quality={50}
+                    quality={90}
                     onError={(e) => {
                       console.error(`Failed to load image: ${src}`);
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 h-[5px] bg-primary"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1.25 bg-primary"></div>
               </div>
             </SwiperSlide>
           ))}

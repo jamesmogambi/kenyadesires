@@ -45,7 +45,7 @@ const Header = ({ initialCounties }: Prop) => {
               <div className="flex gap-3">
                 <LoginFormSheet>
                   <span
-                    className="text-white cursor-pointer font-medium p-2 px-4 rounded-sm  hover:text-primary  bg-[#343434]"
+                    className="text-white cursor-pointer font-medium py-2.5 px-6 rounded-sm  hover:text-primary  bg-[#343434]"
                     // href=""
                   >
                     login

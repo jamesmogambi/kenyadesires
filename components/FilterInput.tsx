@@ -128,7 +128,7 @@ const FilterInput = ({ className }: Prop) => {
       <LocationInitializer />
       {/* Counties */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger className=" self-end  cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
+        <DropdownMenuTrigger className=" self-end  cursor-pointer border-0 flex w-full lg:w-62.5 justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
           {county ? (
             <span className="text-slate-100 text-lg font-bold">
               {county.name}
@@ -154,7 +154,7 @@ const FilterInput = ({ className }: Prop) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           //   side="left"
-          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-[900px] bg-gray-1 "
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-225 bg-gray-1 "
         >
           <div className="flex flex-row w-full gap-1.5  flex-wrap">
             {counties.map((item: any) => (
@@ -183,7 +183,7 @@ const FilterInput = ({ className }: Prop) => {
       {/* region, city or region */}
 
       <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
-        <DropdownMenuTrigger className="self-end text-nowrap overflow-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
+        <DropdownMenuTrigger className="self-end text-nowrap text-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-62.5 justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
           {region ? (
             <span className="text-slate-100 text-lg font-bold">
               {region.name}
@@ -211,7 +211,7 @@ const FilterInput = ({ className }: Prop) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           //   side="left"
-          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-[900px] bg-gray-1 "
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-225 bg-gray-1 "
         >
           <div className="flex -2 gap-1.5 flex-wrap">
             {/* TODO: RENDER REGIONS BASED ON SELECTED COUNTY */}
@@ -240,7 +240,7 @@ const FilterInput = ({ className }: Prop) => {
 
       {/* practices */}
       <DropdownMenu open={practiceOpen} onOpenChange={setPracticeOpen}>
-        <DropdownMenuTrigger className=" cursor-pointer self-end border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
+        <DropdownMenuTrigger className=" cursor-pointer self-end border-0 flex w-full lg:w-62.5 justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
           {practice ? (
             <span className="text-slate-100 text-lg font-bold capitalize">
               {practice}
@@ -266,7 +266,7 @@ const FilterInput = ({ className }: Prop) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent
           //   side="left"
-          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-[900px] bg-gray-1 "
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-225 bg-gray-1 "
         >
           <div className="flex -2 gap-1.5 flex-wrap">
             {practices?.map((item: any) => (

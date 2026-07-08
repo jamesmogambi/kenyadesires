@@ -10,11 +10,11 @@ import {
   generateBreadcrumbList,
   generateListStructuredData,
 } from "./seo-utils";
-import { getCachedEscorts } from "@/lib/cache";
 import {
   getEscortCountForMetadata,
   getFirstEscortForMetadata,
 } from "@/lib/metadata-helper";
+import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 
 // ✅ ISR - 7 days
 export const revalidate = 604800; // 7 days in seconds
@@ -196,19 +196,20 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
 
   const title = getDynamicTitle();
 
-  // ✅ Use cached version
+  // ✅ Use the new action with cleaned images
   const {
     escorts,
     total,
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getCachedEscorts({
+  } = await getEscortsWithCleanedImages({
     county: params.county,
     region: params.region,
     practice: params.practice,
     page: currentPage,
     limit: ITEMS_PER_PAGE,
+    isActive: true,
   });
 
   const structuredData = generateListStructuredData({
