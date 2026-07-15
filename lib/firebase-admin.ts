@@ -3,20 +3,29 @@ import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
+// Decode the URL‑encoded private key
+const getPrivateKey = () => {
+  const encoded = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  if (!encoded) {
+    console.warn("FIREBASE_ADMIN_PRIVATE_KEY is not set");
+    return undefined;
+  }
+  try {
+    return decodeURIComponent(encoded);
+  } catch (err) {
+    console.error("Failed to decode FIREBASE_ADMIN_PRIVATE_KEY", err);
+    return undefined;
+  }
+};
+
 // Initialize Firebase Admin with environment variables
 const app = !getApps().length
   ? initializeApp({
       credential: cert({
         projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
         clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY
-          ? process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(
-              /\\n/g,
-              "\n",
-            ).replace(/^"|"$/g, "")
-          : undefined,
+        privateKey: getPrivateKey(),
       }),
-      // Use the correct bucket name from environment
       storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
     })
   : getApps()[0];

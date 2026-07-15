@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, XIcon } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, XIcon } from "lucide-react";
 import { useSignIn } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import EmailResetPasswordSheet from "./(password-reset)/EmailResetPasswordSheet";
@@ -51,6 +51,7 @@ const LoginFormSheet = ({ className, children }: Prop) => {
   const [loading, setLoader] = useState(false);
   const [error, setError] = useState<any>(null);
   const [open, setOpen] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signIn } = useSignIn();
 
@@ -58,8 +59,8 @@ const LoginFormSheet = ({ className, children }: Prop) => {
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "mogambi48@icloud.com",
-      password: "Obama2026@",
+      email: "",
+      password: "",
     },
   });
 
@@ -184,9 +185,24 @@ const LoginFormSheet = ({ className, children }: Prop) => {
                             <Input
                               placeholder="Password"
                               {...field}
-                              type="password"
+                              type={showPassword ? "text" : "password"}
                               className="bg-white flex-1 flex border-0 text-black  h-14  focus-visible:ring-0 "
                             />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              className="ml-1 cursor-pointer text-gray-1/60 hover:text-black transition-colors"
+                              aria-label={
+                                showPassword ? "Hide password" : "Show password"
+                              }
+                              aria-pressed={showPassword}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="size-5" />
+                              ) : (
+                                <Eye className="size-5" />
+                              )}
+                            </button>
                           </div>
                         </FormControl>
 
