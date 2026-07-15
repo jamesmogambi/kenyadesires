@@ -68,3 +68,4 @@ build/
 # Firebase credentials
 *firebase-adminsdk*.json
 
+config/firebase-admin.json

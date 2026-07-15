@@ -79,7 +79,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
                     alt={`${title} - Image ${index + 1}`}
                     fill
                     className="object-cover"
-                    sizes="100vw"
+                    sizes="(max-width: 1024px) 100vw, 40vw"
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
                     quality={90}

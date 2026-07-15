@@ -2,29 +2,48 @@ import "./polyfill";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
+import * as fs from "fs";
+import * as path from "path";
 
-// Get the full config from the single JSON environment variable
-const getFirebaseConfig = () => {
-  const raw = process.env.FIREBASE_ADMIN_CONFIG;
-  if (!raw) {
-    throw new Error("FIREBASE_ADMIN_CONFIG environment variable is not set");
-  }
-  try {
-    const config = JSON.parse(raw);
-    // Replace literal \n sequences with actual newlines for the private key
-    if (config.privateKey) {
-      config.privateKey = config.privateKey.replace(/\\n/g, "\n");
+// ------------------------------------------------------------------
+// 1. Read the service account JSON from disk
+// ------------------------------------------------------------------
+function getFirebaseConfig() {
+  const configPath = path.join(process.cwd(), "config", "firebase-admin.json");
+
+  if (!fs.existsSync(configPath)) {
+    // In development, show a clear error
+    if (process.env.NODE_ENV === "development") {
+      throw new Error(
+        `Firebase config file not found at ${configPath}.\n` +
+          `Please create it manually (copy from your service account JSON).`,
+      );
     }
-    return config;
-  } catch (err) {
-    console.error("Failed to parse FIREBASE_ADMIN_CONFIG", err);
-    throw err;
+    // In production, it should have been created by the build script
+    throw new Error(`Firebase config file not found at ${configPath}`);
   }
-};
+
+  const content = fs.readFileSync(configPath, "utf8");
+  const config = JSON.parse(content);
+
+  // The private_key already has \n escapes – replace with actual newlines
+  if (config.private_key) {
+    config.private_key = config.private_key.replace(/\\n/g, "\n");
+  }
+
+  return {
+    projectId: config.project_id,
+    clientEmail: config.client_email,
+    privateKey: config.private_key,
+    storageBucket: config.project_id + ".appspot.com", // or use explicit
+  };
+}
 
 const config = getFirebaseConfig();
 
-// Initialize Firebase Admin
+// ------------------------------------------------------------------
+// 2. Initialize Firebase Admin
+// ------------------------------------------------------------------
 const app = !getApps().length
   ? initializeApp({
       credential: cert({
@@ -36,7 +55,7 @@ const app = !getApps().length
     })
   : getApps()[0];
 
-// Firestore Collections
+// Collections
 const COLLECTIONS = {
   ESCORTS: "escorts",
   IMAGES: "escort_images",
@@ -44,10 +63,7 @@ const COLLECTIONS = {
   PROCESSING_LOGS: "processing_logs",
 } as const;
 
-// Initialize Firestore
 const adminDb = getFirestore(app);
-
-// Initialize Storage
 const adminStorage = getStorage(app);
 const bucket = adminStorage.bucket(config.storageBucket);
 
