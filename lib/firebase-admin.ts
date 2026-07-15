@@ -3,30 +3,36 @@ import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 
-// Decode the URL‑encoded private key
-const getPrivateKey = () => {
-  const encoded = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
-  if (!encoded) {
-    console.warn("FIREBASE_ADMIN_PRIVATE_KEY is not set");
-    return undefined;
+// Get the full config from the single JSON environment variable
+const getFirebaseConfig = () => {
+  const raw = process.env.FIREBASE_ADMIN_CONFIG;
+  if (!raw) {
+    throw new Error("FIREBASE_ADMIN_CONFIG environment variable is not set");
   }
   try {
-    return decodeURIComponent(encoded);
+    const config = JSON.parse(raw);
+    // Replace literal \n sequences with actual newlines for the private key
+    if (config.privateKey) {
+      config.privateKey = config.privateKey.replace(/\\n/g, "\n");
+    }
+    return config;
   } catch (err) {
-    console.error("Failed to decode FIREBASE_ADMIN_PRIVATE_KEY", err);
-    return undefined;
+    console.error("Failed to parse FIREBASE_ADMIN_CONFIG", err);
+    throw err;
   }
 };
 
-// Initialize Firebase Admin with environment variables
+const config = getFirebaseConfig();
+
+// Initialize Firebase Admin
 const app = !getApps().length
   ? initializeApp({
       credential: cert({
-        projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-        privateKey: getPrivateKey(),
+        projectId: config.projectId,
+        clientEmail: config.clientEmail,
+        privateKey: config.privateKey,
       }),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      storageBucket: config.storageBucket,
     })
   : getApps()[0];
 
@@ -41,9 +47,9 @@ const COLLECTIONS = {
 // Initialize Firestore
 const adminDb = getFirestore(app);
 
-// Initialize Storage with explicit bucket name from environment
+// Initialize Storage
 const adminStorage = getStorage(app);
-const bucket = adminStorage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
+const bucket = adminStorage.bucket(config.storageBucket);
 
 console.log(`[Firebase] Initialized with bucket: ${bucket.name}`);
 
