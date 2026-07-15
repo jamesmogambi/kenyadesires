@@ -8,6 +8,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import LocationInitializer from "@/components/FileInputInitializer";
 import { useVariantStore } from "@/store/variantStore";
@@ -35,6 +44,7 @@ const GirlFilterInput = ({ className }: Prop) => {
   const [regions, setRegions] = useState<IRegion[]>([]);
   const [practice, setPractice] = useState(initialpractice);
   const [practiceOpen, setPracticeOpen] = useState(false);
+  const [countyWarningOpen, setCountyWarningOpen] = useState(false);
 
   // Get data from stores
   const {
@@ -163,7 +173,7 @@ const GirlFilterInput = ({ className }: Prop) => {
   // Handle region selection
   const handleRegion = (val: IRegion) => {
     if (!county) {
-      alert("You must first select a county");
+      setCountyWarningOpen(true);
       return;
     }
     setRegion(val);
@@ -203,6 +213,28 @@ const GirlFilterInput = ({ className }: Prop) => {
       )}
     >
       <LocationInitializer />
+
+      {/* County-required warning modal */}
+      <Dialog open={countyWarningOpen} onOpenChange={setCountyWarningOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select a county first</DialogTitle>
+            <DialogDescription>
+              Please choose a county before selecting a city or region.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setCountyWarningOpen(false);
+                setOpen(true);
+              }}
+            >
+              Select County
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* County Filter */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -269,11 +301,18 @@ const GirlFilterInput = ({ className }: Prop) => {
       </DropdownMenu>
 
       {/* Region/City Filter */}
-      <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
-        <DropdownMenuTrigger
-          className="self-end text-nowrap text-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md"
-          disabled={!county}
-        >
+      <DropdownMenu
+        open={regionOpen}
+        onOpenChange={(next) => {
+          if (next && !county) {
+            // Warn the user to select a county before choosing a city/region
+            setCountyWarningOpen(true);
+            return;
+          }
+          setRegionOpen(next);
+        }}
+      >
+        <DropdownMenuTrigger className="self-end text-nowrap text-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md">
           {region ? (
             <div className="flex items-center gap-2">
               <span className="text-slate-100 text-lg font-bold">
