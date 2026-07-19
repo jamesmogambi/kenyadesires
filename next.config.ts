@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // ✅ CRITICAL: Add standalone output for cPanel deployment
+  output: "standalone",
+
   images: {
     // formats: ["image/avif", "image/webp"],
     remotePatterns: [

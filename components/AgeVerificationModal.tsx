@@ -72,7 +72,7 @@ export default function AgeVerificationModal() {
   if (!show) return null;
 
   return (
-    <div className="fixed outline-0 border-0 inset-0 z-200 flex items-center justify-center bg-black/95 p-4">
+    <div className="fixed outline-0 border-0 inset-0 z-200 flex items-center justify-center bg-black/90 p-4">
       <div className="w-full max-w-md rounded-none border border-none bg-dark-slate p-6 text-center shadow-2xl">
         {!denied ? (
           <>

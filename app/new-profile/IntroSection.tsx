@@ -40,7 +40,7 @@ const IntroSection = ({form, className}: Prop) => {
         async function fetchRegions() {
             try {
                 // const res: any = await getRegions();
-                const res: any = null
+                const res: any = []
                 console.log("fetched regions", res);
                 setRegions(res);
             } catch (err) {
@@ -55,7 +55,7 @@ const IntroSection = ({form, className}: Prop) => {
         async function fetchTowns() {
             try {
                 // const res: any = await getTowns();
-                const res: any = null
+                const res: any = []
                 console.log("fetched towns", res);
                 setTowns(res);
             } catch (err) {
@@ -221,7 +221,7 @@ const IntroSection = ({form, className}: Prop) => {
                                             className="flex border-0 flex-col outline-none p-5 gap-3 w-screen  lg:max-w-[900px] bg-gray-1 "
                                         >
                                             <div className="flex flex-row w-full gap-1.5 gap-y-2.5  flex-wrap">
-                                                {regions.map((item) => (
+                                                {(regions || []).map((item) => (
                                                     <DropdownMenuItem
                                                         className="rounded-lg  cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
                                                         // onSelect={(e) => setRegion(item.location)}
