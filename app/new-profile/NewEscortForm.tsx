@@ -416,7 +416,7 @@ const NewEscortForm = ({className}: Prop) => {
                         // })}
                         className="space-y-3"
                     >
-                        {/* about section */}
+                        {/* about section */} 
                         <IntroSection form={form}/>
                         {/* description and setting section */}
                         <section className="flex flex-col lg:flex-row mt-12 gap-6">

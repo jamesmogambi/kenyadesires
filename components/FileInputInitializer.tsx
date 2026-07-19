@@ -75,6 +75,15 @@ const LocationInitializer = ({
     setMassage,
     setBdsm,
     setPractices: setVariantPractices,
+    setAvailability,
+    setAge,
+    setBreast,
+    setCharacter,
+    setHairColor,
+    setNationality,
+    setExperience,
+    setLanguages,
+    setCategories,
   } = useVariantStore();
 
   const [loading, setLoading] = useState(false);
@@ -165,10 +174,21 @@ const LocationInitializer = ({
     if (initialCounties) setCounties(initialCounties);
     if (initialRegions) setRegions(initialRegions);
 
-    // ✅ Set other lookup data if provided
     if (initialLookup) {
       setMassage(initialLookup.massage || []);
       setBdsm(initialLookup.bdsm || []);
+      setAvailability(initialLookup.availability || []);
+      setAge(initialLookup.age || []);
+      setBreast(initialLookup.breast || []);
+      setCharacter(initialLookup.character || []);
+      setHairColor(initialLookup.hairColor || []);
+      setNationality(initialLookup.nationality || []);
+      setExperience(initialLookup.experience || []);
+      setLanguages(initialLookup.languages || []);
+      setCategories(initialLookup.categories || []);
+      if (initialLookup.practices) {
+        setVariantPractices(initialLookup.practices);
+      }
     }
   }, [initialCounties, initialRegions, initialLookup]);
 
