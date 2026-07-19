@@ -187,7 +187,24 @@ const LocationInitializer = ({
       setLanguages(initialLookup.languages || []);
       setCategories(initialLookup.categories || []);
       if (initialLookup.practices) {
-        setVariantPractices(initialLookup.practices);
+        setVariantPractices(
+          Array.isArray(initialLookup.practices)
+            ? initialLookup.practices.map((p: any, idx: number) => ({
+                id: typeof p.id === "number" ? p.id : idx,
+                name: typeof p === "string" ? p : p.name || p.value || "",
+                label: typeof p === "string" ? p : p.name || p.value || "",
+                value: typeof p === "string" ? p : p.name || p.value || "",
+                count: typeof p === "string" ? 0 : p.count ?? 0,
+              }))
+            : [],
+        );
+        setPractices(
+          Array.isArray(initialLookup.practices)
+            ? initialLookup.practices.map((p: any) =>
+                typeof p === "string" ? p : p.value,
+              )
+            : [],
+        );
       }
     }
   }, [initialCounties, initialRegions, initialLookup]);

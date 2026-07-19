@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-import { cn, getFlagEmoji, splitIntoThreeColumns } from "@/lib/utils";
+import { cn, getFlagEmoji, splitIntoThreeColumns, formatPracticeName } from "@/lib/utils";
 import ReactCountryFlag from "react-country-flag";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettingStore } from "@/store/settingStore";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useVariantStore } from "@/store/variantStore";
+import { getPractices } from "@/server-actions/lookup.action";
 
 interface Prop {
   className?: string;
@@ -18,6 +19,8 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   const { setValue, watch } = form;
   const variantSettings = useVariantStore();
   const { practices, massage } = variantSettings;
+
+  const [dbPractices, setDbPractices] = useState<any[]>([]);
 
   const {
     massages,
@@ -35,8 +38,30 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     languages,
   } = useSettingStore();
 
+  useEffect(() => {
+    async function loadPractices() {
+      try {
+        const res = await getPractices();
+        if (res.success && Array.isArray(res.data)) {
+          const formatted = res.data.map((item: any, idx: number) => ({
+            id: typeof item.id === "number" ? item.id : idx,
+            name: item.name || item.practice || "",
+            label: item.name || item.practice || "",
+            value: item.name || item.practice || "",
+            count: item.count ?? 0,
+          }));
+          setDbPractices(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load practices from DB:", err);
+      }
+    }
+
+    loadPractices();
+  }, []);
+
   const [practiceCol1, practiceCol2, practiceCol3] =
-    splitIntoThreeColumns(practices);
+    splitIntoThreeColumns(dbPractices);
 
   const [massageCol1, massageCol2, massageCol3] =
     splitIntoThreeColumns(massage);
@@ -85,12 +110,12 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                       toggle(item.name);
                     }}
                     key={j}
-                    className={cn(
-                      "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5",
-                      selected.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                    )}
+                     className={cn(
+                       "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
+                       selected.includes(item.name) ? "bg-primary" : "bg-gray-1",
+                     )}
                   >
-                    {item.name}
+                    {formatPracticeName(item.name)}
                   </span>
                 ))}
               </div>
@@ -107,12 +132,12 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                       toggleMassage(item.name);
                     }}
                     key={j}
-                    className={cn(
-                      "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5",
-                      massages.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                    )}
+                     className={cn(
+                       "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
+                       massages.includes(item.name) ? "bg-primary" : "bg-gray-1",
+                     )}
                   >
-                    {item.name}
+                    {formatPracticeName(item.name)}
                   </span>
                 ))}
               </div>
@@ -129,12 +154,12 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                       toggleBdsm(item.name);
                     }}
                     key={j}
-                    className={cn(
-                      "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5",
-                      bdsm.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                    )}
+                     className={cn(
+                       "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
+                       bdsm.includes(item.name) ? "bg-primary" : "bg-gray-1",
+                     )}
                   >
-                    {item.name}
+                    {formatPracticeName(item.name)}
                   </span>
                 ))}
               </div>
@@ -160,7 +185,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                 onCheckedChange={(checked) => setCategory(catName, checked === true)}
               />
               <label
-                className="lg:text-2xl text-xl text-primary font-bold"
+                className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
                 htmlFor={String(catKey)}
               >
                 {catName}
@@ -188,7 +213,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                   setLanguage(lang.name, checked === true)
                 }
               />
-              <label className="lg:hidden">{lang.name}</label>
+              <label className="lg:hidden line-clamp-2">{lang.name}</label>
               <label className="hidden lg:inline-block">
                 <ReactCountryFlag
                   countryCode={lang.flag}
