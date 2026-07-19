@@ -26,6 +26,7 @@ import { PostHogProvider } from "./PostHogProvider";
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";
 import { structuredData, organizationSchema } from "./config/structured-data";
+import { getAllLookupData } from "@/server-actions/lookup.action";
 
 // ✅ Export metadata so Next.js picks it up
 export { metadata };
@@ -57,7 +58,8 @@ export default async function RootLayout({
   const [counties, regions, lookup, allCounties] = await Promise.all([
     getCachedPopularCounties(),
     getCachedRegions(),
-    getCachedLookupData(),
+    // getCachedLookupData(),
+    getAllLookupData(),
     getAllCounties(),
   ]);
 

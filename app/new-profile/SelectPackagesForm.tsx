@@ -10,6 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useVariantStore } from "@/store/variantStore";
 import { getPractices } from "@/server-actions/lookup.action";
 
+const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
+  english: "GB",
+  swahili: "KE",
+  arabic: "SA",
+};
+
 interface Prop {
   className?: string;
   form: any;
@@ -200,35 +206,37 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
         <span className="text-white/50 font-bold  text-lg">Languages:</span>
 
         <div className="flex-1 flex ">
-          {variantSettings.languages.map((lang: any) => (
-            <div
-              key={lang.name}
-              className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
-            >
-              <Checkbox
-                id={lang}
-                className="size-6  bg-white border-primary"
-                checked={languages.includes(lang.name)}
-                onCheckedChange={(checked) =>
-                  setLanguage(lang.name, checked === true)
-                }
-              />
-              <label className="lg:hidden line-clamp-2">{lang.name}</label>
-              <label className="hidden lg:inline-block">
-                <ReactCountryFlag
-                  countryCode={lang.flag}
-                  // className="size-2"
-                  // className="size-12"
-                  style={{
-                    fontSize: "2em",
-                    // height: "2em",
-                    // display: "inline-block",
-                  }}
-                  svg
+          {variantSettings.languages
+            .filter((lang: any) =>
+              ["english", "swahili", "arabic"].includes(
+                (lang.name || "").toLowerCase(),
+              ),
+            )
+            .map((lang: any) => (
+              <div
+                key={lang.name}
+                className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
+              >
+                <Checkbox
+                  id={lang.name}
+                  className="size-6  bg-white border-primary"
+                  checked={languages.includes(lang.name)}
+                  onCheckedChange={(checked) =>
+                    setLanguage(lang.name, checked === true)
+                  }
                 />
-              </label>
-            </div>
-          ))}
+                <label className="lg:hidden line-clamp-2">{lang.name}</label>
+                <label className="hidden lg:inline-block">
+                  <ReactCountryFlag
+                    countryCode={LANGUAGE_COUNTRY_CODES[(lang.name || "").toLowerCase()] || "GB"}
+                    style={{
+                      fontSize: "2em",
+                    }}
+                    svg
+                  />
+                </label>
+              </div>
+            ))}
         </div>
       </div>
     </section>
