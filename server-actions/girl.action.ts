@@ -259,6 +259,34 @@ export async function getEscortByIdentifier(
 }
 
 /**
+ * Get escort by Clerk user ID
+ */
+export async function getEscortByClerkUserId(
+  clerkUserId: string,
+): Promise<Escort | null> {
+  try {
+    if (!clerkUserId || clerkUserId.trim() === "") {
+      return null;
+    }
+
+    const snapshot = await adminDb
+      .collection("escorts")
+      .where("clerkUserId", "==", clerkUserId)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return convertDocToEscort(snapshot.docs[0]);
+  } catch (error) {
+    console.error("Error fetching escort by clerkUserId:", error);
+    return null;
+  }
+}
+
+/**
  * Get a single escort by ID with only cleaned images
  * Cached for 2 weeks
  */
