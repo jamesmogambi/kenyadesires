@@ -148,22 +148,26 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           Categories where I want to appear:
         </span>
 
-        {variantSettings.categories.map((cat) => (
-          <div key={cat} className="flex items-center mx-4 gap-2">
-            <Checkbox
-              id={cat}
-              className="size-6 bg-white border-primary"
-              checked={categories.includes(cat)}
-              onCheckedChange={(checked) => setCategory(cat, checked === true)}
-            />
-            <label
-              className="lg:text-2xl text-xl text-primary font-bold"
-              htmlFor={cat}
-            >
-              {cat}
-            </label>
-          </div>
-        ))}
+        {variantSettings.categories.map((cat: any) => {
+          const catName = typeof cat === "string" ? cat : cat.name;
+          const catKey = typeof cat === "string" ? cat : cat.id ?? cat.name;
+          return (
+            <div key={catKey} className="flex items-center mx-4 gap-2">
+              <Checkbox
+                id={String(catKey)}
+                className="size-6 bg-white border-primary"
+                checked={categories.includes(catName)}
+                onCheckedChange={(checked) => setCategory(catName, checked === true)}
+              />
+              <label
+                className="lg:text-2xl text-xl text-primary font-bold"
+                htmlFor={String(catKey)}
+              >
+                {catName}
+              </label>
+            </div>
+          );
+        })}
       </div>
 
       {/* languages */}
