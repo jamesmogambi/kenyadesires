@@ -28,6 +28,7 @@ import { useLocationStore } from "@/store/locationStore";
 import { toast } from "sonner";
 import SuccessToast from "@/components/Toasts/SuccessToast";
 import { saveNewEscortProfile } from "@/server-actions/girl.action";
+import { updateEscort } from "@/server-actions/escort.action";
 
 // Define the RichTextEditorHandle type
 type RichTextEditorHandle = {
@@ -36,6 +37,49 @@ type RichTextEditorHandle = {
 
 interface Prop {
   className?: string;
+  mode?: "create" | "edit";
+  initialData?: {
+    id?: string;
+    name: string;
+    email: string;
+    street: string;
+    phone: string;
+    whatsappNumber: string;
+    region: string;
+    town: string;
+    nationality: string;
+    age: string;
+    height: string;
+    breasts: string;
+    weight: string;
+    ageCategory: string;
+    character: string;
+    hairColor: string;
+    experience: string;
+    about: string;
+    previewPhoto: string;
+    images: string[];
+    telephone: string;
+    whatsappPhone: string;
+    availability: string[];
+    languages: string[];
+    practices: string[];
+    bdsm: string[];
+    massage: string[];
+    extraServices: string[];
+    categories: string[];
+    openingHours: {
+      monday: string;
+      tuesday: string;
+      wednesday: string;
+      thursday: string;
+      friday: string;
+      saturday: string;
+      sunday: string;
+    };
+    bustSize?: string;
+    clerkUserId?: string;
+  };
 }
 
 const timeRangeRegex =
@@ -47,8 +91,8 @@ const defaultDay = "";
 
 const daySchema = z
   .string()
-  .regex(timeRangeRegex, "Invalid time range")
-  .default(defaultDay);
+  .default(defaultDay)
+  .refine((val) => val === "" || timeRangeRegex.test(val), "Invalid time range");
 
 export const formSchema: any = z.object({
   name: z
@@ -96,10 +140,7 @@ export const formSchema: any = z.object({
     .array(z.string().min(1, "Tag cannot be empty"))
     .default([]),
 });
-const NewEscortForm = ({ className }: Prop) => {
-  // TODO: store the user preview image
-  // const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
-
+const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
   const router = useRouter();
 
   const [error, setError] = useState<any>(null);
@@ -109,28 +150,27 @@ const NewEscortForm = ({ className }: Prop) => {
 
   const imageFiles = useFileStore((state) => state.files);
 
-  // if (!isLoaded || !user) {
-  //   return null;
-  // }
-
-  // console.log("user - role", user);
-
   const DEFAULT_VALUES = {
     name: "",
     email: "",
     street: "",
     phone: "",
     whatsappNumber: "",
-    // address: "",
     myAge: "",
     myBreasts: "",
     myWeight: "",
     myHeight: "",
     variantAge: "",
-    // variantAvailability: undefined,
+    monday: "",
+    tuesday: "",
+    wednesday: "",
+    thursday: "",
+    friday: "",
+    saturday: "",
+    sunday: "",
+    variantAvailability: [],
   };
 
-  // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: DEFAULT_VALUES,
@@ -142,8 +182,6 @@ const NewEscortForm = ({ className }: Prop) => {
     watch,
     setValue,
   });
-  // Watch all fields
-  // const values = watch();
 
   const { isSubmitting } = formState;
 
@@ -156,9 +194,6 @@ const NewEscortForm = ({ className }: Prop) => {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        // const res: any = await getVariantSettings();
-        // const data = await res.json();
-        // console.log("fetched-variant-setting", res);
         const res: any = null;
         hydrate(res);
       } catch (err) {
@@ -170,11 +205,98 @@ const NewEscortForm = ({ className }: Prop) => {
   }, [hydrate]);
 
   useEffect(() => {
-    if (!isLoaded || !user) return; // just return, no null needed
-
-    // Set email in React Hook Form
+    if (!isLoaded || !user) return;
     setValue("email", user.primaryEmailAddress?.emailAddress || "");
   }, [setValue, user, isLoaded]);
+
+  // Prepopulate form and stores when editing
+  useEffect(() => {
+    if (mode !== "edit" || !initialData) return;
+
+    const {
+      name,
+      email,
+      street,
+      phone,
+      whatsappNumber,
+      region,
+      town,
+      nationality,
+      age,
+      height,
+      breasts,
+      weight,
+      ageCategory,
+      character,
+      hairColor,
+      experience,
+      about,
+      availability,
+      languages,
+      practices,
+      bdsm,
+      massage,
+      extraServices,
+      categories,
+      openingHours,
+      images,
+    } = initialData;
+
+    setValue("name", name || "");
+    setValue("email", email || "");
+    setValue("street", street || "");
+    setValue("phone", phone || "");
+    setValue("whatsappNumber", whatsappNumber || "");
+    setValue("myAge", age || "");
+    setValue("myBreasts", breasts || "");
+    setValue("myWeight", weight || "");
+    setValue("myHeight", height || "");
+    setValue("variantAge", ageCategory || "");
+
+    if (openingHours) {
+      setValue("monday", openingHours.monday || "");
+      setValue("tuesday", openingHours.tuesday || "");
+      setValue("wednesday", openingHours.wednesday || "");
+      setValue("thursday", openingHours.thursday || "");
+      setValue("friday", openingHours.friday || "");
+      setValue("saturday", openingHours.saturday || "");
+      setValue("sunday", openingHours.sunday || "");
+    }
+
+    useFormStore.setState({
+      description: about || "",
+      region: region || "",
+      town: town || "",
+      age: ageCategory || "",
+      breast: breasts || "",
+      character: character || "",
+      hairColor: hairColor || "",
+      nationality: nationality || "",
+      experience: experience || "",
+      tags: extraServices || [],
+    });
+
+    useSettingStore.setState({
+      selected: practices || [],
+      massages: massage || [],
+      bdsm: bdsm || [],
+      categories: categories || [],
+      languages: languages || [],
+      availability: availability || [],
+    });
+
+    useFileStore.setState({
+      existingImages: images || [],
+      files: [],
+    });
+
+    if (region || town) {
+      useFormStore.getState().setRegion(region || "");
+      if (town) {
+        useFormStore.getState().setTown(town);
+      }
+    }
+  }, [mode, initialData, setValue]);
 
   const {
     description,
@@ -258,7 +380,6 @@ const NewEscortForm = ({ className }: Prop) => {
 
         if (selectedFiles && selectedFiles.length > 0) {
           const previewFile = selectedFiles[0];
-          // Avoid duplicates
           if (
             !filesToUpload.some(
               (f) => f.name === previewFile.name && f.size === previewFile.size,
@@ -274,9 +395,7 @@ const NewEscortForm = ({ className }: Prop) => {
 
         const uploadedImageUrls: string[] = [];
 
-        // Upload each file individually
         for (const file of filesToUpload) {
-          // Fetch fresh signature & params
           const { signature, timestamp, cloudName, apiKey, folder } =
             await fetch("/api/cloudinary-signature").then((res) => res.json());
 
@@ -309,42 +428,31 @@ const NewEscortForm = ({ className }: Prop) => {
 
         console.log("All uploaded image URLs:", uploadedImageUrls);
 
-        // TODO: UPLOAD videos to MUX and get video URLs
+        const { existingImages } = useFileStore.getState();
 
-        // TODO: Continue with saving the user profile using uploadedImageUrls
-        // save profile with images and preview photo URLs
+        let newPreviewPhotoUrl = "";
+        if (selectedFiles && selectedFiles.length > 0 && uploadedImageUrls.length > 0) {
+          newPreviewPhotoUrl = uploadedImageUrls[uploadedImageUrls.length - 1];
+        } else if (existingImages.length > 0) {
+          newPreviewPhotoUrl = existingImages[existingImages.length - 1];
+        }
 
-        // Decide previewPhoto URL (e.g., last uploaded or specifically the preview file URL)
-        const previewPhotoUrl =
-          selectedFiles && selectedFiles.length > 0
-            ? uploadedImageUrls[uploadedImageUrls.length - 1]
-            : "";
-
-        // Filter out preview photo from gallery images
-        const galleryImageUrls = uploadedImageUrls.filter(
-          (url) => url !== previewPhotoUrl,
+        const allImages = [...existingImages, ...uploadedImageUrls];
+        const galleryImageUrls = allImages.filter(
+          (url) => url !== newPreviewPhotoUrl,
         );
         const escortData: any = {
           name,
           clerkUserId: user?.id || "",
-          previewPhoto: previewPhotoUrl,
-          // age,
+          previewPhoto: newPreviewPhotoUrl,
           telephone: phone,
           whatsappPhone: whatsappNumber,
-          // exclude the last item if previewPhoto is their
           images: galleryImageUrls,
-          // videos will be handled by mux webhook
-          // videos
           about: description,
           availability,
-          // ethnicity
           nationality,
           bustSize: breast,
-          // Weight,
-          // zodiacSign,
-          // sexualOrientation,
           languages,
-          // estate
           town,
           region,
           practices: selected,
@@ -370,20 +478,26 @@ const NewEscortForm = ({ className }: Prop) => {
           weight: myWeight,
           height: myHeight,
           categories: settingCategories,
-          // address,
           email,
         };
 
-        const res = await saveNewEscortProfile(escortData);
-        console.log("new escort girl created", res);
+        if (mode === "edit" && initialData?.id) {
+          await updateEscort(initialData.id, escortData);
+          toast.custom(() => (
+            <SuccessToast message="Your profile was updated successfully." />
+          ));
+        } else {
+          const res = await saveNewEscortProfile(escortData);
+          console.log("new escort girl created", res);
+          toast.custom(() => (
+            <SuccessToast message="Your profile was created successfully." />
+          ));
+          router.push("/administration");
+        }
 
-        // ✅ 1. Reset React Hook Form
         form.reset(DEFAULT_VALUES);
         localStorage.removeItem("storageKey");
-
-        // ✅ 2. Clear persisted form storage (useFormPersist)
         localStorage.removeItem("storageKey");
-        //TODO  Reset form, clear states, notify user etc.
         clear();
         (clearAll(),
           clearDescription(),
@@ -392,11 +506,6 @@ const NewEscortForm = ({ className }: Prop) => {
           clearTags(),
           clearCategories());
         clearEscortGallery();
-        toast.custom(() => (
-          <SuccessToast message="Your profile was created successfully." />
-        ));
-
-        router.push("/administration");
       } catch (error: any) {
         console.error("Error saving profile:", error);
         setError(error?.message || "Something went wrong");
@@ -410,7 +519,8 @@ const NewEscortForm = ({ className }: Prop) => {
     <div className={cn("", className)}>
       <SectionCard className="px-12">
         <h3 className="text-2xl mb-5 font-semibold">
-          New <span className="text-primary font-bold text-xl">girl</span>{" "}
+          {mode === "edit" ? "Edit" : "New"}{" "}
+          <span className="text-primary font-bold text-xl">girl</span>{" "}
           profile
         </h3>
 

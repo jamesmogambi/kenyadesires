@@ -1,10 +1,20 @@
 import React from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
+import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import NewEscortForm from "./NewEscortForm";
 
 export const metadata = {
   title: "New Profile - Kenya Desires",
 };
-const page = () => {
+const page = async () => {
+  const { userId } = await auth();
+  const escort = userId ? await getEscortByClerkUserId(userId) : null;
+
+  if (escort) {
+    redirect("/administration");
+  }
+
   return (
     <div>
       <NewEscortForm />

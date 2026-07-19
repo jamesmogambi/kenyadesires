@@ -9,6 +9,7 @@ import { Metadata } from "next";
 import UserForm from "./UserForm";
 import { auth } from "@clerk/nextjs/server";
 import { getEscortByClerkUserId } from "@/server-actions/girl.action";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Update Profile 💖 | kenyadesires.com",
@@ -44,6 +45,15 @@ const page = async () => {
             title="How to top up credits?"
             description={`To purchase credits, simply go to your account settings and select "BUY MORE CREDITS". Then order a credit package and send the corresponding amount with the correct variable symbol (VS). Within one hour of receiving the payment, the system will automatically add the credits to your account. There’s no need to contact us; everything is automatic. If the credits do not appear within one hour, please contact us.`}
           />
+
+          <div className=" flex justify-center items-center">
+            <Link
+              className="bg-primary p-3 font-semibold text-white uppercase text-base "
+              href="/adjustment"
+            >
+              Edit profile
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6">
