@@ -78,6 +78,8 @@ export interface Escort {
   };
   totalImagesProcessed?: number;
   totalImagesFailed?: number;
+
+  street?: string;
 }
 
 export interface Location {

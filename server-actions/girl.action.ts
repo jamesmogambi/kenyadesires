@@ -503,6 +503,7 @@ export async function revalidateEscortCache(id: string) {
 }
 
 export interface NewEscortProfileInput {
+  id?: string;
   name: string;
   email: string;
   street: string;
@@ -557,12 +558,14 @@ export async function saveNewEscortProfile(
     const timestamp = Date.now().toString().slice(-6);
     const username = `${baseUsername}_${timestamp}`;
 
-    const phoneSuffix = (data.phone || data.whatsappNumber || "").replace(/\D/g, "").slice(-6);
+    const phoneSuffix = (data.phone || data.whatsappNumber || "")
+      .replace(/\D/g, "")
+      .slice(-6);
     const slug = `${slugify(data.name)}-${phoneSuffix}`;
 
     const docRef = adminDb.collection("escorts").doc();
 
-    const newEscort: any = {
+    const newEscort: Escort = {
       name: data.name,
       username,
       slug,

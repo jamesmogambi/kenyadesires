@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import SuccessToast from "@/components/Toasts/SuccessToast";
 import { saveNewEscortProfile } from "@/server-actions/girl.action";
 import { updateEscort } from "@/server-actions/escort.action";
+import type { NewEscortProfileInput } from "@/server-actions/girl.action";
 
 // Define the RichTextEditorHandle type
 type RichTextEditorHandle = {
@@ -38,48 +39,7 @@ type RichTextEditorHandle = {
 interface Prop {
   className?: string;
   mode?: "create" | "edit";
-  initialData?: {
-    id?: string;
-    name: string;
-    email: string;
-    street: string;
-    phone: string;
-    whatsappNumber: string;
-    region: string;
-    town: string;
-    nationality: string;
-    age: string;
-    height: string;
-    breasts: string;
-    weight: string;
-    ageCategory: string;
-    character: string;
-    hairColor: string;
-    experience: string;
-    about: string;
-    previewPhoto: string;
-    images: string[];
-    telephone: string;
-    whatsappPhone: string;
-    availability: string[];
-    languages: string[];
-    practices: string[];
-    bdsm: string[];
-    massage: string[];
-    extraServices: string[];
-    categories: string[];
-    openingHours: {
-      monday: string;
-      tuesday: string;
-      wednesday: string;
-      thursday: string;
-      friday: string;
-      saturday: string;
-      sunday: string;
-    };
-    bustSize?: string;
-    clerkUserId?: string;
-  };
+  initialData?: NewEscortProfileInput;
 }
 
 const timeRangeRegex =
@@ -225,6 +185,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
       age,
       height,
       breasts,
+      bustSize,
       weight,
       ageCategory,
       character,
@@ -235,7 +196,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
       languages,
       practices,
       bdsm,
-      massage,
+      massages,
       extraServices,
       categories,
       openingHours,
@@ -268,7 +229,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
       region: region || "",
       town: town || "",
       age: ageCategory || "",
-      breast: breasts || "",
+      breast: bustSize || "",
       character: character || "",
       hairColor: hairColor || "",
       nationality: nationality || "",
@@ -278,7 +239,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
     useSettingStore.setState({
       selected: practices || [],
-      massages: massage || [],
+      massages: massages || [],
       bdsm: bdsm || [],
       categories: categories || [],
       languages: languages || [],
@@ -548,7 +509,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
                 <AboutMeForm form={form} className="my-8" />
 
-                <PreviewPhoto className="my-10 lg:w-3/4 w-full" form={form} />
+                <PreviewPhoto className="my-10 lg:w-3/4 w-full" form={form} storedImageUrl={initialData?.previewPhoto} />
               </div>
 
               {/* 2 */}
