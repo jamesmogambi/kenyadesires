@@ -12,7 +12,7 @@ function convertDocToEscort(
   doc:
     | FirebaseFirestore.DocumentSnapshot
     | FirebaseFirestore.QueryDocumentSnapshot,
-): Escort {
+): any {
   const data = (doc.data() || {}) as { [key: string]: any };
 
   const convertTimestamp = (value: any): any => {
@@ -566,6 +566,7 @@ export async function saveNewEscortProfile(
     const docRef = adminDb.collection("escorts").doc();
 
     const newEscort: Escort = {
+      id: docRef.id,
       name: data.name,
       username,
       slug,
@@ -577,9 +578,9 @@ export async function saveNewEscortProfile(
       availability: data.availability || [],
       nationality: data.nationality || "",
       bustSize: data.bustSize || data.breasts || "",
+      breastSize: data.bustSize || data.breasts || "",
       languages: data.languages || [],
-      town: data.town || "",
-      region: data.region || "",
+      regions: data.region ? [data.region] : [],
       practices: data.practices || [],
       bdsm: data.bdsm || [],
       massage: data.massages || [],
@@ -592,11 +593,8 @@ export async function saveNewEscortProfile(
       hairColor: data.hairColor || "",
       experience: data.experience || "",
       age: data.age || "",
-      breasts: data.breasts || "",
       weight: data.weight || "",
-      height: data.height || "",
       street: data.street || "",
-      clerkUserId: data.clerkUserId || "",
       images: data.images || [],
       videos: [],
       labels: [],
@@ -607,7 +605,6 @@ export async function saveNewEscortProfile(
       country: "Kenya",
       county: data.region || "",
       countyCode: "",
-      regions: data.region ? [data.region] : [],
       primaryRegion: data.region || "",
       locations: [],
       source: "admin",
@@ -619,14 +616,17 @@ export async function saveNewEscortProfile(
       plan: {
         type: "basic",
         isActive: true,
+        features: [],
       },
+      
       totalBookings: 0,
       totalReviews: 0,
       rating: 0,
       totalViews: 0,
-      createdAt: Timestamp.fromDate(now),
-      updatedAt: Timestamp.fromDate(now),
+      createdAt: now,
+      updatedAt: now,
       cleaningHistory: [],
+      rates: [],
     };
 
     await docRef.set(newEscort);
