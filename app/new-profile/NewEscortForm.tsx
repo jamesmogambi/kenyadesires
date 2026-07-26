@@ -445,7 +445,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
         };
 
         if (mode === "edit" && initialData?.id) {
-          console.log("updateEscort called", { ...escortData });
+          // console.log("updateEscort called", { ...escortData });
           await updateEscort(initialData.id, escortData);
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />

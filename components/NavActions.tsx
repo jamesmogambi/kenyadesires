@@ -17,18 +17,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import SearchSheet from "./SearchSheet";
 
 const NavActions = () => {
   const { signOut } = useAuth();
+  const { user } = useUser();
 
   const router = useRouter();
   const handleLogout = async () => {
     await signOut();
     router.refresh();
   };
+
+  const isBusiness = (user?.unsafeMetadata?.role as string) === "business";
 
   return (
     <div className="flex items-center gap-4">
@@ -155,30 +158,29 @@ const NavActions = () => {
             </Link>
           </DropdownMenuItem>
 
-          <DropdownMenuItem className="text-stone-800 group">
-            <Link
-              href="new-profile/?type=girl"
-              className="flex items-center gap-2"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={30}
-                height={30}
-                viewBox="0 0 24 24"
-                className="text-stone-400"
-              >
-                <path
-                  fill="currentColor"
-                  d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2"
-                  strokeWidth={0.5}
-                  stroke="currentColor"
-                ></path>
-              </svg>
-              <span className="uppercase text-base group-hover:font-bold">
-                add girl
-              </span>
-            </Link>
-          </DropdownMenuItem>
+          {isBusiness && (
+            <DropdownMenuItem className="text-stone-800 group">
+              <Link href="/add-girl" className="flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={30}
+                  height={30}
+                  viewBox="0 0 24 24"
+                  className="text-stone-400"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2"
+                    strokeWidth={0.5}
+                    stroke="currentColor"
+                  ></path>
+                </svg>
+                <span className="uppercase text-base group-hover:font-bold">
+                  add girl
+                </span>
+              </Link>
+            </DropdownMenuItem>
+          )}
 
           <DropdownMenuItem className="text-stone-800 group">
             <Link href="invoices" className="flex items-center gap-2">

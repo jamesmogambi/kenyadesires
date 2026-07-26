@@ -47,7 +47,7 @@ const page = async () => {
       }
     : null;
 
-  console.log("escort record==>", { ...initialData });
+  // console.log("escort record==>", { ...initialData });
   return (
     <div>
       {initialData ? (
