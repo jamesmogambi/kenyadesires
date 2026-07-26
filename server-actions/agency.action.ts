@@ -602,6 +602,94 @@ export async function createAgency(
 }
 
 // ============================================
+// UPDATE AGENCY
+// ============================================
+export type UpdateAgencyInput = Partial<Omit<CreateAgencyInput, "ownerId">> & {
+  ownerId: string;
+};
+
+export async function updateAgency(
+  id: string,
+  data: UpdateAgencyInput,
+): Promise<{ success: boolean; id?: string; slug?: string; error?: string }> {
+  try {
+    if (!data.ownerId) {
+      return { success: false, error: "You must be signed in to continue" };
+    }
+
+    const docRef = adminDb.collection("agencies").doc(id);
+    const snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      return { success: false, error: "Agency profile not found" };
+    }
+
+    const existing = snapshot.data() || {};
+
+    if (existing.ownerId !== data.ownerId) {
+      return {
+        success: false,
+        error: "You are not allowed to edit this agency",
+      };
+    }
+
+    const { ownerId, planType, openingHours, socialMedia, ...rest } = data;
+    const payload: Record<string, any> = { ...rest, updatedAt: new Date() };
+
+    if (data.county) {
+      payload.countyCode =
+        data.countyCode || data.county.toLowerCase().replace(/\s+/g, "-");
+    }
+
+    if (openingHours) {
+      payload.openingHours = {
+        ...DEFAULT_OPENING_HOURS,
+        ...(existing.openingHours || {}),
+        ...openingHours,
+      };
+    }
+
+    if (socialMedia) {
+      payload.socialMedia = cleanSocialMedia(socialMedia) || {};
+    }
+
+    if (planType) {
+      payload.plan = {
+        ...(existing.plan || {}),
+        type: planType,
+        ...PLAN_LIMITS[planType],
+      };
+    }
+
+    if (data.establishmentYear === undefined) {
+      delete payload.establishmentYear;
+    }
+
+    // Firestore rejects undefined values
+    Object.keys(payload).forEach((key) => {
+      if (payload[key] === undefined) delete payload[key];
+    });
+
+    await docRef.update(payload);
+
+    const slug = existing.slug || id;
+
+    revalidatePath("/agencies");
+    revalidatePath(`/agencies/${slug}`);
+    revalidatePath("/agency-profile");
+
+    return { success: true, id, slug };
+  } catch (error) {
+    console.error("Error updating agency:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update agency",
+    };
+  }
+}
+
+// ============================================
 // LEGACY EXPORTS (for backward compatibility)
 // ============================================
 // These point to the cached versions

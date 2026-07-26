@@ -4,6 +4,7 @@ import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import SectionCard from "@/components/SectionCard";
 import AgencyProfileForm from "./AgencyProfileForm";
+import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 
 export const metadata: Metadata = {
   title: "Agency Profile 💖 | kenyadesires.com",
@@ -32,12 +33,14 @@ const page = async () => {
   }
 
   const user = await currentUser();
+  const agency = await getAgencyByOwnerId(userId);
 
   return (
     <div>
       <AgencyProfileForm
         ownerId={userId}
         defaultEmail={user?.primaryEmailAddress?.emailAddress}
+        agency={agency}
       />
     </div>
   );

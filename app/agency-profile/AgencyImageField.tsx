@@ -9,27 +9,40 @@ interface Prop {
   label: string;
   file: File | null;
   onFileChange: (file: File | null) => void;
+  /** Already uploaded image, shown until a new file is picked */
+  existingUrl?: string;
+  onClear?: () => void;
   className?: string;
 }
 
-const AgencyImageField = ({ label, file, onFileChange, className }: Prop) => {
+const AgencyImageField = ({
+  label,
+  file,
+  onFileChange,
+  existingUrl = "",
+  onClear,
+  className,
+}: Prop) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [filePreview, setFilePreview] = useState<string>("");
 
   useEffect(() => {
     if (!file) {
-      setPreviewUrl("");
+      setFilePreview("");
       return;
     }
 
     const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    setFilePreview(url);
 
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  const previewUrl = filePreview || existingUrl;
+
   const clearImage = () => {
     onFileChange(null);
+    onClear?.();
     if (inputRef.current) {
       inputRef.current.value = "";
     }
@@ -59,7 +72,11 @@ const AgencyImageField = ({ label, file, onFileChange, className }: Prop) => {
           className="border flex-1 h-10 overflow-hidden cursor-pointer flex rounded-full border-primary"
         >
           <span className="flex-1 truncate pl-4 flex items-center text-base text-white/30">
-            {file ? file.name : "No image selected"}
+            {file
+              ? file.name
+              : existingUrl
+                ? "Current image - click to replace"
+                : "No image selected"}
           </span>
           <span className="w-1/3 bg-primary justify-center items-center flex font-bold text-white uppercase text-base">
             insert

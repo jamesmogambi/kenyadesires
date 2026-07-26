@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, X } from "lucide-react";
 
 import SectionCard from "@/components/SectionCard";
 import SuccessToast from "@/components/Toasts/SuccessToast";
@@ -23,7 +23,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, slugify } from "@/lib/utils";
 import countiesAndRegions from "@/data/development/countiesAndRegions.json";
-import { createAgency } from "@/server-actions/agency.action";
+import { createAgency, updateAgency } from "@/server-actions/agency.action";
+import type { IAgency } from "@/types/agency.types";
 import WorkHoursForm from "../new-profile/WorkHoursForm";
 import AgencySelectField from "./AgencySelectField";
 import AgencyTagsInput from "./AgencyTagsInput";
@@ -33,6 +34,8 @@ interface Prop {
   className?: string;
   ownerId: string;
   defaultEmail?: string;
+  /** When provided the form edits this agency instead of creating a new one */
+  agency?: IAgency | null;
 }
 
 const BUSINESS_TYPES = [
@@ -56,14 +59,50 @@ const SERVICE_SUGGESTIONS = [
   "Incall",
   "Companionship",
 ];
-const LANGUAGE_SUGGESTIONS = ["English", "Swahili", "French", "Kikuyu", "Luo"];
+const LANGUAGE_SUGGESTIONS = ["English", "Swahili", "French", "Other"];
 const PAYMENT_SUGGESTIONS = [
-  "Cash",
+  // "Cash",
   "M-Pesa",
-  "Bank Transfer",
-  "Card",
-  "Crypto",
+  // "Bank Transfer",
+  // "Card",
+  // "Crypto",
 ];
+
+// Friendly names used when summarising validation errors
+const FIELD_LABELS: Record<string, string> = {
+  name: "Agency name",
+  businessType: "Business type",
+  description: "Description",
+  establishmentYear: "Year established",
+  contactEmail: "Email",
+  contactPhone: "Phone",
+  whatsappPhone: "WhatsApp",
+  website: "Website",
+  county: "County",
+  region: "Region",
+  town: "Town or area",
+  estate: "Estate",
+  address: "Address",
+  street: "Street",
+  postalCode: "Postal code",
+  monday: "Monday hours",
+  tuesday: "Tuesday hours",
+  wednesday: "Wednesday hours",
+  thursday: "Thursday hours",
+  friday: "Friday hours",
+  saturday: "Saturday hours",
+  sunday: "Sunday hours",
+  categories: "Categories",
+  services: "Services",
+  specialties: "Specialties",
+  languages: "Languages",
+  paymentMethods: "Payment methods",
+  instagram: "Instagram",
+  twitter: "X / Twitter",
+  facebook: "Facebook",
+  telegram: "Telegram",
+  planType: "Subscription plan",
+};
 
 const currentYear = new Date().getFullYear();
 
@@ -156,48 +195,89 @@ export const agencySchema = z.object({
 
 export type AgencyFormValues = z.infer<typeof agencySchema>;
 
-const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
+const DEFAULT_HOURS = "09:00-18:00";
+
+// Prefill from the saved agency when there is one, otherwise sensible blanks
+const buildDefaultValues = (
+  agency?: IAgency | null,
+  defaultEmail?: string,
+): AgencyFormValues => ({
+  name: agency?.name || "",
+  businessType: agency?.businessType || "agency",
+  description: agency?.description || "",
+  establishmentYear: agency?.establishmentYear
+    ? String(agency.establishmentYear)
+    : "",
+  contactEmail: agency?.contactEmail || defaultEmail || "",
+  contactPhone: agency?.contactPhone || "",
+  whatsappPhone: agency?.whatsappPhone || "",
+  website: agency?.website || "",
+  county: agency?.county || "",
+  region: agency?.region || "",
+  town: agency?.town || "",
+  estate: agency?.estate || "",
+  address: agency?.address || "",
+  street: agency?.street || "",
+  postalCode: agency?.postalCode || "",
+  monday: agency?.openingHours?.monday || DEFAULT_HOURS,
+  tuesday: agency?.openingHours?.tuesday || DEFAULT_HOURS,
+  wednesday: agency?.openingHours?.wednesday || DEFAULT_HOURS,
+  thursday: agency?.openingHours?.thursday || DEFAULT_HOURS,
+  friday: agency?.openingHours?.friday || DEFAULT_HOURS,
+  saturday: agency?.openingHours?.saturday || DEFAULT_HOURS,
+  sunday: agency?.openingHours?.sunday || DEFAULT_HOURS,
+  categories: agency?.categories || [],
+  services: agency?.services || [],
+  specialties: agency?.specialties || [],
+  languages: agency?.languages?.length
+    ? agency.languages
+    : ["English", "Swahili"],
+  paymentMethods: agency?.paymentMethods?.length
+    ? agency.paymentMethods
+    : ["Cash", "M-Pesa"],
+  instagram: agency?.socialMedia?.instagram || "",
+  twitter: agency?.socialMedia?.twitter || "",
+  facebook: agency?.socialMedia?.facebook || "",
+  telegram: agency?.socialMedia?.telegram || "",
+  planType: agency?.plan?.type || "basic",
+});
+
+const AgencyProfileForm = ({
+  className,
+  ownerId,
+  defaultEmail,
+  agency,
+}: Prop) => {
   const router = useRouter();
 
+  const isEdit = !!agency?.id;
+
   const [loading, setLoader] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formAlert, setFormAlert] = useState<{
+    title: string;
+    details: string[];
+  } | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState(agency?.logo || "");
+  const [coverUrl, setCoverUrl] = useState(agency?.coverImage || "");
 
-  const DEFAULT_VALUES: AgencyFormValues = {
-    name: "",
-    businessType: "agency",
-    description: "",
-    establishmentYear: "",
-    contactEmail: defaultEmail || "",
-    contactPhone: "",
-    whatsappPhone: "",
-    website: "",
-    county: "",
-    region: "",
-    town: "",
-    estate: "",
-    address: "",
-    street: "",
-    postalCode: "",
-    monday: "09:00-18:00",
-    tuesday: "09:00-18:00",
-    wednesday: "09:00-18:00",
-    thursday: "09:00-18:00",
-    friday: "09:00-18:00",
-    saturday: "09:00-18:00",
-    sunday: "09:00-18:00",
-    categories: [],
-    services: [],
-    specialties: [],
-    languages: ["English", "Swahili"],
-    paymentMethods: ["Cash", "M-Pesa"],
-    instagram: "",
-    twitter: "",
-    facebook: "",
-    telegram: "",
-    planType: "basic",
+  const clearLogo = () => {
+    setLogoFile(null);
+    setLogoUrl("");
   };
+
+  const clearCover = () => {
+    setCoverFile(null);
+    setCoverUrl("");
+  };
+
+  const alertRef = useRef<HTMLDivElement>(null);
+
+  const DEFAULT_VALUES = useMemo(
+    () => buildDefaultValues(agency, defaultEmail),
+    [agency, defaultEmail],
+  );
 
   const form = useForm<AgencyFormValues>({
     resolver: zodResolver(agencySchema),
@@ -234,6 +314,41 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
     }
   }, [regionOptions, form]);
 
+  const showAlert = (title: string, details: string[] = []) => {
+    setFormAlert({ title, details });
+    requestAnimationFrame(() =>
+      alertRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }),
+    );
+  };
+
+  // Turn react-hook-form errors into a readable list instead of a console dump
+  const onInvalid = (errors: FieldErrors<AgencyFormValues>) => {
+    const details = Object.entries(errors).map(([field, fieldError]) => {
+      const label = FIELD_LABELS[field] || field;
+      const message = fieldError?.message;
+
+      return message ? `${label}: ${message}` : `${label} is invalid`;
+    });
+
+    showAlert(
+      details.length
+        ? "Please fix the following before saving:"
+        : "Some details are missing or invalid. Check the highlighted fields.",
+      details,
+    );
+
+    const firstField = Object.keys(errors)[0] as
+      keyof AgencyFormValues | undefined;
+
+    if (firstField) {
+      try {
+        form.setFocus(firstField);
+      } catch {
+        // Selects and tag inputs have no focusable ref - the summary is enough
+      }
+    }
+  };
+
   const uploadImage = async (file: File | null): Promise<string> => {
     if (!file) return "";
 
@@ -268,16 +383,14 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
   };
 
   const onSubmit = async (values: AgencyFormValues) => {
-    setError(null);
+    setFormAlert(null);
     setLoader(true);
 
     try {
-      const [logo, coverImage] = await Promise.all([
-        uploadImage(logoFile),
-        uploadImage(coverFile),
-      ]);
+      const logo = logoFile ? await uploadImage(logoFile) : logoUrl;
+      const coverImage = coverFile ? await uploadImage(coverFile) : coverUrl;
 
-      const res = await createAgency({
+      const payload = {
         name: values.name,
         description: values.description,
         businessType: values.businessType,
@@ -320,15 +433,30 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
         logo,
         coverImage,
         planType: values.planType,
-      });
+      };
+
+      const res = isEdit
+        ? await updateAgency(agency!.id, payload)
+        : await createAgency(payload);
 
       if (!res.success) {
-        setError(res.error || "Failed to create the agency profile");
+        showAlert(
+          res.error ||
+            (isEdit
+              ? "Failed to update the agency profile"
+              : "Failed to create the agency profile"),
+        );
         return;
       }
 
       toast.custom(() => (
-        <SuccessToast message="Your agency profile was created successfully." />
+        <SuccessToast
+          message={
+            isEdit
+              ? "Your agency profile was updated successfully."
+              : "Your agency profile was created successfully."
+          }
+        />
       ));
 
       form.reset(DEFAULT_VALUES);
@@ -336,8 +464,10 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
       setCoverFile(null);
       router.push("/administration");
     } catch (err: any) {
-      console.error("Error creating agency:", err);
-      setError(err?.message || "Something went wrong");
+      showAlert(
+        err?.message ||
+          "Something went wrong while saving your agency. Please try again.",
+      );
     } finally {
       setLoader(false);
     }
@@ -351,15 +481,13 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
     <div className={cn("", className)}>
       <SectionCard className="lg:px-12">
         <h3 className="text-2xl mb-5 font-semibold">
-          New <span className="text-primary font-bold text-xl">agency</span>{" "}
-          profile
+          {isEdit ? "Edit" : "New"}{" "}
+          <span className="text-primary font-bold text-xl">agency</span> profile
         </h3>
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error("Validation errors:", errors);
-            })}
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
             className="space-y-10"
           >
             {/* BUSINESS DETAILS */}
@@ -834,12 +962,16 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
                   label="Logo:"
                   file={logoFile}
                   onFileChange={setLogoFile}
+                  existingUrl={logoUrl}
+                  onClear={clearLogo}
                 />
 
                 <AgencyImageField
                   label="Cover:"
                   file={coverFile}
                   onFileChange={setCoverFile}
+                  existingUrl={coverUrl}
+                  onClear={clearCover}
                 />
 
                 <FormField
@@ -865,10 +997,32 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
               </div>
             </section>
 
-            {error && (
-              <p className="p-3 bg-primary text-lg text-white py-2 text-center my-4">
-                {error}
-              </p>
+            {formAlert && (
+              <div
+                ref={alertRef}
+                role="alert"
+                className="bg-primary text-white p-4 my-4 flex flex-col gap-2"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <p className="font-semibold text-lg">{formAlert.title}</p>
+                  <button
+                    type="button"
+                    onClick={() => setFormAlert(null)}
+                    aria-label="Dismiss"
+                    className="cursor-pointer shrink-0"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </div>
+
+                {formAlert.details.length > 0 && (
+                  <ul className="list-disc pl-6 space-y-1 text-base">
+                    {formAlert.details.map((detail) => (
+                      <li key={detail}>{detail}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
 
             <div className="flex justify-center">
@@ -882,7 +1036,11 @@ const AgencyProfileForm = ({ className, ownerId, defaultEmail }: Prop) => {
                   strokeWidth={4}
                 />
                 <span className="uppercase font-semibold text-xl lg:text-2xl">
-                  {loading ? "Submitting..." : "Create Agency"}
+                  {loading
+                    ? "Submitting..."
+                    : isEdit
+                      ? "Update Agency"
+                      : "Create Agency"}
                 </span>
               </Button>
             </div>
