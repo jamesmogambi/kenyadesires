@@ -41,6 +41,7 @@ interface Prop {
   mode?: "create" | "edit";
   initialData?: NewEscortProfileInput;
   agencyId?: string;
+  fresh?: boolean;
 }
 
 const timeRangeRegex =
@@ -107,7 +108,28 @@ export const formSchema: any = z.object({
     .array(z.string().min(1, "Tag cannot be empty"))
     .default([]),
 });
-const NewEscortForm = ({ className, mode = "create", initialData, agencyId }: Prop) => {
+const DEFAULT_VALUES = {
+  name: "",
+  email: "",
+  street: "",
+  phone: "",
+  whatsappNumber: "",
+  myAge: "",
+  myBreasts: "",
+  myWeight: "",
+  myHeight: "",
+  variantAge: "",
+  monday: "",
+  tuesday: "",
+  wednesday: "",
+  thursday: "",
+  friday: "",
+  saturday: "",
+  sunday: "",
+  variantAvailability: [],
+};
+
+const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fresh }: Prop) => {
   const router = useRouter();
 
   const [error, setError] = useState<any>(null);
@@ -124,26 +146,7 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId }: Pr
     clear: () => void;
   } | null>(null);
 
-  const DEFAULT_VALUES = {
-    name: "",
-    email: "",
-    street: "",
-    phone: "",
-    whatsappNumber: "",
-    myAge: "",
-    myBreasts: "",
-    myWeight: "",
-    myHeight: "",
-    variantAge: "",
-    monday: "",
-    tuesday: "",
-    wednesday: "",
-    thursday: "",
-    friday: "",
-    saturday: "",
-    sunday: "",
-    variantAvailability: [],
-  };
+  const freshKeyRef = useRef(`storageKey_${Math.random()}`);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -152,7 +155,9 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId }: Pr
 
   const { watch, setValue, formState } = form;
 
-  useFormPersist("storageKey", {
+  const storageKey = fresh ? freshKeyRef.current : "storageKey";
+
+  useFormPersist(storageKey, {
     watch,
     setValue,
   });
@@ -164,10 +169,38 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId }: Pr
   const { clearCategories, clearLanguages, clearAll } = useSettingStore();
   const { clearFiles: clearEscortGallery } = useFileStore();
 
+  const hasClearedRef = useRef(false);
+  const clearStoresRef = useRef<(() => void) | null>(null);
+
+  clearStoresRef.current = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("form-store");
+      localStorage.removeItem("Setting-selection");
+      localStorage.removeItem("location-store");
+      localStorage.removeItem("storageKey");
+    }
+    clear();
+    clearDescription();
+    clearTags();
+    clearCategories();
+    clearLanguages();
+    clearAll();
+    clearEscortGallery();
+  };
+
+  useEffect(() => {
+    if (!fresh || hasClearedRef.current) return;
+    hasClearedRef.current = true;
+
+    clearStoresRef.current?.();
+    form.reset(DEFAULT_VALUES);
+  }, [fresh, form]);
+
   useEffect(() => {
     if (!isLoaded || !user) return;
+    if (fresh) return;
     setValue("email", user.primaryEmailAddress?.emailAddress || "");
-  }, [setValue, user, isLoaded]);
+  }, [setValue, user, isLoaded, fresh]);
 
   // Prepopulate form and stores when editing
   useEffect(() => {

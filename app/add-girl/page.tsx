@@ -48,7 +48,7 @@ const page = async () => {
 
   return (
     <div>
-      <NewEscortForm agencyId={agency.id} />
+      <NewEscortForm agencyId={agency.id} fresh />
     </div>
   );
 };

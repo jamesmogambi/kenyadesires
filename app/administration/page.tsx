@@ -11,6 +11,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import Link from "next/link";
+import AgencyGirls from "./AgencyGirls";
 
 export const metadata: Metadata = {
   title: "Update Profile 💖 | kenyadesires.com",
@@ -86,6 +87,8 @@ const page = async () => {
           </div>
         </div>
 
+        {/* TODO: list agency girls if they exist */}
+        {agency && <AgencyGirls agencyId={agency.id} />}
         <div className="mt-6">
           <UserForm />
         </div>
