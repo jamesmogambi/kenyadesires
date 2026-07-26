@@ -111,6 +111,10 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
   const [error, setError] = useState<any>(null);
   const [loading, setLoader] = useState<any>(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string>(
+    initialData?.previewPhoto || "",
+  );
 
   const { user, isLoaded, isSignedIn } = useUser();
 
@@ -156,20 +160,6 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
   const { clearCategories, clearLanguages, clearAll } = useSettingStore();
   const { clearFiles: clearEscortGallery } = useFileStore();
 
-  const hydrate = useVariantStore((s) => s.hydrate);
-  useEffect(() => {
-    async function fetchSettings() {
-      try {
-        const res: any = null;
-        hydrate(res);
-      } catch (err) {
-        console.error("Failed to hydrate variant settings:", err);
-      }
-    }
-
-    fetchSettings();
-  }, [hydrate]);
-
   useEffect(() => {
     if (!isLoaded || !user) return;
     setValue("email", user.primaryEmailAddress?.emailAddress || "");
@@ -177,7 +167,10 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
   // Prepopulate form and stores when editing
   useEffect(() => {
-    if (mode !== "edit" || !initialData) return;
+    if (mode !== "edit" || !initialData) {
+      setHydrated(true);
+      return;
+    }
 
     const {
       name,
@@ -208,6 +201,8 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
       openingHours,
       images,
     } = initialData;
+
+    setHydrated(false);
 
     setValue("name", name || "");
     setValue("email", email || "");
@@ -263,6 +258,8 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
         useFormStore.getState().setTown(town);
       }
     }
+
+    setHydrated(true);
   }, [mode, initialData, setValue]);
 
   const {
@@ -398,14 +395,13 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
         const { existingImages } = useFileStore.getState();
 
         let newPreviewPhotoUrl = "";
-        if (
-          selectedFiles &&
-          selectedFiles.length > 0 &&
-          uploadedImageUrls.length > 0
-        ) {
+        if (uploadedImageUrls.length > 0) {
           newPreviewPhotoUrl = uploadedImageUrls[uploadedImageUrls.length - 1];
-        } else if (existingImages.length > 0) {
-          newPreviewPhotoUrl = existingImages[existingImages.length - 1];
+        } else if (previewPhoto) {
+          const allImageUrls = [...existingImages, ...uploadedImageUrls];
+          if (allImageUrls.includes(previewPhoto)) {
+            newPreviewPhotoUrl = previewPhoto;
+          }
         }
 
         const allImages = [...existingImages, ...uploadedImageUrls];
@@ -456,6 +452,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
         if (mode === "edit" && initialData?.id) {
           console.log("updateEscort called", { ...escortData });
           await updateEscort(initialData.id, escortData);
+          setPreviewPhoto(newPreviewPhotoUrl);
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />
           ));
@@ -516,21 +513,38 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
                 <WorkHoursForm form={form} className={" mt-5"} />
 
-                <SettingsForm form={form} className="mt-14 w-full" />
+                {hydrated ? (
+                  <SettingsForm form={form} className="mt-14 w-full" />
+                ) : (
+                  <div className="mt-14 w-full animate-pulse bg-gray-1/30 h-48 rounded" />
+                )}
 
-                <AboutMeForm form={form} className="my-8" />
+                {hydrated ? (
+                  <AboutMeForm form={form} className="my-8" />
+                ) : (
+                  <div className="my-8 animate-pulse bg-gray-1/30 h-32 rounded" />
+                )}
 
-                <PreviewPhoto
-                  className="my-10 lg:w-3/4 w-full"
-                  form={form}
-                  storedImageUrl={initialData?.previewPhoto}
-                />
+                {hydrated ? (
+                  <PreviewPhoto
+                    className="my-10 lg:w-3/4 w-full"
+                    form={form}
+                    storedImageUrl={previewPhoto}
+                    onClear={() => setPreviewPhoto("")}
+                  />
+                ) : (
+                  <div className="my-10 lg:w-3/4 w-full animate-pulse bg-gray-1/30 h-48 rounded" />
+                )}
               </div>
 
               {/* 2 */}
 
               <div className="lg:basis-1/2 basis-full relative  border-green-600">
-                <SelectPackagesForm form={form} />
+                {hydrated ? (
+                  <SelectPackagesForm form={form} />
+                ) : (
+                  <div className="animate-pulse bg-gray-1/30 h-96 rounded" />
+                )}
               </div>
             </section>
             <PhotoVideoUploads />
@@ -544,7 +558,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
             <div className="flex justify-center ">
               <Button
                 disabled={loading}
-                className="flex lg:w-1/4 w-3/4 rounded-none  items-center  gap-2 p-12 text-white bg-primary"
+                className="flex lg:w-1/4 w-3/4 rounded-none  font-bold items-center  gap-2 p-12 text-white bg-primary"
                 type="submit"
               >
                 <ArrowDown

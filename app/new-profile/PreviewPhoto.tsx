@@ -110,10 +110,11 @@ import { useFormStore } from "@/store/formStore";
 type Prop = {
   className?: string;
   form: any;
-  storedImageUrl?: string | null; // new optional prop
+  storedImageUrl?: string | null;
+  onClear?: () => void;
 };
 
-const PreviewPhoto = ({ className, form, storedImageUrl }: Prop) => {
+const PreviewPhoto = ({ className, form, storedImageUrl, onClear }: Prop) => {
   const { watch, setValue } = form;
   const { setFiles, files } = useFormStore();
 
@@ -153,12 +154,10 @@ const PreviewPhoto = ({ className, form, storedImageUrl }: Prop) => {
     }
   };
 
-  // Clear image handler clears files and optionally stored URL
-  // If you want to clear storedImageUrl from parent, you'll need a callback prop
+  // Clear image handler clears files and optionally notifies parent to clear stored URL
   const clearImage = () => {
     setFiles([]); // clear selected files locally
-
-    // Can't clear storedImageUrl here directly, you'd need a callback from parent if needed
+    onClear?.(); // notify parent to clear stored preview URL
 
     if (inputRef.current) {
       inputRef.current.value = "";
