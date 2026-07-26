@@ -1,13 +1,3 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +42,7 @@ const NavActions = () => {
             />
           </svg>
 
-          <span className="text-base group-hover:font-bold uppercase font-medium">
+          <span className="text-base group-hover:font-bold uppercase font-semibold">
             account settings
           </span>
 
@@ -60,7 +50,7 @@ const NavActions = () => {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="size-4"
+            className="size-6"
           >
             <path
               fillRule="evenodd"
@@ -70,23 +60,24 @@ const NavActions = () => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-full max-w-62.5 space-y-2">
-          {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
+          {/* <DropdownM>My Account</DropdownM enuLabel> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-stone-700 group">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width={384}
-              height={512}
-              viewBox="0 0 384 512"
-              className="text-stone-400"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="size-6 text-stone-400"
             >
+              <path d="M12 7.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" />
               <path
-                fill="currentColor"
-                d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c19.8 27.1 39.7 54.4 49.2 86.2h160zm-80 128c44.2 0 80-35.8 80-80v-16H112v16c0 44.2 35.8 80 80 80m-80-336c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80"
-                strokeWidth={13}
-                stroke="currentColor"
-              ></path>
+                fill-rule="evenodd"
+                d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 0 1 1.5 14.625v-9.75ZM8.25 9.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM18.75 9a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75V9.75a.75.75 0 0 0-.75-.75h-.008ZM4.5 9.75A.75.75 0 0 1 5.25 9h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H5.25a.75.75 0 0 1-.75-.75V9.75Z"
+                clip-rule="evenodd"
+              />
+              <path d="M2.25 18a.75.75 0 0 0 0 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 0 0-.75-.75H2.25Z" />
             </svg>
+
             <span className="uppercase font-normal text-base group-hover:font-bold">
               Number of Credits : 0
             </span>
@@ -99,7 +90,7 @@ const NavActions = () => {
                 width={384}
                 height={512}
                 viewBox="0 0 384 512"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="currentColor"
@@ -121,7 +112,7 @@ const NavActions = () => {
                 width={576}
                 height={512}
                 viewBox="0 0 576 512"
-                className="text-stone-400"
+                className="text-stone-400 size-6 shrink-0"
               >
                 <path
                   fill="currentColor"
@@ -130,20 +121,23 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase font-normal text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold ">
                 buy credits - for advertising and topping
               </span>
             </Link>
           </DropdownMenuItem>
 
           <DropdownMenuItem className="text-stone-800 group">
-            <Link href="adjustment" className="flex items-center gap-2">
+            <Link
+              href={isBusiness ? "/edit-admin-profile" : "adjustment"}
+              className="flex items-center gap-2"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width={30}
                 height={30}
                 viewBox="0 0 24 24"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="currentColor"
@@ -166,7 +160,7 @@ const NavActions = () => {
                   width={30}
                   height={30}
                   viewBox="0 0 24 24"
-                  className="text-stone-400"
+                  className="text-stone-400 size-6"
                 >
                   <path
                     fill="currentColor"
@@ -189,7 +183,7 @@ const NavActions = () => {
                 width={30}
                 height={30}
                 viewBox="0 0 24 24"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="currentColor"
@@ -214,7 +208,7 @@ const NavActions = () => {
                 width={30}
                 height={30}
                 viewBox="0 0 24 24"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="none"
