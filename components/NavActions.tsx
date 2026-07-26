@@ -87,7 +87,7 @@ const NavActions = () => {
                 stroke="currentColor"
               ></path>
             </svg>
-            <span className="uppercase font-semibold text-base group-hover:font-bold">
+            <span className="uppercase font-normal text-base group-hover:font-bold">
               Number of Credits : 0
             </span>
           </DropdownMenuItem>
@@ -108,7 +108,7 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase font-semibold text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 advice - frequently asked questions
               </span>
             </Link>
@@ -130,7 +130,7 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase font-semibold text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 buy credits - for advertising and topping
               </span>
             </Link>
@@ -152,7 +152,7 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase font-semibold text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 edit profile
               </span>
             </Link>
@@ -175,7 +175,7 @@ const NavActions = () => {
                     stroke="currentColor"
                   ></path>
                 </svg>
-                <span className="uppercase font-semibold text-base group-hover:font-bold">
+                <span className="uppercase font-normal text-base group-hover:font-bold">
                   add girl
                 </span>
               </Link>
@@ -198,7 +198,7 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase font-semibold text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 invoices to download
               </span>
             </Link>
@@ -225,7 +225,7 @@ const NavActions = () => {
                   d="M7.023 5.5a9 9 0 1 0 9.953 0M12 2v8"
                 ></path>
               </svg>
-              <span className="uppercase font-semibold text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 check out
               </span>
             </div>
