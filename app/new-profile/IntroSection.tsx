@@ -29,7 +29,8 @@ interface Prop {
 const IntroSection = ({ form, className }: Prop) => {
   const [regionOpen, setRegionOpen] = React.useState<boolean>(false);
   const [cityOpen, setCityOpen] = React.useState<boolean>(false);
-  const [availabilityOpen, setAvailabilityOpen] = React.useState<boolean>(false);
+  const [availabilityOpen, setAvailabilityOpen] =
+    React.useState<boolean>(false);
 
   const [countyRegions, setCountyRegions] = useState<
     { id: string; name: string }[]
@@ -214,9 +215,7 @@ const IntroSection = ({ form, className }: Prop) => {
                   <DropdownMenuItem
                     className="rounded-lg  cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
                     // onSelect={(e) => setRegion(item.location)}
-                    onSelect={(val: any) =>
-                      handleSelectCounty(item.countyName)
-                    }
+                    onSelect={(val: any) => handleSelectCounty(item.countyName)}
                     key={item.countyCode}
                   >
                     {item.countyName}
@@ -232,7 +231,10 @@ const IntroSection = ({ form, className }: Prop) => {
           <label className="text-white/50 text-base font-medium">
             Availability:
           </label>
-          <DropdownMenu open={availabilityOpen} onOpenChange={setAvailabilityOpen}>
+          <DropdownMenu
+            open={availabilityOpen}
+            onOpenChange={setAvailabilityOpen}
+          >
             <DropdownMenuTrigger className=" outline-0  self-end  cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
               <span className="text-white/50 text-base font-semibold">
                 {availability.length > 0
@@ -258,7 +260,8 @@ const IntroSection = ({ form, className }: Prop) => {
               {variantAvailability.map((i, k) => {
                 const item: any = i;
                 const label = typeof item === "string" ? item : item.name;
-                const key = typeof item === "string" ? item : item.id ?? item.name ?? k;
+                const key =
+                  typeof item === "string" ? item : (item.id ?? item.name ?? k);
                 const checked = availability.includes(label);
                 return (
                   <DropdownMenuItem
@@ -270,7 +273,9 @@ const IntroSection = ({ form, className }: Prop) => {
                   >
                     <div
                       className={`size-5 rounded border flex items-center justify-center ${
-                        checked ? "bg-primary border-primary" : "border-white/30"
+                        checked
+                          ? "bg-primary border-primary"
+                          : "border-white/30"
                       }`}
                     >
                       {checked && (
@@ -322,6 +327,7 @@ const IntroSection = ({ form, className }: Prop) => {
           )}
         />
 
+        {/* TODO: // FIX AREA HANDLER */}
         <div className=" flex-row   justify-end flex gap-2  ">
           <DropdownMenu
             open={cityOpen}

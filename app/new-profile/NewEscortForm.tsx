@@ -52,7 +52,10 @@ const defaultDay = "";
 const daySchema = z
   .string()
   .default(defaultDay)
-  .refine((val) => val === "" || timeRangeRegex.test(val), "Invalid time range");
+  .refine(
+    (val) => val === "" || timeRangeRegex.test(val),
+    "Invalid time range",
+  );
 
 export const formSchema: any = z.object({
   name: z
@@ -60,10 +63,13 @@ export const formSchema: any = z.object({
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name must be at most 50 characters"),
   email: z.email({ error: "Invalid email address" }),
-
   street: z
-    .string({ error: "Street is required" })
-    .min(3, "Street name must be at least 3 characters"),
+    .string()
+    .optional()
+    .refine((val) => !val || val.length >= 3, {
+      message: "Street name must be at least 3 characters",
+    }),
+
   whatsappNumber: z
     .string()
     .optional()
@@ -392,7 +398,11 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
         const { existingImages } = useFileStore.getState();
 
         let newPreviewPhotoUrl = "";
-        if (selectedFiles && selectedFiles.length > 0 && uploadedImageUrls.length > 0) {
+        if (
+          selectedFiles &&
+          selectedFiles.length > 0 &&
+          uploadedImageUrls.length > 0
+        ) {
           newPreviewPhotoUrl = uploadedImageUrls[uploadedImageUrls.length - 1];
         } else if (existingImages.length > 0) {
           newPreviewPhotoUrl = existingImages[existingImages.length - 1];
@@ -440,9 +450,11 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
           height: myHeight,
           categories: settingCategories,
           email,
+          street,
         };
 
         if (mode === "edit" && initialData?.id) {
+          console.log("updateEscort called", { ...escortData });
           await updateEscort(initialData.id, escortData);
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />
@@ -481,8 +493,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
       <SectionCard className="px-12">
         <h3 className="text-2xl mb-5 font-semibold">
           {mode === "edit" ? "Edit" : "New"}{" "}
-          <span className="text-primary font-bold text-xl">girl</span>{" "}
-          profile
+          <span className="text-primary font-bold text-xl">girl</span> profile
         </h3>
 
         <Form {...form}>
@@ -509,7 +520,11 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
                 <AboutMeForm form={form} className="my-8" />
 
-                <PreviewPhoto className="my-10 lg:w-3/4 w-full" form={form} storedImageUrl={initialData?.previewPhoto} />
+                <PreviewPhoto
+                  className="my-10 lg:w-3/4 w-full"
+                  form={form}
+                  storedImageUrl={initialData?.previewPhoto}
+                />
               </div>
 
               {/* 2 */}
