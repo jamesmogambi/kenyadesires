@@ -53,6 +53,7 @@ const page = async () => {
       <NewEscortForm
         mode={initialData ? "edit" : "create"}
         initialData={initialData || undefined}
+        fresh={!initialData}
       />
     </div>
   );

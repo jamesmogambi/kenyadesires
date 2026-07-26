@@ -32,11 +32,12 @@ const page = async () => {
   console.log("Full user object:", user);
   console.log("=========================================");
 
-  const escort = userId ? await getEscortByClerkUserId(userId) : null;
-  console.log("profile of escort", escort);
-
   const isBusiness = role === "business";
   const agency = isBusiness && userId ? await getAgencyByOwnerId(userId) : null;
+
+  const isUser = role === "user";
+  const escort = isUser && userId ? await getEscortByClerkUserId(userId) : null;
+  console.log("profile of escort", escort);
 
   // Determine the link and button text based on role and profile existence
   let editProfileLink = "/adjustment";
@@ -48,6 +49,9 @@ const page = async () => {
   } else if (!escort) {
     editProfileLink = "/adjustment";
     buttonText = "Create profile";
+  } else {
+    editProfileLink = "/adjustment";
+    buttonText = "Edit profile";
   }
 
   // if (!escort) {

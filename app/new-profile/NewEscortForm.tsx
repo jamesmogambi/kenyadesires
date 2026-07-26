@@ -178,10 +178,13 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
       localStorage.removeItem("Setting-selection");
       localStorage.removeItem("location-store");
       localStorage.removeItem("storageKey");
+      sessionStorage.removeItem("form-store");
+      sessionStorage.removeItem("Setting-selection");
+      sessionStorage.removeItem("location-store");
+      sessionStorage.removeItem("storageKey");
     }
     clear();
-    clearDescription();
-    clearTags();
+    useFormStore.getState().reset();
     clearCategories();
     clearLanguages();
     clearAll();
@@ -201,6 +204,13 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
     if (fresh) return;
     setValue("email", user.primaryEmailAddress?.emailAddress || "");
   }, [setValue, user, isLoaded, fresh]);
+
+  // Clear stores and reset form when creating a new profile without existing data
+  useEffect(() => {
+    if (mode !== "create" || initialData || !isLoaded) return;
+    clearStoresRef.current?.();
+    form.reset(DEFAULT_VALUES);
+  }, [mode, initialData, isLoaded, form]);
 
   // Prepopulate form and stores when editing
   useEffect(() => {
@@ -476,36 +486,47 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
           categories: settingCategories,
           email,
           street,
-          agencyId: agencyId || initialData?.agencyId,
-          isAgencyOwned: !!agencyId || initialData?.isAgencyOwned,
+          agencyId: agencyId || initialData?.agencyId || "",
+          isAgencyOwned: !!agencyId || initialData?.isAgencyOwned || false,
         };
 
         if (mode === "edit" && initialData?.id) {
-          // console.log("updateEscort called", { ...escortData });
           await updateEscort(initialData.id, escortData);
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />
           ));
         } else {
           const res = await saveNewEscortProfile(escortData);
-          console.log("new escort girl created", res);
+          if (!res.success) {
+            setError(res.error || "Failed to create profile");
+            setLoader(false);
+            return;
+          }
           toast.custom(() => (
             <SuccessToast message="Your profile was created successfully." />
           ));
-          router.push("/administration");
         }
 
         form.reset(DEFAULT_VALUES);
+        localStorage.removeItem("form-store");
+        localStorage.removeItem("Setting-selection");
+        localStorage.removeItem("location-store");
         localStorage.removeItem("storageKey");
-        localStorage.removeItem("storageKey");
+        sessionStorage.removeItem("form-store");
+        sessionStorage.removeItem("Setting-selection");
+        sessionStorage.removeItem("location-store");
+        sessionStorage.removeItem("storageKey");
         clear();
-        (clearAll(),
-          clearDescription(),
-          clearLanguages(),
-          clearFiles(),
-          clearTags(),
-          clearCategories());
+        clearDescription();
+        clearTags();
+        clearCategories();
+        clearLanguages();
+        clearAll();
+        clearFiles();
         clearEscortGallery();
+        hasClearedRef.current = false;
+
+        router.push("/administration");
       } catch (error: any) {
         console.error("Error saving profile:", error);
         setError(error?.message || "Something went wrong");
@@ -526,11 +547,22 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error("Validation errors:", errors);
+              const details = Object.entries(errors).map(
+                ([field, fieldError]) => {
+                  const message = fieldError?.message;
+                  const label = field
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/^./, (str) => str.toUpperCase());
+                  return message || `${label} is invalid`;
+                },
+              );
+
+              setError(
+                details.length > 0
+                  ? details.join(". ")
+                  : "Please fix the highlighted fields.",
+              );
             })}
-            // onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            //   console.error("Validation errors:", errors);
-            // })}
             className="space-y-3"
           >
             {/* about section */}
