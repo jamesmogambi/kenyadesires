@@ -543,6 +543,8 @@ export interface NewEscortProfileInput {
   };
   bustSize?: string;
   clerkUserId?: string;
+  agencyId?: string;
+  isAgencyOwned?: boolean;
 }
 
 export async function saveNewEscortProfile(
@@ -608,7 +610,9 @@ export async function saveNewEscortProfile(
       primaryRegion: data.region || "",
       locations: [],
       source: "admin",
-      workType: "independent",
+      workType: data.isAgencyOwned ? "agency" : "independent",
+      agencyId: data.agencyId,
+      isAgencyOwned: data.isAgencyOwned,
       isAgencyFeatured: false,
       isActive: true,
       isVerified: false,

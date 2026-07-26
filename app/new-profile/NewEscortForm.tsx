@@ -40,6 +40,7 @@ interface Prop {
   className?: string;
   mode?: "create" | "edit";
   initialData?: NewEscortProfileInput;
+  agencyId?: string;
 }
 
 const timeRangeRegex =
@@ -106,7 +107,7 @@ export const formSchema: any = z.object({
     .array(z.string().min(1, "Tag cannot be empty"))
     .default([]),
 });
-const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
+const NewEscortForm = ({ className, mode = "create", initialData, agencyId }: Prop) => {
   const router = useRouter();
 
   const [error, setError] = useState<any>(null);
@@ -442,6 +443,8 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
           categories: settingCategories,
           email,
           street,
+          agencyId: agencyId || initialData?.agencyId,
+          isAgencyOwned: !!agencyId || initialData?.isAgencyOwned,
         };
 
         if (mode === "edit" && initialData?.id) {

@@ -69,7 +69,7 @@ const NavActions = () => {
             />
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-full max-w-[250px] space-y-2">
+        <DropdownMenuContent className="w-full max-w-62.5 space-y-2">
           {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-stone-700 group">
