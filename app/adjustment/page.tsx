@@ -47,14 +47,13 @@ const page = async () => {
       }
     : null;
 
-  // console.log("escort record==>", { ...initialData });
+  console.log("escort record==>", { ...initialData });
   return (
     <div>
-      {initialData ? (
-        <NewEscortForm mode="edit" initialData={initialData} />
-      ) : (
-        <div>No escort profile found</div>
-      )}
+      <NewEscortForm
+        mode={initialData ? "edit" : "create"}
+        initialData={initialData || undefined}
+      />
     </div>
   );
 };

@@ -45,6 +45,9 @@ const page = async () => {
   if (isBusiness) {
     editProfileLink = "/agency-profile";
     buttonText = agency ? "Edit agency" : "Create agency";
+  } else if (!escort) {
+    editProfileLink = "/adjustment";
+    buttonText = "Create profile";
   }
 
   // if (!escort) {
