@@ -287,6 +287,34 @@ export async function getEscortByClerkUserId(
 }
 
 /**
+ * Get escort by email address
+ */
+export async function getEscortByEmail(
+  email: string,
+): Promise<Escort | null> {
+  try {
+    if (!email || email.trim() === "") {
+      return null;
+    }
+
+    const snapshot = await adminDb
+      .collection("escorts")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return convertDocToEscort(snapshot.docs[0]);
+  } catch (error) {
+    console.error("Error fetching escort by email:", error);
+    return null;
+  }
+}
+
+/**
  * Get a single escort by ID with only cleaned images
  * Cached for 2 weeks
  */
@@ -613,6 +641,7 @@ export async function saveNewEscortProfile(
       workType: data.isAgencyOwned ? "agency" : "independent",
       agencyId: data.agencyId || "",
       isAgencyOwned: data.isAgencyOwned || false,
+      clerkUserId: data.clerkUserId || "",
       isAgencyFeatured: false,
       isActive: true,
       isVerified: false,

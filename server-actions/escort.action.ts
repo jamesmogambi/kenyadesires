@@ -52,6 +52,7 @@ export interface Escort {
   workType: string;
   agencyId?: string;
   isAgencyOwned?: boolean;
+  clerkUserId?: string;
   isAgencyFeatured: boolean;
   isActive: boolean;
   isVerified: boolean;
@@ -220,6 +221,7 @@ export const convertDocSnapshotToEscort = async (
     workType: data.workType,
     agencyId: data.agencyId,
     isAgencyOwned: data.isAgencyOwned,
+    clerkUserId: data.clerkUserId,
     isAgencyFeatured: data.isAgencyFeatured,
     isActive: data.isActive,
     isVerified: data.isVerified,
@@ -293,6 +295,7 @@ export const convertQueryDocToEscort = async (
     workType: data.workType,
     agencyId: data.agencyId,
     isAgencyOwned: data.isAgencyOwned,
+    clerkUserId: data.clerkUserId,
     isAgencyFeatured: data.isAgencyFeatured,
     isActive: data.isActive,
     isVerified: data.isVerified,
@@ -745,6 +748,7 @@ function convertDocToEscortFast(doc: any): Escort {
     workType: data.workType || "",
     agencyId: data.agencyId,
     isAgencyOwned: data.isAgencyOwned,
+    clerkUserId: data.clerkUserId,
     isAgencyFeatured: data.isAgencyFeatured || false,
     isActive: data.isActive !== undefined ? data.isActive : true,
     isVerified: data.isVerified || false,
@@ -1155,7 +1159,8 @@ export async function updateEscort(
     if (updates.previewPhoto !== undefined) updateData.previewPhoto = updates.previewPhoto;
     if (updates.images) updateData.images = updates.images;
     if (updates.role) updateData.role = updates.role;
-    if (updates.agencyId) updateData.agencyId = updates.agencyId;
+    if (updates.agencyId !== undefined) updateData.agencyId = updates.agencyId;
+    if (updates.clerkUserId !== undefined) updateData.clerkUserId = updates.clerkUserId;
     if (updates.isAgencyOwned !== undefined) updateData.isAgencyOwned = updates.isAgencyOwned;
     if (updates.town !== undefined) {
       updateData.locations = [

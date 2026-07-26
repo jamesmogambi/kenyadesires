@@ -1,13 +1,21 @@
 import React from "react";
 
 import NewEscortForm from "@/app/new-profile/NewEscortForm";
-import { auth } from "@clerk/nextjs/server";
-import { getEscortByClerkUserId } from "@/server-actions/girl.action";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getEscortByClerkUserId, getEscortByEmail } from "@/server-actions/girl.action";
 import type { NewEscortProfileInput } from "@/server-actions/girl.action";
 
 const page = async () => {
   const { userId } = await auth();
-  const escort = userId ? await getEscortByClerkUserId(userId) : null;
+  const user = await currentUser();
+  let escort = userId ? await getEscortByClerkUserId(userId) : null;
+
+  if (!escort && user?.primaryEmailAddress?.emailAddress) {
+    const byEmail = await getEscortByEmail(user.primaryEmailAddress.emailAddress);
+    if (byEmail) {
+      escort = byEmail;
+    }
+  }
 
   const initialData: NewEscortProfileInput | null = escort
     ? {
