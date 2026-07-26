@@ -1103,7 +1103,7 @@ export async function createEscort(
 // Update escort
 export async function updateEscort(
   id: string,
-  updates: Partial<Escort>,
+  updates: Record<string, any>,
 ): Promise<void> {
   try {
     const updateData: any = {

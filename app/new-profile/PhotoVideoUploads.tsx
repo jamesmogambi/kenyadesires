@@ -64,10 +64,11 @@ const PhotoVideoUploads = ({ className }: Props) => {
   };
 
   const allImages = [
-    ...existingImages.map((url) => ({ type: "existing" as const, url })),
+    ...existingImages.map((url) => ({ type: "existing" as const, url, file: null as File | null })),
     ...files.map((file, idx) => ({
       type: "new" as const,
       url: URL.createObjectURL(file),
+      file,
       index: idx,
     })),
   ];
