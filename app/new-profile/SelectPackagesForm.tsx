@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-import { cn, getFlagEmoji, splitIntoThreeColumns, formatPracticeName } from "@/lib/utils";
+import {
+  cn,
+  getFlagEmoji,
+  splitIntoThreeColumns,
+  formatPracticeName,
+} from "@/lib/utils";
 import ReactCountryFlag from "react-country-flag";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -76,7 +81,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     variantSettings.bdsm,
   );
   return (
-    <section className={cn("w-full  ", className)}>
+    <section className={cn("w-full ", className)}>
       <h4 className="text-primary text-xl  mb-6 font-bold">
         Select the services you offer:
       </h4>
@@ -116,10 +121,10 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                       toggle(item.name);
                     }}
                     key={j}
-                     className={cn(
-                       "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
-                       selected.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                     )}
+                    className={cn(
+                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 wrap-break-word",
+                      selected.includes(item.name) ? "bg-primary" : "bg-gray-1",
+                    )}
                   >
                     {formatPracticeName(item.name)}
                   </span>
@@ -138,10 +143,10 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                       toggleMassage(item.name);
                     }}
                     key={j}
-                     className={cn(
-                       "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
-                       massages.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                     )}
+                    className={cn(
+                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 wrap-break-word",
+                      massages.includes(item.name) ? "bg-primary" : "bg-gray-1",
+                    )}
                   >
                     {formatPracticeName(item.name)}
                   </span>
@@ -160,10 +165,10 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                       toggleBdsm(item.name);
                     }}
                     key={j}
-                     className={cn(
-                       "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
-                       bdsm.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                     )}
+                    className={cn(
+                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
+                      bdsm.includes(item.name) ? "bg-primary" : "bg-gray-1",
+                    )}
                   >
                     {formatPracticeName(item.name)}
                   </span>
@@ -181,14 +186,16 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
 
         {variantSettings.categories.map((cat: any) => {
           const catName = typeof cat === "string" ? cat : cat.name;
-          const catKey = typeof cat === "string" ? cat : cat.id ?? cat.name;
+          const catKey = typeof cat === "string" ? cat : (cat.id ?? cat.name);
           return (
             <div key={catKey} className="flex items-center mx-4 gap-2">
               <Checkbox
                 id={String(catKey)}
                 className="size-6 bg-white border-primary"
                 checked={categories.includes(catName)}
-                onCheckedChange={(checked) => setCategory(catName, checked === true)}
+                onCheckedChange={(checked) =>
+                  setCategory(catName, checked === true)
+                }
               />
               <label
                 className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
@@ -202,7 +209,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
       </div>
 
       {/* languages */}
-      <div className=" lg:px-4 px-1 flex lg:absolute top-[80%] my-5 lg:my-0  flex-wrap">
+      <div className="lg:px-4 mt-8 px-1 lg:mt-32 flex-col lg:flex-row flex flex-wrap gap-3">
         <span className="text-white/50 font-bold  text-lg">Languages:</span>
 
         <div className="flex-1 flex ">
@@ -228,7 +235,10 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                 <label className="lg:hidden line-clamp-2">{lang.name}</label>
                 <label className="hidden lg:inline-block">
                   <ReactCountryFlag
-                    countryCode={LANGUAGE_COUNTRY_CODES[(lang.name || "").toLowerCase()] || "GB"}
+                    countryCode={
+                      LANGUAGE_COUNTRY_CODES[(lang.name || "").toLowerCase()] ||
+                      "GB"
+                    }
                     style={{
                       fontSize: "2em",
                     }}

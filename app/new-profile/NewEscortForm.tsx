@@ -9,7 +9,7 @@ import { Form } from "@/components/ui/form";
 import { useRouter } from "next/navigation";
 import SectionCard from "@/components/SectionCard";
 import { cn } from "@/lib/utils";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import WorkHoursForm from "./WorkHoursForm";
 import SettingsForm from "./SettingsForm";
 import AboutMeForm from "./AboutMeForm";
@@ -112,13 +112,16 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
   const [error, setError] = useState<any>(null);
   const [loading, setLoader] = useState<any>(false);
   const [hydrated, setHydrated] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<string>(
-    initialData?.previewPhoto || "",
-  );
 
   const { user, isLoaded, isSignedIn } = useUser();
 
   const imageFiles = useFileStore((state) => state.files);
+
+  const previewPhotoRef = useRef<{
+    getPreviewFile: () => File | null;
+    getPreviewUrl: () => string;
+    clear: () => void;
+  } | null>(null);
 
   const DEFAULT_VALUES = {
     name: "",
@@ -273,7 +276,6 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
     nationality,
     experience,
     tags,
-    files: selectedFiles = [],
   } = useFormStore();
 
   const {
@@ -285,16 +287,47 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
     availability,
   } = useSettingStore();
 
-  const { files: gallery } = useFileStore();
+  const { files: gallery, existingImages } = useFileStore();
+
+  const uploadSingleFile = async (file: File | null): Promise<string> => {
+    if (!file) return "";
+    const { signature, timestamp, cloudName, apiKey, folder } = await fetch(
+      "/api/cloudinary-signature",
+    ).then((res) => res.json());
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("api_key", apiKey);
+    formData.append("timestamp", timestamp.toString());
+    formData.append("signature", signature);
+    formData.append("folder", folder);
+
+    const uploadRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      throw new Error(
+        `Failed to upload preview image ${file.name}: ${uploadRes.status} - ${errText}`,
+      );
+    }
+
+    const uploadData = await uploadRes.json();
+    return uploadData.secure_url;
+  };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     setLoader(true);
     setError(null);
 
     (async () => {
       try {
-        // Destructure fields you want from values (add more as needed)
         const {
-          // address,
           name,
           email,
           whatsappNumber,
@@ -313,7 +346,6 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
           myWeight,
         } = values;
 
-        // Validate region and town
         if (!region) {
           setError("Please select your region");
           setLoader(false);
@@ -324,42 +356,22 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
           setLoader(false);
           return;
         }
-        // Validate categories
         if (settingCategories.length === 0) {
           setError("Please select categories you want to appear");
           setLoader(false);
           return;
         }
 
-        // Get all files from your file store
-        // const allFiles = Array.from(useFileStore.getState().fileMap.values());
+        const previewFile = previewPhotoRef.current?.getPreviewFile() ?? null;
+        const storedPreviewUrl = previewPhotoRef.current?.getPreviewUrl() || "";
 
-        // // Filter image files
-        // const imageFiles = allFiles.filter((file) =>
-        //   file.type.startsWith("image/"),
-        // );
+        const uploadedPreviewUrl = await uploadSingleFile(previewFile);
+        const finalPreviewPhotoUrl = uploadedPreviewUrl || storedPreviewUrl;
 
-        // Prepare combined list: image files + preview photo (if exists)
-        const filesToUpload: File[] = [...imageFiles];
+        const galleryFiles = [...imageFiles];
+        const uploadedGalleryUrls: string[] = [];
 
-        if (selectedFiles && selectedFiles.length > 0) {
-          const previewFile = selectedFiles[0];
-          if (
-            !filesToUpload.some(
-              (f) => f.name === previewFile.name && f.size === previewFile.size,
-            )
-          ) {
-            filesToUpload.push(previewFile);
-          }
-        }
-
-        if (filesToUpload.length === 0) {
-          console.log("No images to upload");
-        }
-
-        const uploadedImageUrls: string[] = [];
-
-        for (const file of filesToUpload) {
+        for (const file of galleryFiles) {
           const { signature, timestamp, cloudName, apiKey, folder } =
             await fetch("/api/cloudinary-signature").then((res) => res.json());
 
@@ -386,32 +398,15 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
           }
 
           const uploadData = await uploadRes.json();
-          uploadedImageUrls.push(uploadData.secure_url);
-          console.log(`Uploaded ${file.name} -> ${uploadData.secure_url}`);
+          uploadedGalleryUrls.push(uploadData.secure_url);
         }
 
-        console.log("All uploaded image URLs:", uploadedImageUrls);
+        const galleryImageUrls = [...existingImages, ...uploadedGalleryUrls];
 
-        const { existingImages } = useFileStore.getState();
-
-        let newPreviewPhotoUrl = "";
-        if (uploadedImageUrls.length > 0) {
-          newPreviewPhotoUrl = uploadedImageUrls[uploadedImageUrls.length - 1];
-        } else if (previewPhoto) {
-          const allImageUrls = [...existingImages, ...uploadedImageUrls];
-          if (allImageUrls.includes(previewPhoto)) {
-            newPreviewPhotoUrl = previewPhoto;
-          }
-        }
-
-        const allImages = [...existingImages, ...uploadedImageUrls];
-        const galleryImageUrls = allImages.filter(
-          (url) => url !== newPreviewPhotoUrl,
-        );
         const escortData: any = {
           name,
           clerkUserId: user?.id || "",
-          previewPhoto: newPreviewPhotoUrl,
+          previewPhoto: finalPreviewPhotoUrl,
           telephone: phone,
           whatsappPhone: whatsappNumber,
           images: galleryImageUrls,
@@ -452,7 +447,6 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
         if (mode === "edit" && initialData?.id) {
           console.log("updateEscort called", { ...escortData });
           await updateEscort(initialData.id, escortData);
-          setPreviewPhoto(newPreviewPhotoUrl);
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />
           ));
@@ -508,10 +502,12 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
             {/* description and setting section */}
             <section className="flex flex-col lg:flex-row mt-12 gap-6">
               {/* 1 */}
-              <div className=" basis-full lg:basis-1/2">
+              <div className="w-full lg:w-1/2 shrink-0">
                 <RichTextEditor />
 
-                <WorkHoursForm form={form} className={" mt-5"} />
+                <div>
+                  <WorkHoursForm form={form} className={"  mt-5"} />
+                </div>
 
                 {hydrated ? (
                   <SettingsForm form={form} className="mt-14 w-full" />
@@ -527,10 +523,10 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
                 {hydrated ? (
                   <PreviewPhoto
+                    ref={previewPhotoRef}
                     className="my-10 lg:w-3/4 w-full"
                     form={form}
-                    storedImageUrl={previewPhoto}
-                    onClear={() => setPreviewPhoto("")}
+                    storedImageUrl={initialData?.previewPhoto}
                   />
                 ) : (
                   <div className="my-10 lg:w-3/4 w-full animate-pulse bg-gray-1/30 h-48 rounded" />
@@ -539,7 +535,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
 
               {/* 2 */}
 
-              <div className="lg:basis-1/2 basis-full relative  border-green-600">
+              <div className="w-full lg:w-1/2 shrink-0">
                 {hydrated ? (
                   <SelectPackagesForm form={form} />
                 ) : (
@@ -565,7 +561,7 @@ const NewEscortForm = ({ className, mode = "create", initialData }: Prop) => {
                   className={cn("size-8", isSubmitting ? "hidden" : "block")}
                   strokeWidth={4}
                 />
-                <span className="uppercase font-semibold text-xl tlg:ext-2xl">
+                <span className="uppercase font-semibold text-xl lg:text-2xl">
                   {loading ? "Submitting..." : "Save Changes"}
                 </span>
               </Button>
