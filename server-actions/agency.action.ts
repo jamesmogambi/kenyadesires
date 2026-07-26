@@ -14,6 +14,9 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { cache } from "react";
+import { revalidatePath } from "next/cache";
+import { adminDb } from "@/lib/firebase-admin";
+import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
 
@@ -372,6 +375,231 @@ export const getCachedAgencyEscorts = cache(
     }
   },
 );
+
+// ============================================
+// GET AGENCY BY OWNER (Clerk user id)
+// ============================================
+export async function getAgencyByOwnerId(
+  ownerId: string,
+): Promise<IAgency | null> {
+  try {
+    if (!ownerId) return null;
+
+    const snapshot = await adminDb
+      .collection("agencies")
+      .where("ownerId", "==", ownerId)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+
+    return {
+      ...data,
+      id: doc.id,
+      createdAt: data.createdAt?.toDate?.() || data.createdAt || null,
+      updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || null,
+      plan: {
+        ...data.plan,
+        activatedAt: data.plan?.activatedAt?.toDate?.() || null,
+        expiresAt: data.plan?.expiresAt?.toDate?.() || null,
+      },
+    } as IAgency;
+  } catch (error) {
+    console.error("Error fetching agency by owner:", error);
+    return null;
+  }
+}
+
+// ============================================
+// CREATE AGENCY
+// ============================================
+export interface CreateAgencyInput {
+  name: string;
+  description?: string;
+  businessType?: IAgency["businessType"];
+  contactEmail: string;
+  contactPhone: string;
+  whatsappPhone?: string;
+  website?: string;
+  ownerId: string;
+  county: string;
+  countyCode?: string;
+  region: string;
+  town: string;
+  estate?: string;
+  address?: string;
+  street?: string;
+  postalCode?: string;
+  categories?: string[];
+  services?: string[];
+  specialties?: string[];
+  languages?: string[];
+  paymentMethods?: string[];
+  establishmentYear?: number;
+  openingHours?: Partial<IAgency["openingHours"]>;
+  socialMedia?: IAgency["socialMedia"];
+  logo?: string;
+  coverImage?: string;
+  gallery?: string[];
+  videos?: string[];
+  planType?: IAgency["plan"]["type"];
+}
+
+const PLAN_LIMITS: Record<
+  IAgency["plan"]["type"],
+  { maxEmployees: number; maxGalleryImages: number }
+> = {
+  basic: { maxEmployees: 10, maxGalleryImages: 20 },
+  premium: { maxEmployees: 25, maxGalleryImages: 50 },
+  enterprise: { maxEmployees: 100, maxGalleryImages: 200 },
+};
+
+const DEFAULT_OPENING_HOURS: IAgency["openingHours"] = {
+  monday: "09:00-18:00",
+  tuesday: "09:00-18:00",
+  wednesday: "09:00-18:00",
+  thursday: "09:00-18:00",
+  friday: "09:00-18:00",
+  saturday: "09:00-18:00",
+  sunday: "09:00-18:00",
+};
+
+// Strip empty social handles so we never store blank keys
+function cleanSocialMedia(socialMedia?: IAgency["socialMedia"]) {
+  if (!socialMedia) return undefined;
+
+  const cleaned = Object.fromEntries(
+    Object.entries(socialMedia).filter(([, value]) => !!value?.trim()),
+  );
+
+  return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+}
+
+// Slug must be unique - agencies are stored under their slug
+async function generateUniqueAgencySlug(name: string): Promise<string> {
+  const base = slugify(name);
+  let slug = base;
+
+  for (let attempt = 2; attempt <= 20; attempt++) {
+    const snapshot = await adminDb
+      .collection("agencies")
+      .where("slug", "==", slug)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return slug;
+
+    slug = `${base}-${attempt}`;
+  }
+
+  return `${base}-${Date.now().toString().slice(-6)}`;
+}
+
+export async function createAgency(
+  data: CreateAgencyInput,
+): Promise<{ success: boolean; id?: string; slug?: string; error?: string }> {
+  try {
+    if (!data.ownerId) {
+      return { success: false, error: "You must be signed in to continue" };
+    }
+
+    // One agency per owner
+    const ownerSnapshot = await adminDb
+      .collection("agencies")
+      .where("ownerId", "==", data.ownerId)
+      .limit(1)
+      .get();
+
+    if (!ownerSnapshot.empty) {
+      return {
+        success: false,
+        error: "You already have an agency profile",
+      };
+    }
+
+    const now = new Date();
+    const slug = await generateUniqueAgencySlug(data.name);
+    const planType = data.planType || "basic";
+    const socialMedia = cleanSocialMedia(data.socialMedia);
+
+    const agency: Omit<IAgency, "id"> = {
+      name: data.name,
+      slug,
+      description: data.description || "",
+      contactEmail: data.contactEmail,
+      contactPhone: data.contactPhone,
+      whatsappPhone: data.whatsappPhone || "",
+      website: data.website || "",
+      ownerId: data.ownerId,
+      country: "Kenya",
+      county: data.county,
+      countyCode:
+        data.countyCode || data.county.toLowerCase().replace(/\s+/g, "-"),
+      region: data.region,
+      town: data.town,
+      estate: data.estate || "",
+      address: data.address || "",
+      street: data.street || "",
+      postalCode: data.postalCode || "",
+      businessType: data.businessType || "agency",
+      categories: data.categories || [],
+      openingHours: { ...DEFAULT_OPENING_HOURS, ...(data.openingHours || {}) },
+      services: data.services || [],
+      specialties: data.specialties || [],
+      isVerified: false,
+      verificationStatus: "pending",
+      logo: data.logo || "",
+      coverImage: data.coverImage || "",
+      gallery: data.gallery || [],
+      videos: data.videos || [],
+      establishmentYear: data.establishmentYear,
+      languages: data.languages?.length ? data.languages : ["English"],
+      paymentMethods: data.paymentMethods?.length
+        ? data.paymentMethods
+        : ["Cash", "M-Pesa"],
+      plan: {
+        type: planType,
+        isActive: true,
+        activatedAt: now,
+        features: [],
+        ...PLAN_LIMITS[planType],
+      },
+      rating: 0,
+      totalReviews: 0,
+      totalBookings: 0,
+      totalViews: 0,
+      featuredEmployeesCount: 0,
+      isActive: true,
+      isFeatured: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const docRef = adminDb.collection("agencies").doc(slug);
+
+    await docRef.set({
+      id: docRef.id,
+      ...agency,
+      ...(socialMedia ? { socialMedia } : {}),
+      ...(data.establishmentYear ? {} : { establishmentYear: null }),
+    });
+
+    revalidatePath("/agencies");
+    revalidatePath(`/agencies/${slug}`);
+
+    return { success: true, id: docRef.id, slug };
+  } catch (error) {
+    console.error("Error creating agency:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to create agency",
+    };
+  }
+}
 
 // ============================================
 // LEGACY EXPORTS (for backward compatibility)
