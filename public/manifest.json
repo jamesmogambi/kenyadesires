@@ -1,0 +1,46 @@
+{
+  "name": "KenyaDesires – Premium Escorts & Companions in Kenya",
+  "short_name": "KenyaDesires",
+  "description": "KenyaDesires is Kenya's premier escort directory. Find 900+ verified, high-class companions in Nairobi, Mombasa, Kisumu, and all major cities. Real photos, honest reviews, and discreet booking.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#13161b",
+  "theme_color": "#fe0032",
+  "categories": ["social", "lifestyle", "entertainment"],
+  "lang": "en-KE",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon",
+      "sizes": "36x36",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Browse Girls",
+      "url": "/girls",
+      "description": "View all escort listings"
+    },
+    {
+      "name": "Create Advertisement",
+      "url": "/private-apartment-girl-listing",
+      "description": "Post a new escort listing"
+    },
+    {
+      "name": "Contact Us",
+      "url": "/contact",
+      "description": "Get in touch with support"
+    }
+  ]
+}

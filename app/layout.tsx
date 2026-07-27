@@ -127,6 +127,7 @@ export default async function RootLayout({
           <meta name="geo.region" content="KE-30" />
           {/* PWA Configuration */}
           <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#fe0032" />
           {/* RSS Feed */}
           <link
             rel="alternate"
