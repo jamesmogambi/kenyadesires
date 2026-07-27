@@ -86,8 +86,23 @@ export default async function RootLayout({
             href="https://cdn.sanity.io"
             crossOrigin="anonymous"
           />
+          <link
+            rel="icon"
+            type="image/png"
+            href="/favicon-96x96.png"
+            sizes="96x96"
+          />
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+          <link rel="shortcut icon" href="/favicon.ico" />
+          <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="/apple-touch-icon.png"
+          />
+          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
+          <link rel="manifest" href="/site.webmanifest" />
 
-          {/* Icons - using dynamic icon route */}
+          {/* Icons - using dynamic icon route
           <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
           <link rel="apple-touch-icon" href="/icon" type="image/png" />
           <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
@@ -95,7 +110,7 @@ export default async function RootLayout({
           <meta
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
-          />
+          /> */}
 
           {/* Microsoft Tiles */}
           <meta name="msapplication-TileColor" content="#000000" />
