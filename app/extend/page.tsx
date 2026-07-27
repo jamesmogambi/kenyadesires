@@ -21,7 +21,7 @@ const page = () => {
         <PurchaseInfoSection className="mt-20" />
         <AdvertisingPriceLIst />
       </div>
-      <p className="text-2xl max-w-[900px] text-red-700 mx-auto text-center my-6 font-semibold">
+      <p className="text-3xl max-w-[1000px] text-red-700 mx-auto text-center my-6 font-semibold">
         After the payment is received, the credits will be added automatically.
         If you advertise as a standalone profile and the membership has ended or
         only 5 days remain, your membership will be automatically extended from
