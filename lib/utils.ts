@@ -213,3 +213,10 @@ export function formatDateShort(date: string): string {
 //   if (text.length <= maxLength) return text
 //   return text.slice(0, maxLength) + '...'
 // }
+
+export function formatPracticeName(name: string): string {
+  if (!name) return "";
+  const withoutBrackets = name.replace(/\s*[\(\[].*?[\)\]]/g, "").trim();
+  const words = withoutBrackets.split(/\s+/).filter((w) => w.length > 0);
+  return words.slice(0, 3).join(" ");
+}

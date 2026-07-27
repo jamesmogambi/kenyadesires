@@ -136,7 +136,7 @@ const RegisterForm = ({ className }: Prop) => {
 
         // Delay redirect (2–3 seconds)
         setTimeout(() => {
-          router.push("/new-profile");
+          router.push("/administration");
         }, 5000);
       }
     } catch (err: any) {

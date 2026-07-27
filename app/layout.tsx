@@ -26,6 +26,7 @@ import { PostHogProvider } from "./PostHogProvider";
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";
 import { structuredData, organizationSchema } from "./config/structured-data";
+import { getAllLookupData } from "@/server-actions/lookup.action";
 
 // ✅ Export metadata so Next.js picks it up
 export { metadata };
@@ -57,7 +58,8 @@ export default async function RootLayout({
   const [counties, regions, lookup, allCounties] = await Promise.all([
     getCachedPopularCounties(),
     getCachedRegions(),
-    getCachedLookupData(),
+    // getCachedLookupData(),
+    getAllLookupData(),
     getAllCounties(),
   ]);
 
@@ -84,8 +86,25 @@ export default async function RootLayout({
             href="https://cdn.sanity.io"
             crossOrigin="anonymous"
           />
+          {/* ✅ Primary: Static favicon - works everywhere */}
+          <link rel="icon" href="/favicon.ico" sizes="any" />
 
-          {/* Icons - using dynamic icon route */}
+          {/* ✅ SVG fallback */}
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+          {/* ✅ Fallback: Dynamic Next.js route */}
+          <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
+
+          {/* Apple touch icon */}
+          <link rel="apple-touch-icon" href="/icon" />
+
+          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+          />
+          {/* Icons - using dynamic icon route
           <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
           <link rel="apple-touch-icon" href="/icon" type="image/png" />
           <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
@@ -93,26 +112,22 @@ export default async function RootLayout({
           <meta
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
-          />
-
+          /> */}
           {/* Microsoft Tiles */}
           <meta name="msapplication-TileColor" content="#000000" />
           <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
           <meta name="msapplication-config" content="/browserconfig.xml" />
-
           {/* Additional meta tags */}
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="application-name" content="KenyaDesires" />
-
           {/* Language and region */}
           <meta name="language" content="English" />
           <meta name="geo.country" content="KE" />
           <meta name="geo.region" content="KE-30" />
-
           {/* PWA Configuration */}
           <link rel="manifest" href="/manifest.json" />
-
+          <meta name="theme-color" content="#fe0032" />
           {/* RSS Feed */}
           <link
             rel="alternate"
@@ -120,7 +135,6 @@ export default async function RootLayout({
             title="KenyaDesires - Latest Escorts"
             href="/rss.xml"
           />
-
           {/* Sitemap */}
           <link
             rel="sitemap"

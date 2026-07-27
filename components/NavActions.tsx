@@ -1,13 +1,3 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Search } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,18 +7,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import SearchSheet from "./SearchSheet";
 
 const NavActions = () => {
   const { signOut } = useAuth();
+  const { user } = useUser();
 
   const router = useRouter();
   const handleLogout = async () => {
     await signOut();
     router.refresh();
   };
+
+  const isBusiness = (user?.unsafeMetadata?.role as string) === "business";
 
   return (
     <div className="flex items-center gap-4">
@@ -49,7 +42,7 @@ const NavActions = () => {
             />
           </svg>
 
-          <span className="text-base group-hover:font-bold uppercase font-medium">
+          <span className="text-base group-hover:font-bold uppercase font-semibold">
             account settings
           </span>
 
@@ -57,7 +50,7 @@ const NavActions = () => {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="size-4"
+            className="size-6"
           >
             <path
               fillRule="evenodd"
@@ -66,25 +59,26 @@ const NavActions = () => {
             />
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-full max-w-[250px] space-y-2">
-          {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
+        <DropdownMenuContent className="w-full max-w-62.5 space-y-2">
+          {/* <DropdownM>My Account</DropdownM enuLabel> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-stone-700 group">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width={384}
-              height={512}
-              viewBox="0 0 384 512"
-              className="text-stone-400"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="size-6 text-stone-400"
             >
+              <path d="M12 7.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" />
               <path
-                fill="currentColor"
-                d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c19.8 27.1 39.7 54.4 49.2 86.2h160zm-80 128c44.2 0 80-35.8 80-80v-16H112v16c0 44.2 35.8 80 80 80m-80-336c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80"
-                strokeWidth={13}
-                stroke="currentColor"
-              ></path>
+                fill-rule="evenodd"
+                d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 0 1 1.5 14.625v-9.75ZM8.25 9.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM18.75 9a.75.75 0 0 0-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 0 0 .75-.75V9.75a.75.75 0 0 0-.75-.75h-.008ZM4.5 9.75A.75.75 0 0 1 5.25 9h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H5.25a.75.75 0 0 1-.75-.75V9.75Z"
+                clip-rule="evenodd"
+              />
+              <path d="M2.25 18a.75.75 0 0 0 0 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 0 0-.75-.75H2.25Z" />
             </svg>
-            <span className="uppercase text-base group-hover:font-bold">
+
+            <span className="uppercase font-normal text-base group-hover:font-bold">
               Number of Credits : 0
             </span>
           </DropdownMenuItem>
@@ -96,7 +90,7 @@ const NavActions = () => {
                 width={384}
                 height={512}
                 viewBox="0 0 384 512"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="currentColor"
@@ -105,7 +99,7 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 advice - frequently asked questions
               </span>
             </Link>
@@ -118,7 +112,7 @@ const NavActions = () => {
                 width={576}
                 height={512}
                 viewBox="0 0 576 512"
-                className="text-stone-400"
+                className="text-stone-400 size-6 shrink-0"
               >
                 <path
                   fill="currentColor"
@@ -127,37 +121,15 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold ">
                 buy credits - for advertising and topping
               </span>
             </Link>
           </DropdownMenuItem>
 
           <DropdownMenuItem className="text-stone-800 group">
-            <Link href="adjustment" className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={30}
-                height={30}
-                viewBox="0 0 24 24"
-                className="text-stone-400"
-              >
-                <path
-                  fill="currentColor"
-                  d="M14.678 3.272a3.483 3.483 0 0 1 4.928-.001l1.127 1.127a3.483 3.483 0 0 1 0 4.925L9.33 20.729a3.48 3.48 0 0 1-2.463 1.021H3a.75.75 0 0 1-.75-.75v-3.844a3.48 3.48 0 0 1 1.019-2.461zm3.867 1.06a1.983 1.983 0 0 0-2.806 0l-.896.897l3.931 3.931l.898-.898a1.983 1.983 0 0 0 0-2.804z"
-                  strokeWidth={0.5}
-                  stroke="currentColor"
-                ></path>
-              </svg>
-              <span className="uppercase text-base group-hover:font-bold">
-                edit profile
-              </span>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem className="text-stone-800 group">
             <Link
-              href="new-profile/?type=girl"
+              href={isBusiness ? "/agency-admin-profile" : "adjustment"}
               className="flex items-center gap-2"
             >
               <svg
@@ -165,29 +137,7 @@ const NavActions = () => {
                 width={30}
                 height={30}
                 viewBox="0 0 24 24"
-                className="text-stone-400"
-              >
-                <path
-                  fill="currentColor"
-                  d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2"
-                  strokeWidth={0.5}
-                  stroke="currentColor"
-                ></path>
-              </svg>
-              <span className="uppercase text-base group-hover:font-bold">
-                add girl
-              </span>
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem className="text-stone-800 group">
-            <Link href="invoices" className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={30}
-                height={30}
-                viewBox="0 0 24 24"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="currentColor"
@@ -196,7 +146,71 @@ const NavActions = () => {
                   stroke="currentColor"
                 ></path>
               </svg>
-              <span className="uppercase text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
+                edit profile
+              </span>
+            </Link>
+          </DropdownMenuItem>
+
+          {isBusiness && (
+            <DropdownMenuItem className="text-stone-800 group">
+              <Link href="/add-girl" className="flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={30}
+                  height={30}
+                  viewBox="0 0 24 24"
+                  className="text-stone-400 size-6"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M17 13h-4v4h-2v-4H7v-2h4V7h2v4h4m-5-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2"
+                    strokeWidth={0.5}
+                    stroke="currentColor"
+                  ></path>
+                </svg>
+                <span className="uppercase font-normal text-base group-hover:font-bold">
+                  add girl
+                </span>
+              </Link>
+            </DropdownMenuItem>
+          )}
+
+          {isBusiness && (
+            <DropdownMenuItem className="text-stone-800 group">
+              <Link href="/administration" className="flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="size-6 text-stone-400"
+                >
+                  <path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" />
+                </svg>
+
+                <span className="uppercase font-normal text-base group-hover:font-bold">
+                  View Agency Girls
+                </span>
+              </Link>
+            </DropdownMenuItem>
+          )}
+
+          <DropdownMenuItem className="text-stone-800 group">
+            <Link href="invoices" className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-6 text-stone-400"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M3.75 3.375c0-1.036.84-1.875 1.875-1.875H9a3.75 3.75 0 0 1 3.75 3.75v1.875c0 1.036.84 1.875 1.875 1.875H16.5a3.75 3.75 0 0 1 3.75 3.75v7.875c0 1.035-.84 1.875-1.875 1.875H5.625a1.875 1.875 0 0 1-1.875-1.875V3.375Zm10.5 1.875a5.23 5.23 0 0 0-1.279-3.434 9.768 9.768 0 0 1 6.963 6.963A5.23 5.23 0 0 0 16.5 7.5h-1.875a.375.375 0 0 1-.375-.375V5.25Zm-3.75 5.56c0-1.336-1.616-2.005-2.56-1.06l-.22.22a.75.75 0 0 0 1.06 1.06l.22-.22v1.94h-.75a.75.75 0 0 0 0 1.5H9v3c0 .671.307 1.453 1.068 1.815a4.5 4.5 0 0 0 5.993-2.123c.233-.487.14-1-.136-1.37A1.459 1.459 0 0 0 14.757 15h-.507a.75.75 0 0 0 0 1.5h.349a2.999 2.999 0 0 1-3.887 1.21c-.091-.043-.212-.186-.212-.46v-3h5.25a.75.75 0 1 0 0-1.5H10.5v-1.94Z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 invoices to download
               </span>
             </Link>
@@ -212,7 +226,7 @@ const NavActions = () => {
                 width={30}
                 height={30}
                 viewBox="0 0 24 24"
-                className="text-stone-400"
+                className="text-stone-400 size-6"
               >
                 <path
                   fill="none"
@@ -223,7 +237,7 @@ const NavActions = () => {
                   d="M7.023 5.5a9 9 0 1 0 9.953 0M12 2v8"
                 ></path>
               </svg>
-              <span className="uppercase text-base group-hover:font-bold">
+              <span className="uppercase font-normal text-base group-hover:font-bold">
                 check out
               </span>
             </div>

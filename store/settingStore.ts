@@ -77,7 +77,7 @@ export const useSettingStore = create<SettingStore>()(
             ? state.bdsm.filter((item) => item !== name)
             : [...state.bdsm, name],
         })),
-      clearAll: () => set({ selected: [], massages: [], bdsm: [] }),
+      clearAll: () => set({ selected: [], massages: [], bdsm: [], availability: [], languages: [], categories: [] }),
     }),
     { name: "Setting-selection" }
   )

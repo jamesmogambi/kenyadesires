@@ -75,6 +75,15 @@ const LocationInitializer = ({
     setMassage,
     setBdsm,
     setPractices: setVariantPractices,
+    setAvailability,
+    setAge,
+    setBreast,
+    setCharacter,
+    setHairColor,
+    setNationality,
+    setExperience,
+    setLanguages,
+    setCategories,
   } = useVariantStore();
 
   const [loading, setLoading] = useState(false);
@@ -165,10 +174,38 @@ const LocationInitializer = ({
     if (initialCounties) setCounties(initialCounties);
     if (initialRegions) setRegions(initialRegions);
 
-    // ✅ Set other lookup data if provided
     if (initialLookup) {
       setMassage(initialLookup.massage || []);
       setBdsm(initialLookup.bdsm || []);
+      setAvailability(initialLookup.availability || []);
+      setAge(initialLookup.age || []);
+      setBreast(initialLookup.breast || []);
+      setCharacter(initialLookup.character || []);
+      setHairColor(initialLookup.hairColor || []);
+      setNationality(initialLookup.nationality || []);
+      setExperience(initialLookup.experience || []);
+      setLanguages(initialLookup.languages || []);
+      setCategories(initialLookup.categories || []);
+      if (initialLookup.practices) {
+        setVariantPractices(
+          Array.isArray(initialLookup.practices)
+            ? initialLookup.practices.map((p: any, idx: number) => ({
+                id: typeof p.id === "number" ? p.id : idx,
+                name: typeof p === "string" ? p : p.name || p.value || "",
+                label: typeof p === "string" ? p : p.name || p.value || "",
+                value: typeof p === "string" ? p : p.name || p.value || "",
+                count: typeof p === "string" ? 0 : p.count ?? 0,
+              }))
+            : [],
+        );
+        setPractices(
+          Array.isArray(initialLookup.practices)
+            ? initialLookup.practices.map((p: any) =>
+                typeof p === "string" ? p : p.value,
+              )
+            : [],
+        );
+      }
     }
   }, [initialCounties, initialRegions, initialLookup]);
 

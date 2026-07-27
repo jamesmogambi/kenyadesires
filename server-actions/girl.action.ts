@@ -3,15 +3,16 @@
 
 import { adminDb } from "@/lib/firebase-admin";
 import { unstable_cache } from "next/cache";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
+import { slugify } from "@/lib/utils";
 
 // Helper to convert Firestore doc to plain serializable object
 function convertDocToEscort(
   doc:
     | FirebaseFirestore.DocumentSnapshot
     | FirebaseFirestore.QueryDocumentSnapshot,
-): Escort {
+): any {
   const data = (doc.data() || {}) as { [key: string]: any };
 
   const convertTimestamp = (value: any): any => {
@@ -258,6 +259,62 @@ export async function getEscortByIdentifier(
 }
 
 /**
+ * Get escort by Clerk user ID
+ */
+export async function getEscortByClerkUserId(
+  clerkUserId: string,
+): Promise<Escort | null> {
+  try {
+    if (!clerkUserId || clerkUserId.trim() === "") {
+      return null;
+    }
+
+    const snapshot = await adminDb
+      .collection("escorts")
+      .where("clerkUserId", "==", clerkUserId)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return convertDocToEscort(snapshot.docs[0]);
+  } catch (error) {
+    console.error("Error fetching escort by clerkUserId:", error);
+    return null;
+  }
+}
+
+/**
+ * Get escort by email address
+ */
+export async function getEscortByEmail(
+  email: string,
+): Promise<Escort | null> {
+  try {
+    if (!email || email.trim() === "") {
+      return null;
+    }
+
+    const snapshot = await adminDb
+      .collection("escorts")
+      .where("email", "==", email)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return convertDocToEscort(snapshot.docs[0]);
+  } catch (error) {
+    console.error("Error fetching escort by email:", error);
+    return null;
+  }
+}
+
+/**
  * Get a single escort by ID with only cleaned images
  * Cached for 2 weeks
  */
@@ -471,4 +528,151 @@ export async function revalidateEscortCache(id: string) {
   revalidateTag("escort-cleaned-separate", {});
 
   return { success: true };
+}
+
+export interface NewEscortProfileInput {
+  id?: string;
+  name: string;
+  email: string;
+  street: string;
+  phone: string;
+  whatsappNumber: string;
+  region: string;
+  town: string;
+  nationality: string;
+  age: string;
+  height: string;
+  breasts: string;
+  weight: string;
+  ageCategory: string;
+  character: string;
+  hairColor: string;
+  experience: string;
+  about: string;
+  previewPhoto: string;
+  images: string[];
+  telephone: string;
+  whatsappPhone: string;
+  availability: string[];
+  languages: string[];
+  practices: string[];
+  bdsm: string[];
+  massages: string[];
+  extraServices: string[];
+  categories: string[];
+  openingHours: {
+    monday: string;
+    tuesday: string;
+    wednesday: string;
+    thursday: string;
+    friday: string;
+    saturday: string;
+    sunday: string;
+  };
+  bustSize?: string;
+  clerkUserId?: string;
+  agencyId?: string;
+  isAgencyOwned?: boolean;
+}
+
+export async function saveNewEscortProfile(
+  data: NewEscortProfileInput,
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const now = new Date();
+    const baseUsername = data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .substring(0, 20);
+
+    const timestamp = Date.now().toString().slice(-6);
+    const username = `${baseUsername}_${timestamp}`;
+
+    const phoneSuffix = (data.phone || data.whatsappNumber || "")
+      .replace(/\D/g, "")
+      .slice(-6);
+    const slug = `${slugify(data.name)}-${phoneSuffix}`;
+
+    const docRef = adminDb.collection("escorts").doc();
+
+    const newEscort: Escort = {
+      id: docRef.id,
+      name: data.name,
+      username,
+      slug,
+      email: data.email,
+      previewPhoto: data.previewPhoto || "",
+      telephone: data.telephone || data.phone || "",
+      whatsappPhone: data.whatsappPhone || data.whatsappNumber || "",
+      about: data.about || "",
+      availability: data.availability || [],
+      nationality: data.nationality || "",
+      bustSize: data.bustSize || data.breasts || "",
+      breastSize: data.bustSize || data.breasts || "",
+      languages: data.languages || [],
+      regions: data.region ? [data.region] : [],
+      practices: data.practices || [],
+      bdsm: data.bdsm || [],
+      massage: data.massages || [],
+      extraServices: data.extraServices || [],
+      categories: data.categories || [],
+      role: "escort",
+      openingHours: data.openingHours || {},
+      ageCategory: data.ageCategory || "",
+      character: data.character || "",
+      hairColor: data.hairColor || "",
+      experience: data.experience || "",
+      age: data.age || "",
+      weight: data.weight || "",
+      street: data.street || "",
+      images: data.images || [],
+      videos: [],
+      labels: [],
+      ethnicity: "",
+      zodiacSign: "",
+      sexualOrientation: "",
+      gender: "girl",
+      country: "Kenya",
+      county: data.region || "",
+      countyCode: "",
+      primaryRegion: data.region || "",
+      locations: [],
+      source: "admin",
+      workType: data.isAgencyOwned ? "agency" : "independent",
+      agencyId: data.agencyId || "",
+      isAgencyOwned: data.isAgencyOwned || false,
+      clerkUserId: data.clerkUserId || "",
+      isAgencyFeatured: false,
+      isActive: true,
+      isVerified: false,
+      isFeatured: false,
+      plan: {
+        type: "basic",
+        isActive: true,
+        features: [],
+      },
+      
+      totalBookings: 0,
+      totalReviews: 0,
+      rating: 0,
+      totalViews: 0,
+      createdAt: now,
+      updatedAt: now,
+      cleaningHistory: [],
+      rates: [],
+    };
+
+    await docRef.set(newEscort);
+
+    return {
+      success: true,
+      id: docRef.id,
+    };
+  } catch (error) {
+    console.error("Error saving escort profile:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to save profile",
+    };
+  }
 }

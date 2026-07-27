@@ -1,6 +1,8 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // ✅ CRITICAL: Add standalone output for cPanel deployment
+  output: "standalone",
 
-const nextConfig: NextConfig = {
   images: {
     // formats: ["image/avif", "image/webp"],
     remotePatterns: [
@@ -167,4 +169,4 @@ const nextConfig: NextConfig = {
   compress: true,
 };
 
-export default nextConfig;
+module.exports = nextConfig;

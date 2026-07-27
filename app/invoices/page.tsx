@@ -1,7 +1,8 @@
+import { notFound } from "next/navigation";
 import React from "react";
 
 const page = () => {
-  return <div>Invoices Page</div>;
+  return notFound();
 };
 
 export default page;

@@ -7,8 +7,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
   title: {
-    default: "KenyaDesires – Premium Escorts & Companions in Kenya",
-    template: "%s | KenyaDesires – Trusted Escort Directory Kenya",
+    default:
+      "Kenya Desires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
+    template: "%s | Kenya Desires",
   },
 
   description:
@@ -90,20 +91,20 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_KE",
     url: SITE_URL,
-    siteName: "KenyaDesires – Kenya's Trusted Escort Directory",
-    title: "KenyaDesires – Hot Escorts Across Kenya",
+    siteName: "KenyaDesires - Hot Kenyan Escorts",
+    title: "KenyaDesires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
     description:
-      "Discover Hot, verified escorts, girls for sex and companions across Kenya. Browse real photos, genuine reviews, and transparent rates. Discreet and secure booking.",
+      "Discover hot, verified escorts, girls for sex and companions across Kenya. Browse real photos, genuine reviews, and transparent rates. Discreet and secure booking.",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "KenyaDesires – Premium Escort Directory Kenya",
+        alt: "KenyaDesires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
       },
     ],
-    emails: ["support@kenyadesires.com"],
-    phoneNumbers: ["+254701694004"],
+    emails: ["hello@kenyadesires.com"],
+    phoneNumbers: ["+254743129621"],
     countryName: "Kenya",
   },
 
@@ -111,7 +112,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@kenyadesires",
     creator: "@kenyadesires",
-    title: "KenyaDesires – Trusted Escorts Across Kenya",
+    title: "KenyaDesires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
     description:
       "Kenya's most trusted escort directory. 900+ verified companions in Nairobi, Mombasa, Kisumu & all major cities. Real photos, authentic reviews.",
     images: ["/twitter-image.jpg"],

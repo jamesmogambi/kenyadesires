@@ -1,6 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
-import { cn, getFlagEmoji, splitIntoThreeColumns } from "@/lib/utils";
+import {
+  cn,
+  getFlagEmoji,
+  splitIntoThreeColumns,
+  formatPracticeName,
+} from "@/lib/utils";
 import ReactCountryFlag from "react-country-flag";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettingStore } from "@/store/settingStore";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useVariantStore } from "@/store/variantStore";
+import { getPractices } from "@/server-actions/lookup.action";
+
+const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
+  english: "GB",
+  swahili: "KE",
+  arabic: "SA",
+};
 
 interface Prop {
   className?: string;
@@ -18,6 +30,8 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   const { setValue, watch } = form;
   const variantSettings = useVariantStore();
   const { practices, massage } = variantSettings;
+
+  const [dbPractices, setDbPractices] = useState<any[]>([]);
 
   const {
     massages,
@@ -35,8 +49,30 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     languages,
   } = useSettingStore();
 
+  useEffect(() => {
+    async function loadPractices() {
+      try {
+        const res = await getPractices();
+        if (res.success && Array.isArray(res.data)) {
+          const formatted = res.data.map((item: any, idx: number) => ({
+            id: typeof item.id === "number" ? item.id : idx,
+            name: item.name || item.practice || "",
+            label: item.name || item.practice || "",
+            value: item.name || item.practice || "",
+            count: item.count ?? 0,
+          }));
+          setDbPractices(formatted);
+        }
+      } catch (err) {
+        console.error("Failed to load practices from DB:", err);
+      }
+    }
+
+    loadPractices();
+  }, []);
+
   const [practiceCol1, practiceCol2, practiceCol3] =
-    splitIntoThreeColumns(practices);
+    splitIntoThreeColumns(dbPractices);
 
   const [massageCol1, massageCol2, massageCol3] =
     splitIntoThreeColumns(massage);
@@ -45,7 +81,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     variantSettings.bdsm,
   );
   return (
-    <section className={cn("w-full  ", className)}>
+    <section className={cn("w-full ", className)}>
       <h4 className="text-primary text-xl  mb-6 font-bold">
         Select the services you offer:
       </h4>
@@ -86,11 +122,11 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                     }}
                     key={j}
                     className={cn(
-                      "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5",
+                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 wrap-break-word",
                       selected.includes(item.name) ? "bg-primary" : "bg-gray-1",
                     )}
                   >
-                    {item.name}
+                    {formatPracticeName(item.name)}
                   </span>
                 ))}
               </div>
@@ -108,11 +144,11 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                     }}
                     key={j}
                     className={cn(
-                      "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5",
+                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 wrap-break-word",
                       massages.includes(item.name) ? "bg-primary" : "bg-gray-1",
                     )}
                   >
-                    {item.name}
+                    {formatPracticeName(item.name)}
                   </span>
                 ))}
               </div>
@@ -130,11 +166,11 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
                     }}
                     key={j}
                     className={cn(
-                      "bg-gray-1  cursor-pointer data-[active]:bg-primary font-medium text-white  text-center rounded-full p-2.5",
+                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
                       bdsm.includes(item.name) ? "bg-primary" : "bg-gray-1",
                     )}
                   >
-                    {item.name}
+                    {formatPracticeName(item.name)}
                   </span>
                 ))}
               </div>
@@ -148,58 +184,69 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           Categories where I want to appear:
         </span>
 
-        {variantSettings.categories.map((cat) => (
-          <div key={cat} className="flex items-center mx-4 gap-2">
-            <Checkbox
-              id={cat}
-              className="size-6 bg-white border-primary"
-              checked={categories.includes(cat)}
-              onCheckedChange={(checked) => setCategory(cat, checked === true)}
-            />
-            <label
-              className="lg:text-2xl text-xl text-primary font-bold"
-              htmlFor={cat}
-            >
-              {cat}
-            </label>
-          </div>
-        ))}
+        {variantSettings.categories.map((cat: any) => {
+          const catName = typeof cat === "string" ? cat : cat.name;
+          const catKey = typeof cat === "string" ? cat : (cat.id ?? cat.name);
+          return (
+            <div key={catKey} className="flex items-center mx-4 gap-2">
+              <Checkbox
+                id={String(catKey)}
+                className="size-6 bg-white border-primary"
+                checked={categories.includes(catName)}
+                onCheckedChange={(checked) =>
+                  setCategory(catName, checked === true)
+                }
+              />
+              <label
+                className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
+                htmlFor={String(catKey)}
+              >
+                {catName}
+              </label>
+            </div>
+          );
+        })}
       </div>
 
       {/* languages */}
-      <div className=" lg:px-4 px-1 flex lg:absolute top-[80%] my-5 lg:my-0  flex-wrap">
+      <div className="lg:px-4 mt-8 px-1 lg:mt-32 flex-col lg:flex-row flex flex-wrap gap-3">
         <span className="text-white/50 font-bold  text-lg">Languages:</span>
 
         <div className="flex-1 flex ">
-          {variantSettings.languages.map((lang: any) => (
-            <div
-              key={lang.name}
-              className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
-            >
-              <Checkbox
-                id={lang}
-                className="size-6  bg-white border-primary"
-                checked={languages.includes(lang.name)}
-                onCheckedChange={(checked) =>
-                  setLanguage(lang.name, checked === true)
-                }
-              />
-              <label className="lg:hidden">{lang.name}</label>
-              <label className="hidden lg:inline-block">
-                <ReactCountryFlag
-                  countryCode={lang.flag}
-                  // className="size-2"
-                  // className="size-12"
-                  style={{
-                    fontSize: "2em",
-                    // height: "2em",
-                    // display: "inline-block",
-                  }}
-                  svg
+          {variantSettings.languages
+            .filter((lang: any) =>
+              ["english", "swahili", "arabic"].includes(
+                (lang.name || "").toLowerCase(),
+              ),
+            )
+            .map((lang: any) => (
+              <div
+                key={lang.name}
+                className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
+              >
+                <Checkbox
+                  id={lang.name}
+                  className="size-6  bg-white border-primary"
+                  checked={languages.includes(lang.name)}
+                  onCheckedChange={(checked) =>
+                    setLanguage(lang.name, checked === true)
+                  }
                 />
-              </label>
-            </div>
-          ))}
+                <label className="lg:hidden line-clamp-2">{lang.name}</label>
+                <label className="hidden lg:inline-block">
+                  <ReactCountryFlag
+                    countryCode={
+                      LANGUAGE_COUNTRY_CODES[(lang.name || "").toLowerCase()] ||
+                      "GB"
+                    }
+                    style={{
+                      fontSize: "2em",
+                    }}
+                    svg
+                  />
+                </label>
+              </div>
+            ))}
         </div>
       </div>
     </section>

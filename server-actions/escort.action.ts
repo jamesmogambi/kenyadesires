@@ -50,6 +50,9 @@ export interface Escort {
   hairColor: string;
   experience: string;
   workType: string;
+  agencyId?: string;
+  isAgencyOwned?: boolean;
+  clerkUserId?: string;
   isAgencyFeatured: boolean;
   isActive: boolean;
   isVerified: boolean;
@@ -78,6 +81,8 @@ export interface Escort {
   };
   totalImagesProcessed?: number;
   totalImagesFailed?: number;
+
+  street?: string;
 }
 
 export interface Location {
@@ -214,6 +219,9 @@ export const convertDocSnapshotToEscort = async (
     hairColor: data.hairColor,
     experience: data.experience,
     workType: data.workType,
+    agencyId: data.agencyId,
+    isAgencyOwned: data.isAgencyOwned,
+    clerkUserId: data.clerkUserId,
     isAgencyFeatured: data.isAgencyFeatured,
     isActive: data.isActive,
     isVerified: data.isVerified,
@@ -285,6 +293,9 @@ export const convertQueryDocToEscort = async (
     hairColor: data.hairColor,
     experience: data.experience,
     workType: data.workType,
+    agencyId: data.agencyId,
+    isAgencyOwned: data.isAgencyOwned,
+    clerkUserId: data.clerkUserId,
     isAgencyFeatured: data.isAgencyFeatured,
     isActive: data.isActive,
     isVerified: data.isVerified,
@@ -735,6 +746,9 @@ function convertDocToEscortFast(doc: any): Escort {
     hairColor: data.hairColor || "",
     experience: data.experience || "",
     workType: data.workType || "",
+    agencyId: data.agencyId,
+    isAgencyOwned: data.isAgencyOwned,
+    clerkUserId: data.clerkUserId,
     isAgencyFeatured: data.isAgencyFeatured || false,
     isActive: data.isActive !== undefined ? data.isActive : true,
     isVerified: data.isVerified || false,
@@ -1101,17 +1115,73 @@ export async function createEscort(
 // Update escort
 export async function updateEscort(
   id: string,
-  updates: Partial<Escort>,
+  updates: Record<string, any>,
 ): Promise<void> {
   try {
-    if (process.env.NODE_ENV !== "development") {
-      throw new Error("Updates only allowed in development environment");
-    }
-
-    const updateData = {
-      ...updates,
+    const updateData: any = {
       updatedAt: Timestamp.fromDate(new Date()),
     };
+
+    if (updates.name) updateData.name = updates.name;
+    if (updates.email) updateData.email = updates.email;
+    if (updates.street !== undefined) updateData.street = updates.street;
+    if (updates.telephone || updates.phone) updateData.telephone = updates.telephone || updates.phone;
+    if (updates.whatsappPhone || updates.whatsappNumber) updateData.whatsappPhone = updates.whatsappPhone || updates.whatsappNumber;
+    if (updates.about !== undefined) updateData.about = updates.about;
+    if (updates.availability) updateData.availability = updates.availability;
+    if (updates.nationality) updateData.nationality = updates.nationality;
+    if (updates.bustSize || updates.breasts) {
+      updateData.bustSize = updates.bustSize || updates.breasts;
+      updateData.breastSize = updates.bustSize || updates.breasts;
+    }
+    if (updates.languages) updateData.languages = updates.languages;
+    if (updates.region !== undefined || updates.regions !== undefined) {
+      updateData.regions = updates.regions || [updates.region];
+      updateData.primaryRegion = updates.primaryRegion || updates.region;
+      updateData.county = updates.county || updates.region;
+      if (updates.region !== undefined) delete updateData.region;
+    }
+    if (updates.practices) updateData.practices = updates.practices;
+    if (updates.bdsm) updateData.bdsm = updates.bdsm;
+    if (updates.massages !== undefined || updates.massage !== undefined) {
+      updateData.massage = updates.massage || updates.massages;
+      if (updates.massages !== undefined) delete updateData.massages;
+    }
+    if (updates.extraServices) updateData.extraServices = updates.extraServices;
+    if (updates.categories) updateData.categories = updates.categories;
+    if (updates.openingHours) updateData.openingHours = updates.openingHours;
+    if (updates.ageCategory) updateData.ageCategory = updates.ageCategory;
+    if (updates.character) updateData.character = updates.character;
+    if (updates.hairColor) updateData.hairColor = updates.hairColor;
+    if (updates.experience) updateData.experience = updates.experience;
+    if (updates.age) updateData.age = updates.age;
+    if (updates.weight) updateData.weight = updates.weight;
+    if (updates.previewPhoto !== undefined) updateData.previewPhoto = updates.previewPhoto;
+    if (updates.images) updateData.images = updates.images;
+    if (updates.role) updateData.role = updates.role;
+    if (updates.agencyId !== undefined) updateData.agencyId = updates.agencyId;
+    if (updates.clerkUserId !== undefined) updateData.clerkUserId = updates.clerkUserId;
+    if (updates.isAgencyOwned !== undefined) updateData.isAgencyOwned = updates.isAgencyOwned;
+    if (updates.town !== undefined) {
+      updateData.locations = [
+        {
+          region: updates.region || updates.primaryRegion || "",
+          town: updates.town,
+          estate: "",
+          address: "",
+          street: updates.street || "",
+          postalCode: "",
+          isActive: true,
+          notes: "",
+        },
+      ];
+    }
+
+    Object.keys(updateData).forEach((key) => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
 
     await adminDb.collection("escorts").doc(id).update(updateData);
 
