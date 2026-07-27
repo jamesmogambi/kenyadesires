@@ -13,15 +13,15 @@ const page = () => {
 "
       />
 
-      <div className="w-full mt-16  lg:max-w-[800px] border-4 mx-auto">
-        <h4 className="text-red-700 text-4xl text-center font-extrabold">
+      <div className="w-full mt-8 lg:mt-16 lg:max-w-200 my-3 mx-auto px-4">
+        <h4 className="text-2xl md:text-4xl text-center font-extrabold text-red-700">
           Purchase credits to extend or boost your listing
         </h4>
 
-        <PurchaseInfoSection className="mt-20" />
+        <PurchaseInfoSection className="mt-8 lg:mt-20" />
         <AdvertisingPriceLIst />
       </div>
-      <p className="text-3xl max-w-[1000px] text-red-700 mx-auto text-center my-6 font-semibold">
+      <p className="text-lg md:text-2xl pb-8 max-w-250 text-red-700 mx-auto text-center my-6 font-semibold px-4">
         After the payment is received, the credits will be added automatically.
         If you advertise as a standalone profile and the membership has ended or
         only 5 days remain, your membership will be automatically extended from

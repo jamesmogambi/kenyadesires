@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -9,23 +11,20 @@ interface Prop {
 }
 const AdvertisingPriceLIst = ({ className }: Prop) => {
   return (
-    <section className={cn("", className)}>
+    <section className={cn("px-4", className)}>
       <div>
-        <h4 className="text-3xl text-center mt-6 text-red-700 font-bold">
+        <h4 className="text-2xl md:text-3xl text-center mt-6 text-red-700 font-bold">
           Advertising Price List
         </h4>
-        <h6 className="text-red-700 text-2xl font-bold text-center mt-10">
+        <h6 className="text-red-700 text-xl md:text-2xl font-bold text-center mt-6 md:mt-10">
           30 days of advertising = 150 credits
         </h6>
       </div>
 
-      {/* // checkbox */}
-      <div className="flex flex-row mt-6 mb-12  items-center gap-2">
+      {/* checkbox */}
+      <div className="flex flex-col sm:flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
         <Checkbox
-          className="bg-white size-8"
-          //   id="terms"
-          //   checked={field.value}
-          //   onCheckedChange={field.onChange}
+          className="bg-white size-6 md:size-8 shrink-0"
           id="acceptTerms"
         />
         <Label
@@ -35,23 +34,23 @@ const AdvertisingPriceLIst = ({ className }: Prop) => {
           <p className="">
             {" "}
             I agree to the{" "}
-            <span className="text-primary">terms and conditions.</span>
-            and to the provision of the service before the expiry of the
-            withdrawal period in accordance with § 1834 of the Civil Code.
+            <span className="text-primary">terms and conditions.</span> and to
+            the provision of the service before the expiry of the withdrawal
+            period in accordance with § 1834 of the Civil Code.
           </p>
         </Label>
       </div>
 
       {/* packages */}
-      <div className="flex lg:flex-row flex-col justify-center">
+      <div className="flex flex-col lg:flex-row justify-center gap-6 items-center">
         {/* first package */}
-        <div className="bg-stone-100   rounded-lg shadow-lg min-w-[250px] flex items-center justify-center flex-col w-fit h-fit p-4">
+        <div className="bg-stone-100 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[320px] flex items-center justify-center flex-col h-fit p-4 md:p-6">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="8em"
-            height="8em"
+            width="6em"
+            height="6em"
             viewBox="0 0 24 24"
-            // className="size-28"
+            className="md:w-8em md:h-8em"
           >
             <path d="M0 0h24v24H0z" fill="none" />
             <g
@@ -67,45 +66,54 @@ const AdvertisingPriceLIst = ({ className }: Prop) => {
             </g>
           </svg>
           <div>
-            <h5 className="text-5xl mt-4 font-bold text-center text-red-700">
+            <h5 className="text-4xl md:text-5xl mt-4 font-bold text-center text-red-700">
               50{" "}
             </h5>
-            <span className="text-2xl text-red-700 font-extrabold">
+            <span className="text-xl md:text-2xl text-red-700 font-extrabold">
               Credits
             </span>
           </div>
 
-          <div className="mt-8 flex items-center justify-center flex-col gap-3">
-            <span className="text-black font-bold text-lg text-center ">
+          <div className="mt-6 md:mt-8 flex items-center justify-center flex-col gap-2 md:gap-3">
+            <span className="text-black font-bold text-base md:text-lg text-center ">
               Price
             </span>
-            <span className="text-3xl font-bold text-black">KSH 500</span>
-            <span className="text-black text-base font-bold">
+            <span className="text-2xl md:text-3xl font-bold text-black">
+              KSH 500
+            </span>
+            <span className="text-black text-sm md:text-base font-bold">
               including VAT
             </span>
           </div>
 
-          <Button className="bg-red-800 mt-8  h-12 hover:bg-red-700 w-full text-white font-semibold text-2xl">
+          <Button className="bg-red-800 mt-6 md:mt-8 h-10 md:h-12 hover:bg-red-700 w-full text-white font-semibold text-lg md:text-2xl">
             Buy
           </Button>
         </div>
         {/* second package */}
-        <div className="bg-red-700  rounded-lg shadow-lg min-w-[250px] flex items-center justify-center flex-col w-fit h-fit p-4">
-          <Label className="border border-primary shadow-lg mt-4 mb-10 bg-white text-red-800 text-xl p-2 font-bold rounded-2xl ">
+        <div className="bg-red-700 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[320px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative">
+          <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-green-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
+            Save 20%
+          </div>
+          <Label className="border border-primary shadow-lg mt-3 md:mt-4 mb-8 md:mb-10 bg-white text-red-800 text-lg md:text-xl p-2 font-bold rounded-2xl ">
             Most Popular
           </Label>
-          <div className="mt-16">
-            <h5 className="text-5xl mt-4 font-bold text-center ">180 </h5>
-            <span className="text-2xl  font-extrabold">Credits</span>
+          <div className="mt-10 md:mt-16">
+            <h5 className="text-4xl md:text-5xl mt-4 font-bold text-center ">
+              180{" "}
+            </h5>
+            <span className="text-xl md:text-2xl font-extrabold">Credits</span>
           </div>
 
-          <div className="mt-8 flex items-center justify-center flex-col gap-3">
-            <span className=" font-bold text-lg text-center ">Price</span>
-            <span className="text-3xl font-bold ">KSH 1800</span>
-            <span className=" text-base font-bold">including VAT</span>
+          <div className="mt-6 md:mt-8 flex items-center justify-center flex-col gap-2 md:gap-3">
+            <span className=" font-bold text-base md:text-lg text-center ">
+              Price
+            </span>
+            <span className="text-2xl md:text-3xl font-bold ">KSH 1800</span>
+            <span className=" text-sm md:text-base font-bold">including VAT</span>
           </div>
 
-          <Button className="bg-white h-12 mt-8 text-red-700  hover:bg-white/90 w-full font-semibold text-2xl">
+          <Button className="bg-white h-10 md:h-12 mt-6 md:mt-8 text-red-700  hover:bg-white/90 w-full font-semibold text-lg md:text-2xl">
             Buy
           </Button>
         </div>
