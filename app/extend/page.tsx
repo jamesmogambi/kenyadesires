@@ -2,6 +2,7 @@ import React from "react";
 import InfoAlert from "./InfoAlert";
 import MessageAlert from "./MessageAlert";
 import { PurchaseInfoSection } from "./PurchaseInfoSection";
+import AdvertisingPriceLIst from "./AdvertisingPriceLIst";
 
 const page = () => {
   return (
@@ -18,7 +19,14 @@ const page = () => {
         </h4>
 
         <PurchaseInfoSection className="mt-20" />
+        <AdvertisingPriceLIst />
       </div>
+      <p className="text-2xl max-w-[900px] text-red-700 mx-auto text-center my-6 font-semibold">
+        After the payment is received, the credits will be added automatically.
+        If you advertise as a standalone profile and the membership has ended or
+        only 5 days remain, your membership will be automatically extended from
+        this payment.
+      </p>
     </div>
   );
 };
