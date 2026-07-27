@@ -86,22 +86,24 @@ export default async function RootLayout({
             href="https://cdn.sanity.io"
             crossOrigin="anonymous"
           />
-          <link
-            rel="icon"
-            type="image/png"
-            href="/favicon-96x96.png"
-            sizes="96x96"
-          />
-          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-          <link rel="shortcut icon" href="/favicon.ico" />
-          <link
-            rel="apple-touch-icon"
-            sizes="180x180"
-            href="/apple-touch-icon.png"
-          />
-          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
-          <link rel="manifest" href="/site.webmanifest" />
+          {/* ✅ Primary: Static favicon - works everywhere */}
+          <link rel="icon" href="/favicon.ico" sizes="any" />
 
+          {/* ✅ SVG fallback */}
+          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+
+          {/* ✅ Fallback: Dynamic Next.js route */}
+          <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
+
+          {/* Apple touch icon */}
+          <link rel="apple-touch-icon" href="/icon" />
+
+          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+          />
           {/* Icons - using dynamic icon route
           <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
           <link rel="apple-touch-icon" href="/icon" type="image/png" />
@@ -111,25 +113,20 @@ export default async function RootLayout({
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
           /> */}
-
           {/* Microsoft Tiles */}
           <meta name="msapplication-TileColor" content="#000000" />
           <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
           <meta name="msapplication-config" content="/browserconfig.xml" />
-
           {/* Additional meta tags */}
           <meta name="format-detection" content="telephone=no" />
           <meta name="mobile-web-app-capable" content="yes" />
           <meta name="application-name" content="KenyaDesires" />
-
           {/* Language and region */}
           <meta name="language" content="English" />
           <meta name="geo.country" content="KE" />
           <meta name="geo.region" content="KE-30" />
-
           {/* PWA Configuration */}
           <link rel="manifest" href="/manifest.json" />
-
           {/* RSS Feed */}
           <link
             rel="alternate"
@@ -137,7 +134,6 @@ export default async function RootLayout({
             title="KenyaDesires - Latest Escorts"
             href="/rss.xml"
           />
-
           {/* Sitemap */}
           <link
             rel="sitemap"

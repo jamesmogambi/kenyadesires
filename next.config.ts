@@ -122,14 +122,14 @@ const nextConfig = {
   allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev"],
 
   // Redirect favicon.ico to dynamic icon
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: "/favicon.ico",
-  //       destination: "/icon",
-  //     },
-  //   ];
-  // },
+  async rewrites() {
+    return [
+      {
+        source: "/favicon.ico",
+        destination: "/icon",
+      },
+    ];
+  },
 
   // // ✅ Simplified headers - removed problematic Cache-Control for _next/static
   // async headers() {
