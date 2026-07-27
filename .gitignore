@@ -69,3 +69,6 @@ build/
 *firebase-adminsdk*.json
 
 config/firebase-admin.json
+
+# cpanel - Spaceship
+.httpaccess
