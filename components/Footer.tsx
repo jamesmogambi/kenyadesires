@@ -2,8 +2,12 @@ import React from "react";
 import Logo from "./Logo";
 import Link from "next/link";
 import FooterBottom from "./FooterBottom";
+import { auth } from "@clerk/nextjs/server";
 
-const Footer = () => {
+const Footer = async () => {
+  const { userId } = await auth();
+  const isLoggedIn = Boolean(userId);
+
   return (
     <footer className="w-full">
       {/* // section 1 */}
@@ -43,7 +47,7 @@ const Footer = () => {
             </Link>
 
             <Link
-              href={"#"}
+              href={isLoggedIn ? "/private-apartment-girl-listing" : "/private-escort-record"}
               className="uppercase group  font-medium flex items-center  gap-2 lg:py-5 lg:text-lg text-base"
             >
               <svg
