@@ -1,12 +1,14 @@
+"use client";
+
 import React from "react";
 import Logo from "./Logo";
 import Link from "next/link";
 import FooterBottom from "./FooterBottom";
-import { auth } from "@clerk/nextjs/server";
+import { useUser } from "@clerk/nextjs";
 
-const Footer = async () => {
-  const { userId } = await auth();
-  const isLoggedIn = Boolean(userId);
+const Footer = () => {
+  const { isSignedIn } = useUser();
+  const isLoggedIn = Boolean(isSignedIn);
 
   return (
     <footer className="w-full">

@@ -113,12 +113,12 @@ const ContactForm = () => {
               render={({ field }) => (
                 <FormItem className="w-full  border-none">
                   <FormControl className="">
-                    <Input
-                      placeholder="Name"
-                      type="text"
-                      {...field}
-                      className="border-2 placeholder-white text-xl text-white border-white h-14 bg-gray-1 "
-                    />
+                     <Input
+                       placeholder="Name"
+                       type="text"
+                       {...field}
+                       className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white h-14 bg-gray-1 "
+                     />
                   </FormControl>
 
                   <FormMessage />
@@ -131,12 +131,12 @@ const ContactForm = () => {
               render={({ field }) => (
                 <FormItem className="w-full  border-none">
                   <FormControl className="">
-                    <Input
-                      placeholder="Email"
-                      type="email"
-                      {...field}
-                      className="border-2 text-xl text-white border-white h-14 bg-gray-1 "
-                    />
+                     <Input
+                       placeholder="Email"
+                       type="email"
+                       {...field}
+                       className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white h-14 bg-gray-1 "
+                     />
                   </FormControl>
 
                   <FormMessage />
@@ -150,12 +150,12 @@ const ContactForm = () => {
               render={({ field }) => (
                 <FormItem className="w-full  border-none">
                   <FormControl className="">
-                    <Textarea
-                      // rows={12}
-                      placeholder="Message - If you have any question about advertising, always state the number under which you are advertising"
-                      {...field}
-                      className="border-2 text-xl text-white border-white min-h-32 bg-gray-1 "
-                    />
+                     <Textarea
+                       // rows={12}
+                       placeholder="Message - If you have any question about advertising, always state the number under which you are advertising"
+                       {...field}
+                       className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white min-h-32 bg-gray-1 "
+                     />
                   </FormControl>
 
                   <FormMessage />

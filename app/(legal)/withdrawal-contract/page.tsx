@@ -213,15 +213,15 @@ export default function WithdrawalPage() {
                     provided address
                   </li>
                   <li>Keep a copy of this form for your records</li>
-                  <li>
-                    For any questions, contact us at{" "}
-                    <a
-                      href="mailto:mugambijames96@gmail.com"
-                      className="text-primary hover:underline font-medium"
-                    >
-                      info@kenyadesires.com
-                    </a>
-                  </li>
+                    <li>
+                      For any questions, contact us at{" "}
+                      <a
+                        href="mailto:hello@kenyadesires.com"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        hello@kenyadesires.com
+                      </a>
+                    </li>
                 </ul>
               </div>
             </div>

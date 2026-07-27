@@ -255,15 +255,15 @@ export default function TermsPage() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     Report Illegal Content
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    You can report illegal content to our contact email:{" "}
-                    <a
-                      href="mailto:mugambijames96@gmail.com"
-                      className="text-primary hover:underline font-medium"
-                    >
-                      info@kenyadesires.com
-                    </a>
-                  </p>
+                    <p className="text-gray-600 leading-relaxed">
+                      You can report illegal content to our contact email:{" "}
+                      <a
+                        href="mailto:hello@kenyadesires.com"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        hello@kenyadesires.com
+                      </a>
+                    </p>
                 </div>
               </div>
             </div>
