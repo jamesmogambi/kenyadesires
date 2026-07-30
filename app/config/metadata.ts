@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "escorts in Kenya",
     "Kenya call girls",
     "verified escorts Kenya",
-    "premium escorts Kenya",
+    "Sexy Call girls in Kenya",
     "high class escorts Kenya",
     "Kenya companion services",
     "Kenya adult entertainment",

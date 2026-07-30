@@ -95,7 +95,7 @@ export async function generateMetadata(
     const generateDescription = () => {
       const age = escort.age ? `${escort.age} year old` : "";
       const categories =
-        escort.categories?.slice(0, 3).join(", ") || "premium escort";
+        escort.categories?.slice(0, 3).join(", ") || "Sexy Call girl";
 
       if (escort.about) {
         return `${escort.about.substring(0, 160)}... Book ${displayName} for an unforgettable experience in ${location}.`;

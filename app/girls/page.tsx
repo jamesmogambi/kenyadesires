@@ -30,9 +30,9 @@ interface PageProps {
 
 const ITEMS_PER_PAGE = 24;
 
-const defaultTitle = "Premium Escorts in Kenya";
+const defaultTitle = "Sexy Call girls in Kenya";
 const defaultDescription =
-  "KenyaDesires - Kenya's premier escort directory. Browse verified premium escorts in Nairobi, Mombasa, Kisumu and across Kenya. Real photos, authentic reviews, and transparent rates.";
+  "KenyaDesires - Kenya's premier escort directory. Browse verified Sexy Call girls in Nairobi, Mombasa, Kisumu and across Kenya. Real photos, authentic reviews, and transparent rates.";
 
 const formatLocationName = (str: string): string => {
   return str
@@ -69,7 +69,7 @@ export async function generateMetadata(
     if (formattedRegion) parts.push(formattedRegion);
     if (formattedCounty) parts.push(formattedCounty);
 
-    if (parts.length === 0) return `Premium Escorts in Kenya | KenyaDesires`;
+    if (parts.length === 0) return `Sexy Call girls in Kenya | KenyaDesires`;
 
     const baseTitle = `${parts.join(" ")} Escorts in Kenya`;
     return pageNumber > 1
@@ -91,7 +91,7 @@ export async function generateMetadata(
 
     const servicePhrase = formattedPractice
       ? `Find verified ${formattedPractice.toLowerCase()} escorts ${locationPhrase.join(" ")}.`
-      : `Discover premium escort services ${locationPhrase.join(" ")}.`;
+      : `Discover Sexy Call girls services ${locationPhrase.join(" ")}.`;
 
     return `KenyaDesires - ${servicePhrase} Browse ${totalEscorts}+ verified profiles with real photos, authentic reviews, rates, and discreet contact information.`;
   };
@@ -106,7 +106,7 @@ export async function generateMetadata(
     keywords: [
       "KenyaDesires",
       "Kenya escorts",
-      "premium escorts Kenya",
+      "Sexy Call girls in Kenya",
       formattedCounty && `${formattedCounty} escorts`,
       formattedRegion && `${formattedRegion} escorts`,
       formattedPractice && `${formattedPractice} escorts`,
