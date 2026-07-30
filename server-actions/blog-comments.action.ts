@@ -1,6 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { unstable_cache } from "next/cache";
+import { unstable_cache, revalidatePath } from "next/cache";
 import { REVALIDATE_TIME } from "@/lib/cache-config";
 
 export interface BlogComment {
@@ -21,7 +21,6 @@ export async function getCommentsByPostSlug(
     const snapshot = await adminDb
       .collection("blogComments")
       .where("postSlug", "==", postSlug)
-      .where("approved", "==", true)
       .orderBy("createdAt", "desc")
       .get();
 
@@ -81,9 +80,12 @@ export async function addBlogComment(data: {
       email: data.email,
       content: data.content.trim(),
       clerkUserId: data.clerkUserId || null,
-      approved: false,
+      approved: true,
       createdAt: FieldValue.serverTimestamp(),
     });
+
+    revalidatePath(`/blog/${data.postSlug}`);
+    revalidatePath("/api/blog-comments");
 
     return { success: true, id: docRef.id };
   } catch (error) {

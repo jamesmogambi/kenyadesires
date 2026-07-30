@@ -10,10 +10,6 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "approved",
-          "order": "ASCENDING"
-        },
-        {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
         }

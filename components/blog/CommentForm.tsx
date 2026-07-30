@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 export const commentFormSchema = z.object({
   name: z
@@ -41,6 +42,7 @@ const CommentForm = ({ postSlug, className }: Prop) => {
   const [success, setSuccess] = useState<string | null>(null);
 
   const { user } = useUser();
+  const router = useRouter();
 
   const form = useForm<CommentFormData>({
     resolver: zodResolver(commentFormSchema),
@@ -76,8 +78,9 @@ const CommentForm = ({ postSlug, className }: Prop) => {
         return;
       }
 
-      setSuccess("Your comment has been submitted and is awaiting review.");
+      setSuccess("Your comment has been posted!");
       form.reset();
+      router.refresh();
     } catch (err: any) {
       setError("An unexpected error occurred");
     } finally {
