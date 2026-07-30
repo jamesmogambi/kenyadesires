@@ -92,10 +92,7 @@ async function fetchEscortsWithCleanedImages(
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
     escortsQuery = escortsQuery.orderBy(sortField, sortOrder);
 
-    // ✅ Fetch a large batch to account for client-side filtering while keeping performance
-    const fetchLimit = Math.min(2000, Math.max(validLimit * 50, 500));
-    escortsQuery = escortsQuery.limit(fetchLimit);
-
+    // ✅ Fetch all documents - fast conversion makes this efficient
     const allDocsSnapshot = await escortsQuery.get();
 
     // ✅ Fast conversion - no deep timestamp processing
@@ -297,8 +294,6 @@ async function fetchPracticesFromCleanedEscorts(
     if (county && county !== "all") {
       escortsQuery = escortsQuery.where("county", "==", county);
     }
-
-    escortsQuery = escortsQuery.limit(2000);
 
     const allDocsSnapshot = await escortsQuery.get();
 

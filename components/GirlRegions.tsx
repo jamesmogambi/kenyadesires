@@ -28,6 +28,7 @@ const GirlRegions = async () => {
             priority
             width={60}
             height={20}
+            style={{ width: "auto", height: "auto" }}
           />
         </div>
 

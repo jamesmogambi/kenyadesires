@@ -22,6 +22,7 @@ const WhyProfile = ({ className }: Prop) => {
             priority
             width={60}
             height={20}
+            style={{ width: "auto", height: "auto" }}
           />
         </div>
 
