@@ -235,179 +235,193 @@ export const getFirstMassageEscort = unstable_cache(
 // ============================================
 
 /**
- * Get count of BDSM escorts for metadata (lightweight)
+ * Get count of BDSM escorts for metadata (lightweight, cached)
  */
-export async function getBDSMEscortCount(params: {
-  county?: string;
-  region?: string;
-  practice?: string;
-}): Promise<number> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
+export const getBDSMEscortCount = unstable_cache(
+  async (params: {
+    county?: string;
+    region?: string;
+    practice?: string;
+  }): Promise<number> => {
+    try {
+      let query: any = adminDb
+        .collection("escorts")
+        .where("isActive", "==", true);
 
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
+      if (params.county && params.county !== "all") {
+        query = query.where("county", "==", params.county);
+      }
 
-    const snapshot = await query.limit(500).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
+      const snapshot = await query.limit(500).get();
+      let docs = snapshot.docs.map((doc: any) => doc.data());
 
-    if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
-    }
+      if (params.region && params.region !== "all") {
+        docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      }
 
-    // Filter by BDSM practice
-    const bdsmTerms = [
-      "BDSM",
-      "bdsm",
-      "Domination",
-      "domination",
-      "Submission",
-      "submission",
-      "Bondage",
-      "bondage",
-      "Discipline",
-      "discipline",
-      "Sadomasochism",
-      "sadomasochism",
-      "Dominatrix",
-      "dominatrix",
-      "Mistress",
-      "mistress",
-      "Slave",
-      "slave",
-      "Master",
-      "master",
-      "Kinky",
-      "kinky",
-      "Fetish",
-      "fetish",
-      "Spanking",
-      "spanking",
-      "Whipping",
-      "whipping",
-      "Role play",
-      "role play",
-      "Roleplay",
-      "roleplay",
-      "Leather",
-      "leather",
-      "Latex",
-      "latex",
-      "Pegging",
-      "pegging",
-      "Strap-on",
-      "strap-on",
-    ];
+      // Filter by BDSM practice
+      const bdsmTerms = [
+        "BDSM",
+        "bdsm",
+        "Domination",
+        "domination",
+        "Submission",
+        "submission",
+        "Bondage",
+        "bondage",
+        "Discipline",
+        "discipline",
+        "Sadomasochism",
+        "sadomasochism",
+        "Dominatrix",
+        "dominatrix",
+        "Mistress",
+        "mistress",
+        "Slave",
+        "slave",
+        "Master",
+        "master",
+        "Kinky",
+        "kinky",
+        "Fetish",
+        "fetish",
+        "Spanking",
+        "spanking",
+        "Whipping",
+        "whipping",
+        "Role play",
+        "role play",
+        "Roleplay",
+        "roleplay",
+        "Leather",
+        "leather",
+        "Latex",
+        "latex",
+        "Pegging",
+        "pegging",
+        "Strap-on",
+        "strap-on",
+      ];
 
-    docs = docs.filter((d: any) => {
-      if (!d.practices) return false;
-      return d.practices.some((p: string) => {
-        const lower = p.toLowerCase();
-        return bdsmTerms.some((term) => lower.includes(term.toLowerCase()));
+      docs = docs.filter((d: any) => {
+        if (!d.practices) return false;
+        return d.practices.some((p: string) => {
+          const lower = p.toLowerCase();
+          return bdsmTerms.some((term) => lower.includes(term.toLowerCase()));
+        });
       });
-    });
 
-    return docs.length;
-  } catch (error) {
-    console.error("Error getting BDSM count:", error);
-    return 0;
-  }
-}
+      return docs.length;
+    } catch (error) {
+      console.error("Error getting BDSM count:", error);
+      return 0;
+    }
+  },
+  ["bdsm-count-metadata"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["escorts"],
+  },
+);
 
 /**
- * Get first BDSM escort for metadata (lightweight)
+ * Get first BDSM escort for metadata (lightweight, cached)
  */
-export async function getFirstBDSMEscort(params: {
-  county?: string;
-  region?: string;
-  practice?: string;
-}): Promise<{
-  previewPhoto?: string;
-  name?: string;
-  username?: string;
-} | null> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
+export const getFirstBDSMEscort = unstable_cache(
+  async (params: {
+    county?: string;
+    region?: string;
+    practice?: string;
+  }): Promise<{
+    previewPhoto?: string;
+    name?: string;
+    username?: string;
+  } | null> => {
+    try {
+      let query: any = adminDb
+        .collection("escorts")
+        .where("isActive", "==", true);
 
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
+      if (params.county && params.county !== "all") {
+        query = query.where("county", "==", params.county);
+      }
 
-    const snapshot = await query.limit(20).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
+      const snapshot = await query.limit(20).get();
+      let docs = snapshot.docs.map((doc: any) => doc.data());
 
-    if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
-    }
+      if (params.region && params.region !== "all") {
+        docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      }
 
-    const bdsmTerms = [
-      "BDSM",
-      "bdsm",
-      "Domination",
-      "domination",
-      "Submission",
-      "submission",
-      "Bondage",
-      "bondage",
-      "Discipline",
-      "discipline",
-      "Sadomasochism",
-      "sadomasochism",
-      "Dominatrix",
-      "dominatrix",
-      "Mistress",
-      "mistress",
-      "Slave",
-      "slave",
-      "Master",
-      "master",
-      "Kinky",
-      "kinky",
-      "Fetish",
-      "fetish",
-      "Spanking",
-      "spanking",
-      "Whipping",
-      "whipping",
-      "Role play",
-      "role play",
-      "Roleplay",
-      "roleplay",
-      "Leather",
-      "leather",
-      "Latex",
-      "latex",
-      "Pegging",
-      "pegging",
-      "Strap-on",
-      "strap-on",
-    ];
+      const bdsmTerms = [
+        "BDSM",
+        "bdsm",
+        "Domination",
+        "domination",
+        "Submission",
+        "submission",
+        "Bondage",
+        "bondage",
+        "Discipline",
+        "discipline",
+        "Sadomasochism",
+        "sadomasochism",
+        "Dominatrix",
+        "dominatrix",
+        "Mistress",
+        "mistress",
+        "Slave",
+        "slave",
+        "Master",
+        "master",
+        "Kinky",
+        "kinky",
+        "Fetish",
+        "fetish",
+        "Spanking",
+        "spanking",
+        "Whipping",
+        "whipping",
+        "Role play",
+        "role play",
+        "Roleplay",
+        "roleplay",
+        "Leather",
+        "leather",
+        "Latex",
+        "latex",
+        "Pegging",
+        "pegging",
+        "Strap-on",
+        "strap-on",
+      ];
 
-    docs = docs.filter((d: any) => {
-      if (!d.practices) return false;
-      return d.practices.some((p: string) => {
-        const lower = p.toLowerCase();
-        return bdsmTerms.some((term) => lower.includes(term.toLowerCase()));
+      docs = docs.filter((d: any) => {
+        if (!d.practices) return false;
+        return d.practices.some((p: string) => {
+          const lower = p.toLowerCase();
+          return bdsmTerms.some((term) => lower.includes(term.toLowerCase()));
+        });
       });
-    });
 
-    if (docs.length === 0) return null;
+      if (docs.length === 0) return null;
 
-    return {
-      previewPhoto: docs[0].previewPhoto,
-      name: docs[0].name,
-      username: docs[0].username,
-    };
-  } catch (error) {
-    console.error("Error getting first BDSM escort:", error);
-    return null;
-  }
-}
+      return {
+        previewPhoto: docs[0].previewPhoto,
+        name: docs[0].name,
+        username: docs[0].username,
+      };
+    } catch (error) {
+      console.error("Error getting first BDSM escort:", error);
+      return null;
+    }
+  },
+  ["bdsm-first-metadata"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["escorts"],
+  },
+);
 
 // ============================================
 // AGENCIES METADATA HELPERS
