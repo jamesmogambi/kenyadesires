@@ -12,9 +12,10 @@ interface GirlItemProps {
   className?: string;
   handlePress?: () => void;
   path?: string;
+  priority?: boolean;
 }
 
-const GirlItem = ({ girl, className, handlePress, path }: GirlItemProps) => {
+const GirlItem = ({ girl, className, handlePress, path, priority = false }: GirlItemProps) => {
   const {
     images,
     name,
@@ -78,7 +79,7 @@ const GirlItem = ({ girl, className, handlePress, path }: GirlItemProps) => {
     >
       <Link href={profilePath}>
         {/* Header - Image */}
-        <GirlImageSwiper images={displayImages} />
+        <GirlImageSwiper images={displayImages} priority={priority} />
 
         {/* Footer */}
         <div className="p-4">

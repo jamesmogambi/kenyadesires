@@ -40,7 +40,7 @@ const GirlList = ({
         )}
       >
         {girls.map((girl, index) => (
-          <GirlItem key={girl.id || girl.id || index} girl={girl} />
+          <GirlItem key={girl.id || girl.id || index} girl={girl} priority={index === 0} />
         ))}
       </div>
 

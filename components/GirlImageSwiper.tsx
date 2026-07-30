@@ -12,12 +12,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Prop {
   images: string[];
+  priority?: boolean;
 }
 
 // Fallback image if image fails to load
 const FALLBACK_IMAGE = "/images/fallback.png";
 
-const GirlImageSwiper = ({ images }: Prop) => {
+const GirlImageSwiper = ({ images, priority = false }: Prop) => {
   const [swiperRef, setSwiperRef] = useState<any>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
@@ -71,8 +72,8 @@ const GirlImageSwiper = ({ images }: Prop) => {
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={index === 0}
-                      loading={index === 0 ? "eager" : "lazy"}
+                      priority={priority}
+                      loading={priority ? "eager" : "lazy"}
                       quality={50}
                       onError={() => handleImageError(index)}
                     />
