@@ -15,6 +15,7 @@ const config: ClientConfig = {
   apiVersion,
   useCdn: process.env.NODE_ENV === "production",
   perspective: "published",
+  timeout: 10000,
 };
 
 export const client = createClient(config);

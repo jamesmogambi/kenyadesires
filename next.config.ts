@@ -3,6 +3,13 @@ const nextConfig = {
   // ✅ CRITICAL: Add standalone output for cPanel deployment
   output: "standalone",
 
+  // ✅ Turbopack resolve alias for Clerk ESM modules
+  turbopack: {
+    resolveAlias: {
+      "@clerk/shared": require.resolve("@clerk/shared"),
+    },
+  },
+
   images: {
     // formats: ["image/avif", "image/webp"],
     remotePatterns: [
