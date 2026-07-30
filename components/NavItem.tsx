@@ -21,7 +21,7 @@ const NavItem = ({ children, path, className, text = "Item" }: Props) => {
         <div
           className={cn(
             "group-hover:border-b-[6px] h-28 justify-between   flex border-0 flex-col items-center pb-10 border-primary",
-            pathname.includes(path) && "border-b-[6px]",
+            pathname.includes(path) && "border-b-6",
           )}
         >
           <svg

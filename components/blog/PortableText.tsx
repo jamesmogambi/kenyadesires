@@ -106,16 +106,17 @@ const components = {
       const imageHeight = isPortrait ? 800 : 500;
 
       return (
-        <figure className="my-8 w-full max-w-full">
-          <div className="relative w-full">
+      <figure className="my-8 w-full max-w-[700px] mx-auto">
+        <div className="relative w-full">
             <SanityImage
               image={value}
               alt={value?.alt || "Article image"}
               width={imageWidth}
               height={imageHeight}
               className="w-full h-auto rounded-none shadow-md"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 700px"
               priority={false}
+              loading="eager"
             />
             {value?.caption && (
               <figcaption className="mt-3 text-center text-sm text-white/60">

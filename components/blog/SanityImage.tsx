@@ -12,6 +12,7 @@ interface SanityImageProps {
   sizes?: string;
   fallback?: string;
   quality?: number;
+  loading?: "lazy" | "eager";
 }
 
 export default function SanityImage({
@@ -25,6 +26,7 @@ export default function SanityImage({
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
   fallback = "/og-default.jpg",
   quality = 75,
+  loading,
   ...props
 }: SanityImageProps) {
   // ✅ If no image, show fallback
@@ -41,6 +43,7 @@ export default function SanityImage({
           priority={priority}
           sizes={sizes}
           quality={quality}
+          loading={loading}
           {...props}
         />
       );
@@ -64,6 +67,7 @@ export default function SanityImage({
           priority={priority}
           sizes={sizes}
           quality={quality}
+          loading={loading}
           {...props}
         />
       );
@@ -82,6 +86,7 @@ export default function SanityImage({
         priority={priority}
         sizes={sizes}
         quality={quality}
+        loading={loading}
         {...props}
       />
     );
@@ -101,6 +106,7 @@ export default function SanityImage({
       priority={priority}
       sizes={sizes}
       quality={quality}
+      loading={loading}
       {...props}
     />
   );

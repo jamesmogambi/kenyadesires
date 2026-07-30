@@ -1,6 +1,6 @@
 "use client";
 import { cn, formatSlugToTitle } from "@/lib/utils";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,30 +13,11 @@ import LocationInitializer from "@/components/FileInputInitializer";
 import { useVariantStore } from "@/store/variantStore";
 import { useFilterInputStore } from "../girls/filterInputStore";
 import { BUSINESS_TYPES } from "@/constants/index";
+import { ICounty } from "@/server-actions/region.action";
+import { IRegion } from "@/types/region.types";
 
 interface Prop {
   className?: string;
-}
-
-interface IRegion {
-  _id: string;
-  name: string;
-  countyCode: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ICounty {
-  _id: string;
-  name: string;
-  code: string;
-  description?: string;
-  isPopular?: boolean;
-  population?: number;
-  area?: string;
-  capital?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 const AgencyFilterInput = ({ className }: Prop) => {
@@ -60,29 +41,56 @@ const AgencyFilterInput = ({ className }: Prop) => {
   const { counties, regions: fetchedRegions } = useFilterInputStore();
   const { massage: massageVariants, bdsm: bdsmVariants } = useVariantStore();
 
+  // ✅ Memoize filtered regions based on selected county
+  const filteredRegionsByCounty = useMemo(() => {
+    if (!county) return [];
+    return fetchedRegions.filter(
+      (region: IRegion) =>
+        region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
+        region.county?.toLowerCase() === county.name?.toLowerCase(),
+    );
+  }, [county, fetchedRegions]);
+
   // Initialize from URL params on mount
   useEffect(() => {
     if (initialCountyCode && counties.length > 0) {
       const foundCounty = counties.find(
-        (c: { name: string }) => c.name === initialCountyCode,
+        (c: ICounty) =>
+          c.code?.toLowerCase() === initialCountyCode.toLowerCase() ||
+          c.name?.toLowerCase() === initialCountyCode.toLowerCase(),
       );
+
       if (foundCounty) {
         setCounty(foundCounty);
-        // Load regions for this county
-        const filteredRegions = fetchedRegions.filter(
-          (region: any) => region.countyCode === foundCounty.code,
+
+        const filtered = fetchedRegions.filter(
+          (region: IRegion) =>
+            region.countyCode?.toLowerCase() ===
+              foundCounty.code?.toLowerCase() ||
+            region.county?.toLowerCase() === foundCounty.name?.toLowerCase(),
         );
-        setRegions(filteredRegions);
+        setRegions(filtered);
       }
     }
 
     if (initialRegionName && regions.length > 0) {
-      const foundRegion = regions.find((r) => r.name === initialRegionName);
+      const foundRegion = regions.find(
+        (r) => r.name?.toLowerCase() === initialRegionName.toLowerCase(),
+      );
       if (foundRegion) {
         setRegion(foundRegion);
       }
     }
   }, [counties, fetchedRegions, initialCountyCode, initialRegionName]);
+
+  // ✅ Update regions when county changes
+  useEffect(() => {
+    if (county) {
+      setRegions(filteredRegionsByCounty);
+    } else {
+      setRegions([]);
+    }
+  }, [county, filteredRegionsByCounty]);
 
   // Clear all filters
   const clearFilters = () => {
@@ -101,25 +109,13 @@ const AgencyFilterInput = ({ className }: Prop) => {
   // Handle county selection
   const handleCounty = (val: ICounty) => {
     setCounty(val);
-    setRegion(null); // Reset region when county changes
-    setRegions([]);
-
-    // Filter regions based on selected county
-    const filteredRegions = fetchedRegions.filter(
-      (region: any) => region.countyCode === val.code,
-    );
-    setRegions(filteredRegions);
-
-    // Update URL params immediately or wait for filter button
-    // For immediate update, uncomment:
-    // updateURLParams({ county: val.name, region: "", business });
+    setRegion(null);
+    // Regions will be automatically updated by the useEffect above
   };
 
-  // Handle massage type selection
+  // Handle business type selection
   const handlebusiness = (val: string) => {
     setbusiness(val);
-    // For immediate update, uncomment:
-    // updateURLParams({ county: county?.name || "", region: region?.name || "", business: val });
   };
 
   // Handle region selection
@@ -129,8 +125,6 @@ const AgencyFilterInput = ({ className }: Prop) => {
       return;
     }
     setRegion(val);
-    // For immediate update, uncomment:
-    // updateURLParams({ county: county.name, region: val.name, business });
   };
 
   // Update URL params helper
@@ -278,19 +272,25 @@ const AgencyFilterInput = ({ className }: Prop) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           <div className="flex flex-wrap gap-1.5">
-            {regions.map((item: IRegion) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleRegion(item);
-                  setRegionOpen(false);
-                }}
-                key={item._id}
-              >
-                {formatSlugToTitle(item.name)}
-              </DropdownMenuItem>
-            ))}
+            {regions.length > 0 ? (
+              regions.map((item: IRegion) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleRegion(item);
+                    setRegionOpen(false);
+                  }}
+                  key={item.id}
+                >
+                  {formatSlugToTitle(item.name)}
+                </DropdownMenuItem>
+              ))
+            ) : (
+              <span className="text-white/50 text-sm p-2">
+                No regions found
+              </span>
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -334,7 +334,7 @@ const AgencyFilterInput = ({ className }: Prop) => {
                   handlebusiness(item.value);
                   setbusinessOpen(false);
                 }}
-                key={item.id}
+                key={item.label}
               >
                 {item.icon} {item.label}
               </DropdownMenuItem>
