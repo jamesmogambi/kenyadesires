@@ -393,7 +393,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
 
         {/* Hidden h1 for SEO */}
         <h1 className="sr-only">
-          {displayName} - Premium Escort in {location} | KenyaDesires Kenya
+          {displayName} - Sexy Hot Escort in {location} | KenyaDesires Kenya
         </h1>
 
         {/* TODO: add verification badge in future */}

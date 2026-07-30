@@ -37,7 +37,7 @@ const getFirstName = (fullName: string): string => {
 const LoadingSkeleton = ({ className }: { className?: string }) => (
   <div
     className={cn(
-      "border border-white/20 rounded-md h-[800px] lg:h-[410px] flex items-center justify-center",
+      "border border-white/20 rounded-md h-200 lg:h-102.5 flex items-center justify-center",
       className,
     )}
   >
@@ -56,7 +56,7 @@ const ErrorDisplay = ({
   error: string;
   onRetry: () => void;
 }) => (
-  <div className="border border-white/20 rounded-md h-[800px] lg:h-[410px] flex items-center justify-center">
+  <div className="border border-white/20 rounded-md h-200 lg:h-102.5 flex items-center justify-center">
     <div className="text-center">
       <p className="text-red-500 mb-2">Error: {error}</p>
       <button
@@ -73,7 +73,7 @@ const ErrorDisplay = ({
 const EscortSwiper = React.memo(({ escorts }: { escorts: Escort[] }) => {
   if (escorts.length === 0) {
     return (
-      <div className="w-full h-[200px] mt-4 flex items-center justify-center border border-white/10 rounded-md">
+      <div className="w-full h-50 mt-4 flex items-center justify-center border border-white/10 rounded-md">
         <p className="text-white/40 font-light">No girls available</p>
       </div>
     );
@@ -90,7 +90,7 @@ const EscortSwiper = React.memo(({ escorts }: { escorts: Escort[] }) => {
         slidesPerView="auto"
         navigation
         scrollbar={{ draggable: true }}
-        className="w-full mt-4 !h-[180px] agency-swiper"
+        className="w-full mt-4 h-45! agency-swiper"
         breakpoints={{
           320: { slidesPerView: 2 },
           480: { slidesPerView: 3 },
@@ -103,20 +103,20 @@ const EscortSwiper = React.memo(({ escorts }: { escorts: Escort[] }) => {
           return (
             <SwiperSlide
               key={escort.id}
-              className="border border-white/30 !w-[100px] rounded-md overflow-hidden"
+              className="border border-white/30 w-25! rounded-md overflow-hidden"
             >
               <Link
                 href={`/girl/${escort.slug || escort.id}`}
                 className="block w-full h-full pointer-events-auto"
               >
-                <div className="relative border-white/40 w-[120px] h-[150px] group">
+                <div className="relative border-white/40 w-30 h-37.5 group">
                   <Image
                     src={imgSrc}
                     alt={escort.name || "Escort"}
                     fill
                     sizes="120px"
                     style={{ objectFit: "cover" }}
-                    quality={75}
+                    quality={50}
                     className="transition-transform duration-300 group-hover:scale-110"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -211,12 +211,12 @@ export default function AgencyListItem({ agency, className }: Prop) {
   return (
     <div
       className={cn(
-        "border border-white/20 overflow-hidden rounded-md h-[600px] lg:h-[410px] flex flex-col lg:flex-row gap-1.5 bg-transparent transition-colors relative group/item",
+        "border border-white/20 overflow-hidden rounded-md h-150 lg:h-102.5 flex flex-col lg:flex-row gap-1.5 bg-transparent transition-colors relative group/item",
         className,
       )}
     >
       {/* Box 1 - Cover Image */}
-      <div className="w-full h-[600px] lg:h-full lg:w-1/2 flex flex-col relative z-20 pointer-events-none">
+      <div className="w-full h-150 lg:h-full lg:w-1/2 flex flex-col relative z-20 pointer-events-none">
         <Link
           href={`/agencies/${id}`}
           className="absolute inset-0 z-0 pointer-events-auto"
@@ -244,11 +244,15 @@ export default function AgencyListItem({ agency, className }: Prop) {
               quality={75}
             />
           ) : (
-            <div className="w-full h-full bg-linear-to-br from-gray-700 to-gray-900 flex items-center justify-center rounded-t-md lg:rounded-l-md lg:rounded-tr-none">
-              <span className="text-white/40 text-lg font-light">
-                No Cover Image
-              </span>
-            </div>
+            <Image
+              src="/fallback.png"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover rounded-t-md lg:rounded-l-md lg:rounded-tr-none"
+              priority
+              alt={name}
+              quality={75}
+            />
           )}
         </div>
       </div>

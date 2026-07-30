@@ -75,8 +75,8 @@ export interface IAgency {
   plan: {
     type: "basic" | "premium" | "enterprise";
     isActive: boolean;
-    activatedAt?: Date;
-    expiresAt?: Date;
+    activatedAt?: string;
+    expiresAt?: string;
     features: string[];
     maxEmployees: number;
     maxGalleryImages: number;
@@ -94,8 +94,8 @@ export interface IAgency {
   isFeatured: boolean;
 
   // Timestamps
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateAgencyDTO {

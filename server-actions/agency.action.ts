@@ -23,6 +23,36 @@ import { Escort } from "./escort.action";
 // ============================================
 // CONVERT FIREBASE DOC TO AGENCY
 // ============================================
+function serializePlan(plan: any): IAgency["plan"] {
+  if (!plan) {
+    return {
+      type: "basic",
+      isActive: true,
+      features: [],
+      maxEmployees: 5,
+      maxGalleryImages: 10,
+    };
+  }
+
+  return {
+    type: plan.type || "basic",
+    isActive: plan.isActive !== undefined ? plan.isActive : true,
+    activatedAt: plan.activatedAt?.toDate?.()
+      ? plan.activatedAt.toDate().toISOString()
+      : plan.activatedAt
+      ? new Date(plan.activatedAt).toISOString()
+      : undefined,
+    expiresAt: plan.expiresAt?.toDate?.()
+      ? plan.expiresAt.toDate().toISOString()
+      : plan.expiresAt
+      ? new Date(plan.expiresAt).toISOString()
+      : undefined,
+    features: plan.features || [],
+    maxEmployees: plan.maxEmployees || 5,
+    maxGalleryImages: plan.maxGalleryImages || 10,
+  };
+}
+
 function convertFirebaseDocToAgency(
   doc: QueryDocumentSnapshot<DocumentData>,
 ): IAgency {
@@ -70,13 +100,7 @@ function convertFirebaseDocToAgency(
     languages: data.languages || ["English"],
     paymentMethods: data.paymentMethods || ["Cash", "M-Pesa"],
     socialMedia: data.socialMedia,
-    plan: data.plan || {
-      type: "basic",
-      isActive: true,
-      features: [],
-      maxEmployees: 5,
-      maxGalleryImages: 10,
-    },
+    plan: serializePlan(data.plan),
     rating: data.rating || 0,
     totalReviews: data.totalReviews || 0,
     totalBookings: data.totalBookings || 0,
@@ -84,8 +108,8 @@ function convertFirebaseDocToAgency(
     featuredEmployeesCount: data.featuredEmployeesCount || 0,
     isActive: data.isActive !== undefined ? data.isActive : true,
     isFeatured: data.isFeatured || false,
-    createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
-    updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
+    createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : data.updatedAt || new Date().toISOString(),
   };
 }
 
@@ -397,16 +421,59 @@ export async function getAgencyByOwnerId(
     const data = doc.data();
 
     return {
-      ...data,
       id: doc.id,
-      createdAt: data.createdAt?.toDate?.() || data.createdAt || null,
-      updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || null,
-      plan: {
-        ...data.plan,
-        activatedAt: data.plan?.activatedAt?.toDate?.() || null,
-        expiresAt: data.plan?.expiresAt?.toDate?.() || null,
+      name: data.name || "",
+      slug: data.slug || "",
+      description: data.description || "",
+      contactEmail: data.contactEmail || "",
+      contactPhone: data.contactPhone || "",
+      whatsappPhone: data.whatsappPhone,
+      website: data.website,
+      ownerId: data.ownerId || "",
+      country: data.country || "Kenya",
+      county: data.county || "",
+      countyCode: data.countyCode || "",
+      region: data.region || "",
+      town: data.town || "",
+      estate: data.estate,
+      address: data.address,
+      street: data.street,
+      postalCode: data.postalCode,
+      businessType: data.businessType || "agency",
+      categories: data.categories || [],
+      openingHours: data.openingHours || {
+        monday: "9:00 AM - 6:00 PM",
+        tuesday: "9:00 AM - 6:00 PM",
+        wednesday: "9:00 AM - 6:00 PM",
+        thursday: "9:00 AM - 6:00 PM",
+        friday: "9:00 AM - 6:00 PM",
+        saturday: "9:00 AM - 6:00 PM",
+        sunday: "Closed",
       },
-    } as IAgency;
+      services: data.services || [],
+      specialties: data.specialties || [],
+      isVerified: data.isVerified || false,
+      verificationStatus: data.verificationStatus || "pending",
+      verificationDocuments: data.verificationDocuments,
+      logo: data.logo,
+      coverImage: data.coverImage,
+      gallery: data.gallery || [],
+      videos: data.videos || [],
+      establishmentYear: data.establishmentYear,
+      languages: data.languages || ["English"],
+      paymentMethods: data.paymentMethods || ["Cash", "M-Pesa"],
+      socialMedia: data.socialMedia,
+      plan: serializePlan(data.plan),
+      rating: data.rating || 0,
+      totalReviews: data.totalReviews || 0,
+      totalBookings: data.totalBookings || 0,
+      totalViews: data.totalViews || 0,
+      featuredEmployeesCount: data.featuredEmployeesCount || 0,
+      isActive: data.isActive !== undefined ? data.isActive : true,
+      isFeatured: data.isFeatured || false,
+      createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt || null,
+      updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : data.updatedAt || null,
+    };
   } catch (error) {
     console.error("Error fetching agency by owner:", error);
     return null;
@@ -563,7 +630,7 @@ export async function createAgency(
       plan: {
         type: planType,
         isActive: true,
-        activatedAt: now,
+        activatedAt: now.toISOString(),
         features: [],
         ...PLAN_LIMITS[planType],
       },
@@ -574,8 +641,8 @@ export async function createAgency(
       featuredEmployeesCount: 0,
       isActive: true,
       isFeatured: false,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
 
     const docRef = adminDb.collection("agencies").doc(slug);

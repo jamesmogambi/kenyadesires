@@ -82,7 +82,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
                     sizes="(max-width: 1024px) 100vw, 40vw"
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
-                    quality={90}
+                    quality={50}
                     onError={(e) => {
                       console.error(`Failed to load image: ${src}`);
                       (e.target as HTMLImageElement).style.display = "none";
