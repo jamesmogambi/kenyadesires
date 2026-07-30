@@ -190,7 +190,7 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
     if (formattedRegion) parts.push(formattedRegion);
     if (formattedCounty) parts.push(formattedCounty);
     return parts.length === 0
-      ? "Premium Escorts in Kenya"
+      ? "Sexy Call girls in Kenya"
       : `${parts.join(" ")} Escorts in Kenya`;
   };
 
