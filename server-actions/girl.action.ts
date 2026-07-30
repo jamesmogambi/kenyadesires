@@ -113,16 +113,12 @@ async function fetchEscortById(id: string): Promise<Escort | null> {
       })
       .catch(() => {});
 
-    if (!hasCleanedImages(escort)) {
-      return null;
-    }
-
     const cleanedImages = getCleanedImageUrls(escort);
     const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
 
     return {
       ...escort,
-      images: cleanedImages,
+      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
       previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
       imagesMetadata: escort.imagesMetadata,
     };
@@ -151,7 +147,7 @@ async function fetchEscortBySlug(slug: string): Promise<Escort | null> {
       return null;
     }
 
-    const doc = snapshot.docs[0];
+const doc = snapshot.docs[0];
     const escort = convertDocToEscort(doc);
 
     // Fire and forget - increment view count
@@ -163,16 +159,12 @@ async function fetchEscortBySlug(slug: string): Promise<Escort | null> {
       })
       .catch(() => {});
 
-    if (!hasCleanedImages(escort)) {
-      return null;
-    }
-
     const cleanedImages = getCleanedImageUrls(escort);
     const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
 
     return {
       ...escort,
-      images: cleanedImages,
+      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
       previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
       imagesMetadata: escort.imagesMetadata,
     };
@@ -180,7 +172,7 @@ async function fetchEscortBySlug(slug: string): Promise<Escort | null> {
     console.error("Error fetching escort by slug:", error);
     return null;
   }
-}
+};
 
 /**
  * Internal function that fetches escort by Username
@@ -201,7 +193,7 @@ async function fetchEscortByUsername(username: string): Promise<Escort | null> {
       return null;
     }
 
-    const doc = snapshot.docs[0];
+const doc = snapshot.docs[0];
     const escort = convertDocToEscort(doc);
 
     // Fire and forget - increment view count
@@ -213,16 +205,12 @@ async function fetchEscortByUsername(username: string): Promise<Escort | null> {
       })
       .catch(() => {});
 
-    if (!hasCleanedImages(escort)) {
-      return null;
-    }
-
     const cleanedImages = getCleanedImageUrls(escort);
     const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
 
     return {
       ...escort,
-      images: cleanedImages,
+      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
       previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
       imagesMetadata: escort.imagesMetadata,
     };
@@ -230,7 +218,7 @@ async function fetchEscortByUsername(username: string): Promise<Escort | null> {
     console.error("Error fetching escort by username:", error);
     return null;
   }
-}
+};
 
 /**
  * Get a single escort by any identifier (ID, Slug, or Username)
