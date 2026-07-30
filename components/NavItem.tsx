@@ -13,15 +13,15 @@ interface Props {
 const NavItem = ({ children, path, className, text = "Item" }: Props) => {
   const pathname = usePathname();
   return (
-    <li className={cn("group", className)}>
+    <li className={cn("group border border-green-600", className)}>
       <Link href={`${path}`} className="flex gap-3  items-center">
         {/* icon */}
         {children}
 
         <div
           className={cn(
-            "group-hover:border-b-[6px] h-28 justify-between   flex border-0 flex-col items-center pb-10 border-primary",
-            pathname.includes(path) && "border-b-6",
+            "border-b-[6px] border-transparent h-28 justify-between flex flex-col items-center pb-10 group-hover:border-primary box-border",
+            pathname.includes(path) && "border-b-[6px] border-primary",
           )}
         >
           <svg
