@@ -144,7 +144,7 @@ export const getCachedPopularCounties = unstable_cache(
     console.log(
       `🔄 Fetching fresh popular counties (limit: ${limit || "all"})...`,
     );
-    const result = await getPopularCounties({ limit, forceRefresh: true });
+    const result = await getPopularCounties({ limit });
     return result;
   },
   ["popular-counties"],

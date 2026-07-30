@@ -1,83 +1,95 @@
 // ✅ Lightweight metadata fetch - only gets what's needed
 import { adminDb } from "@/lib/firebase-admin";
+import { unstable_cache } from "next/cache";
 import { REVALIDATE_TIME } from "./cache-config";
 
-export async function getEscortCountForMetadata(params: {
-  county?: string;
-  region?: string;
-  practice?: string;
-}): Promise<number> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
+export const getEscortCountForMetadata = unstable_cache(
+  async (params: {
+    county?: string;
+    region?: string;
+    practice?: string;
+  }): Promise<number> => {
+    try {
+      let query: any = adminDb
+        .collection("escorts")
+        .where("isActive", "==", true);
 
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
+      if (params.county && params.county !== "all") {
+        query = query.where("county", "==", params.county);
+      }
+
+      const snapshot = await query.limit(500).get();
+      let docs = snapshot.docs.map((doc: any) => doc.data());
+
+      if (params.region && params.region !== "all") {
+        docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      }
+
+      if (params.practice && params.practice !== "all") {
+        docs = docs.filter((d: any) => d.practices?.includes(params.practice));
+      }
+
+      return docs.length;
+    } catch (error) {
+      console.error("Error getting count for metadata:", error);
+      return 0;
     }
+  },
+  ["escort-count-metadata"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["escorts"],
+  },
+);
 
-    const snapshot = await query.limit(500).get();
-    let count = snapshot.size;
+export const getFirstEscortForMetadata = unstable_cache(
+  async (params: {
+    county?: string;
+    region?: string;
+    practice?: string;
+  }): Promise<{
+    previewPhoto?: string;
+    name?: string;
+    username?: string;
+  } | null> => {
+    try {
+      let query: any = adminDb
+        .collection("escorts")
+        .where("isActive", "==", true);
 
-    // Client-side filtering for metadata count
-    let docs = snapshot.docs.map((doc: any) => doc.data());
+      if (params.county && params.county !== "all") {
+        query = query.where("county", "==", params.county);
+      }
 
-    if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      const snapshot = await query.limit(20).get();
+      let docs = snapshot.docs.map((doc: any) => doc.data());
+
+      if (params.region && params.region !== "all") {
+        docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      }
+
+      if (params.practice && params.practice !== "all") {
+        docs = docs.filter((d: any) => d.practices?.includes(params.practice));
+      }
+
+      if (docs.length === 0) return null;
+
+      return {
+        previewPhoto: docs[0].previewPhoto,
+        name: docs[0].name,
+        username: docs[0].username,
+      };
+    } catch (error) {
+      console.error("Error getting first escort for metadata:", error);
+      return null;
     }
-
-    if (params.practice && params.practice !== "all") {
-      docs = docs.filter((d: any) => d.practices?.includes(params.practice));
-    }
-
-    return docs.length;
-  } catch (error) {
-    console.error("Error getting count for metadata:", error);
-    return 0;
-  }
-}
-
-export async function getFirstEscortForMetadata(params: {
-  county?: string;
-  region?: string;
-  practice?: string;
-}): Promise<{
-  previewPhoto?: string;
-  name?: string;
-  username?: string;
-} | null> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
-
-    const snapshot = await query.limit(20).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
-    }
-
-    if (params.practice && params.practice !== "all") {
-      docs = docs.filter((d: any) => d.practices?.includes(params.practice));
-    }
-
-    if (docs.length === 0) return null;
-
-    return {
-      previewPhoto: docs[0].previewPhoto,
-      name: docs[0].name,
-      username: docs[0].username,
-    };
-  } catch (error) {
-    console.error("Error getting first escort for metadata:", error);
-    return null;
-  }
-}
+  },
+  ["escort-first-metadata"],
+  {
+    revalidate: REVALIDATE_TIME,
+    tags: ["escorts"],
+  },
+);
 
 // ============================================
 // MASSAGE ESCORTS METADATA HELPERS

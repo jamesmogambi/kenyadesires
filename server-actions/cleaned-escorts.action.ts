@@ -5,40 +5,12 @@ import { adminDb } from "@/lib/firebase-admin";
 import { unstable_cache } from "next/cache";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
-// Helper to convert Firestore doc to plain serializable object
-function convertDocToEscort(
-  doc:
-    | FirebaseFirestore.DocumentSnapshot
-    | FirebaseFirestore.QueryDocumentSnapshot,
-): Escort {
-  const data = (doc.data() || {}) as { [key: string]: any };
-
-  // Helper to convert Timestamp to ISO string
-  const convertTimestamp = (value: any): any => {
-    if (!value) return value;
-    if (value.toDate && typeof value.toDate === "function") {
-      return value.toDate().toISOString();
-    }
-    if (Array.isArray(value)) {
-      return value.map(convertTimestamp);
-    }
-    if (value && typeof value === "object") {
-      const result: any = {};
-      for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-          result[key] = convertTimestamp(value[key]);
-        }
-      }
-      return result;
-    }
-    return value;
-  };
-
-  const convertedData = convertTimestamp(data);
-
+// Fast conversion - avoids expensive deep timestamp conversion
+function convertDocToEscortFast(doc: any): Escort {
+  const data = doc.data();
   return {
     id: doc.id,
-    ...convertedData,
+    ...data,
   } as Escort;
 }
 
@@ -49,7 +21,7 @@ async function fetchEscortsWithCleanedImages(
   try {
     const {
       page = 1,
-      limit = 20,
+      limit: limitParam = 20,
       county,
       region,
       town,
@@ -71,29 +43,27 @@ async function fetchEscortsWithCleanedImages(
     } = params;
 
     const validPage = Math.max(1, page);
-    const validLimit = Math.min(100, Math.max(1, limit));
+    const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    // ✅ Build query
-    let query: FirebaseFirestore.Query = adminDb.collection("escorts");
+    // ✅ Build Firestore query with server-side filters
+    let escortsQuery: any = adminDb.collection("escorts");
 
-    // Apply filters
     if (isActive !== undefined) {
-      query = query.where("isActive", "==", isActive);
+      escortsQuery = escortsQuery.where("isActive", "==", isActive);
     }
 
     if (isVerified !== undefined) {
-      query = query.where("isVerified", "==", isVerified);
+      escortsQuery = escortsQuery.where("isVerified", "==", isVerified);
     }
 
     if (isFeatured !== undefined) {
-      query = query.where("isFeatured", "==", isFeatured);
+      escortsQuery = escortsQuery.where("isFeatured", "==", isFeatured);
     }
 
     if (county && county !== "all") {
-      query = query.where("county", "==", county);
+      escortsQuery = escortsQuery.where("county", "==", county);
     }
 
-    // ✅ Apply sorting
     const validSortFields = [
       "createdAt",
       "updatedAt",
@@ -103,27 +73,28 @@ async function fetchEscortsWithCleanedImages(
       "totalBookings",
     ];
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-    query = query.orderBy(sortField, sortOrder);
+    escortsQuery = escortsQuery.orderBy(sortField, sortOrder);
 
-    // ✅ IMPORTANT: Get ALL documents (no limit) to properly filter for cleaned images
-    const allDocsSnapshot = await query.get();
+    // ✅ Fetch a larger batch to account for client-side filtering
+    const fetchLimit = Math.min(200, Math.max(validLimit * 5, 50));
+    escortsQuery = escortsQuery.limit(fetchLimit);
 
-    // ✅ Convert ALL data
-    let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscort);
+    const allDocsSnapshot = await escortsQuery.get();
 
-    // ✅ Filter: Only escorts with cleaned images
+    // ✅ Fast conversion - no deep timestamp processing
+    let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscortFast);
+
+    // ✅ Filter: Only escorts with cleaned images (client-side, can't be done in Firestore)
     let escortsWithCleanedImages = allEscorts.filter((escort) => {
       if (!escort.imagesMetadata) return false;
 
-      const hasCleanedImages = Object.values(escort.imagesMetadata).some(
+      return Object.values(escort.imagesMetadata).some(
         (metadata: any) =>
           metadata.status === "completed" && metadata.cleanedUrl,
       );
-
-      return hasCleanedImages;
     });
 
-    // ✅ Apply additional filters client-side
+    // ✅ Apply remaining filters client-side
     if (region && region !== "all") {
       escortsWithCleanedImages = escortsWithCleanedImages.filter((e) =>
         e.regions?.includes(region),
@@ -200,8 +171,23 @@ async function fetchEscortsWithCleanedImages(
       );
     }
 
-    // ✅ Total count (all escorts with cleaned images that match filters)
-    const total = escortsWithCleanedImages.length;
+    // ✅ Use server-side count for total
+    let countQuery: any = adminDb.collection("escorts");
+    if (isActive !== undefined) {
+      countQuery = countQuery.where("isActive", "==", isActive);
+    }
+    if (county && county !== "all") {
+      countQuery = countQuery.where("county", "==", county);
+    }
+    if (isVerified !== undefined) {
+      countQuery = countQuery.where("isVerified", "==", isVerified);
+    }
+    if (isFeatured !== undefined) {
+      countQuery = countQuery.where("isFeatured", "==", isFeatured);
+    }
+
+    const countSnapshot = await countQuery.get();
+    const total = countSnapshot.size;
 
     // ✅ Apply pagination
     const startIndex = (validPage - 1) * validLimit;
@@ -292,29 +278,30 @@ async function fetchPracticesFromCleanedEscorts(
     } = params;
 
     // ✅ Build query to get all escorts with the base filters
-    let query: FirebaseFirestore.Query = adminDb.collection("escorts");
+    let escortsQuery: any = adminDb.collection("escorts");
 
     if (isActive !== undefined) {
-      query = query.where("isActive", "==", isActive);
+      escortsQuery = escortsQuery.where("isActive", "==", isActive);
     }
 
     if (isVerified !== undefined) {
-      query = query.where("isVerified", "==", isVerified);
+      escortsQuery = escortsQuery.where("isVerified", "==", isVerified);
     }
 
     if (isFeatured !== undefined) {
-      query = query.where("isFeatured", "==", isFeatured);
+      escortsQuery = escortsQuery.where("isFeatured", "==", isFeatured);
     }
 
     if (county && county !== "all") {
-      query = query.where("county", "==", county);
+      escortsQuery = escortsQuery.where("county", "==", county);
     }
 
-    // ✅ Get ALL documents
-    const allDocsSnapshot = await query.get();
+    escortsQuery = escortsQuery.limit(200);
 
-    // ✅ Convert ALL data
-    let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscort);
+    const allDocsSnapshot = await escortsQuery.get();
+
+    // ✅ Fast conversion
+    let allEscorts: Escort[] = allDocsSnapshot.docs.map(convertDocToEscortFast);
 
     // ✅ Filter: Only escorts with cleaned images
     let escortsWithCleanedImages = allEscorts.filter((escort) => {
@@ -449,7 +436,7 @@ export async function getCleanedImagesForEscort(
       return [];
     }
 
-    const escort = convertDocToEscort(doc);
+    const escort = convertDocToEscortFast(doc);
 
     if (!escort.imagesMetadata) {
       return [];
@@ -475,7 +462,7 @@ export async function getCleanedImagesForEscort(
 export async function getCleanedImagesStats() {
   try {
     const snapshot = await adminDb.collection("escorts").get();
-    const escorts: Escort[] = snapshot.docs.map(convertDocToEscort);
+    const escorts: Escort[] = snapshot.docs.map(convertDocToEscortFast);
 
     const stats = {
       totalEscorts: escorts.length,
