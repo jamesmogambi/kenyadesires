@@ -130,49 +130,25 @@ const BioSection = ({ girl }: Prop) => {
     categories,
     telephone,
     whatsappPhone,
-    locations,
-    county, // County from main Escort interface
-    primaryRegion, // Primary region from main Escort interface
+    county,
+    primaryRegion,
   } = girl;
 
-  // Function to get the best available address/location display
   const getDisplayAddress = (): string => {
-    // Priority 1: Check if locations array exists and has address in first location
-    if (locations && locations.length > 0) {
-      const firstLocation = locations[0];
+    const parts: string[] = [];
 
-      // Try to get full address from location
-      if (firstLocation.address && firstLocation.address.trim()) {
-        return firstLocation.address;
-      }
-
-      // Build address from location fields (town, estate, street)
-      const locationParts = [];
-      if (firstLocation.town) locationParts.push(firstLocation.town);
-      if (firstLocation.estate) locationParts.push(firstLocation.estate);
-      if (firstLocation.street) locationParts.push(firstLocation.street);
-
-      if (locationParts.length > 0) {
-        return locationParts.join(", ");
-      }
-
-      // Use region from location if available
-      if (firstLocation.region) {
-        return firstLocation.region;
-      }
-    }
-
-    // Priority 2: Use primaryRegion from main escort data
     if (primaryRegion && primaryRegion.trim()) {
-      return primaryRegion;
+      parts.push(primaryRegion);
     }
 
-    // Priority 3: Use county from main escort data
-    if (county && county.trim()) {
-      return county;
+    if (county && county.trim() && county !== primaryRegion) {
+      parts.push(county);
     }
 
-    // Final fallback
+    if (parts.length > 0) {
+      return parts.join(", ");
+    }
+
     return "Location not specified";
   };
 
