@@ -9,11 +9,12 @@ import {
   orderBy,
   limit,
   getDocs,
+  getCountFromServer,
   QueryConstraint,
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { revalidatePath } from "next/cache";
 import { adminDb } from "@/lib/firebase-admin";
 import { slugify } from "@/lib/utils";
@@ -116,7 +117,7 @@ function convertFirebaseDocToAgency(
 // ============================================
 // GET CACHED AGENCIES ✅ CACHED
 // ============================================
-export const getCachedAgencies = cache(
+export const getCachedAgencies = unstable_cache(
   async (page: number = 1, limitCount: number = 24) => {
     try {
       console.log(`🔄 Fetching agencies from Firestore (page ${page})...`);
@@ -166,50 +167,62 @@ export const getCachedAgencies = cache(
       };
     }
   },
+  ["cached-agencies"],
+  {
+    revalidate: 3600,
+    tags: ["agencies"],
+  },
 );
 
 // ============================================
 // GET AGENCY BY SLUG ✅ CACHED
 // ============================================
-export const getCachedAgencyBySlug = cache(async (slug: string) => {
-  try {
-    console.log(`🔄 Fetching agency by slug: ${slug}`);
+export const getCachedAgencyBySlug = unstable_cache(
+  async (slug: string) => {
+    try {
+      console.log(`🔄 Fetching agency by slug: ${slug}`);
 
-    const agenciesRef = collection(db, "agencies");
-    const q = query(
-      agenciesRef,
-      where("slug", "==", slug),
-      where("isActive", "==", true),
-    );
+      const agenciesRef = collection(db, "agencies");
+      const q = query(
+        agenciesRef,
+        where("slug", "==", slug),
+        where("isActive", "==", true),
+      );
 
-    const snapshot = await getDocs(q);
+      const snapshot = await getDocs(q);
 
-    if (snapshot.empty) {
+      if (snapshot.empty) {
+        return {
+          success: false,
+          data: null,
+        };
+      }
+
+      const agency = convertFirebaseDocToAgency(snapshot.docs[0]);
+
+      return {
+        success: true,
+        data: agency,
+      };
+    } catch (error) {
+      console.error("Error fetching agency by slug:", error);
       return {
         success: false,
         data: null,
       };
     }
-
-    const agency = convertFirebaseDocToAgency(snapshot.docs[0]);
-
-    return {
-      success: true,
-      data: agency,
-    };
-  } catch (error) {
-    console.error("Error fetching agency by slug:", error);
-    return {
-      success: false,
-      data: null,
-    };
-  }
-});
+  },
+  ["cached-agency-by-slug"],
+  {
+    revalidate: 3600,
+    tags: ["agencies"],
+  },
+);
 
 // ============================================
 // GET AGENCIES COUNT ✅ CACHED
 // ============================================
-export const getCachedAgenciesCount = cache(
+export const getCachedAgenciesCount = unstable_cache(
   async (filters?: { county?: string; region?: string; business?: string }) => {
     try {
       const agenciesRef = collection(db, "agencies");
@@ -234,12 +247,17 @@ export const getCachedAgenciesCount = cache(
       return 0;
     }
   },
+  ["cached-agencies-count"],
+  {
+    revalidate: 3600,
+    tags: ["agencies"],
+  },
 );
 
 // ============================================
 // GET FIRST AGENCY (for metadata) ✅ CACHED
 // ============================================
-export const getCachedFirstAgency = cache(
+export const getCachedFirstAgency = unstable_cache(
   async (filters?: { county?: string; region?: string; business?: string }) => {
     try {
       const agenciesRef = collection(db, "agencies");
@@ -272,12 +290,17 @@ export const getCachedFirstAgency = cache(
       return null;
     }
   },
+  ["cached-first-agency"],
+  {
+    revalidate: 3600,
+    tags: ["agencies"],
+  },
 );
 
 // ============================================
 // GET AGENCY ESCORTS ✅ CACHED
 // ============================================
-export const getCachedAgencyEscorts = cache(
+export const getCachedAgencyEscorts = unstable_cache(
   async (agencyId: string, page: number = 1, limitCount: number = 20) => {
     try {
       console.log(`🔄 Fetching escorts for agency: ${agencyId}`);
@@ -368,13 +391,13 @@ export const getCachedAgencyEscorts = cache(
         });
       });
 
-      const countConstraints: QueryConstraint[] = [
+      const totalQuery = query(
+        escortsRef,
         where("agencyId", "==", agencyId),
         where("isActive", "==", true),
-      ];
-      const countQ = query(escortsRef, ...countConstraints);
-      const countSnapshot = await getDocs(countQ);
-      const total = countSnapshot.docs.length;
+      );
+      const totalSnapshot = await getCountFromServer(totalQuery);
+      const total = totalSnapshot.data().count;
 
       return {
         success: true,
@@ -397,6 +420,11 @@ export const getCachedAgencyEscorts = cache(
         hasMore: false,
       };
     }
+  },
+  ["cached-agency-escorts"],
+  {
+    revalidate: 3600,
+    tags: ["agencies", "escorts"],
   },
 );
 
