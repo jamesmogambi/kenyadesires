@@ -5,40 +5,28 @@ import { adminDb } from "@/lib/firebase-admin";
 import { unstable_cache } from "next/cache";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
-// Helper to convert Firestore doc to plain serializable object
-function convertDocToEscort(
-  doc:
-    | FirebaseFirestore.DocumentSnapshot
-    | FirebaseFirestore.QueryDocumentSnapshot,
-): Escort {
-  const data = (doc.data() || {}) as { [key: string]: any };
+// Fast conversion - only converts known timestamp fields, no deep recursion
+const TIMESTAMP_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "joinedDate",
+  "lastProcessedAt",
+];
 
-  const convertTimestamp = (value: any): any => {
-    if (!value) return value;
-    if (value.toDate && typeof value.toDate === "function") {
-      return value.toDate().toISOString();
-    }
-    if (Array.isArray(value)) {
-      return value.map(convertTimestamp);
-    }
-    if (value && typeof value === "object") {
-      const result: any = {};
-      for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-          result[key] = convertTimestamp(value[key]);
-        }
-      }
-      return result;
-    }
-    return value;
+function convertDocToEscortFast(doc: any): Escort {
+  const data = doc.data();
+  const result: any = {
+    id: doc.id,
+    ...data,
   };
 
-  const convertedData = convertTimestamp(data);
+  for (const field of TIMESTAMP_FIELDS) {
+    if (result[field] && typeof result[field]?.toDate === "function") {
+      result[field] = result[field].toDate().toISOString();
+    }
+  }
 
-  return {
-    id: doc.id,
-    ...convertedData,
-  } as Escort;
+  return result as Escort;
 }
 
 // Helper to check if escort has cleaned images
@@ -127,7 +115,7 @@ async function fetchEroticMassageEscorts(
 
     // Get ALL documents
     const snapshot = await query.get();
-    let allEscorts: Escort[] = snapshot.docs.map(convertDocToEscort);
+    let allEscorts: Escort[] = snapshot.docs.map(convertDocToEscortFast);
 
     // ✅ Filter: Only escorts with cleaned images
     allEscorts = allEscorts.filter(hasCleanedImages);
@@ -184,6 +172,10 @@ async function fetchEroticMassageEscorts(
 export const getEroticMassageEscorts = unstable_cache(
   fetchEroticMassageEscorts,
   ["escorts", "cleaned-images", "erotic-massage"],
+  {
+    revalidate: 604800, // 1 week in seconds
+    tags: ["escorts", "cleaned-images", "erotic-massage"],
+  },
 );
 
 // Also export the uncached version if needed
