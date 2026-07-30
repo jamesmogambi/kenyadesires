@@ -99,43 +99,6 @@ const CommentForm = ({ postSlug, className }: Prop) => {
       {!success && (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        placeholder="Your name*"
-                        type="text"
-                        {...field}
-                        className="border-0 text-black/70 outline-0 rounded-none placeholder-opacity-90 text-xl   h-15 bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input
-                        placeholder="Your email*"
-                        type="email"
-                        {...field}
-                        className="border-0 text-black/70 outline-0 rounded-none placeholder-opacity-90 text-xl   h-15 bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
               name="content"
@@ -155,6 +118,42 @@ const CommentForm = ({ postSlug, className }: Prop) => {
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-1 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Your name*"
+                        type="text"
+                        {...field}
+                        className="border-0 text-black/60 w-full lg:w-1/2 outline-0 rounded-none placeholder-opacity-90 text-2xl   h-15 bg-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        placeholder="Your email*"
+                        type="email"
+                        {...field}
+                        className="border-0 text-black/70 outline-0 w-full lg:w-1/2 rounded-none placeholder-opacity-90 text-xl   h-15 bg-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {error && (
               <p className="p-4 bg-red-100 text-red-600 text-lg rounded-md">
