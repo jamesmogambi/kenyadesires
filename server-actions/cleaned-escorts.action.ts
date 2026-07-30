@@ -6,12 +6,29 @@ import { unstable_cache } from "next/cache";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
 // Fast conversion - avoids expensive deep timestamp conversion
+// Only converts known timestamp fields at top level
+const TIMESTAMP_FIELDS = [
+  "createdAt",
+  "updatedAt",
+  "joinedDate",
+  "lastProcessedAt",
+];
+
 function convertDocToEscortFast(doc: any): Escort {
   const data = doc.data();
-  return {
+  const result: any = {
     id: doc.id,
     ...data,
-  } as Escort;
+  };
+
+  // Convert only known timestamp fields to ISO strings
+  for (const field of TIMESTAMP_FIELDS) {
+    if (result[field] && typeof result[field]?.toDate === "function") {
+      result[field] = result[field].toDate().toISOString();
+    }
+  }
+
+  return result as Escort;
 }
 
 // Internal function that does the actual fetching
@@ -75,8 +92,8 @@ async function fetchEscortsWithCleanedImages(
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
     escortsQuery = escortsQuery.orderBy(sortField, sortOrder);
 
-    // ✅ Fetch a larger batch to account for client-side filtering
-    const fetchLimit = Math.min(200, Math.max(validLimit * 5, 50));
+    // ✅ Fetch a large batch to account for client-side filtering while keeping performance
+    const fetchLimit = Math.min(2000, Math.max(validLimit * 50, 500));
     escortsQuery = escortsQuery.limit(fetchLimit);
 
     const allDocsSnapshot = await escortsQuery.get();
@@ -171,23 +188,8 @@ async function fetchEscortsWithCleanedImages(
       );
     }
 
-    // ✅ Use server-side count for total
-    let countQuery: any = adminDb.collection("escorts");
-    if (isActive !== undefined) {
-      countQuery = countQuery.where("isActive", "==", isActive);
-    }
-    if (county && county !== "all") {
-      countQuery = countQuery.where("county", "==", county);
-    }
-    if (isVerified !== undefined) {
-      countQuery = countQuery.where("isVerified", "==", isVerified);
-    }
-    if (isFeatured !== undefined) {
-      countQuery = countQuery.where("isFeatured", "==", isFeatured);
-    }
-
-    const countSnapshot = await countQuery.get();
-    const total = countSnapshot.size;
+    // ✅ Use filtered results count for total (accurate for pagination)
+    const total = escortsWithCleanedImages.length;
 
     // ✅ Apply pagination
     const startIndex = (validPage - 1) * validLimit;
@@ -296,7 +298,7 @@ async function fetchPracticesFromCleanedEscorts(
       escortsQuery = escortsQuery.where("county", "==", county);
     }
 
-    escortsQuery = escortsQuery.limit(200);
+    escortsQuery = escortsQuery.limit(2000);
 
     const allDocsSnapshot = await escortsQuery.get();
 
