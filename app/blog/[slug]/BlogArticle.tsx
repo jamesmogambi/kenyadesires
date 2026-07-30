@@ -16,7 +16,11 @@ interface Prop {
   showBackButton?: boolean;
 }
 
-const BlogArticle = async ({ blog, className, showBackButton = true }: Prop) => {
+const BlogArticle = async ({
+  blog,
+  className,
+  showBackButton = true,
+}: Prop) => {
   const { _createdAt: createdAt, title, mainImage, body, author } = blog;
   const postSlug = blog.slug?.current || "";
   const comments = await getCachedCommentsByPostSlug(postSlug);
@@ -91,8 +95,8 @@ const BlogArticle = async ({ blog, className, showBackButton = true }: Prop) => 
         )}
 
         {/* ✅ Comments Section */}
-        <div className="border-t border-gray-1 pt-10 mt-10">
-          <h3 className="text-2xl font-bold text-white mb-6">
+        <div className=" border-gray-1 pt-10 mt-5">
+          <h3 className="text-2xl font-bold text-white/20 mb-6">
             Comments ({comments.length})
           </h3>
 
@@ -100,8 +104,8 @@ const BlogArticle = async ({ blog, className, showBackButton = true }: Prop) => 
           <CommentList comments={comments} className="mb-10" />
 
           {/* Comment Form */}
-          <div className="border-t border-gray-1 pt-8">
-            <h4 className="text-xl font-bold text-white mb-4">
+          <div className=" border-gray-1 pt-8">
+            <h4 className="text-xl font-bold text-primary mb-4">
               Leave a comment
             </h4>
             <CommentForm postSlug={postSlug} />

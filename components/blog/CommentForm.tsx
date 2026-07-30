@@ -104,10 +104,10 @@ const CommentForm = ({ postSlug, className }: Prop) => {
                   <FormItem>
                     <FormControl>
                       <Input
-                        placeholder="Your name"
+                        placeholder="Your name*"
                         type="text"
                         {...field}
-                        className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white h-14 bg-gray-1"
+                        className="border-0 text-black/70 outline-0 rounded-none placeholder-opacity-90 text-xl   h-15 bg-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -121,10 +121,10 @@ const CommentForm = ({ postSlug, className }: Prop) => {
                   <FormItem>
                     <FormControl>
                       <Input
-                        placeholder="Your email"
+                        placeholder="Your email*"
                         type="email"
                         {...field}
-                        className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white h-14 bg-gray-1"
+                        className="border-0 text-black/70 outline-0 rounded-none placeholder-opacity-90 text-xl   h-15 bg-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -142,7 +142,10 @@ const CommentForm = ({ postSlug, className }: Prop) => {
                     <Textarea
                       placeholder="Write your comment..."
                       {...field}
-                      className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white min-h-32 bg-gray-1"
+                      // className="border-2 placeholder-opacity-90 text-xl text-white border-white h-14 bg-gray-1"
+                      className="border-0 text-black/70 outline-0 rounded-none placeholder-opacity-90 text-xl min-h-32 bg-white"
+
+                      // className="border-2 placeholder-white placeholder-opacity-90 text-xl text-white border-white min-h-32 bg-gray-1"
                     />
                   </FormControl>
                   <FormMessage />
@@ -156,15 +159,17 @@ const CommentForm = ({ postSlug, className }: Prop) => {
               </p>
             )}
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className={cn(
-                "bg-primary hover:bg-primary/80 cursor-pointer p-4 px-8 rounded-md text-lg font-semibold",
-              )}
-            >
-              {isSubmitting ? "Submitting..." : "Post Comment"}
-            </Button>
+            <div className="flex justify-center lg:justify-end">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className={cn(
+                  "bg-primary hover:bg-primary/80 cursor-pointer p-7 px-8 rounded-none text-lg font-semibold",
+                )}
+              >
+                {isSubmitting ? "Submitting..." : "Post Comment"}
+              </Button>
+            </div>
           </form>
         </Form>
       )}

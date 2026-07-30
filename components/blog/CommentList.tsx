@@ -11,7 +11,9 @@ const CommentList = ({ comments, className }: Prop) => {
   if (!comments || comments.length === 0) {
     return (
       <div className={cn("text-center py-8", className)}>
-        <p className="text-white/50 text-lg">No comments yet. Be the first to comment!</p>
+        <p className="text-white/40 text-lg">
+          No comments yet. Be the first to comment!
+        </p>
       </div>
     );
   }
@@ -19,10 +21,7 @@ const CommentList = ({ comments, className }: Prop) => {
   return (
     <div className={cn("space-y-6", className)}>
       {comments.map((comment) => (
-        <div
-          key={comment.id}
-          className="bg-gray-1 rounded-lg p-4 md:p-6"
-        >
+        <div key={comment.id} className="bg-gray-1 rounded-lg p-4 md:p-6">
           <div className="flex items-start gap-3 md:gap-4">
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-primary font-bold text-sm">
