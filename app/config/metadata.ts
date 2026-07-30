@@ -132,6 +132,33 @@ export const metadata: Metadata = {
 
   manifest: "/manifest.json",
 
+  icons: [
+    {
+      rel: "icon",
+      url: "/favicon.ico",
+      sizes: "any",
+    },
+    {
+      rel: "icon",
+      url: "/favicon.svg",
+      type: "image/svg+xml",
+    },
+    {
+      rel: "icon",
+      url: "/icon",
+      type: "image/png",
+      sizes: "32x32",
+    },
+    {
+      rel: "apple-touch-icon",
+      url: "/icon",
+    },
+    {
+      rel: "msapplication-TileImage",
+      url: "/mstile-144x144.png",
+    },
+  ],
+
   alternates: {
     canonical: SITE_URL,
     languages: {

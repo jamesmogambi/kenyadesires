@@ -121,50 +121,6 @@ const nextConfig = {
 
   allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev"],
 
-  // Redirect favicon.ico to dynamic icon
-  async rewrites() {
-    return [
-      {
-        source: "/favicon.ico",
-        destination: "/icon",
-      },
-    ];
-  },
-
-  // // ✅ Simplified headers - removed problematic Cache-Control for _next/static
-  // async headers() {
-  //   return [
-  //     {
-  //       source: "/icon",
-  //       headers: [
-  //         {
-  //           key: "Cache-Control",
-  //           value: "public, max-age=31536000, immutable",
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       source: "/images/(.*)",
-  //       headers: [
-  //         {
-  //           key: "Cache-Control",
-  //           value: "public, max-age=31536000, immutable",
-  //         },
-  //       ],
-  //     },
-  //     // ✅ Add caching for static assets
-  //     {
-  //       source: "/static/(.*)",
-  //       headers: [
-  //         {
-  //           key: "Cache-Control",
-  //           value: "public, max-age=31536000, immutable",
-  //         },
-  //       ],
-  //     },
-  //   ];
-  // },
-
   // Enable compression
   compress: true,
 };

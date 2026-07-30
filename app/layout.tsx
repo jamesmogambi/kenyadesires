@@ -86,14 +86,6 @@ export default async function RootLayout({
             href="https://cdn.sanity.io"
             crossOrigin="anonymous"
           />
-          {/* ✅ Primary: Static favicon - works everywhere */}
-          <link rel="icon" href="/favicon.ico" sizes="any" />
-
-          {/* ✅ SVG fallback */}
-          <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-
-          {/* ✅ Fallback: Dynamic Next.js route */}
-          <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
 
           {/* Apple touch icon */}
           <link rel="apple-touch-icon" href="/icon" />
@@ -104,15 +96,6 @@ export default async function RootLayout({
             name="apple-mobile-web-app-status-bar-style"
             content="black-translucent"
           />
-          {/* Icons - using dynamic icon route
-          <link rel="icon" href="/icon" type="image/png" sizes="32x32" />
-          <link rel="apple-touch-icon" href="/icon" type="image/png" />
-          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta
-            name="apple-mobile-web-app-status-bar-style"
-            content="black-translucent"
-          /> */}
           {/* Microsoft Tiles */}
           <meta name="msapplication-TileColor" content="#000000" />
           <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
