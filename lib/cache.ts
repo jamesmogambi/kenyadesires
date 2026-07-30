@@ -21,6 +21,9 @@ import {
   getPopularCounties,
 } from "@/server-actions/region.action";
 import { getAllLookupData } from "@/server-actions/lookup.action";
+import {
+  getCommentsByPostSlug,
+} from "@/server-actions/blog-comments.action";
 
 export const getCachedEscorts = unstable_cache(
   async (params: any) => {
@@ -203,5 +206,17 @@ export const getCachedPostsByCategory = unstable_cache(
   {
     revalidate: REVALIDATE_TIME,
     tags: ["category-posts"],
+  },
+);
+
+// ✅ Cache blog comments by post slug - 5 minutes
+export const getCachedCommentsByPostSlug = unstable_cache(
+  async (postSlug: string) => {
+    return await getCommentsByPostSlug(postSlug);
+  },
+  ["blog-comments"],
+  {
+    revalidate: 300,
+    tags: ["blog-comments"],
   },
 );

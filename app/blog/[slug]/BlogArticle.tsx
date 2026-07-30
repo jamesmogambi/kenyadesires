@@ -6,6 +6,9 @@ import AuthorSection from "./AuthorSection";
 import { Post } from "@/types/sanity";
 import PortableText from "@/components/blog/PortableText";
 import SanityImage from "@/components/blog/SanityImage";
+import CommentList from "@/components/blog/CommentList";
+import CommentForm from "@/components/blog/CommentForm";
+import { getCachedCommentsByPostSlug } from "@/lib/cache";
 
 interface Prop {
   blog: Post;
@@ -13,8 +16,10 @@ interface Prop {
   showBackButton?: boolean;
 }
 
-const BlogArticle = ({ blog, className, showBackButton = true }: Prop) => {
+const BlogArticle = async ({ blog, className, showBackButton = true }: Prop) => {
   const { _createdAt: createdAt, title, mainImage, body, author } = blog;
+  const postSlug = blog.slug?.current || "";
+  const comments = await getCachedCommentsByPostSlug(postSlug);
 
   const formatter = new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",
@@ -84,6 +89,24 @@ const BlogArticle = ({ blog, className, showBackButton = true }: Prop) => {
             </Link>
           </div>
         )}
+
+        {/* ✅ Comments Section */}
+        <div className="border-t border-gray-1 pt-10 mt-10">
+          <h3 className="text-2xl font-bold text-white mb-6">
+            Comments ({comments.length})
+          </h3>
+
+          {/* Comments List */}
+          <CommentList comments={comments} className="mb-10" />
+
+          {/* Comment Form */}
+          <div className="border-t border-gray-1 pt-8">
+            <h4 className="text-xl font-bold text-white mb-4">
+              Leave a comment
+            </h4>
+            <CommentForm postSlug={postSlug} />
+          </div>
+        </div>
       </SectionCard>
     </article>
   );

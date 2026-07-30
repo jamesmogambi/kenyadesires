@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collection": "blogComments",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "postSlug",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "approved",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

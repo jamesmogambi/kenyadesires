@@ -25,11 +25,11 @@ export const metadata: Metadata = {
     description:
       "Explore our collection of blog posts and articles about dating in Kenya",
     type: "website",
-    url: "https://yourdomain.com/blog",
+    url: "https://kenyadesires.com/blog",
     siteName: "Kenyan Dating Blog",
     images: [
       {
-        url: "https://yourdomain.com/images/blog-og-image.jpg",
+        url: "https://kenyadesires.com/images/blog-og-image.jpg",
         width: 1200,
         height: 630,
         alt: "Blog Posts Overview",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Latest Blog Posts & Articles",
     description: "Explore our collection of blog posts and articles",
-    images: ["https://yourdomain.com/images/blog-twitter-image.jpg"],
+    images: ["https://kenyadesires.com/images/blog-twitter-image.jpg"],
     creator: "@yourtwitterhandle",
   },
   keywords: [
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://yourdomain.com/blog",
+    canonical: "https://kenyadesires.com/blog",
   },
 };
 

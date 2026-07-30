@@ -1,6 +1,6 @@
 {
   "apphosting": {
-    "backendId": "kenyandivas",
+    "backendId": "kenyadivas",
     "rootDir": "/",
     "ignore": [
       "node_modules",
@@ -9,6 +9,10 @@
       "firebase-debug.*.log",
       "functions"
     ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "hosting": {
     "public": ".next/static",
