@@ -20,7 +20,6 @@ import ScrollToTopBottom from "@/components/ScrollToTopBottom";
 import YouTargetsAd from "@/components/YouTargetsAd";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
-import { Analytics } from "@vercel/analytics/next";
 import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
 
@@ -191,7 +190,6 @@ export default async function RootLayout({
           <ScrollToTopBottom />
 
           <AgeVerificationModal />
-          <Analytics />
         </body>
       </html>
     </ClerkProvider>

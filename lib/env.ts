@@ -1,0 +1,4 @@
+export const NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: string =
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+  process.env.CLOUDINARY_CLOUD_NAME ||
+  "";
