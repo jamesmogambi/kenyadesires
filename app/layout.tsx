@@ -119,6 +119,8 @@ export default async function RootLayout({
             title="KenyaDesires - Latest Escorts"
             href="/rss.xml"
           />
+          {/* Exolix site verification */}
+          <meta name="6a97888e-site-verification" content="7076eebf366b5125e5462f1490d115bf" />
           {/* Sitemap */}
           <link
             rel="sitemap"
