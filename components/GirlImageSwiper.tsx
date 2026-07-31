@@ -89,7 +89,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
         <button
           type="button"
           onClick={handlePrev}
-          className="custom-swiper-button-prev absolute top-1/2 -translate-y-1/2 left-2 z-10 w-7 h-7 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
+          className="custom-swiper-button-prev absolute top-1/2 -translate-y-1/2 left-2 z-10 w-10 h-10 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
           aria-label="Previous slide"
         >
           <ChevronLeft size={18} />
@@ -97,7 +97,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
         <button
           type="button"
           onClick={handleNext}
-          className="custom-swiper-button-next absolute top-1/2 -translate-y-1/2 right-2 z-10 w-7 h-7 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
+          className="custom-swiper-button-next absolute top-1/2 -translate-y-1/2 right-2 z-10 w-10 h-10 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
           aria-label="Next slide"
         >
           <ChevronRight size={18} />

@@ -100,7 +100,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
             <button
               type="button"
               onClick={handlePrev}
-              className="absolute top-1/2 -translate-y-1/2 left-2 z-20 w-9 h-9 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
+              className="absolute top-1/2 -translate-y-1/2 left-2 z-20 w-13 h-13 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
               aria-label="Previous slide"
             >
               <ChevronLeft size={22} />
@@ -108,7 +108,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
             <button
               type="button"
               onClick={handleNext}
-              className="absolute top-1/2 -translate-y-1/2 right-2 z-20 w-9 h-9 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
+              className="absolute top-1/2 -translate-y-1/2 right-2 z-20 w-13 h-13 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
               aria-label="Next slide"
             >
               <ChevronRight size={22} />
