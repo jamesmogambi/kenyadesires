@@ -52,7 +52,7 @@ const NavItem = ({ children, path, className, text = "Item" }: Props) => {
 
         <div
           className={cn(
-            "flex flex-col justify-center group-hover:border-b-6 border-primary items-center gap-4",
+            "flex flex-col justify-center border-b-[6px] border-transparent items-center gap-4 group-hover:border-primary box-border",
             pathname.includes(path) && "border-b-[6px] border-primary",
           )}
         >
