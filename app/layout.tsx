@@ -17,6 +17,7 @@ import {
 import LocationInitializer from "@/components/FileInputInitializer";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import ScrollToTopBottom from "@/components/ScrollToTopBottom";
+import YouTargetsAd from "@/components/YouTargetsAd";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 import { Analytics } from "@vercel/analytics/next";
@@ -169,6 +170,11 @@ export default async function RootLayout({
               initialRegions={regions.data}
               initialLookup={lookup.data}
             />
+
+            {/* YouTargets Ad - 300x250 medium rectangle */}
+            <div className="flex justify-center">
+              <YouTargetsAd />
+            </div>
           </main>
 
           <div>
