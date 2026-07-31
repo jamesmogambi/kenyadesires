@@ -8,7 +8,7 @@ interface Prop {
 
 const NavMenu = ({ className }: Prop) => {
   return (
-    <nav className={cn("", className)}>
+    <nav className={cn("-mt-2", className)}>
       <ul className="flex gap-10">
         <NavItem path="/girls" text="girls for sex">
           <svg
