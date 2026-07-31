@@ -612,6 +612,7 @@ export async function saveNewEscortProfile(
       createdAt: now,
       updatedAt: now,
       cleaningHistory: [],
+      hasCleanedImages: false,
       rates: [],
     };
 

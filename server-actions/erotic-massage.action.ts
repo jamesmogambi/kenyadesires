@@ -2,9 +2,9 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
+import { cache } from "react";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
-// Fast conversion - only converts known timestamp fields, no deep recursion
 const TIMESTAMP_FIELDS = [
   "createdAt",
   "updatedAt",
@@ -28,7 +28,6 @@ function convertDocToEscortFast(doc: any): Escort {
   return result as Escort;
 }
 
-// Helper to check if escort has cleaned images
 function hasCleanedImages(escort: Escort): boolean {
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
@@ -36,9 +35,144 @@ function hasCleanedImages(escort: Escort): boolean {
   );
 }
 
-// Helper to check if practice is erotic massage
+const LISTING_FIELDS = [
+  "name",
+  "username",
+  "previewPhoto",
+  "images",
+  "videos",
+  "imagesMetadata",
+  "age",
+  "county",
+  "regions",
+  "primaryRegion",
+  "locations",
+  "practices",
+  "categories",
+  "nationality",
+  "rating",
+  "totalViews",
+  "totalBookings",
+  "isActive",
+  "isVerified",
+  "isFeatured",
+  "slug",
+  "telephone",
+  "whatsappPhone",
+  "createdAt",
+  "hasCleanedImages",
+];
+
+async function fetchSpecializedEscorts(
+  params: GetEscortsParams,
+  filterFn: (doc: Escort) => boolean,
+): Promise<GetEscortsResponse> {
+  const {
+    page = 1,
+    limit = 20,
+    county,
+    region,
+    isActive = true,
+    isVerified,
+    isFeatured,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    minAge,
+    maxAge,
+  } = params;
+
+  const validPage = Math.max(1, page);
+  const validLimit = Math.min(100, Math.max(1, limit));
+
+  let query: any = adminDb.collection("escorts");
+  query = query.where("hasCleanedImages", "==", true);
+
+  if (isActive !== undefined) {
+    query = query.where("isActive", "==", isActive);
+  }
+  if (isVerified !== undefined) {
+    query = query.where("isVerified", "==", isVerified);
+  }
+  if (isFeatured !== undefined) {
+    query = query.where("isFeatured", "==", isFeatured);
+  }
+  if (county && county !== "all") {
+    query = query.where("county", "==", county);
+  }
+
+  const validSortFields = [
+    "createdAt",
+    "updatedAt",
+    "rating",
+    "totalViews",
+    "totalBookings",
+  ];
+  const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+  query = query.orderBy(sortField, sortOrder);
+  query = query.select(...LISTING_FIELDS);
+
+  const batchSize = Math.max(validLimit * 5, 200);
+  let lastDoc: any = null;
+  const allFiltered: Escort[] = [];
+  let hasMore = false;
+
+  while (allFiltered.length < validLimit) {
+    let pageQuery = query;
+    if (lastDoc) {
+      pageQuery = pageQuery.startAfter(lastDoc);
+    }
+
+    const snapshot = await pageQuery.limit(batchSize).get();
+
+    if (snapshot.empty) {
+      break;
+    }
+
+    const docs = snapshot.docs.map(convertDocToEscortFast);
+    let filtered = docs;
+
+    if (region && region !== "all") {
+      filtered = filtered.filter((e: Escort) => e.regions?.includes(region));
+    }
+
+    filtered = filtered.filter(filterFn);
+
+    if (minAge && minAge > 0) {
+      filtered = filtered.filter(
+        (e: Escort) => parseInt(e.age || "0") >= minAge,
+      );
+    }
+    if (maxAge && maxAge > 0) {
+      filtered = filtered.filter(
+        (e: Escort) => parseInt(e.age || "0") <= maxAge,
+      );
+    }
+
+    allFiltered.push(...filtered);
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    hasMore = snapshot.size === batchSize;
+
+    if (!hasMore) {
+      break;
+    }
+  }
+
+  const total = allFiltered.length;
+  const startIndex = (validPage - 1) * validLimit;
+  const endIndex = Math.min(startIndex + validLimit, total);
+  const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
+
+  return {
+    escorts: paginatedEscorts,
+    total,
+    page: validPage,
+    totalPages: Math.max(1, Math.ceil(total / validLimit)),
+    hasMore: endIndex < total || hasMore,
+  };
+}
+
 function isEroticMassage(practice: string): boolean {
-  const eroticMassageTerms = [
+  const terms = [
     "erotic massage",
     "erotic",
     "massage",
@@ -51,11 +185,8 @@ function isEroticMassage(practice: string): boolean {
     "b2b",
     "body-to-body",
   ];
-
-  const lowerPractice = practice.toLowerCase();
-  return eroticMassageTerms.some((term) =>
-    lowerPractice.includes(term.toLowerCase()),
-  );
+  const lower = practice.toLowerCase();
+  return terms.some((t) => lower.includes(t.toLowerCase()));
 }
 
 /**
@@ -65,96 +196,10 @@ async function fetchEroticMassageEscorts(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      county,
-      region,
-      isActive = true,
-      isVerified,
-      isFeatured,
-      minAge,
-      maxAge,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = params;
-
-    const validPage = Math.max(1, page);
-    const validLimit = Math.min(100, Math.max(1, limit));
-
-    // Build query
-    let query: FirebaseFirestore.Query = adminDb.collection("escorts");
-
-    if (isActive !== undefined) {
-      query = query.where("isActive", "==", isActive);
-    }
-
-    if (isVerified !== undefined) {
-      query = query.where("isVerified", "==", isVerified);
-    }
-
-    if (isFeatured !== undefined) {
-      query = query.where("isFeatured", "==", isFeatured);
-    }
-
-    if (county && county !== "all") {
-      query = query.where("county", "==", county);
-    }
-
-    // Apply sorting
-    const validSortFields = [
-      "createdAt",
-      "updatedAt",
-      "rating",
-      "totalViews",
-      "totalBookings",
-    ];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-    query = query.orderBy(sortField, sortOrder);
-
-    // Get ALL documents
-    const snapshot = await query.get();
-    let allEscorts: Escort[] = snapshot.docs.map(convertDocToEscortFast);
-
-    // ✅ Filter: Only escorts with cleaned images
-    allEscorts = allEscorts.filter(hasCleanedImages);
-
-    // Filter by region (client-side)
-    if (region && region !== "all") {
-      allEscorts = allEscorts.filter((doc) => doc.regions?.includes(region));
-    }
-
-    // ✅ Filter by erotic massage practice
-    allEscorts = allEscorts.filter((doc) => {
+    return await fetchSpecializedEscorts(params, (doc) => {
       if (!doc.practices || doc.practices.length === 0) return false;
       return doc.practices.some((practice) => isEroticMassage(practice));
     });
-
-    // Apply age filters
-    if (minAge && minAge > 0) {
-      allEscorts = allEscorts.filter(
-        (doc) => doc.age && parseInt(doc.age) >= minAge,
-      );
-    }
-
-    if (maxAge && maxAge > 0) {
-      allEscorts = allEscorts.filter(
-        (doc) => doc.age && parseInt(doc.age) <= maxAge,
-      );
-    }
-
-    // Pagination
-    const total = allEscorts.length;
-    const startAt = (validPage - 1) * validLimit;
-    const paginatedEscorts = allEscorts.slice(startAt, startAt + validLimit);
-
-    return {
-      escorts: paginatedEscorts,
-      total,
-      page: validPage,
-      totalPages: Math.max(1, Math.ceil(total / validLimit)),
-      hasMore: validPage * validLimit < total,
-    };
   } catch (error) {
     console.error("Error fetching erotic massage escorts:", error);
     return {
@@ -167,4 +212,4 @@ async function fetchEroticMassageEscorts(
   }
 }
 
-export const getEroticMassageEscorts = fetchEroticMassageEscorts;
+export const getEroticMassageEscorts = cache(fetchEroticMassageEscorts);

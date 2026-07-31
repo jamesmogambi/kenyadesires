@@ -74,7 +74,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       priority={priority}
                       loading={priority ? "eager" : "lazy"}
-                      quality={50}
+                      // quality={50}
                       onError={() => handleImageError(index)}
                     />
                   </div>

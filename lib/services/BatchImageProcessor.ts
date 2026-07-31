@@ -236,14 +236,14 @@ export class BatchImageProcessor {
     const escortId: string = doc.id;
     const data: EscortData = doc.data();
     const imageUrls: string[] = data.images || [];
+    const metadata: ImagesMetadataMap = data.imagesMetadata || {};
 
     try {
       console.log(`\n🔄 Processing escort: ${data.name || escortId}`);
       console.log(`   📸 ${imageUrls.length} images to process`);
 
-      const metadata: ImagesMetadataMap = data.imagesMetadata || {};
-      const pendingUrls: string[] = imageUrls.filter((url: string) => 
-        !metadata[url] || metadata[url]?.status === 'failed' || metadata[url]?.status === 'pending'
+      const pendingUrls: string[] = imageUrls.filter((url: string) =>
+        !metadata[url] || metadata[url]?.status === "failed" || metadata[url]?.status === "pending"
       );
 
       if (pendingUrls.length === 0) {
@@ -299,11 +299,16 @@ export class BatchImageProcessor {
         });
       }
 
-      const status = failed === 0 ? 'completed' : 'failed';
+      const hasCleanedImages = Object.values(metadata).some(
+        (m: any) => m.status === "completed" && m.cleanedUrl
+      );
+
+      const status = failed === 0 ? "completed" : "failed";
       await adminDb.collection(COLLECTIONS.ESCORTS).doc(escortId).update({
         watermarkStatus: status,
         watermarkError: failed > 0 ? `${failed} images failed` : null,
-        lastProcessedAt: FieldValue.serverTimestamp()
+        lastProcessedAt: FieldValue.serverTimestamp(),
+        hasCleanedImages,
       });
 
       this.stats.processedEscorts++;
@@ -317,10 +322,15 @@ export class BatchImageProcessor {
       this.stats.failedEscorts++;
       this.stats.errors.push(`Escort ${escortId}: ${error.message}`);
 
+      const hasCleanedImages = Object.values(metadata).some(
+        (m: any) => m.status === "completed" && m.cleanedUrl
+      );
+
       await adminDb.collection(COLLECTIONS.ESCORTS).doc(escortId).update({
-        watermarkStatus: 'failed',
-        watermarkError: error.message || 'Unknown error',
-        lastProcessedAt: FieldValue.serverTimestamp()
+        watermarkStatus: "failed",
+        watermarkError: error.message || "Unknown error",
+        lastProcessedAt: FieldValue.serverTimestamp(),
+        hasCleanedImages,
       });
     }
   }
