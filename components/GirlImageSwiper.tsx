@@ -6,10 +6,9 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME } from "@/lib/env";
 
 interface Prop {
   images: string[];
@@ -18,31 +17,6 @@ interface Prop {
 
 // Fallback image if image fails to load
 const FALLBACK_IMAGE = "/images/fallback.png";
-
-function isCloudinaryUrl(url: string): boolean {
-  return (
-    url.includes("res.cloudinary.com") ||
-    url.includes("cloudinary.com") ||
-    (!!NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
-      url.includes(NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME))
-  );
-}
-
-function extractPublicId(url: string): string {
-  const uploadMatch = url.match(/\/upload\/(?:[^/]+\/)*([^?#]+)/);
-  if (uploadMatch) {
-    return uploadMatch[1];
-  }
-  const parts = url.split("/");
-  return parts[parts.length - 1] || url;
-}
-
-function getCldSrc(url: string): string {
-  if (isCloudinaryUrl(url)) {
-    return extractPublicId(url);
-  }
-  return `https://res.cloudinary.com/${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/fetch/f_auto,q_auto,lpr_auto/${encodeURIComponent(url)}`;
-}
 
 const GirlImageSwiper = ({ images, priority = false }: Prop) => {
   const [swiperRef, setSwiperRef] = useState<any>(null);
@@ -87,19 +61,19 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
         >
           {images.map((src, index) => {
             const imageSrc = imageErrors[index] ? FALLBACK_IMAGE : src;
-            const cldSrc = getCldSrc(imageSrc);
 
             return (
               <SwiperSlide key={index}>
                 <div className="relative w-full h-50 lg:h-75 bg-transparent">
                   <div className="absolute inset-0 pb-1.25">
-                    <CldImage
-                      src={cldSrc}
+                    <Image
+                      src={imageSrc}
                       alt={`Slide ${index + 1}`}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       priority={priority}
+                      loading={priority ? "eager" : "lazy"}
                       quality={50}
                       onError={() => handleImageError(index)}
                     />
