@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { collection, getDocs, doc, updateDoc, query, orderBy, limit, startAfter } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, query, orderBy, limit, startAfter, writeBatch } from "firebase/firestore";
 
 dotenv.config({ path: ".env" });
 
@@ -18,14 +18,12 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
-async function migrateHasCleanedImages() {
-  console.log("🚀 Starting migration: hasCleanedImages");
-  console.log("   Project:", firebaseConfig.projectId);
+async function resetAndMigrate() {
+  console.log("🚀 Resetting hasCleanedImages and re-running migration...");
   
   let processed = 0;
   let updated = 0;
   let skipped = 0;
-  let errors = 0;
   
   const batchSize = 500;
   let lastDoc: any = null;
@@ -43,17 +41,17 @@ async function migrateHasCleanedImages() {
       break;
     }
 
-    const batch: any[] = [];
+    const batch = writeBatch(db);
     
     snapshot.docs.forEach((docSnapshot: any) => {
       const data = docSnapshot.data();
       const imagesMetadata = data.imagesMetadata || {};
       
       const hasCleaned = Object.values(imagesMetadata).some(
-        (m: any) => m.status === "completed" && m.cleanedUrl
+        (m: any) => m.cleanedUrl
       );
       
-      batch.push(updateDoc(docSnapshot.ref, { hasCleanedImages: hasCleaned }));
+      batch.update(docSnapshot.ref, { hasCleanedImages: hasCleaned });
       
       if (hasCleaned) {
         updated++;
@@ -63,7 +61,7 @@ async function migrateHasCleanedImages() {
       processed++;
     });
     
-    await Promise.all(batch);
+    await batch.commit();
     console.log(`   Processed batch: ${processed} total, ${updated} with cleaned images, ${skipped} without`);
     
     lastDoc = snapshot.docs[snapshot.docs.length - 1];
@@ -77,10 +75,9 @@ async function migrateHasCleanedImages() {
   console.log(`   Total processed: ${processed}`);
   console.log(`   Updated with hasCleanedImages=true: ${updated}`);
   console.log(`   Set hasCleanedImages=false: ${skipped}`);
-  console.log(`   Errors: ${errors}`);
 }
 
-migrateHasCleanedImages()
+resetAndMigrate()
   .then(() => {
     console.log("Done.");
     process.exit(0);
