@@ -100,18 +100,18 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
             <button
               type="button"
               onClick={handlePrev}
-              className="custom-swiper-button-prev"
+              className="absolute top-1/2 -translate-y-1/2 left-2 z-20 w-9 h-9 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
               aria-label="Previous slide"
             >
-              <ChevronLeft size={24} />
+              <ChevronLeft size={22} />
             </button>
             <button
               type="button"
               onClick={handleNext}
-              className="custom-swiper-button-next"
+              className="absolute top-1/2 -translate-y-1/2 right-2 z-20 w-9 h-9 rounded-full bg-stone-300/50 text-black/60 flex items-center justify-center border-none cursor-pointer transition-all duration-300 hover:bg-[#fe0032] hover:text-white hover:scale-110"
               aria-label="Next slide"
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={22} />
             </button>
           </>
         )}
@@ -172,47 +172,8 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
 
       {/* Custom Styles */}
       <style jsx global>{`
-        /* Main Swiper Navigation */
         .custom-swiper-button-prev,
         .custom-swiper-button-next {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background-color: rgba(255, 255, 255, 0.75);
-          color: #1a1a1a;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.3s ease;
-          z-index: 20;
-          padding: 0;
-          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .custom-swiper-button-prev:hover,
-        .custom-swiper-button-next:hover {
-          background-color: #fe0032;
-          color: white;
-          transform: translateY(-50%) scale(1.1);
-          box-shadow: 0 2px 8px rgba(254, 0, 50, 0.35);
-        }
-
-        .custom-swiper-button-prev {
-          left: 10px;
-        }
-
-        .custom-swiper-button-next {
-          right: 10px;
-        }
-
-        /* Hide default Swiper navigation arrows on thumbnail swiper */
-        .thumbnails-swiper .swiper-button-next,
-        .thumbnails-swiper .swiper-button-prev {
           display: none !important;
         }
 
@@ -256,21 +217,6 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
 
         /* Mobile Optimizations */
         @media (max-width: 640px) {
-          .custom-swiper-button-prev,
-          .custom-swiper-button-next {
-            width: 32px;
-            height: 32px;
-            background-color: rgba(255, 255, 255, 0.75);
-          }
-
-          .custom-swiper-button-prev {
-            left: 6px;
-          }
-
-          .custom-swiper-button-next {
-            right: 6px;
-          }
-
           .swiper-pagination-bullet-active {
             width: 18px;
           }

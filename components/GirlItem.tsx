@@ -15,7 +15,13 @@ interface GirlItemProps {
   priority?: boolean;
 }
 
-const GirlItem = ({ girl, className, handlePress, path, priority = false }: GirlItemProps) => {
+const GirlItem = ({
+  girl,
+  className,
+  handlePress,
+  path,
+  priority = false,
+}: GirlItemProps) => {
   const {
     images,
     name,
@@ -121,7 +127,7 @@ const GirlItem = ({ girl, className, handlePress, path, priority = false }: Girl
       {/* Display number of media */}
       <div className="fiex top-0 -left-2 absolute z-10">
         {videos && videos.length > 0 ? (
-          <div className="flex items-center rounded-br-lg gap-4 p-2 px- bg-red-700 text-white/80">
+          <div className="flex items-center rounded-br-lg gap-4 p-2 px- bg-red-700 text-white/70">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -134,11 +140,11 @@ const GirlItem = ({ girl, className, handlePress, path, priority = false }: Girl
             <span className="text-xl">{videos.length}</span>
           </div>
         ) : (
-          <div className="hidden lg:flex items-center rounded-br-lg gap-4 p-2 px-6 bg-stone-300/65 text-black/60">
+          <div className="hidden lg:flex items-centerm font-semibold rounded-br-lg gap-4 p-2 px-6 bg-stone-300/50 text-black/60">
             <Images className="h-8 w-10" />
             <span className="text-xl">
               {displayImages.length > 0 ? displayImages.length : 1}
-              <span className="text-lg uppercase">x</span>
+              <span className="text-sm  uppercase ml-0.5">x</span>
             </span>
           </div>
         )}
