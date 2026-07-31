@@ -37,6 +37,13 @@ function extractPublicId(url: string): string {
   return parts[parts.length - 1] || url;
 }
 
+function getCldSrc(url: string): string {
+  if (isCloudinaryUrl(url)) {
+    return extractPublicId(url);
+  }
+  return `https://res.cloudinary.com/${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/fetch/f_auto,q_auto,lpr_auto/${encodeURIComponent(url)}`;
+}
+
 const GirlImageSwiper = ({ images, priority = false }: Prop) => {
   const [swiperRef, setSwiperRef] = useState<any>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
@@ -80,9 +87,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
         >
           {images.map((src, index) => {
             const imageSrc = imageErrors[index] ? FALLBACK_IMAGE : src;
-            const cldSrc = isCloudinaryUrl(imageSrc)
-              ? extractPublicId(imageSrc)
-              : imageSrc;
+            const cldSrc = getCldSrc(imageSrc);
 
             return (
               <SwiperSlide key={index}>
