@@ -7,7 +7,6 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import { CldImage } from "next-cloudinary";
-import Image from "next/image";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME } from "@/lib/env";
@@ -81,36 +80,24 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
         >
           {images.map((src, index) => {
             const imageSrc = imageErrors[index] ? FALLBACK_IMAGE : src;
-            const isCloudinary = isCloudinaryUrl(imageSrc);
+            const cldSrc = isCloudinaryUrl(imageSrc)
+              ? extractPublicId(imageSrc)
+              : imageSrc;
 
             return (
               <SwiperSlide key={index}>
                 <div className="relative w-full h-50 lg:h-75 bg-transparent">
                   <div className="absolute inset-0 pb-1.25">
-                    {isCloudinary ? (
-                      <CldImage
-                        src={extractPublicId(imageSrc)}
-                        alt={`Slide ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority={priority}
-                        quality={50}
-                        onError={() => handleImageError(index)}
-                      />
-                    ) : (
-                      <Image
-                        src={imageSrc}
-                        alt={`Slide ${index + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority={priority}
-                        loading={priority ? "eager" : "lazy"}
-                        quality={50}
-                        onError={() => handleImageError(index)}
-                      />
-                    )}
+                    <CldImage
+                      src={cldSrc}
+                      alt={`Slide ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={priority}
+                      quality={50}
+                      onError={() => handleImageError(index)}
+                    />
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 h-1.25 bg-primary"></div>
                 </div>
@@ -206,7 +193,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
           background: #fe0032;
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 640-px) {
           .custom-swiper-button-prev,
           .custom-swiper-button-next {
             width: 28px;
