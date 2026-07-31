@@ -82,7 +82,6 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
                     sizes="(max-width: 1024px) 100vw, 40vw"
                     priority={index === 0}
                     loading={index === 0 ? "eager" : "lazy"}
-                    // quality={50}
                     onError={(e) => {
                       console.error(`Failed to load image: ${src}`);
                       (e.target as HTMLImageElement).style.display = "none";
@@ -95,7 +94,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           ))}
         </Swiper>
 
-        {/* Custom Navigation Buttons */}
+        {/* Main Navigation Buttons */}
         {photos.length > 1 && (
           <>
             <button
@@ -128,17 +127,16 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
         <div className="mt-4 w-full">
           <Swiper
             modules={[Navigation, Scrollbar]}
-            spaceBetween={10}
+            spaceBetween={8}
             slidesPerView={4}
             breakpoints={{
-              320: { slidesPerView: 3 },
-              640: { slidesPerView: 4 },
-              768: { slidesPerView: 5 },
-              1024: { slidesPerView: 6 },
-              1280: { slidesPerView: 8 },
+              320: { slidesPerView: 3, spaceBetween: 6 },
+              480: { slidesPerView: 4, spaceBetween: 8 },
+              640: { slidesPerView: 5, spaceBetween: 10 },
+              768: { slidesPerView: 6, spaceBetween: 10 },
+              1024: { slidesPerView: 7, spaceBetween: 10 },
+              1280: { slidesPerView: 8, spaceBetween: 10 },
             }}
-            navigation
-            scrollbar={{ draggable: true }}
             onSwiper={(swiper: any) => (thumbSwiperRef.current = swiper)}
             className="thumbnails-swiper"
           >
@@ -174,47 +172,48 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
 
       {/* Custom Styles */}
       <style jsx global>{`
+        /* Main Swiper Navigation */
         .custom-swiper-button-prev,
         .custom-swiper-button-next {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          width: 44px;
-          height: 44px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
-          background-color: white;
-          color: black;
-          opacity: 0.5;
+          background-color: rgba(255, 255, 255, 0.75);
+          color: #1a1a1a;
           border: none;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: all 0.3s ease;
-          z-index: 10;
+          z-index: 20;
           padding: 0;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .group:hover .custom-swiper-button-prev,
-        .group:hover .custom-swiper-button-next {
-          opacity: 0.5;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
         }
 
         .custom-swiper-button-prev:hover,
         .custom-swiper-button-next:hover {
-          opacity: 0.5 !important;
-          background-color: white;
+          background-color: #fe0032;
+          color: white;
           transform: translateY(-50%) scale(1.1);
-          color: #fe0032;
+          box-shadow: 0 2px 8px rgba(254, 0, 50, 0.35);
         }
 
         .custom-swiper-button-prev {
-          left: 16px;
+          left: 10px;
         }
 
         .custom-swiper-button-next {
-          right: 16px;
+          right: 10px;
+        }
+
+        /* Hide default Swiper navigation arrows on thumbnail swiper */
+        .thumbnails-swiper .swiper-button-next,
+        .thumbnails-swiper .swiper-button-prev {
+          display: none !important;
         }
 
         /* Main Swiper Pagination */
@@ -243,48 +242,48 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           background: #fe0032;
         }
 
-        /* Thumbnail Swiper Navigation */
-        .thumbnails-swiper .swiper-button-next,
-        .thumbnails-swiper .swiper-button-prev {
-          color: #333;
-          background-color: rgba(255, 255, 255, 0.9);
-          width: 30px;
-          height: 30px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-          border-radius: 50%;
-        }
-
-        .thumbnails-swiper .swiper-button-next::after,
-        .thumbnails-swiper .swiper-button-prev::after {
-          font-size: 12px;
-        }
-
-        .thumbnails-swiper .swiper-button-next:hover,
-        .thumbnails-swiper .swiper-button-prev:hover {
-          background-color: white;
-          transform: scale(1.05);
-        }
-
+        /* Thumbnail Swiper Scrollbar */
         .thumbnails-swiper .swiper-scrollbar {
-          background: rgba(0, 0, 0, 0.1);
+          background: rgba(0, 0, 0, 0.08);
+          border-radius: 4px;
+          height: 4px;
         }
 
+        .thumbnails-swiper .swiper-scrollbar-drag {
+          background: #fe0032;
+          border-radius: 4px;
+        }
+
+        /* Mobile Optimizations */
         @media (max-width: 640px) {
           .custom-swiper-button-prev,
           .custom-swiper-button-next {
             width: 32px;
             height: 32px;
-            opacity: 0.8;
+            background-color: rgba(255, 255, 255, 0.75);
           }
 
-          .thumbnails-swiper .swiper-button-next,
-          .thumbnails-swiper .swiper-button-prev {
-            width: 24px;
-            height: 24px;
+          .custom-swiper-button-prev {
+            left: 6px;
+          }
+
+          .custom-swiper-button-next {
+            right: 6px;
           }
 
           .swiper-pagination-bullet-active {
-            width: 16px;
+            width: 18px;
+          }
+        }
+
+        /* Ensure thumbnail swiper container allows overflow for buttons */
+        .thumbnails-swiper {
+          padding: 0 20px !important;
+        }
+
+        @media (max-width: 640px) {
+          .thumbnails-swiper {
+            padding: 0 16px !important;
           }
         }
       `}</style>

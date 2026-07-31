@@ -110,12 +110,11 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          width: 36px;
-          height: 36px;
+          width: 28px;
+          height: 28px;
           border-radius: 50%;
-          background-color: white;
-          color: black;
-          opacity: 0.4;
+          background-color: rgba(255, 255, 255, 0.7);
+          color: #1a1a1a;
           border: none;
           cursor: pointer;
           display: flex;
@@ -124,28 +123,23 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
           transition: all 0.3s ease;
           z-index: 10;
           padding: 0;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .group:hover .custom-swiper-button-prev,
-        .group:hover .custom-swiper-button-next {
-          opacity: 0.5;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
         }
 
         .custom-swiper-button-prev:hover,
         .custom-swiper-button-next:hover {
-          opacity: 0.5 !important;
-          background-color: white;
+          background-color: #fe0032;
+          color: white;
           transform: translateY(-50%) scale(1.1);
-          color: #fe0032;
+          box-shadow: 0 2px 8px rgba(254, 0, 50, 0.4);
         }
 
         .custom-swiper-button-prev {
-          left: 10px;
+          left: 6px;
         }
 
         .custom-swiper-button-next {
-          right: 10px;
+          right: 6px;
         }
 
         .swiper-button-next,
@@ -172,17 +166,20 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
           background: #fe0032;
         }
 
-        @media (max-width: 640-px) {
+        @media (max-width: 640px) {
           .custom-swiper-button-prev,
           .custom-swiper-button-next {
-            width: 28px;
-            height: 28px;
-            opacity: 0.8;
+            width: 24px;
+            height: 24px;
+            opacity: 1;
           }
 
-          .group:hover .custom-swiper-button-prev,
-          .group:hover .custom-swiper-button-next {
-            opacity: 1;
+          .custom-swiper-button-prev {
+            left: 4px;
+          }
+
+          .custom-swiper-button-next {
+            right: 4px;
           }
         }
       `}</style>
