@@ -13,7 +13,7 @@ interface Props {
 const NavItem = ({ children, path, className, text = "Item" }: Props) => {
   const pathname = usePathname();
   return (
-    <li className={cn("group border-green-600", className)}>
+    <li className={cn("group", className)}>
       <Link href={`${path}`} className="flex gap-3   items-center">
         {/* icon */}
         <div>{children}</div>
