@@ -11,7 +11,10 @@ const nextConfig = {
   },
 
   images: {
-    // formats: ["image/avif", "image/webp"],
+    // Bypass Next.js image optimization to serve images directly from origin.
+    // External images are already on fast CDNs (Firebase Storage, Cloudinary, etc.),
+    // and on cPanel standalone the optimization server becomes the bottleneck.
+    unoptimized: true,
     remotePatterns: [
       // Adult content
       {
@@ -119,8 +122,6 @@ const nextConfig = {
         hostname: "localhost",
       },
     ],
-    qualities: [50, 75, 60, 90],
-    maximumDiskCacheSize: 0,
   },
 
   typescript: {
