@@ -120,6 +120,7 @@ const nextConfig = {
       },
     ],
     qualities: [50, 75, 60, 90],
+    maximumDiskCacheSize: 0,
   },
 
   typescript: {

@@ -14,8 +14,7 @@ import {
   getFeaturedBlogPostsForSitemap,
 } from "@/lib/sanity/queries";
 
-// Revalidate every 24 hours (86400 seconds)
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
 
 // Optional: Use edge runtime for better performance
 // export const runtime = 'edge';

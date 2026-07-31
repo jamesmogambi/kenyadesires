@@ -22,9 +22,8 @@ import {
   getFirstAgency,
 } from "../../server-actions/agency.action";
 
-// ✅ OPTION 1: Force dynamic with ISR
+// ✅ Force dynamic - no caching
 export const dynamic = "force-dynamic";
-export const revalidate = 604800; // 7 days in seconds
 
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;

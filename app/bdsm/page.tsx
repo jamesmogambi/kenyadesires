@@ -14,7 +14,7 @@ import { getCachedBDSMEscorts } from "@/lib/cache";
 import { getBDSMEscortCount, getFirstBDSMEscort } from "@/lib/metadata-helper";
 import { getBDSMEscorts } from "@/server-actions/bdsm.action";
 
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{

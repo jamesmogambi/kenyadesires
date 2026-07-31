@@ -3,12 +3,12 @@ import WhyProfile from "@/components/blog/WhyProfile";
 import GirlList from "@/components/GirlList";
 import GirlRegions from "@/components/GirlRegions";
 import NotFoundList from "@/components/NotFoundList";
+import YouTargetsAd from "@/components/YouTargetsAd";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 // import { getEscortsWithOnlyCleanedImages } from "@/server-actions/cleaned-escorts.action";
 
-// ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{
@@ -33,6 +33,10 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <>
+      {/* YouTargets Ad - 300x250 medium rectangle */}
+      <div className="flex justify-center">
+        <YouTargetsAd />
+      </div>
       <GirlRegions />
       {escorts.length > 0 && <GirlList girls={escorts} />}
       {escorts.length === 0 && total === 0 && <NotFoundList />}

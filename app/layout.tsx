@@ -17,7 +17,7 @@ import {
 import LocationInitializer from "@/components/FileInputInitializer";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import ScrollToTopBottom from "@/components/ScrollToTopBottom";
-import YouTargetsAd from "@/components/YouTargetsAd";
+// import YouTargetsAd from "@/components/YouTargetsAd";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 import { headers } from "next/headers";
@@ -31,8 +31,7 @@ import { getAllLookupData } from "@/server-actions/lookup.action";
 // ✅ Export metadata so Next.js picks it up
 export { metadata };
 
-// ✅ ISR - Revalidate every 7 days (data doesn't change frequently)
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -175,10 +174,10 @@ export default async function RootLayout({
               initialLookup={lookup.data}
             />
 
-            {/* YouTargets Ad - 300x250 medium rectangle */}
+            {/* YouTargets Ad - 300x250 medium rectangle
             <div className="flex justify-center">
               <YouTargetsAd />
-            </div>
+            </div> */}
           </main>
 
           <div>

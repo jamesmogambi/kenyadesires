@@ -1,7 +1,6 @@
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
-import { unstable_cache, revalidatePath } from "next/cache";
-import { REVALIDATE_TIME } from "@/lib/cache-config";
+import { revalidatePath } from "next/cache";
 
 export interface BlogComment {
   id: string;
@@ -47,16 +46,9 @@ export async function getCommentsByPostSlug(
   }
 }
 
-export const getCachedCommentsByPostSlug = unstable_cache(
-  async (postSlug: string): Promise<BlogComment[]> => {
-    return await getCommentsByPostSlug(postSlug);
-  },
-  ["blog-comments"],
-  {
-    revalidate: 300,
-    tags: ["blog-comments"],
-  },
-);
+export async function getCachedCommentsByPostSlug(postSlug: string): Promise<BlogComment[]> {
+  return await getCommentsByPostSlug(postSlug);
+}
 
 export async function addBlogComment(data: {
   postSlug: string;

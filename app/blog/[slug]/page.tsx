@@ -13,8 +13,7 @@ type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-// ✅ ISR - 7 days
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 // ============================================
 // GENERATE METADATA FOR SEO & GEO

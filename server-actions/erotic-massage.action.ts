@@ -2,7 +2,6 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { unstable_cache } from "next/cache";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
 // Fast conversion - only converts known timestamp fields, no deep recursion
@@ -168,15 +167,4 @@ async function fetchEroticMassageEscorts(
   }
 }
 
-// ✅ Cached version - 1 week
-export const getEroticMassageEscorts = unstable_cache(
-  fetchEroticMassageEscorts,
-  ["escorts", "cleaned-images", "erotic-massage"],
-  {
-    revalidate: 604800, // 1 week in seconds
-    tags: ["escorts", "cleaned-images", "erotic-massage"],
-  },
-);
-
-// Also export the uncached version if needed
-export const getEroticMassageEscortsUncached = fetchEroticMassageEscorts;
+export const getEroticMassageEscorts = fetchEroticMassageEscorts;

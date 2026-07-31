@@ -1,11 +1,9 @@
-import { unstable_cache } from "next/cache";
 import {
   getBDSMEscortsOptimized,
   getEroticMassageEscortsOptimized,
   getEscortById,
   getEscorts,
 } from "@/server-actions/escort.action";
-import { REVALIDATE_TIME } from "./cache-config";
 import { AgenciesResponse, IAgency } from "@/types/agency.types";
 import {
   getAllCategories,
@@ -16,207 +14,84 @@ import {
   getPostsByCategory,
   getPostsWithPagination,
 } from "./sanity/queries";
-import {
-  getAllRegions,
-  getPopularCounties,
-} from "@/server-actions/region.action";
+import { getAllRegions, getPopularCounties } from "@/server-actions/region.action";
 import { getAllLookupData } from "@/server-actions/lookup.action";
-import {
-  getCommentsByPostSlug,
-} from "@/server-actions/blog-comments.action";
+import { getCommentsByPostSlug } from "@/server-actions/blog-comments.action";
 
-export const getCachedEscorts = unstable_cache(
-  async (params: any) => {
-    console.log("🔄 Fetching fresh escort data...");
-    return await getEscorts(params);
-  },
-  ["escorts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["escorts"],
-  },
-);
+export async function getCachedEscorts(params: any) {
+  console.log("🔄 Fetching fresh escort data...");
+  return await getEscorts(params);
+}
 
-// ✅ Cache individual escort - 7 days
-export const getCachedEscortById = unstable_cache(
-  async (id: string) => {
-    console.log(`🔄 Fetching fresh escort data for ID: ${id}...`);
-    return await getEscortById(id);
-  },
-  ["escort-detail"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["escort"],
-  },
-);
+export async function getCachedEscortById(id: string) {
+  console.log(`🔄 Fetching fresh escort data for ID: ${id}...`);
+  return await getEscortById(id);
+}
 
-// ✅ Cache massage escorts using OPTIMIZED version
-export const getCachedMassageEscorts = unstable_cache(
-  async (params: any) => {
-    console.log("🔄 Fetching fresh massage escort data (optimized)...");
-    return await getEroticMassageEscortsOptimized(params); // ← OPTIMIZED
-  },
-  ["massage-escorts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["massage-escorts"],
-  },
-);
+export async function getCachedMassageEscorts(params: any) {
+  console.log("🔄 Fetching fresh massage escort data (optimized)...");
+  return await getEroticMassageEscortsOptimized(params);
+}
 
-// ✅ NEW: Cache BDSM escorts - 7 days
-export const getCachedBDSMEscorts = unstable_cache(
-  async (params: any) => {
-    console.log("🔄 Fetching fresh BDSM escort data...");
-    return await getBDSMEscortsOptimized(params);
-  },
-  ["bdsm-escorts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["bdsm-escorts"],
-  },
-);
+export async function getCachedBDSMEscorts(params: any) {
+  console.log("🔄 Fetching fresh BDSM escort data...");
+  return await getBDSMEscortsOptimized(params);
+}
 
-// ✅ NEW: Cache blog categories - 7 days
-export const getCachedBlogCategories = unstable_cache(
-  async () => {
-    console.log("🔄 Fetching fresh blog categories...");
-    return await getAllCategories();
-  },
-  ["blog-categories"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["blog-categories"],
-  },
-);
+export async function getCachedBlogCategories() {
+  console.log("🔄 Fetching fresh blog categories...");
+  return await getAllCategories();
+}
 
-// ✅ NEW: Cache featured blog posts - 7 days
-export const getCachedFeaturedPosts = unstable_cache(
-  async (limit: number = 20) => {
-    console.log(`🔄 Fetching fresh featured posts (limit: ${limit})...`);
-    return await getFeaturedPostsWithLimit(limit);
-  },
-  ["blog-featured-posts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["blog-featured-posts"],
-  },
-);
+export async function getCachedFeaturedPosts(limit: number = 20) {
+  console.log(`🔄 Fetching fresh featured posts (limit: ${limit})...`);
+  return await getFeaturedPostsWithLimit(limit);
+}
 
-// ✅ NEW: Cache all blog posts with pagination - 7 days
-export const getCachedBlogPosts = unstable_cache(
-  async (page: number, limit: number) => {
-    console.log(`🔄 Fetching fresh blog posts (page: ${page})...`);
-    return await getPostsWithPagination(page, limit);
-  },
-  ["blog-posts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["blog-posts"],
-  },
-);
+export async function getCachedBlogPosts(page: number, limit: number) {
+  console.log(`🔄 Fetching fresh blog posts (page: ${page})...`);
+  return await getPostsWithPagination(page, limit);
+}
 
-// ✅ NEW: Cache single blog post - 7 days
-export const getCachedBlogPost = unstable_cache(
-  async (slug: string) => {
-    console.log(`🔄 Fetching fresh blog post: ${slug}...`);
-    return await getBlogBySlug(slug);
-  },
-  ["blog-post"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["blog-post"],
-  },
-);
+export async function getCachedBlogPost(slug: string) {
+  console.log(`🔄 Fetching fresh blog post: ${slug}...`);
+  return await getBlogBySlug(slug);
+}
 
-// ✅ Cache all blog posts for static params - 7 days
-export const getCachedAllBlogPosts = unstable_cache(
-  async () => {
-    console.log("🔄 Fetching all blog posts for static params...");
-    return await getAllPosts();
-  },
-  ["blog-all-posts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["blog-all-posts"],
-  },
-);
+export async function getCachedAllBlogPosts() {
+  console.log("🔄 Fetching all blog posts for static params...");
+  return await getAllPosts();
+}
 
-// ✅ Cache popular counties - 7 days
-export const getCachedPopularCounties = unstable_cache(
-  async (limit?: number) => {
-    console.log(
-      `🔄 Fetching fresh popular counties (limit: ${limit || "all"})...`,
-    );
-    const result = await getPopularCounties({ limit });
-    return result;
-  },
-  ["popular-counties"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["popular-counties"],
-  },
-);
+export async function getCachedPopularCounties(limit?: number) {
+  console.log(
+    `🔄 Fetching fresh popular counties (limit: ${limit || "all"})...`,
+  );
+  const result = await getPopularCounties({ limit });
+  return result;
+}
 
-// ✅ Cache regions - 7 days
-export const getCachedRegions = unstable_cache(
-  async () => {
-    console.log("🔄 Fetching fresh regions...");
-    return await getAllRegions();
-  },
-  ["regions"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["regions"],
-  },
-);
+export async function getCachedRegions() {
+  console.log("🔄 Fetching fresh regions...");
+  return await getAllRegions();
+}
 
-// ✅ Cache all lookup data - 7 days
-export const getCachedLookupData = unstable_cache(
-  async () => {
-    console.log("🔄 Fetching fresh lookup data...");
-    return await getAllLookupData();
-  },
-  ["lookup-data"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["lookup-data"],
-  },
-);
+export async function getCachedLookupData() {
+  console.log("🔄 Fetching fresh lookup data...");
+  return await getAllLookupData();
+}
 
-// ✅ Cache single category by slug - 7 days
-export const getCachedCategoryBySlug = unstable_cache(
-  async (slug: string) => {
-    console.log(`🔄 Fetching fresh category: ${slug}...`);
-    return await getCategoryBySlug(slug);
-  },
-  ["category-detail"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["category"],
-  },
-);
+export async function getCachedCategoryBySlug(slug: string) {
+  console.log(`🔄 Fetching fresh category: ${slug}...`);
+  return await getCategoryBySlug(slug);
+}
 
-// ✅ Cache posts by category - 7 days
-export const getCachedPostsByCategory = unstable_cache(
-  async (slug: string) => {
-    console.log(`🔄 Fetching fresh posts for category: ${slug}...`);
-    return await getPostsByCategory(slug);
-  },
-  ["category-posts"],
-  {
-    revalidate: REVALIDATE_TIME,
-    tags: ["category-posts"],
-  },
-);
+export async function getCachedPostsByCategory(slug: string) {
+  console.log(`🔄 Fetching fresh posts for category: ${slug}...`);
+  return await getPostsByCategory(slug);
+}
 
-// ✅ Cache blog comments by post slug - 5 minutes
-export const getCachedCommentsByPostSlug = unstable_cache(
-  async (postSlug: string) => {
-    return await getCommentsByPostSlug(postSlug);
-  },
-  ["blog-comments"],
-  {
-    revalidate: 300,
-    tags: ["blog-comments"],
-  },
-);
+export async function getCachedCommentsByPostSlug(postSlug: string) {
+  console.log(`🔄 Fetching fresh comments for post: ${postSlug}...`);
+  return await getCommentsByPostSlug(postSlug);
+}

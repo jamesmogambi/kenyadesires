@@ -17,8 +17,7 @@ import {
   generateBlogListJsonLd,
 } from "@/lib/blog-seo";
 
-// ✅ ISR - 7 days
-export const revalidate = 604800;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   searchParams,

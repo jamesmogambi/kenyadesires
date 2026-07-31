@@ -10,9 +10,9 @@ import {
   limit as firestoreLimit,
   orderBy,
 } from "firebase/firestore";
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 // ✅ Import from the new config file
-import { County, CACHE_TAGS } from "@/lib/county.config";
+import { County } from "@/lib/county.config";
 import { ICounty } from "./region.action";
 
 // ✅ Keep ONLY async function exports in this file
@@ -87,25 +87,13 @@ async function fetchAllCountiesFromDB() {
 }
 
 // ============================================
-// CACHED VERSION - MAIN EXPORT
+// GET ALL COUNTIES - no caching, always fresh
 // ============================================
 
 /**
- * Get all counties with Next.js caching
- * Caches results for 5 minutes by default
+ * Get all counties
  */
 export async function getAllCounties() {
-  const cachedResult = await unstable_cache(
-    async () => {
-      console.log("🔄 Fetching counties from Firestore (cache miss)");
-      return await fetchAllCountiesFromDB();
-    },
-    ["all-counties"],
-    {
-      tags: [CACHE_TAGS.ALL_COUNTIES, CACHE_TAGS.COUNTIES],
-      revalidate: 604800, // Revalidate every 7 days (604800 seconds) or 5 minutes (300 seconds) based on your preference
-    },
-  )();
-
-  return cachedResult;
+  console.log("🔄 Fetching counties from Firestore...");
+  return await fetchAllCountiesFromDB();
 }

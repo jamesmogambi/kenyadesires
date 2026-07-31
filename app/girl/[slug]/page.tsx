@@ -15,8 +15,7 @@ import { generateEscortStructuredData } from "./utils";
 import { getEscortByIdentifier } from "@/server-actions/girl.action";
 // import { getEscortByIdentifier } from "@/server-actions/get-escorts";
 
-// ✅ ISR - Rebuild page after revalidate time
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 // Generate metadata for the escort profile page
 export async function generateMetadata(

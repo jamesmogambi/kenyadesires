@@ -2,7 +2,6 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { unstable_cache } from "next/cache";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 
 // Fast conversion - avoids expensive deep timestamp conversion
@@ -215,41 +214,8 @@ async function fetchEscortsWithCleanedImages(
   }
 }
 
-// ✅ Cached version - 1 week
-export const getEscortsWithCleanedImages = unstable_cache(
-  fetchEscortsWithCleanedImages /** cast to any to satisfy unstable_cache typings */,
-  // Cache key based on params
-  ((params: GetEscortsParams) => {
-    const p = params || {};
-    return [
-      "escorts-cleaned",
-      String(p.page || 1),
-      String(p.limit || 20),
-      String(p.county || "all"),
-      String(p.region || "all"),
-      String(p.town || "all"),
-      String(p.estate || "all"),
-      String(p.practice || "all"),
-      String(p.practices?.join(",") || "all"),
-      String(p.category || "all"),
-      String(p.categories?.join(",") || "all"),
-      String(p.nationality || "all"),
-      String(p.minAge || "all"),
-      String(p.maxAge || "all"),
-      String(p.isActive?.toString() || "true"),
-      String(p.isVerified?.toString() || "all"),
-      String(p.isFeatured?.toString() || "all"),
-      String(p.search || "all"),
-      String(p.minRating || "all"),
-      String(p.sortBy || "createdAt"),
-      String(p.sortOrder || "desc"),
-    ];
-  }) as any,
-  {
-    revalidate: 604800, // 1 week in seconds
-    tags: ["escorts", "cleaned-images"],
-  },
-);
+// ✅ Direct export - no caching (always fresh data for girls listing)
+export const getEscortsWithCleanedImages = fetchEscortsWithCleanedImages;
 
 // Internal function for practices
 async function fetchPracticesFromCleanedEscorts(
@@ -409,15 +375,7 @@ async function fetchPracticesFromCleanedEscorts(
   }
 }
 
-// ✅ Cached version - 1 week
-export const getPracticesFromCleanedEscorts = unstable_cache(
-  fetchPracticesFromCleanedEscorts,
-  ["practices-cleaned"],
-  {
-    revalidate: 604800, // 1 week in seconds
-    tags: ["practices", "cleaned-images"],
-  },
-);
+export const getPracticesFromCleanedEscorts = fetchPracticesFromCleanedEscorts;
 
 // ⚠️ These functions are NOT cached (they're fast and should always be fresh)
 /**

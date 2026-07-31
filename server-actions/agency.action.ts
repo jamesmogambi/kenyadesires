@@ -14,7 +14,6 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import { unstable_cache } from "next/cache";
 import { revalidatePath } from "next/cache";
 import { adminDb } from "@/lib/firebase-admin";
 import { slugify } from "@/lib/utils";
@@ -115,10 +114,9 @@ function convertFirebaseDocToAgency(
 }
 
 // ============================================
-// GET CACHED AGENCIES ✅ CACHED
+// GET AGENCIES
 // ============================================
-export const getCachedAgencies = unstable_cache(
-  async (page: number = 1, limitCount: number = 24) => {
+export async function getCachedAgencies(page: number = 1, limitCount: number = 24) {
     try {
       console.log(`🔄 Fetching agencies from Firestore (page ${page})...`);
 
@@ -166,19 +164,12 @@ export const getCachedAgencies = unstable_cache(
         },
       };
     }
-  },
-  ["cached-agencies"],
-  {
-    revalidate: 3600,
-    tags: ["agencies"],
-  },
-);
+  }
 
 // ============================================
-// GET AGENCY BY SLUG ✅ CACHED
+// GET AGENCY BY SLUG
 // ============================================
-export const getCachedAgencyBySlug = unstable_cache(
-  async (slug: string) => {
+export async function getCachedAgencyBySlug(slug: string) {
     try {
       console.log(`🔄 Fetching agency by slug: ${slug}`);
 
@@ -211,19 +202,12 @@ export const getCachedAgencyBySlug = unstable_cache(
         data: null,
       };
     }
-  },
-  ["cached-agency-by-slug"],
-  {
-    revalidate: 3600,
-    tags: ["agencies"],
-  },
-);
+  }
 
 // ============================================
-// GET AGENCIES COUNT ✅ CACHED
+// GET AGENCIES COUNT
 // ============================================
-export const getCachedAgenciesCount = unstable_cache(
-  async (filters?: { county?: string; region?: string; business?: string }) => {
+export async function getCachedAgenciesCount(filters?: { county?: string; region?: string; business?: string }) {
     try {
       const agenciesRef = collection(db, "agencies");
       const constraints: QueryConstraint[] = [where("isActive", "==", true)];
@@ -246,19 +230,12 @@ export const getCachedAgenciesCount = unstable_cache(
       console.error("Error getting agencies count:", error);
       return 0;
     }
-  },
-  ["cached-agencies-count"],
-  {
-    revalidate: 3600,
-    tags: ["agencies"],
-  },
-);
+  }
 
 // ============================================
-// GET FIRST AGENCY (for metadata) ✅ CACHED
+// GET FIRST AGENCY (for metadata)
 // ============================================
-export const getCachedFirstAgency = unstable_cache(
-  async (filters?: { county?: string; region?: string; business?: string }) => {
+export async function getCachedFirstAgency(filters?: { county?: string; region?: string; business?: string }) {
     try {
       const agenciesRef = collection(db, "agencies");
       const constraints: QueryConstraint[] = [
@@ -289,19 +266,12 @@ export const getCachedFirstAgency = unstable_cache(
       console.error("Error getting first agency:", error);
       return null;
     }
-  },
-  ["cached-first-agency"],
-  {
-    revalidate: 3600,
-    tags: ["agencies"],
-  },
-);
+  }
 
 // ============================================
-// GET AGENCY ESCORTS ✅ CACHED
+// GET AGENCY ESCORTS
 // ============================================
-export const getCachedAgencyEscorts = unstable_cache(
-  async (agencyId: string, page: number = 1, limitCount: number = 20) => {
+export async function getCachedAgencyEscorts(agencyId: string, page: number = 1, limitCount: number = 20) {
     try {
       console.log(`🔄 Fetching escorts for agency: ${agencyId}`);
 
@@ -420,13 +390,7 @@ export const getCachedAgencyEscorts = unstable_cache(
         hasMore: false,
       };
     }
-  },
-  ["cached-agency-escorts"],
-  {
-    revalidate: 3600,
-    tags: ["agencies", "escorts"],
-  },
-);
+  }
 
 // ============================================
 // GET AGENCY BY OWNER (Clerk user id)
@@ -787,7 +751,7 @@ export async function updateAgency(
 // ============================================
 // LEGACY EXPORTS (for backward compatibility)
 // ============================================
-// These point to the cached versions
+// These point to the direct (uncached) versions
 export const getAgenciesCount = getCachedAgenciesCount;
 export const getFirstAgency = getCachedFirstAgency;
 export const getAgencyEscorts = getCachedAgencyEscorts;

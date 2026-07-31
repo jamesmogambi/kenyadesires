@@ -11,8 +11,7 @@ import {
   generateBlogCategoryJsonLd,
 } from "@/lib/blog-seo";
 
-// ✅ ISR - 7 days
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;

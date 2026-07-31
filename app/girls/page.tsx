@@ -16,8 +16,8 @@ import {
 } from "@/lib/metadata-helper";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 
-// ✅ ISR - 7 days
-export const revalidate = 604800; // 7 days in seconds
+// ✅ No caching - always fresh (server actions are also uncached)
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{

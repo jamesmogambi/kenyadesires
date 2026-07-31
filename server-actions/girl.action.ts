@@ -2,7 +2,7 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { unstable_cache } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 import { slugify } from "@/lib/utils";
@@ -302,44 +302,17 @@ export async function getEscortByEmail(
   }
 }
 
-/**
- * Get a single escort by ID with only cleaned images
- * Cached for 2 weeks
- */
-export const getEscortById = unstable_cache(
-  fetchEscortById,
-  ["escort-cleaned-id"],
-  {
-    revalidate: 1209600,
-    tags: ["escorts", "cleaned-images", "escort-detail"],
-  },
-);
+export const getEscortById = fetchEscortById;
 
 /**
  * Get a single escort by Slug with only cleaned images
- * Cached for 2 weeks
  */
-export const getEscortBySlug = unstable_cache(
-  fetchEscortBySlug,
-  ["escort-cleaned-slug"],
-  {
-    revalidate: 1209600,
-    tags: ["escorts", "cleaned-images", "escort-detail"],
-  },
-);
+export const getEscortBySlug = fetchEscortBySlug;
 
 /**
  * Get a single escort by Username with only cleaned images
- * Cached for 2 weeks
  */
-export const getEscortByUsername = unstable_cache(
-  fetchEscortByUsername,
-  ["escort-cleaned-username"],
-  {
-    revalidate: 1209600,
-    tags: ["escorts", "cleaned-images", "escort-detail"],
-  },
-);
+export const getEscortByUsername = fetchEscortByUsername;
 
 /**
  * Get a single escort by ID with cleaned images (returns null if no cleaned images)
@@ -382,55 +355,47 @@ export async function getEscortByIdOriginal(
 
 /**
  * Get a single escort by ID and also get cleaned images separately
- * Cached for 2 weeks
  */
-export const getEscortByIdWithSeparateCleanedImages = unstable_cache(
-  async (
-    id: string,
-  ): Promise<{ escort: Escort | null; cleanedImages: string[] }> => {
-    try {
-      if (!id || id.trim() === "") {
-        return { escort: null, cleanedImages: [] };
-      }
-
-      const doc = await adminDb.collection("escorts").doc(id).get();
-
-      if (!doc.exists) {
-        return { escort: null, cleanedImages: [] };
-      }
-
-      const escort = convertDocToEscort(doc);
-
-      adminDb
-        .collection("escorts")
-        .doc(id)
-        .update({
-          totalViews: FieldValue.increment(1),
-        })
-        .catch(() => {});
-
-      const cleanedImages = getCleanedImageUrls(escort);
-      const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
-
-      return {
-        escort: {
-          ...escort,
-          images: cleanedImages,
-          previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
-        },
-        cleanedImages,
-      };
-    } catch (error) {
-      console.error("Error fetching escort with cleaned images:", error);
+export async function getEscortByIdWithSeparateCleanedImages(
+  id: string,
+): Promise<{ escort: Escort | null; cleanedImages: string[] }> {
+  try {
+    if (!id || id.trim() === "") {
       return { escort: null, cleanedImages: [] };
     }
-  },
-  ["escort-cleaned-separate"],
-  {
-    revalidate: 1209600,
-    tags: ["escorts", "cleaned-images", "escort-detail"],
-  },
-);
+
+    const doc = await adminDb.collection("escorts").doc(id).get();
+
+    if (!doc.exists) {
+      return { escort: null, cleanedImages: [] };
+    }
+
+    const escort = convertDocToEscort(doc);
+
+    adminDb
+      .collection("escorts")
+      .doc(id)
+      .update({
+        totalViews: FieldValue.increment(1),
+      })
+      .catch(() => {});
+
+    const cleanedImages = getCleanedImageUrls(escort);
+    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
+
+    return {
+      escort: {
+        ...escort,
+        images: cleanedImages,
+        previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
+      },
+      cleanedImages,
+    };
+  } catch (error) {
+    console.error("Error fetching escort with cleaned images:", error);
+    return { escort: null, cleanedImages: [] };
+  }
+}
 
 /**
  * Get cleaned images for a specific escort

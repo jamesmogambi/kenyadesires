@@ -7,9 +7,7 @@ import AgencyProfile from "./AgencyDetailCard";
 import { IAgency } from "@/types/agency.types";
 import { getCachedAgencyBySlug } from "@/server-actions/agency.action";
 
-// ✅ OPTION 1: Force dynamic with ISR
 export const dynamic = "force-dynamic";
-export const revalidate = 604800; // 7 days in seconds
 
 interface PageProps {
   params: Promise<{ slug: string }>;

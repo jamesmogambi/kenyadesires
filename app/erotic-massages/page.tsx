@@ -19,7 +19,7 @@ import {
 } from "@/lib/metadata-helper";
 import { getEroticMassageEscorts } from "@/server-actions/erotic-massage.action";
 
-export const revalidate = 604800; // 7 days in seconds
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{
