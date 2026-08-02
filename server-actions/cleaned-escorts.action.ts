@@ -58,7 +58,6 @@ const LISTING_FIELDS = [
 
 function buildBaseQuery() {
   let query: any = adminDb.collection("escorts");
-  query = query.where("hasCleanedImages", "==", true);
   query = query.select(...LISTING_FIELDS);
   return query;
 }
@@ -166,6 +165,49 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
   return filtered;
 }
 
+function getCleanedImageUrls(escort: Escort): string[] {
+  if (!escort.imagesMetadata) return [];
+
+  const cleanedUrls: string[] = [];
+  Object.values(escort.imagesMetadata).forEach((metadata: any) => {
+    if (metadata.status === "completed" && metadata.cleanedUrl) {
+      cleanedUrls.push(metadata.cleanedUrl);
+    }
+  });
+  return cleanedUrls;
+}
+
+function getCleanedPreviewPhoto(escort: Escort): string | undefined {
+  if (!escort.imagesMetadata || !escort.previewPhoto)
+    return escort.previewPhoto;
+
+  const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
+  if (previewMetadata?.status === "completed" && previewMetadata?.cleanedUrl) {
+    return previewMetadata.cleanedUrl;
+  }
+  return escort.previewPhoto;
+}
+
+function applyCleanedImages(escorts: Escort[]): Escort[] {
+  return escorts.map((escort) => {
+    const cleanedImages = getCleanedImageUrls(escort);
+    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
+
+    return {
+      ...escort,
+      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
+      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
+    };
+  });
+}
+
+function hasCleanedImages(escort: Escort): boolean {
+  if (!escort.imagesMetadata) return false;
+  return Object.values(escort.imagesMetadata).some(
+    (metadata: any) => metadata.status === "completed" && metadata.cleanedUrl,
+  );
+}
+
 async function fetchEscortsWithCleanedImagesInternal(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
@@ -189,7 +231,7 @@ async function fetchEscortsWithCleanedImagesInternal(
     const allFiltered: Escort[] = [];
     let hasMore = false;
 
-    while (allFiltered.length < validLimit) {
+    while (true) {
       let pageQuery = query;
       if (lastDoc) {
         pageQuery = pageQuery.startAfter(lastDoc);
@@ -203,7 +245,8 @@ async function fetchEscortsWithCleanedImagesInternal(
 
       const docs = snapshot.docs.map(convertDocToEscortFast);
       const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
+      const withCleanedImages = filtered.filter(hasCleanedImages);
+      allFiltered.push(...withCleanedImages);
 
       lastDoc = snapshot.docs[snapshot.docs.length - 1];
       hasMore = snapshot.size === batchSize;
@@ -219,7 +262,7 @@ async function fetchEscortsWithCleanedImagesInternal(
     const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
 
     return {
-      escorts: paginatedEscorts,
+      escorts: applyCleanedImages(paginatedEscorts),
       total,
       page: validPage,
       totalPages: Math.max(1, Math.ceil(total / validLimit)),
@@ -269,7 +312,8 @@ async function fetchPracticesFromCleanedEscortsInternal(
 
       const docs = snapshot.docs.map(convertDocToEscortFast);
       const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
+      const withCleanedImages = filtered.filter(hasCleanedImages);
+      allFiltered.push(...withCleanedImages);
 
       lastDoc = snapshot.docs[snapshot.docs.length - 1];
 
@@ -351,7 +395,6 @@ export async function getCleanedImagesStats() {
     while (true) {
       let query = adminDb
         .collection("escorts")
-        .where("hasCleanedImages", "==", true)
         .select(
           "imagesMetadata",
           "categories",
