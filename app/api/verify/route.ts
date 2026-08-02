@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/lib/firebase-admin";
 
 const WORKFLOW_ID = "f97e57f7-0890-41e1-b38a-53871b5192a4";
+const DIDIT_TIMEOUT_MS = 10000;
 
 export async function POST(req: Request) {
   try {
@@ -12,6 +13,9 @@ export async function POST(req: Request) {
     }
 
     const { callback } = await req.json().catch(() => ({}));
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), DIDIT_TIMEOUT_MS);
 
     const res = await fetch("https://verification.didit.me/v3/session/", {
       method: "POST",
@@ -24,7 +28,10 @@ export async function POST(req: Request) {
         vendor_data: userId,
         callback: callback || `${process.env.NEXT_PUBLIC_SITE_URL}/verify/done`,
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       const detail = await res.text();

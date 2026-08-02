@@ -118,6 +118,7 @@ export interface EscortDoc extends Document {
   isActive: boolean;
   isVerified: boolean;
   isFeatured: boolean;
+  credits: number;
   user?: Types.ObjectId;
 
   // Plan
@@ -531,6 +532,11 @@ const EscortSchema = new Schema<EscortDoc, EscortModel>(
       type: Boolean,
       default: false,
       index: true,
+    },
+    credits: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     user: {
       type: Schema.Types.ObjectId,

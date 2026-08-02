@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { adminDb } from "@/lib/firebase-admin";
+import { FieldValue } from "firebase-admin/firestore";
 
 function shortenFloats(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(shortenFloats);
@@ -106,6 +107,7 @@ export async function POST(req: Request) {
           verificationDocuments: {
             idProof: parsed.decision?.id_verifications?.[0]?.document_number,
           },
+          credits: FieldValue.increment(100),
         });
       }
 
