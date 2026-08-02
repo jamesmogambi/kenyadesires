@@ -1,6 +1,7 @@
 # Settings for Backend (on Cloud Run).
-# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
-  minInstances: 0
+  minInstances: 1 # Keeping 1 instance warm eliminates cold starts for faster loading times
+  cpu: 2 # Allocates 2 CPUs (default is typically 1)
+  memoryMiB: 2048 # Allocates 2048 MiB (2 GiB) of RAM (default is 512 MiB)
 
 env:

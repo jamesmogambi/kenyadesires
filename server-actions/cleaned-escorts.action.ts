@@ -267,6 +267,117 @@ export const getEscortsWithCleanedImages = cache(
   fetchEscortsWithCleanedImagesInternal,
 );
 
+interface GetMassageEscortsParams
+  extends Omit<GetEscortsParams, "practice" | "practices"> {
+  massageType?: string;
+}
+
+async function fetchMassageEscortsWithCleanedImagesInternal(
+  params: GetMassageEscortsParams = {},
+): Promise<GetEscortsResponse> {
+  try {
+    const {
+      page = 1,
+      limit: limitParam = 20,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      massageType,
+    } = params;
+
+    const validPage = Math.max(1, page);
+    const validLimit = Math.min(100, Math.max(1, limitParam));
+
+    let query = buildBaseQuery();
+    query = applyServerSideFilters(query, params);
+    query = applySorting(query, sortBy, sortOrder);
+
+    const batchSize = 500;
+    let lastDoc: any = null;
+    const allFiltered: Escort[] = [];
+    let hasMore = false;
+
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
+
+      const snapshot = await pageQuery.limit(batchSize).get();
+
+      if (snapshot.empty) {
+        break;
+      }
+
+      let docs = snapshot.docs.map(convertDocToEscortFast);
+      let filtered = applyClientFilters(docs, params);
+
+      // Filter for escorts that offer massage services
+      filtered = filtered.filter((escort) => {
+        const practices = escort.practices || [];
+        const massages = (escort as any).massage || [];
+
+        const hasMassagePractice = practices.some(
+          (p: string) => p && isMassageType(p),
+        );
+        const hasMassageEntry = massages.some(
+          (m: string) => m && isMassageType(m),
+        );
+
+        if (!hasMassagePractice && !hasMassageEntry) return false;
+
+        // If a specific massage type is requested, filter further
+        if (massageType && massageType !== "all") {
+          const lowerType = massageType.toLowerCase();
+          const matchesPractice = practices.some(
+            (p: string) => p && p.toLowerCase().includes(lowerType),
+          );
+          const matchesMassage = massages.some(
+            (m: string) => m && m.toLowerCase().includes(lowerType),
+          );
+          if (!matchesPractice && !matchesMassage) return false;
+        }
+
+        return true;
+      });
+
+      allFiltered.push(...filtered);
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      hasMore = snapshot.size === batchSize;
+
+      if (!hasMore) {
+        break;
+      }
+    }
+
+    const total = allFiltered.length;
+    const startIndex = (validPage - 1) * validLimit;
+    const endIndex = Math.min(startIndex + validLimit, total);
+    const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
+
+    return {
+      escorts: applyCleanedImages(paginatedEscorts),
+      total,
+      page: validPage,
+      totalPages: Math.max(1, Math.ceil(total / validLimit)),
+      hasMore: endIndex < total || hasMore,
+    };
+  } catch (error) {
+    console.error("Error fetching massage escorts with cleaned images:", error);
+    return {
+      escorts: [],
+      total: 0,
+      page: params.page || 1,
+      totalPages: 0,
+      hasMore: false,
+    };
+  }
+}
+
+export const getMassageEscortsFromCleanedImages = cache(
+  fetchMassageEscortsWithCleanedImagesInternal,
+);
+
 async function fetchPracticesFromCleanedEscortsInternal(
   params: Omit<
     GetEscortsParams,

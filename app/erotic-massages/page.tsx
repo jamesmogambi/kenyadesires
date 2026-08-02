@@ -17,8 +17,7 @@ import {
   getMassageEscortCount,
   getFirstMassageEscort,
 } from "@/lib/metadata-helper";
-import { getEroticMassageEscorts } from "@/server-actions/erotic-massage.action";
-import { getMassagesFromCleanedEscorts } from "@/server-actions/cleaned-escorts.action";
+import { getMassageEscortsFromCleanedImages, getMassagesFromCleanedEscorts } from "@/server-actions/cleaned-escorts.action";
 
 export const dynamic = "force-dynamic";
 
@@ -326,18 +325,19 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
   const formattedRegion = formatLocationName(params.region);
   const formattedMassageType = formatMassageType(params.massageType || "");
 
-  // ✅ Use cached version (already optimized)
+  // ✅ Fetch massage escorts from cleaned escorts with proper image processing
   const {
     escorts,
     total,
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getEroticMassageEscorts({
+  } = await getMassageEscortsFromCleanedImages({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     county: params.county,
     region: params.region,
+    massageType: params.massageType,
     isActive: true,
   });
 
