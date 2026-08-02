@@ -12,7 +12,10 @@ import { generateBDSMStructuredData } from "./seo-utils";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { getCachedBDSMEscorts } from "@/lib/cache";
 import { getBDSMEscortCount, getFirstBDSMEscort } from "@/lib/metadata-helper";
-import { getBDSMEscorts } from "@/server-actions/bdsm.action";
+import {
+  getBDSMEscortsWithCleanedImages,
+  getBDSMsFromCleanedEscorts,
+} from "@/server-actions/cleaned-escorts.action";
 
 export const dynamic = "force-dynamic";
 
@@ -258,16 +261,24 @@ const BDSMPage = async ({ searchParams }: PageProps) => {
   const formattedRegion = formatLocationName(params.region);
   const formattedPractice = formatPracticeType(params.practice || "");
 
-  // ✅ Use cached version
+  // ✅ Fetch BDSM escorts from cleaned escorts with proper image processing
   const {
     escorts,
     total,
     totalPages,
     page: currentPageFromResponse,
     hasMore,
-  } = await getBDSMEscorts({
+  } = await getBDSMEscortsWithCleanedImages({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
+    county: params.county === "all" ? undefined : params.county,
+    region: params.region === "all" ? undefined : params.region,
+    practice: params.practice,
+    isActive: true,
+  });
+
+  // ✅ Fetch BDSM practices from cleaned escorts (server-side)
+  const initialBDSMs = await getBDSMsFromCleanedEscorts({
     county: params.county === "all" ? undefined : params.county,
     region: params.region === "all" ? undefined : params.region,
     isActive: true,
@@ -354,7 +365,7 @@ const BDSMPage = async ({ searchParams }: PageProps) => {
 
       <div className="px-4">
         <div className="max-w-2/3 mx-auto">
-          <BDSMFilterInput />
+          <BDSMFilterInput initialBDSMs={initialBDSMs} />
         </div>
       </div>
 

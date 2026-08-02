@@ -10,16 +10,25 @@ import {
 import { X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LocationInitializer from "@/components/FileInputInitializer";
-import { useVariantStore } from "@/store/variantStore";
+import BDSMInitializer from "./BDSMInitializer";
+import { useBDSMStore } from "@/store/bdsmStore";
 import { useFilterInputStore } from "../girls/filterInputStore";
 import { ICounty } from "@/server-actions/region.action";
 import { IRegion } from "@/types/region.types";
 
 interface Prop {
   className?: string;
+  initialBDSMs?: { value: string; count: number }[];
 }
 
-const BDSMFilterInput = ({ className }: Prop) => {
+const formatPracticeName = (name: string): string => {
+  if (!name) return "";
+  const words = name.split(/\s+/);
+  if (words.length <= 10) return name;
+  return words.slice(0, 10).join(" ") + "...";
+};
+
+const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -42,7 +51,7 @@ const BDSMFilterInput = ({ className }: Prop) => {
     counties,
     regions: fetchedRegions,
   } = useFilterInputStore();
-  const { massage: massageVariants, bdsm: bdsmVariants } = useVariantStore();
+  const { bdsms: bdsmVariants } = useBDSMStore();
 
   // ✅ Memoize filtered regions based on selected county
   const filteredRegionsByCounty = useMemo(() => {
@@ -195,6 +204,7 @@ const BDSMFilterInput = ({ className }: Prop) => {
       )}
     >
       <LocationInitializer />
+      <BDSMInitializer initialBDSMs={initialBDSMs} />
 
       {/* County Filter */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -304,8 +314,8 @@ const BDSMFilterInput = ({ className }: Prop) => {
         <DropdownMenuTrigger className="cursor-pointer self-end border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md">
           {practice ? (
             <div className="flex items-center gap-2">
-              <span className="text-slate-100 text-lg font-bold capitalize">
-                {practice}
+              <span className="text-slate-100 text-lg font-bold capitalize truncate">
+                {formatPracticeName(practice)}
               </span>
             </div>
           ) : (
@@ -327,18 +337,18 @@ const BDSMFilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
-          <div className="flex flex-wrap gap-1.5">
+           <div className="flex flex-wrap gap-1.5">
             {bdsmVariants?.map((item: any) => (
               <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] truncate max-w-full"
                 onSelect={(e) => {
                   e.preventDefault();
-                  handlepractice(item.name);
+                  handlepractice(item.name || item.value);
                   setPracticeOpen(false);
                 }}
                 key={item.id}
               >
-                {item.name}
+                {formatPracticeName(item.name || item.value)}
               </DropdownMenuItem>
             ))}
           </div>

@@ -378,6 +378,230 @@ export const getMassageEscortsFromCleanedImages = cache(
   fetchMassageEscortsWithCleanedImagesInternal,
 );
 
+const BDSM_TYPE_TERMS = [
+  "bdsm",
+  "domination",
+  "submission",
+  "bondage",
+  "discipline",
+  "sadomasochism",
+  "dominatrix",
+  "mistress",
+  "slave",
+  "master",
+  "kinky",
+  "fetish",
+  "spanking",
+  "whipping",
+  "role play",
+  "roleplay",
+  "leather",
+  "latex",
+  "pegging",
+  "strap-on",
+];
+
+function isBDSMPractice(value: string): boolean {
+  if (!value) return false;
+  const lower = value.toLowerCase();
+  return BDSM_TYPE_TERMS.some((term) => lower.includes(term));
+}
+
+interface GetBDSMEscortsParams
+  extends Omit<GetEscortsParams, "practice" | "practices"> {
+  practice?: string;
+}
+
+async function fetchBDSMEscortsWithCleanedImagesInternal(
+  params: GetBDSMEscortsParams = {},
+): Promise<GetEscortsResponse> {
+  try {
+    const {
+      page = 1,
+      limit: limitParam = 20,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      practice,
+    } = params;
+
+    const validPage = Math.max(1, page);
+    const validLimit = Math.min(100, Math.max(1, limitParam));
+
+    let query = buildBaseQuery();
+    query = applyServerSideFilters(query, params);
+    query = applySorting(query, sortBy, sortOrder);
+
+    const batchSize = 500;
+    let lastDoc: any = null;
+    const allFiltered: Escort[] = [];
+    let hasMore = false;
+
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
+
+      const snapshot = await pageQuery.limit(batchSize).get();
+
+      if (snapshot.empty) {
+        break;
+      }
+
+      let docs = snapshot.docs.map(convertDocToEscortFast);
+      let filtered = applyClientFilters(docs, params);
+
+      filtered = filtered.filter((escort) => {
+        const practices = escort.practices || [];
+        const bdsms = (escort as any).bdsm || [];
+
+        const hasBDSMPractice = practices.some(
+          (p: string) => p && isBDSMPractice(p),
+        );
+        const hasBDSMEntry = bdsms.some(
+          (b: string) => b && isBDSMPractice(b),
+        );
+
+        if (!hasBDSMPractice && !hasBDSMEntry) return false;
+
+        if (practice && practice !== "all") {
+          const lowerPractice = practice.toLowerCase();
+          const matchesPractice = practices.some(
+            (p: string) => p && p.toLowerCase().includes(lowerPractice),
+          );
+          const matchesBDSm = bdsms.some(
+            (b: string) => b && b.toLowerCase().includes(lowerPractice),
+          );
+          if (!matchesPractice && !matchesBDSm) return false;
+        }
+
+        return true;
+      });
+
+      allFiltered.push(...filtered);
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      hasMore = snapshot.size === batchSize;
+
+      if (!hasMore) {
+        break;
+      }
+    }
+
+    const total = allFiltered.length;
+    const startIndex = (validPage - 1) * validLimit;
+    const endIndex = Math.min(startIndex + validLimit, total);
+    const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
+
+    return {
+      escorts: applyCleanedImages(paginatedEscorts),
+      total,
+      page: validPage,
+      totalPages: Math.max(1, Math.ceil(total / validLimit)),
+      hasMore: endIndex < total || hasMore,
+    };
+  } catch (error) {
+    console.error("Error fetching BDSM escorts with cleaned images:", error);
+    return {
+      escorts: [],
+      total: 0,
+      page: params.page || 1,
+      totalPages: 0,
+      hasMore: false,
+    };
+  }
+}
+
+export const getBDSMEscortsWithCleanedImages = cache(
+  fetchBDSMEscortsWithCleanedImagesInternal,
+);
+
+/**
+ * Get all unique BDSM practices from cleaned escorts.
+ *
+ * BDSM practices are extracted from BOTH the `practices` and `bdsm` array
+ * fields on escorts with cleaned images. Only values that match known BDSM
+ * terms are included.
+ */
+async function fetchBDSMsFromCleanedEscortsInternal(
+  params: Omit<
+    GetEscortsParams,
+    "practice" | "practices" | "page" | "limit"
+  > = {},
+): Promise<{ value: string; count: number }[]> {
+  try {
+    let query = buildBaseQuery();
+    query = applyServerSideFilters(query, params);
+
+    const batchSize = 500;
+    let lastDoc: any = null;
+    const allFiltered: Escort[] = [];
+
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
+
+      const snapshot = await pageQuery.limit(batchSize).get();
+
+      if (snapshot.empty) {
+        break;
+      }
+
+      const docs = snapshot.docs.map(convertDocToEscortFast);
+      const filtered = applyClientFilters(docs, params);
+      allFiltered.push(...filtered);
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      if (snapshot.size < batchSize) {
+        break;
+      }
+    }
+
+    const valueCounts: Record<string, number> = {};
+
+    allFiltered.forEach((escort) => {
+      // Extract from `practices` field
+      const practices = escort.practices || [];
+      if (Array.isArray(practices)) {
+        practices.forEach((practice: string) => {
+          if (practice && isBDSMPractice(practice)) {
+            valueCounts[practice] = (valueCounts[practice] || 0) + 1;
+          }
+        });
+      }
+
+      // Extract from `bdsm` field
+      const bdsms = (escort as any).bdsm || [];
+      if (Array.isArray(bdsms)) {
+        bdsms.forEach((bdsm: string) => {
+          if (bdsm && isBDSMPractice(bdsm) && !valueCounts[bdsm]) {
+            valueCounts[bdsm] = (valueCounts[bdsm] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    return Object.entries(valueCounts)
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.value.localeCompare(b.value);
+      });
+  } catch (error) {
+    console.error("Error fetching BDSM practices from cleaned escorts:", error);
+    return [];
+  }
+}
+
+export const getBDSMsFromCleanedEscorts = cache(
+  fetchBDSMsFromCleanedEscortsInternal,
+);
+
 async function fetchPracticesFromCleanedEscortsInternal(
   params: Omit<
     GetEscortsParams,
