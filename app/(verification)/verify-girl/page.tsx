@@ -26,6 +26,11 @@ const page = () => {
             description="To begin the verification process, click the button below. You will be guided to upload a valid government-issued ID and take a live selfie. Once submitted, our team will review your documents and approve your verification within one business day."
           />
 
+          <InfoSection
+            title="Verification reward"
+            description="When your identity verification is approved, you will receive 50 credits (equivalent to 10 KSH) credited to your account. These credits can be used to boost your listings and extend your advertising."
+          />
+
           <div className="flex justify-center items-center">
             <VerifyButton />
           </div>

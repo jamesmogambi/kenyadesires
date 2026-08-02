@@ -107,7 +107,7 @@ export async function POST(req: Request) {
           verificationDocuments: {
             idProof: parsed.decision?.id_verifications?.[0]?.document_number,
           },
-          credits: FieldValue.increment(100),
+          credits: FieldValue.increment(50),
         });
       }
 
@@ -161,6 +161,18 @@ export async function POST(req: Request) {
         },
         { merge: true },
       );
+
+      const escortSnap = await adminDb
+        .collection("escorts")
+        .where("clerkUserId", "==", vendorData)
+        .limit(1)
+        .get();
+
+      if (!escortSnap.empty) {
+        await escortSnap.docs[0].ref.update({
+          verificationStatus: "pending_review",
+        });
+      }
       break;
     }
 
@@ -173,6 +185,18 @@ export async function POST(req: Request) {
         },
         { merge: true },
       );
+
+      const escortSnap = await adminDb
+        .collection("escorts")
+        .where("clerkUserId", "==", vendorData)
+        .limit(1)
+        .get();
+
+      if (!escortSnap.empty) {
+        await escortSnap.docs[0].ref.update({
+          verificationStatus: "expired",
+        });
+      }
       break;
     }
 
