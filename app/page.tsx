@@ -29,7 +29,7 @@ export default async function Home({ searchParams }: PageProps) {
     practice: params.practice,
     page: 1,
     limit: 20, // Only fetch 20 items
-    sortOrder: "desc",
+    sortOrder: "asc",
   });
 
   return (

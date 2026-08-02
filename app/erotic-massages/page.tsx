@@ -17,7 +17,10 @@ import {
   getMassageEscortCount,
   getFirstMassageEscort,
 } from "@/lib/metadata-helper";
-import { getMassageEscortsFromCleanedImages, getMassagesFromCleanedEscorts } from "@/server-actions/cleaned-escorts.action";
+import {
+  getMassageEscortsFromCleanedImages,
+  getMassagesFromCleanedEscorts,
+} from "@/server-actions/cleaned-escorts.action";
 
 export const dynamic = "force-dynamic";
 
@@ -339,6 +342,7 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
     region: params.region,
     massageType: params.massageType,
     isActive: true,
+    sortOrder: "asc",
   });
 
   // ✅ Fetch massage types from cleaned escorts (server-side)

@@ -275,6 +275,7 @@ const BDSMPage = async ({ searchParams }: PageProps) => {
     region: params.region === "all" ? undefined : params.region,
     practice: params.practice,
     isActive: true,
+    sortBy: "age",
   });
 
   // ✅ Fetch BDSM practices from cleaned escorts (server-side)
