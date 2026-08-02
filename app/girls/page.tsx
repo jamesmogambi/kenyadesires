@@ -24,6 +24,8 @@ interface PageProps {
     county?: string;
     region?: string;
     practice?: string;
+    sort?: string;
+    order?: string;
     page?: string;
   }>;
 }
@@ -47,7 +49,7 @@ export async function generateMetadata(
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const params = await searchParams;
-  const { county, region, practice, page } = params;
+  const { county, region, practice, sort, order, page } = params;
   const pageNumber = page ? parseInt(page) : 1;
 
   // ✅ Fetch lightweight data for metadata only
@@ -207,6 +209,8 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
     county: params.county,
     region: params.region,
     practice: params.practice,
+    sortBy: params.sort as "createdAt" | "updatedAt" | "age" | "totalViews" | "rating" | "totalBookings" | undefined,
+    sortOrder: params.order as "asc" | "desc" | undefined,
     page: currentPage,
     limit: ITEMS_PER_PAGE,
     isActive: true,

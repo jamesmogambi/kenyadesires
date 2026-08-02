@@ -166,7 +166,8 @@ export default async function RootLayout({
           {/* Main Content */}
           <main className="bg-black/80 flex-1 py-4 w-full">
             <TooltipProvider>
-              <PostHogProvider>{children}</PostHogProvider>
+              {children}
+              {/* <PostHogProvider>{children}</PostHogProvider> */}
             </TooltipProvider>
             <LocationInitializer
               initialCounties={allCounties.data}

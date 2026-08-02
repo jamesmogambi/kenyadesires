@@ -39,25 +39,16 @@ const LISTING_FIELDS = [
   "county",
   "regions",
   "primaryRegion",
-  "locations",
   "practices",
   "categories",
-  "nationality",
-  "rating",
-  "totalViews",
-  "totalBookings",
-  "isActive",
-  "isVerified",
-  "isFeatured",
   "slug",
   "telephone",
   "whatsappPhone",
-  "createdAt",
-  "hasCleanedImages",
 ];
 
 function buildBaseQuery() {
   let query: any = adminDb.collection("escorts");
+  query = query.where("hasCleanedImages", "==", true);
   query = query.select(...LISTING_FIELDS);
   return query;
 }
@@ -201,13 +192,6 @@ function applyCleanedImages(escorts: Escort[]): Escort[] {
   });
 }
 
-function hasCleanedImages(escort: Escort): boolean {
-  if (!escort.imagesMetadata) return false;
-  return Object.values(escort.imagesMetadata).some(
-    (metadata: any) => metadata.status === "completed" && metadata.cleanedUrl,
-  );
-}
-
 async function fetchEscortsWithCleanedImagesInternal(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
@@ -226,7 +210,7 @@ async function fetchEscortsWithCleanedImagesInternal(
     query = applyServerSideFilters(query, params);
     query = applySorting(query, sortBy, sortOrder);
 
-    const batchSize = Math.max(validLimit * 5, 200);
+    const batchSize = 500;
     let lastDoc: any = null;
     const allFiltered: Escort[] = [];
     let hasMore = false;
@@ -245,8 +229,7 @@ async function fetchEscortsWithCleanedImagesInternal(
 
       const docs = snapshot.docs.map(convertDocToEscortFast);
       const filtered = applyClientFilters(docs, params);
-      const withCleanedImages = filtered.filter(hasCleanedImages);
-      allFiltered.push(...withCleanedImages);
+      allFiltered.push(...filtered);
 
       lastDoc = snapshot.docs[snapshot.docs.length - 1];
       hasMore = snapshot.size === batchSize;
@@ -312,8 +295,7 @@ async function fetchPracticesFromCleanedEscortsInternal(
 
       const docs = snapshot.docs.map(convertDocToEscortFast);
       const filtered = applyClientFilters(docs, params);
-      const withCleanedImages = filtered.filter(hasCleanedImages);
-      allFiltered.push(...withCleanedImages);
+      allFiltered.push(...filtered);
 
       lastDoc = snapshot.docs[snapshot.docs.length - 1];
 
@@ -395,6 +377,7 @@ export async function getCleanedImagesStats() {
     while (true) {
       let query = adminDb
         .collection("escorts")
+        .where("hasCleanedImages", "==", true)
         .select(
           "imagesMetadata",
           "categories",

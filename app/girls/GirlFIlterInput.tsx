@@ -36,6 +36,8 @@ const GirlFilterInput = ({ className }: Prop) => {
   const initialCountyCode = searchParams.get("county") || "";
   const initialRegionName = searchParams.get("region") || "";
   const initialpractice = searchParams.get("practice") || "";
+  const initialSort = searchParams.get("sort") || "createdAt";
+  const initialOrder = searchParams.get("order") || "desc";
 
   const [county, setCounty] = useState<ICounty | null>(null);
   const [open, setOpen] = useState(false);
@@ -45,6 +47,9 @@ const GirlFilterInput = ({ className }: Prop) => {
   const [practice, setPractice] = useState(initialpractice);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [countyWarningOpen, setCountyWarningOpen] = useState(false);
+  const [sort, setSort] = useState(initialSort);
+  const [order, setOrder] = useState(initialOrder);
+  const [sortOpen, setSortOpen] = useState(false);
 
   // Get data from stores
   const {
@@ -121,6 +126,8 @@ const GirlFilterInput = ({ className }: Prop) => {
     county: string;
     region: string;
     practice: string;
+    sort: string;
+    order: string;
   }) => {
     const urlParams = new URLSearchParams();
 
@@ -135,6 +142,14 @@ const GirlFilterInput = ({ className }: Prop) => {
 
     if (params.practice && params.practice !== "") {
       urlParams.set("practice", params.practice);
+    }
+
+    if (params.sort && params.sort !== "createdAt") {
+      urlParams.set("sort", params.sort);
+    }
+
+    if (params.order && params.order !== "desc") {
+      urlParams.set("order", params.order);
     }
 
     // Always reset to page 1 when filters change
@@ -152,6 +167,8 @@ const GirlFilterInput = ({ className }: Prop) => {
     setCounty(null);
     setRegion(null);
     setPractice("");
+    setSort("createdAt");
+    setOrder("desc");
     setRegions([]);
 
     // Navigate to girls page with no params
@@ -185,6 +202,8 @@ const GirlFilterInput = ({ className }: Prop) => {
       county: county?.name || "",
       region: region?.name || "",
       practice: practice,
+      sort,
+      order,
     };
 
     updateURLParams(params);
@@ -449,6 +468,83 @@ const GirlFilterInput = ({ className }: Prop) => {
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Sort Dropdown */}
+      {/* <DropdownMenu open={sortOpen} onOpenChange={setSortOpen}>
+        <DropdownMenuTrigger className="cursor-pointer self-end border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md">
+          <span className="text-slate-100 text-lg font-medium">
+            {sort === "createdAt" && order === "desc"
+              ? "Latest"
+              : sort === "createdAt" && order === "asc"
+                ? "Oldest"
+                : sort === "rating"
+                  ? "Top Rated"
+                  : sort === "totalViews"
+                    ? "Most Viewed"
+                    : "Sort"}
+          </span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={18}
+            height={18}
+            viewBox="0 0 32 32"
+            className="text-white/50"
+          >
+            <path
+              fill="currentColor"
+              d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
+              strokeWidth={1}
+              stroke="currentColor"
+            ></path>
+          </svg>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
+          <DropdownMenuItem
+            className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+            onSelect={(e) => {
+              e.preventDefault();
+              setSort("createdAt");
+              setOrder("desc");
+              setSortOpen(false);
+            }}
+          >
+            Latest
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+            onSelect={(e) => {
+              e.preventDefault();
+              setSort("createdAt");
+              setOrder("asc");
+              setSortOpen(false);
+            }}
+          >
+            Oldest
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+            onSelect={(e) => {
+              e.preventDefault();
+              setSort("rating");
+              setOrder("desc");
+              setSortOpen(false);
+            }}
+          >
+            Top Rated
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+            onSelect={(e) => {
+              e.preventDefault();
+              setSort("totalViews");
+              setOrder("desc");
+              setSortOpen(false);
+            }}
+          >
+            Most Viewed
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu> */}
 
       {/* Action Buttons */}
       <div className="flex flex-col items-center gap-2">
