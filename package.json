@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
+    "@didit-protocol/sdk-web": "^0.2.1",
     "@hookform/resolvers": "^5.2.1",
     "@mux/mux-node": "^12.7.0",
     "@mux/mux-player": "^3.5.3",

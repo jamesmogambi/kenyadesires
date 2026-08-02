@@ -20,6 +20,8 @@ import ScrollToTopBottom from "@/components/ScrollToTopBottom";
 // import YouTargetsAd from "@/components/YouTargetsAd";
 import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
 
@@ -54,6 +56,14 @@ export default async function RootLayout({
   // This is the key for Firebase Hosting
   // The cloudfront-viewer-country header is set by Firebase Hosting's CDN
   const countryCode = headersList.get("cloudfront-viewer-country");
+
+  // ✅ Fetch escort verification status for NavActions (show verify link or status)
+  const { userId } = await auth();
+  const user = await currentUser();
+  const escortRole = user?.unsafeMetadata?.role as string | undefined;
+  const isEscort = escortRole === "user";
+  const escort = isEscort && userId ? await getEscortByClerkUserId(userId) : null;
+
   // ✅ Pre-fetch on server
   const [counties, regions, lookup, allCounties] = await Promise.all([
     getCachedPopularCounties(),
@@ -161,7 +171,14 @@ export default async function RootLayout({
           </div>
 
           <header>
-            <Header initialCounties={counties.data} />
+            <Header
+              initialCounties={counties.data}
+              escortIsVerified={escort?.isVerified ?? false}
+              escortVerificationStatus={
+                ((escort as any)?.verificationStatus as string) || "not_started"
+              }
+              isEscort={isEscort}
+            />
           </header>
 
           {/* Main Content */}

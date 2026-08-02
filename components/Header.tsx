@@ -15,8 +15,11 @@ import PopularCountiesInitializer from "./PopularCountiesInitializer";
 
 interface Prop {
   initialCounties?: ICounty[];
+  isEscort?: boolean;
+  escortIsVerified?: boolean;
+  escortVerificationStatus?: string;
 }
-const Header = ({ initialCounties }: Prop) => {
+const Header = ({ initialCounties, isEscort, escortIsVerified, escortVerificationStatus }: Prop) => {
   const { isSignedIn } = useUser();
 
   // set to zustand store
@@ -38,7 +41,11 @@ const Header = ({ initialCounties }: Prop) => {
           {/* actions */}
 
           {isSignedIn ? (
-            <NavActions />
+            <NavActions
+              isEscort={isEscort}
+              escortIsVerified={escortIsVerified}
+              escortVerificationStatus={escortVerificationStatus}
+            />
           ) : (
             <div className="flex gap-3 items-center">
               <SearchSheet />
