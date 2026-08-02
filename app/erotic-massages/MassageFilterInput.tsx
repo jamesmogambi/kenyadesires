@@ -10,16 +10,18 @@ import {
 import { X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LocationInitializer from "@/components/FileInputInitializer";
-import { useVariantStore } from "@/store/variantStore";
+import MassageInitializer from "./MassageInitializer";
+import { useMassageStore } from "@/store/massageStore";
 import { useFilterInputStore } from "../girls/filterInputStore";
 import { ICounty } from "@/server-actions/region.action";
 import { IRegion } from "@/types/region.types";
 
 interface Prop {
   className?: string;
+  initialMassages?: { value: string; count: number }[];
 }
 
-const MassageTypeFilterInput = ({ className }: Prop) => {
+const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -42,7 +44,7 @@ const MassageTypeFilterInput = ({ className }: Prop) => {
     counties,
     regions: fetchedRegions,
   } = useFilterInputStore();
-  const { massage: massageVariants } = useVariantStore();
+  const { massages: massageVariants } = useMassageStore();
 
   // ✅ Memoize filtered regions based on selected county (same pattern as GirlFIlterInput)
   const filteredRegionsByCounty = useMemo(() => {
@@ -72,8 +74,7 @@ const MassageTypeFilterInput = ({ className }: Prop) => {
           (region: IRegion) =>
             region.countyCode?.toLowerCase() ===
               foundCounty.code?.toLowerCase() ||
-            region.county?.toLowerCase() ===
-              foundCounty.name?.toLowerCase(),
+            region.county?.toLowerCase() === foundCounty.name?.toLowerCase(),
         );
         setRegions(filtered);
       }
@@ -196,6 +197,7 @@ const MassageTypeFilterInput = ({ className }: Prop) => {
       )}
     >
       <LocationInitializer />
+      <MassageInitializer initialMassages={initialMassages} />
 
       {/* County Filter */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -278,7 +280,9 @@ const MassageTypeFilterInput = ({ className }: Prop) => {
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {regions.length === 0 ? (
             <div className="text-white/50 text-center py-4">
-              {county ? "No regions found for this county" : "Select a county first"}
+              {county
+                ? "No regions found for this county"
+                : "Select a county first"}
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
@@ -336,12 +340,12 @@ const MassageTypeFilterInput = ({ className }: Prop) => {
                 className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
                 onSelect={(e) => {
                   e.preventDefault();
-                  handleMassageType(item.name);
+                  handleMassageType(item.name || item.value);
                   setMassageTypeOpen(false);
                 }}
                 key={item.id}
               >
-                {item.name}
+                {item.name || item.value}
               </DropdownMenuItem>
             ))}
           </div>

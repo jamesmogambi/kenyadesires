@@ -18,6 +18,7 @@ import {
   getFirstMassageEscort,
 } from "@/lib/metadata-helper";
 import { getEroticMassageEscorts } from "@/server-actions/erotic-massage.action";
+import { getMassagesFromCleanedEscorts } from "@/server-actions/cleaned-escorts.action";
 
 export const dynamic = "force-dynamic";
 
@@ -340,6 +341,13 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
     isActive: true,
   });
 
+  // ✅ Fetch massage types from cleaned escorts (server-side)
+  const initialMassages = await getMassagesFromCleanedEscorts({
+    county: params.county,
+    region: params.region,
+    isActive: true,
+  });
+
   const listHeaderTitle = generateListHeaderTitle({
     county: params.county,
     region: params.region,
@@ -419,7 +427,7 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
 
       <div className="bg-black p-5 pb-6 -mt-4.5">
         <div className="max-w-2/3 mx-auto">
-          <MassageTypeFilterInput />
+          <MassageTypeFilterInput initialMassages={initialMassages} />
         </div>
       </div>
 

@@ -334,6 +334,204 @@ export const getPracticesFromCleanedEscorts = cache(
   fetchPracticesFromCleanedEscortsInternal,
 );
 
+/**
+ * Generic internal function to extract unique string values from a given
+ * array field on escorts with cleaned images (mirrors the practices logic).
+ */
+async function fetchUniqueFieldFromCleanedEscortsInternal(
+  params: Omit<
+    GetEscortsParams,
+    "practice" | "practices" | "page" | "limit"
+  > = {},
+  field: "practices" | "massage" | "categories" | "bdsm",
+): Promise<{ value: string; count: number }[]> {
+  try {
+    let query = buildBaseQuery();
+    query = applyServerSideFilters(query, params);
+
+    const batchSize = 500;
+    let lastDoc: any = null;
+    const allFiltered: Escort[] = [];
+
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
+
+      const snapshot = await pageQuery.limit(batchSize).get();
+
+      if (snapshot.empty) {
+        break;
+      }
+
+      const docs = snapshot.docs.map(convertDocToEscortFast);
+      const filtered = applyClientFilters(docs, params);
+      allFiltered.push(...filtered);
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      if (snapshot.size < batchSize) {
+        break;
+      }
+    }
+
+    const valueCounts: Record<string, number> = {};
+
+    allFiltered.forEach((escort) => {
+      const values = (escort as any)[field];
+      if (values && Array.isArray(values)) {
+        values.forEach((value: string) => {
+          if (value) {
+            valueCounts[value] = (valueCounts[value] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    return Object.entries(valueCounts)
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.value.localeCompare(b.value);
+      });
+  } catch (error) {
+    console.error(
+      `Error fetching ${field} from cleaned escorts:`,
+      error,
+    );
+    return [];
+  }
+}
+
+/**
+ * Terms that identify a practice/value as a massage type.
+ * Used to extract massage types from escort `practices` and `massage` arrays.
+ */
+const MASSAGE_TYPE_TERMS = [
+  "massage",
+  "tantric",
+  "nuru",
+  "lingam",
+  "yoni",
+  "body to body",
+  "body-to-body",
+  "b2b",
+  "sensual",
+  "erotic",
+  "four hands",
+  "4 hands",
+  "couples",
+  "therapeutic",
+  "relaxation",
+  "wellness",
+  "deep tissue",
+  "swedish",
+  "hot stone",
+  "aromatherapy",
+  "sports massage",
+];
+
+function isMassageType(value: string): boolean {
+  if (!value) return false;
+  const lower = value.toLowerCase();
+  return MASSAGE_TYPE_TERMS.some((term) => lower.includes(term));
+}
+
+/**
+ * Get all unique massage types from cleaned escorts.
+ *
+ * Massage types are extracted from BOTH the `practices` and `massage` array
+ * fields on escorts with cleaned images. Only values that match known massage
+ * type terms (e.g. "massage", "tantric", "nuru", "lingam", "yoni",
+ * "body to body", "b2b", "sensual", etc.) are included.
+ */
+async function fetchMassagesFromCleanedEscortsInternal(
+  params: Omit<
+    GetEscortsParams,
+    "practice" | "practices" | "page" | "limit"
+  > = {},
+): Promise<{ value: string; count: number }[]> {
+  try {
+    let query = buildBaseQuery();
+    query = applyServerSideFilters(query, params);
+
+    const batchSize = 500;
+    let lastDoc: any = null;
+    const allFiltered: Escort[] = [];
+
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
+
+      const snapshot = await pageQuery.limit(batchSize).get();
+
+      if (snapshot.empty) {
+        break;
+      }
+
+      const docs = snapshot.docs.map(convertDocToEscortFast);
+      const filtered = applyClientFilters(docs, params);
+      allFiltered.push(...filtered);
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      if (snapshot.size < batchSize) {
+        break;
+      }
+    }
+
+    const valueCounts: Record<string, number> = {};
+
+    allFiltered.forEach((escort) => {
+      // Extract from `practices` field
+      const practices = escort.practices;
+      if (practices && Array.isArray(practices)) {
+        practices.forEach((practice: string) => {
+          if (practice && isMassageType(practice)) {
+            valueCounts[practice] = (valueCounts[practice] || 0) + 1;
+          }
+        });
+      }
+
+      // Extract from `massage` field
+      const massages = (escort as any).massage;
+      if (massages && Array.isArray(massages)) {
+        massages.forEach((massage: string) => {
+          if (massage && isMassageType(massage) && !valueCounts[massage]) {
+            valueCounts[massage] = (valueCounts[massage] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    return Object.entries(valueCounts)
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.value.localeCompare(b.value);
+      });
+  } catch (error) {
+    console.error("Error fetching massages from cleaned escorts:", error);
+    return [];
+  }
+}
+
+/**
+ * Get all unique massage types from cleaned escorts.
+ * Extracts from both the `practices` and `massage` array fields,
+ * filtering for values that match known massage type terms.
+ */
+export const getMassagesFromCleanedEscorts = cache(
+  fetchMassagesFromCleanedEscortsInternal,
+);
+
 export async function getCleanedImagesForEscort(
   escortId: string,
 ): Promise<string[]> {
