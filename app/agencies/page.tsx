@@ -1,5 +1,5 @@
 // app/agencies/page.tsx
-import React from "react";
+import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -9,18 +9,17 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { ClientPaginationWrapper } from "@/components/ClientPaginationWrapper";
 import SectionArticle from "./SectionArticle";
-import AgencyList from "./AgencyList";
 import AgencyFilterInput from "./AgencyFilterInput";
+import AgenciesContent from "./AgenciesContent";
+import AgenciesLoadingSkeleton from "./AgenciesLoadingSkeleton";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { Metadata, ResolvingMetadata } from "next";
-import { IAgency } from "@/types/agency.types";
 import {
-  getCachedAgencies,
-  getAgenciesCount,
-  getFirstAgency,
-} from "../../server-actions/agency.action";
+  getAgencies,
+  getAgenciesCountOptimized,
+  getFirstAgencyOptimized,
+} from "@/server-actions/agency.action";
 
 // ✅ Force dynamic - no caching
 export const dynamic = "force-dynamic";
@@ -53,14 +52,6 @@ interface FilterParams {
   featured?: string;
   search?: string;
   page?: string;
-}
-
-interface AgenciesData {
-  agencies: IAgency[];
-  hasMore: boolean;
-  totalPages: number;
-  page: number;
-  total: number;
 }
 
 // ============ HELPERS ============
@@ -149,14 +140,14 @@ export async function generateMetadata(
   const filterParams = extractFilterParams(params);
   const pageNumber = parsePageNumber(filterParams.page);
 
-  // ✅ Fetch lightweight data for metadata only using server actions
+  // ✅ Fetch lightweight data for metadata only using optimized server actions
   const [totalAgencies, firstAgency] = await Promise.all([
-    getAgenciesCount({
+    getAgenciesCountOptimized({
       county: filterParams.county,
       region: filterParams.region,
       business: filterParams.business,
     }),
-    getFirstAgency({
+    getFirstAgencyOptimized({
       county: filterParams.county,
       region: filterParams.region,
       business: filterParams.business,
@@ -291,36 +282,18 @@ const AgenciesPage = async ({ searchParams }: Props) => {
     const filterParams = extractFilterParams(params);
     const currentPage = parsePageNumber(filterParams.page);
 
-    // Format values for display
-    const formattedCounty = formatLocationName(filterParams.county);
-    const formattedRegion = formatLocationName(filterParams.region);
-    const formattedBusiness = formatBusinessType(filterParams.business);
-
-    // ✅ Use server action to fetch agencies
-    const agenciesData: AgenciesData = {
-      agencies: [],
-      hasMore: false,
-      totalPages: 0,
-      page: 1,
-      total: 0,
-    };
-
-    const { success, data } = await getCachedAgencies(
-      currentPage,
-      ITEMS_PER_PAGE,
-    );
-
-    if (success && data) {
-      agenciesData.agencies = data.agencies;
-      agenciesData.hasMore = data.hasMore;
-      agenciesData.totalPages = data.totalPages;
-      agenciesData.page = data.page;
-      agenciesData.total = data.total;
-    }
-
-    if (!agenciesData.agencies || agenciesData.agencies.length === 0) {
-      return notFound();
-    }
+    // ✅ Start the agencies fetch immediately as a promise (enables streaming)
+    // Filters are now applied server-side via adminDb + field selection
+    const agenciesPromise = getAgencies({
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      county: filterParams.county,
+      region: filterParams.region,
+      business: filterParams.business,
+      verified: filterParams.verified,
+      featured: filterParams.featured,
+      search: filterParams.search,
+    });
 
     // Build title parts for display
     const { practice, location } = buildTitleParts(filterParams);
@@ -354,7 +327,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
         </div>
 
         <div className="min-h-screen bg-transparent">
-          {/* Header Section */}
+          {/* Header Section — renders immediately, no data needed */}
           <header className="w-full -mt-4 bg-black">
             <div className="container max-w-2/3 mx-auto px-4 py-6">
               <AgencyFilterInput className="border-0" />
@@ -363,7 +336,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
 
           {/* Main Content */}
           <main className="container mx-auto px-4 py-8">
-            {/* Breadcrumb Navigation */}
+            {/* Breadcrumb Navigation — renders immediately */}
             <nav aria-label="Breadcrumb" className="mb-6">
               <Breadcrumb>
                 <BreadcrumbList className="text-white">
@@ -394,22 +367,24 @@ const AgenciesPage = async ({ searchParams }: Props) => {
               </Breadcrumb>
             </nav>
 
-            {/* Agency List */}
-            <AgencyList agencies={agenciesData.agencies} title={displayTitle} />
-
-            {/* Pagination */}
-            {agenciesData.hasMore && (
-              <div className="mt-8">
-                <ClientPaginationWrapper
-                  totalPages={agenciesData.totalPages}
-                  currentPage={agenciesData.page}
-                  totalItems={agenciesData.total}
-                  itemsPerPage={ITEMS_PER_PAGE}
+            {/* Agency List — streamed via Suspense while data fetches */}
+            <Suspense
+              fallback={
+                <AgenciesLoadingSkeleton
+                  title={displayTitle}
+                  itemCount={ITEMS_PER_PAGE}
                 />
-              </div>
-            )}
+              }
+            >
+              <AgenciesContent
+                agenciesPromise={agenciesPromise}
+                displayTitle={displayTitle}
+                currentPage={currentPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+              />
+            </Suspense>
 
-            {/* SEO Section */}
+            {/* SEO Section — renders immediately */}
             <SectionArticle />
           </main>
         </div>

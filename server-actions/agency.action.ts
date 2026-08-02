@@ -14,6 +14,7 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
+import { cache } from "react";
 import { revalidatePath } from "next/cache";
 import { adminDb } from "@/lib/firebase-admin";
 import { slugify } from "@/lib/utils";
@@ -267,6 +268,278 @@ export async function getCachedFirstAgency(filters?: { county?: string; region?:
       return null;
     }
   }
+
+// ============================================
+// OPTIMIZED: GET AGENCIES SERVER (adminDb + select + filters + streaming-ready)
+// ============================================
+
+// Only select the fields needed for the listing page — reduces network I/O dramatically
+const AGENCY_LISTING_FIELDS = [
+  "name",
+  "slug",
+  "coverImage",
+  "logo",
+  "contactPhone",
+  "isVerified",
+  "isFeatured",
+  "rating",
+  "totalReviews",
+  "totalViews",
+  "totalBookings",
+  "businessType",
+  "county",
+  "region",
+  "town",
+  "description",
+  "createdAt",
+  "updatedAt",
+  "languages",
+  "paymentMethods",
+  "services",
+  "specialties",
+];
+
+interface GetAgenciesServerParams {
+  page?: number;
+  limit?: number;
+  county?: string;
+  region?: string;
+  business?: string;
+  verified?: string;
+  featured?: string;
+  search?: string;
+}
+
+interface GetAgenciesServerResponse {
+  agencies: IAgency[];
+  total: number;
+  page: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+function convertAdminDocToAgency(doc: any): IAgency {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    name: data.name || "",
+    slug: data.slug || "",
+    description: data.description || "",
+    contactEmail: data.contactEmail || "",
+    contactPhone: data.contactPhone || "",
+    whatsappPhone: data.whatsappPhone,
+    website: data.website,
+    ownerId: data.ownerId || "",
+    country: data.country || "Kenya",
+    county: data.county || "",
+    countyCode: data.countyCode || "",
+    region: data.region || "",
+    town: data.town || "",
+    estate: data.estate,
+    address: data.address,
+    street: data.street,
+    postalCode: data.postalCode,
+    businessType: (data.businessType as IAgency["businessType"]) || "agency",
+    categories: data.categories || [],
+    openingHours: data.openingHours || {
+      monday: "9:00 AM - 6:00 PM",
+      tuesday: "9:00 AM - 6:00 PM",
+      wednesday: "9:00 AM - 6:00 PM",
+      thursday: "9:00 AM - 6:00 PM",
+      friday: "9:00 AM - 6:00 PM",
+      saturday: "9:00 AM - 6:00 PM",
+      sunday: "Closed",
+    },
+    services: data.services || [],
+    specialties: data.specialties || [],
+    isVerified: data.isVerified || false,
+    verificationStatus: data.verificationStatus || "pending",
+    verificationDocuments: data.verificationDocuments,
+    logo: data.logo,
+    coverImage: data.coverImage,
+    gallery: data.gallery || [],
+    videos: data.videos || [],
+    establishmentYear: data.establishmentYear,
+    languages: data.languages || ["English"],
+    paymentMethods: data.paymentMethods || ["Cash", "M-Pesa"],
+    socialMedia: data.socialMedia,
+    plan: serializePlan(data.plan),
+    rating: data.rating || 0,
+    totalReviews: data.totalReviews || 0,
+    totalBookings: data.totalBookings || 0,
+    totalViews: data.totalViews || 0,
+    featuredEmployeesCount: data.featuredEmployeesCount || 0,
+    isActive: data.isActive !== undefined ? data.isActive : true,
+    isFeatured: data.isFeatured || false,
+    createdAt: data.createdAt?.toDate?.()
+      ? data.createdAt.toDate().toISOString()
+      : data.createdAt
+        ? new Date(data.createdAt).toISOString()
+        : undefined,
+    updatedAt: data.updatedAt?.toDate?.()
+      ? data.updatedAt.toDate().toISOString()
+      : data.updatedAt
+        ? new Date(data.updatedAt).toISOString()
+        : undefined,
+  };
+}
+
+function buildAgencyCountQuery(
+  params: Pick<GetAgenciesServerParams, "county" | "region" | "business" | "verified" | "featured">,
+): QueryConstraint[] {
+  const constraints: QueryConstraint[] = [
+    where("isActive", "==", true),
+  ];
+
+  if (params.county && params.county !== "all") {
+    constraints.push(where("county", "==", params.county));
+  }
+  if (params.region && params.region !== "all") {
+    constraints.push(where("region", "==", params.region));
+  }
+  if (params.business && params.business !== "all") {
+    constraints.push(where("businessType", "==", params.business));
+  }
+  if (params.verified === "true") {
+    constraints.push(where("isVerified", "==", true));
+  }
+  if (params.featured === "true") {
+    constraints.push(where("isFeatured", "==", true));
+  }
+
+  return constraints;
+}
+
+async function fetchAgenciesServer(params: GetAgenciesServerParams = {}): Promise<GetAgenciesServerResponse> {
+  const {
+    page = 1,
+    limit: limitParam = 24,
+    county,
+    region,
+    business,
+    verified,
+    featured,
+    search,
+  } = params;
+
+  const validPage = Math.max(1, page);
+  const validLimit = Math.min(100, Math.max(1, limitParam));
+
+  const filterParams = { county, region, business, verified, featured };
+  const countConstraints = buildAgencyCountQuery(filterParams);
+
+  // Count query — server-side count via getCountFromServer (fast, no doc download)
+  const countQuery = query(collection(db, "agencies"), ...countConstraints);
+
+  // Data query — adminDb + field selection (only fetch what we need)
+  const q = adminDb.collection("agencies");
+  let adminQuery: any = q.select(...AGENCY_LISTING_FIELDS).where("isActive", "==", true);
+
+  if (county && county !== "all") {
+    adminQuery = adminQuery.where("county", "==", county);
+  }
+  if (region && region !== "all") {
+    adminQuery = adminQuery.where("region", "==", region);
+  }
+  if (business && business !== "all") {
+    adminQuery = adminQuery.where("businessType", "==", business);
+  }
+  if (verified === "true") {
+    adminQuery = adminQuery.where("isVerified", "==", true);
+  }
+  if (featured === "true") {
+    adminQuery = adminQuery.where("isFeatured", "==", true);
+  }
+
+  adminQuery = adminQuery.orderBy("createdAt", "desc");
+
+  // Parallel: server-side count + adminDb data fetch with offset
+  const [countSnapshot, dataSnapshot] = await Promise.all([
+    getCountFromServer(countQuery),
+    adminQuery.offset((validPage - 1) * validLimit).limit(validLimit).get(),
+  ]);
+
+  const total = countSnapshot.data().count;
+  const totalPages = Math.ceil(total / validLimit);
+
+  let agencies: IAgency[] = dataSnapshot.docs.map(convertAdminDocToAgency);
+
+  // Apply search client-side (Firestore doesn't support full-text search)
+  if (search && search !== "all") {
+    const searchLower = search.toLowerCase();
+    agencies = agencies.filter(
+      (agency) =>
+        agency.name?.toLowerCase().includes(searchLower) ||
+        agency.description?.toLowerCase().includes(searchLower),
+    );
+  }
+
+  return {
+    agencies,
+    total,
+    page: validPage,
+    totalPages,
+    hasMore: validPage < totalPages,
+  };
+}
+
+export const getAgenciesServer = cache(fetchAgenciesServer);
+
+async function fetchAgenciesCountServer(params: {
+  county?: string;
+  region?: string;
+  business?: string;
+}): Promise<number> {
+  try {
+    const constraints = buildAgencyCountQuery(params);
+    const q = query(collection(db, "agencies"), ...constraints);
+    const snapshot = await getCountFromServer(q);
+    return snapshot.data().count;
+  } catch (error) {
+    console.error("Error getting agencies count:", error);
+    return 0;
+  }
+}
+
+export const getAgenciesCountServer = cache(fetchAgenciesCountServer);
+
+async function fetchFirstAgencyServer(params: {
+  county?: string;
+  region?: string;
+  business?: string;
+}): Promise<IAgency | null> {
+  try {
+    const q = adminDb.collection("agencies");
+    let adminQuery: any = q
+      .select(...AGENCY_LISTING_FIELDS)
+      .where("isActive", "==", true)
+      .orderBy("createdAt", "desc")
+      .limit(1);
+
+    if (params.county && params.county !== "all") {
+      adminQuery = adminQuery.where("county", "==", params.county);
+    }
+    if (params.region && params.region !== "all") {
+      adminQuery = adminQuery.where("region", "==", params.region);
+    }
+    if (params.business && params.business !== "all") {
+      adminQuery = adminQuery.where("businessType", "==", params.business);
+    }
+
+    const snapshot = await adminQuery.get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return convertAdminDocToAgency(snapshot.docs[0]);
+  } catch (error) {
+    console.error("Error getting first agency:", error);
+    return null;
+  }
+}
+
+export const getFirstAgencyServer = cache(fetchFirstAgencyServer);
 
 // ============================================
 // GET AGENCY ESCORTS
@@ -755,3 +1028,10 @@ export async function updateAgency(
 export const getAgenciesCount = getCachedAgenciesCount;
 export const getFirstAgency = getCachedFirstAgency;
 export const getAgencyEscorts = getCachedAgencyEscorts;
+
+// ============================================
+// OPTIMIZED EXPORTS (use adminDb + getCountFromServer for speed)
+// ============================================
+export const getAgencies = getAgenciesServer;
+export const getAgenciesCountOptimized = getAgenciesCountServer;
+export const getFirstAgencyOptimized = getFirstAgencyServer;
