@@ -42,7 +42,7 @@ export default function VerifyButton() {
     <button
       onClick={start}
       disabled={loading}
-      className="px-5 py-2 bg-primary text-white font-semibold rounded-md hover:bg-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-5 py-3 bg-primary text-lg text-white uppercase font-semibold rounded-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {loading ? "Starting…" : "Verify my identity"}
     </button>

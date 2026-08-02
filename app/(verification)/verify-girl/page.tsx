@@ -2,6 +2,7 @@ import SectionCard from "@/components/SectionCard";
 import React from "react";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
+import VerifyButton from "@/app/verify/VerifyButton";
 
 const page = () => {
   return (
@@ -25,14 +26,8 @@ const page = () => {
             description="To begin the verification process, click the button below. You will be guided to upload a valid government-issued ID and take a live selfie. Once submitted, our team will review your documents and approve your verification within one business day."
           />
 
-          <div className=" flex justify-center items-center">
-            {/* TODO:// PUT VERIFY GIRL BUTTON HERE */}
-            {/* <Link
-              className="bg-primary p-3 px-4 font-semibold text-white uppercase text-lg "
-              href={editProfileLink}
-            >
-              {buttonText}
-            </Link> */}
+          <div className="flex justify-center items-center">
+            <VerifyButton />
           </div>
         </div>
       </SectionCard>
