@@ -27,6 +27,7 @@ import { PostHogProvider } from "./PostHogProvider";
 import { metadata } from "./config/metadata";
 import { structuredData, organizationSchema } from "./config/structured-data";
 import { getAllLookupData } from "@/server-actions/lookup.action";
+import YouTargetsAd from "@/components/YouTargetsAd";
 
 // ✅ Export metadata so Next.js picks it up
 export { metadata };
@@ -175,8 +176,8 @@ export default async function RootLayout({
               initialLookup={lookup.data}
             />
 
-            {/* YouTargets Ad - 300x250 medium rectangle
-            <div className="flex justify-center">
+            {/* YouTargets Ad - 300x250 medium rectangle */}
+            {/* <div className="flex justify-center">
               <YouTargetsAd />
             </div> */}
           </main>

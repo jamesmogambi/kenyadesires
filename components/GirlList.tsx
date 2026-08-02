@@ -35,12 +35,16 @@ const GirlList = ({
     <>
       <div
         className={cn(
-          "grid grid-cols-2 mx-6 lg:mx-auto my-6 max-w-7xl lg:grid-cols-4 gap-3 lg:gap-6",
+          "grid grid-cols-2 mx-6 lg:mx-auto my-6  max-w-7xl lg:grid-cols-4 gap-3 lg:gap-6",
           className,
         )}
       >
         {girls.map((girl, index) => (
-          <GirlItem key={girl.id || girl.id || index} girl={girl} priority={index === 0} />
+          <GirlItem
+            key={girl.id || girl.id || index}
+            girl={girl}
+            priority={index === 0}
+          />
         ))}
       </div>
 

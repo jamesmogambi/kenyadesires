@@ -38,9 +38,14 @@ export default async function Home({ searchParams }: PageProps) {
       <div className="flex justify-center">
         <YouTargetsAd />
       </div>
-      <GirlRegions />
-      {escorts.length > 0 && <GirlList girls={escorts} />}
-      {escorts.length === 0 && total === 0 && <NotFoundList />}
+      <div className="-mt-12">
+        <GirlRegions />
+      </div>
+      <div className="">
+        {escorts.length > 0 && <GirlList className="" girls={escorts} />}
+        {escorts.length === 0 && total === 0 && <NotFoundList />}
+      </div>
+
       <WhyProfile className="mt-20" />
       <PassionateMoments className="mt-8" />
     </>

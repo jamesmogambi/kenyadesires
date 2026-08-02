@@ -14,7 +14,7 @@ const GirlRegions = async () => {
   } = await getCachedPopularCounties(16);
 
   return (
-    <div>
+    <div className="">
       <SectionCard className="">
         <h4 className="text-center text-3xl font-bold text-white ">
           Find a<span className="text-primary"> girl to have sex</span> with in
