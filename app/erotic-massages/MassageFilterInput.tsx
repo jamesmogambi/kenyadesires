@@ -21,6 +21,13 @@ interface Prop {
   initialMassages?: { value: string; count: number }[];
 }
 
+const formatMassageName = (name: string): string => {
+  if (!name) return "";
+  const words = name.split(/\s+/);
+  if (words.length <= 10) return name;
+  return words.slice(0, 10).join(" ") + "...";
+};
+
 const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -309,8 +316,8 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
         <DropdownMenuTrigger className="cursor-pointer self-end border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md">
           {massageType ? (
             <div className="flex items-center gap-2">
-              <span className="text-slate-100 text-lg font-bold capitalize">
-                {massageType}
+              <span className="text-slate-100 text-lg font-bold capitalize truncate">
+                {formatMassageName(massageType)}
               </span>
             </div>
           ) : (
@@ -337,7 +344,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
           <div className="flex flex-wrap gap-1.5">
             {massageVariants?.map((item: any) => (
               <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] truncate max-w-full"
                 onSelect={(e) => {
                   e.preventDefault();
                   handleMassageType(item.name || item.value);
@@ -345,7 +352,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
                 }}
                 key={item.id}
               >
-                {item.name || item.value}
+                {formatMassageName(item.name || item.value)}
               </DropdownMenuItem>
             ))}
           </div>
