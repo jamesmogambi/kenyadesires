@@ -244,7 +244,7 @@ const NavActions = ({
           {isBusiness && (
             <DropdownMenuItem className="text-stone-800 group">
               {agencyIsVerified ? (
-                <Link href="/verify/done" className="flex items-center gap-2">
+                <Link href="/agency-verification-status" className="flex items-center gap-2">
                   <BadgeCheck className="size-6 text-green-400" />
                   <span className="uppercase font-normal text-base group-hover:font-bold">
                     View verification status

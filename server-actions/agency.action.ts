@@ -20,6 +20,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
+import { notifyAdminOfAgencyVerification } from "./agency-verification-email";
 
 // ============================================
 // CONVERT FIREBASE DOC TO AGENCY
@@ -41,13 +42,13 @@ function serializePlan(plan: any): IAgency["plan"] {
     activatedAt: plan.activatedAt?.toDate?.()
       ? plan.activatedAt.toDate().toISOString()
       : plan.activatedAt
-      ? new Date(plan.activatedAt).toISOString()
-      : undefined,
+        ? new Date(plan.activatedAt).toISOString()
+        : undefined,
     expiresAt: plan.expiresAt?.toDate?.()
       ? plan.expiresAt.toDate().toISOString()
       : plan.expiresAt
-      ? new Date(plan.expiresAt).toISOString()
-      : undefined,
+        ? new Date(plan.expiresAt).toISOString()
+        : undefined,
     features: plan.features || [],
     maxEmployees: plan.maxEmployees || 5,
     maxGalleryImages: plan.maxGalleryImages || 10,
@@ -111,165 +112,180 @@ function convertFirebaseDocToAgency(
     featuredEmployeesCount: data.featuredEmployeesCount || 0,
     isActive: data.isActive !== undefined ? data.isActive : true,
     isFeatured: data.isFeatured || false,
-    createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt || new Date().toISOString(),
-    updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : data.updatedAt || new Date().toISOString(),
+    createdAt: data.createdAt?.toDate?.()
+      ? data.createdAt.toDate().toISOString()
+      : data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt?.toDate?.()
+      ? data.updatedAt.toDate().toISOString()
+      : data.updatedAt || new Date().toISOString(),
   };
 }
 
 // ============================================
 // GET AGENCIES
 // ============================================
-export async function getCachedAgencies(page: number = 1, limitCount: number = 24) {
-    try {
-      console.log(`🔄 Fetching agencies from Firestore (page ${page})...`);
+export async function getCachedAgencies(
+  page: number = 1,
+  limitCount: number = 24,
+) {
+  try {
+    console.log(`🔄 Fetching agencies from Firestore (page ${page})...`);
 
-      const agenciesRef = collection(db, "agencies");
-      const constraints: QueryConstraint[] = [
-        where("isActive", "==", true),
-        orderBy("createdAt", "desc"),
-        limit(limitCount),
-      ];
+    const agenciesRef = collection(db, "agencies");
+    const constraints: QueryConstraint[] = [
+      where("isActive", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(limitCount),
+    ];
 
-      const q = query(agenciesRef, ...constraints);
-      const snapshot = await getDocs(q);
+    const q = query(agenciesRef, ...constraints);
+    const snapshot = await getDocs(q);
 
-      const agencies: IAgency[] = [];
-      snapshot.forEach((doc) => {
-        agencies.push(convertFirebaseDocToAgency(doc));
-      });
+    const agencies: IAgency[] = [];
+    snapshot.forEach((doc) => {
+      agencies.push(convertFirebaseDocToAgency(doc));
+    });
 
-      const countQuery = query(agenciesRef, where("isActive", "==", true));
-      const countSnapshot = await getDocs(countQuery);
-      const total = countSnapshot.docs.length;
+    const countQuery = query(agenciesRef, where("isActive", "==", true));
+    const countSnapshot = await getDocs(countQuery);
+    const total = countSnapshot.docs.length;
 
-      const totalPages = Math.ceil(total / limitCount);
+    const totalPages = Math.ceil(total / limitCount);
 
-      return {
-        success: true,
-        data: {
-          agencies,
-          total,
-          page,
-          totalPages,
-          hasMore: page < totalPages,
-        },
-      };
-    } catch (error) {
-      console.error("Error fetching agencies:", error);
-      return {
-        success: false,
-        data: {
-          agencies: [],
-          total: 0,
-          page: 1,
-          totalPages: 0,
-          hasMore: false,
-        },
-      };
-    }
+    return {
+      success: true,
+      data: {
+        agencies,
+        total,
+        page,
+        totalPages,
+        hasMore: page < totalPages,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching agencies:", error);
+    return {
+      success: false,
+      data: {
+        agencies: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+        hasMore: false,
+      },
+    };
   }
+}
 
 // ============================================
 // GET AGENCY BY SLUG
 // ============================================
 export async function getCachedAgencyBySlug(slug: string) {
-    try {
-      console.log(`🔄 Fetching agency by slug: ${slug}`);
+  try {
+    console.log(`🔄 Fetching agency by slug: ${slug}`);
 
-      const agenciesRef = collection(db, "agencies");
-      const q = query(
-        agenciesRef,
-        where("slug", "==", slug),
-        where("isActive", "==", true),
-      );
+    const agenciesRef = collection(db, "agencies");
+    const q = query(
+      agenciesRef,
+      where("slug", "==", slug),
+      where("isActive", "==", true),
+    );
 
-      const snapshot = await getDocs(q);
+    const snapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        return {
-          success: false,
-          data: null,
-        };
-      }
-
-      const agency = convertFirebaseDocToAgency(snapshot.docs[0]);
-
-      return {
-        success: true,
-        data: agency,
-      };
-    } catch (error) {
-      console.error("Error fetching agency by slug:", error);
+    if (snapshot.empty) {
       return {
         success: false,
         data: null,
       };
     }
+
+    const agency = convertFirebaseDocToAgency(snapshot.docs[0]);
+
+    return {
+      success: true,
+      data: agency,
+    };
+  } catch (error) {
+    console.error("Error fetching agency by slug:", error);
+    return {
+      success: false,
+      data: null,
+    };
   }
+}
 
 // ============================================
 // GET AGENCIES COUNT
 // ============================================
-export async function getCachedAgenciesCount(filters?: { county?: string; region?: string; business?: string }) {
-    try {
-      const agenciesRef = collection(db, "agencies");
-      const constraints: QueryConstraint[] = [where("isActive", "==", true)];
+export async function getCachedAgenciesCount(filters?: {
+  county?: string;
+  region?: string;
+  business?: string;
+}) {
+  try {
+    const agenciesRef = collection(db, "agencies");
+    const constraints: QueryConstraint[] = [where("isActive", "==", true)];
 
-      if (filters?.county && filters.county !== "all") {
-        constraints.push(where("county", "==", filters.county));
-      }
-      if (filters?.region && filters.region !== "all") {
-        constraints.push(where("region", "==", filters.region));
-      }
-      if (filters?.business && filters.business !== "all") {
-        constraints.push(where("businessType", "==", filters.business));
-      }
-
-      const q = query(agenciesRef, ...constraints);
-      const snapshot = await getDocs(q);
-
-      return snapshot.docs.length;
-    } catch (error) {
-      console.error("Error getting agencies count:", error);
-      return 0;
+    if (filters?.county && filters.county !== "all") {
+      constraints.push(where("county", "==", filters.county));
     }
+    if (filters?.region && filters.region !== "all") {
+      constraints.push(where("region", "==", filters.region));
+    }
+    if (filters?.business && filters.business !== "all") {
+      constraints.push(where("businessType", "==", filters.business));
+    }
+
+    const q = query(agenciesRef, ...constraints);
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.length;
+  } catch (error) {
+    console.error("Error getting agencies count:", error);
+    return 0;
   }
+}
 
 // ============================================
 // GET FIRST AGENCY (for metadata)
 // ============================================
-export async function getCachedFirstAgency(filters?: { county?: string; region?: string; business?: string }) {
-    try {
-      const agenciesRef = collection(db, "agencies");
-      const constraints: QueryConstraint[] = [
-        where("isActive", "==", true),
-        orderBy("createdAt", "desc"),
-        limit(1),
-      ];
+export async function getCachedFirstAgency(filters?: {
+  county?: string;
+  region?: string;
+  business?: string;
+}) {
+  try {
+    const agenciesRef = collection(db, "agencies");
+    const constraints: QueryConstraint[] = [
+      where("isActive", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(1),
+    ];
 
-      if (filters?.county && filters.county !== "all") {
-        constraints.push(where("county", "==", filters.county));
-      }
-      if (filters?.region && filters.region !== "all") {
-        constraints.push(where("region", "==", filters.region));
-      }
-      if (filters?.business && filters.business !== "all") {
-        constraints.push(where("businessType", "==", filters.business));
-      }
+    if (filters?.county && filters.county !== "all") {
+      constraints.push(where("county", "==", filters.county));
+    }
+    if (filters?.region && filters.region !== "all") {
+      constraints.push(where("region", "==", filters.region));
+    }
+    if (filters?.business && filters.business !== "all") {
+      constraints.push(where("businessType", "==", filters.business));
+    }
 
-      const q = query(agenciesRef, ...constraints);
-      const snapshot = await getDocs(q);
+    const q = query(agenciesRef, ...constraints);
+    const snapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        return null;
-      }
-
-      return convertFirebaseDocToAgency(snapshot.docs[0]);
-    } catch (error) {
-      console.error("Error getting first agency:", error);
+    if (snapshot.empty) {
       return null;
     }
+
+    return convertFirebaseDocToAgency(snapshot.docs[0]);
+  } catch (error) {
+    console.error("Error getting first agency:", error);
+    return null;
   }
+}
 
 // ============================================
 // OPTIMIZED: GET AGENCIES SERVER (adminDb + select + filters + streaming-ready)
@@ -389,11 +405,12 @@ function convertAdminDocToAgency(doc: any): IAgency {
 }
 
 function buildAgencyCountQuery(
-  params: Pick<GetAgenciesServerParams, "county" | "region" | "business" | "verified" | "featured">,
+  params: Pick<
+    GetAgenciesServerParams,
+    "county" | "region" | "business" | "verified" | "featured"
+  >,
 ): QueryConstraint[] {
-  const constraints: QueryConstraint[] = [
-    where("isActive", "==", true),
-  ];
+  const constraints: QueryConstraint[] = [where("isActive", "==", true)];
 
   if (params.county && params.county !== "all") {
     constraints.push(where("county", "==", params.county));
@@ -414,7 +431,9 @@ function buildAgencyCountQuery(
   return constraints;
 }
 
-async function fetchAgenciesServer(params: GetAgenciesServerParams = {}): Promise<GetAgenciesServerResponse> {
+async function fetchAgenciesServer(
+  params: GetAgenciesServerParams = {},
+): Promise<GetAgenciesServerResponse> {
   const {
     page = 1,
     limit: limitParam = 24,
@@ -437,7 +456,9 @@ async function fetchAgenciesServer(params: GetAgenciesServerParams = {}): Promis
 
   // Data query — adminDb + field selection (only fetch what we need)
   const q = adminDb.collection("agencies");
-  let adminQuery: any = q.select(...AGENCY_LISTING_FIELDS).where("isActive", "==", true);
+  let adminQuery: any = q
+    .select(...AGENCY_LISTING_FIELDS)
+    .where("isActive", "==", true);
 
   if (county && county !== "all") {
     adminQuery = adminQuery.where("county", "==", county);
@@ -460,7 +481,10 @@ async function fetchAgenciesServer(params: GetAgenciesServerParams = {}): Promis
   // Parallel: server-side count + adminDb data fetch with offset
   const [countSnapshot, dataSnapshot] = await Promise.all([
     getCountFromServer(countQuery),
-    adminQuery.offset((validPage - 1) * validLimit).limit(validLimit).get(),
+    adminQuery
+      .offset((validPage - 1) * validLimit)
+      .limit(validLimit)
+      .get(),
   ]);
 
   const total = countSnapshot.data().count;
@@ -548,126 +572,129 @@ export const getFirstAgencyServer = cache(fetchFirstAgencyServer);
 // ============================================
 // GET AGENCY ESCORTS
 // ============================================
-export async function getCachedAgencyEscorts(agencyId: string, page: number = 1, limitCount: number = 20) {
-    try {
-      console.log(`🔄 Fetching escorts for agency: ${agencyId}`);
+export async function getCachedAgencyEscorts(
+  agencyId: string,
+  page: number = 1,
+  limitCount: number = 20,
+) {
+  try {
+    console.log(`🔄 Fetching escorts for agency: ${agencyId}`);
 
-      const escortsRef = collection(db, "escorts");
-      const constraints: QueryConstraint[] = [
-        where("agencyId", "==", agencyId),
-        where("isActive", "==", true),
-        orderBy("createdAt", "desc"),
-        limit(limitCount),
-      ];
+    const escortsRef = collection(db, "escorts");
+    const constraints: QueryConstraint[] = [
+      where("agencyId", "==", agencyId),
+      where("isActive", "==", true),
+      orderBy("createdAt", "desc"),
+      limit(limitCount),
+    ];
 
-      const q = query(escortsRef, ...constraints);
-      const snapshot = await getDocs(q);
+    const q = query(escortsRef, ...constraints);
+    const snapshot = await getDocs(q);
 
-      const escorts: Escort[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        escorts.push({
-          id: doc.id,
-          name: data.name || "",
-          username: data.username || "",
-          previewPhoto: data.previewPhoto || "",
-          labels: data.labels || [],
-          email: data.email || "",
-          age: data.age || "",
-          telephone: data.telephone || "",
-          whatsappPhone: data.whatsappPhone || "",
-          images: data.images || [],
-          videos: data.videos || [],
-          about: data.about || "",
-          availability: data.availability || [],
-          ethnicity: data.ethnicity || "",
-          nationality: data.nationality || "",
-          bustSize: data.bustSize || "",
-          weight: data.weight || "",
-          zodiacSign: data.zodiacSign || "",
-          sexualOrientation: data.sexualOrientation || "",
-          gender: data.gender || "",
-          languages: data.languages || [],
-          categories: data.categories || [],
-          country: data.country || "Kenya",
-          county: data.county || "",
-          countyCode: data.countyCode || "",
-          regions: data.regions || [],
-          primaryRegion: data.primaryRegion || "",
-          locations: data.locations || [],
-          source: data.source || "",
-          practices: data.practices || [],
-          bdsm: data.bdsm || [],
-          massage: data.massage || [],
-          extraServices: data.extraServices || [],
-          slug: data.slug || "",
-          role: data.role || "escort",
-          openingHours: data.openingHours || {
-            monday: "",
-            tuesday: "",
-            wednesday: "",
-            thursday: "",
-            friday: "",
-            saturday: "",
-            sunday: "",
-          },
-          rates: data.rates || [],
-          breastSize: data.breastSize || "",
-          ageCategory: data.ageCategory || "",
-          character: data.character || "",
-          hairColor: data.hairColor || "",
-          experience: data.experience || "",
-          workType: data.workType || "",
-          isAgencyFeatured: data.isAgencyFeatured || false,
-          isActive: data.isActive !== undefined ? data.isActive : true,
-          isVerified: data.isVerified || false,
-          isFeatured: data.isFeatured || false,
-          plan: data.plan || {
-            type: "basic",
-            isActive: true,
-            features: [],
-            maxEmployees: 0,
-            maxGalleryImages: 0,
-          },
-          totalBookings: data.totalBookings || 0,
-          totalReviews: data.totalReviews || 0,
-          rating: data.rating || 0,
-          totalViews: data.totalViews || 0,
-          createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
-          updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
-        });
+    const escorts: Escort[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      escorts.push({
+        id: doc.id,
+        name: data.name || "",
+        username: data.username || "",
+        previewPhoto: data.previewPhoto || "",
+        labels: data.labels || [],
+        email: data.email || "",
+        age: data.age || "",
+        telephone: data.telephone || "",
+        whatsappPhone: data.whatsappPhone || "",
+        images: data.images || [],
+        videos: data.videos || [],
+        about: data.about || "",
+        availability: data.availability || [],
+        ethnicity: data.ethnicity || "",
+        nationality: data.nationality || "",
+        bustSize: data.bustSize || "",
+        weight: data.weight || "",
+        zodiacSign: data.zodiacSign || "",
+        sexualOrientation: data.sexualOrientation || "",
+        gender: data.gender || "",
+        languages: data.languages || [],
+        categories: data.categories || [],
+        country: data.country || "Kenya",
+        county: data.county || "",
+        countyCode: data.countyCode || "",
+        regions: data.regions || [],
+        primaryRegion: data.primaryRegion || "",
+        locations: data.locations || [],
+        source: data.source || "",
+        practices: data.practices || [],
+        bdsm: data.bdsm || [],
+        massage: data.massage || [],
+        extraServices: data.extraServices || [],
+        slug: data.slug || "",
+        role: data.role || "escort",
+        openingHours: data.openingHours || {
+          monday: "",
+          tuesday: "",
+          wednesday: "",
+          thursday: "",
+          friday: "",
+          saturday: "",
+          sunday: "",
+        },
+        rates: data.rates || [],
+        breastSize: data.breastSize || "",
+        ageCategory: data.ageCategory || "",
+        character: data.character || "",
+        hairColor: data.hairColor || "",
+        experience: data.experience || "",
+        workType: data.workType || "",
+        isAgencyFeatured: data.isAgencyFeatured || false,
+        isActive: data.isActive !== undefined ? data.isActive : true,
+        isVerified: data.isVerified || false,
+        isFeatured: data.isFeatured || false,
+        plan: data.plan || {
+          type: "basic",
+          isActive: true,
+          features: [],
+          maxEmployees: 0,
+          maxGalleryImages: 0,
+        },
+        totalBookings: data.totalBookings || 0,
+        totalReviews: data.totalReviews || 0,
+        rating: data.rating || 0,
+        totalViews: data.totalViews || 0,
+        createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
+        updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
       });
+    });
 
-      const totalQuery = query(
-        escortsRef,
-        where("agencyId", "==", agencyId),
-        where("isActive", "==", true),
-      );
-      const totalSnapshot = await getCountFromServer(totalQuery);
-      const total = totalSnapshot.data().count;
+    const totalQuery = query(
+      escortsRef,
+      where("agencyId", "==", agencyId),
+      where("isActive", "==", true),
+    );
+    const totalSnapshot = await getCountFromServer(totalQuery);
+    const total = totalSnapshot.data().count;
 
-      return {
-        success: true,
-        data: escorts,
-        total,
-        page,
-        totalPages: Math.ceil(total / limitCount),
-        hasMore: page < Math.ceil(total / limitCount),
-      };
-    } catch (error) {
-      console.error("Error fetching agency escorts:", error);
-      return {
-        success: false,
-        data: [],
-        error:
-          error instanceof Error ? error.message : "Failed to fetch escorts",
-        total: 0,
-        page: 1,
-        totalPages: 0,
-        hasMore: false,
-      };
-    }
+    return {
+      success: true,
+      data: escorts,
+      total,
+      page,
+      totalPages: Math.ceil(total / limitCount),
+      hasMore: page < Math.ceil(total / limitCount),
+    };
+  } catch (error) {
+    console.error("Error fetching agency escorts:", error);
+    return {
+      success: false,
+      data: [],
+      error: error instanceof Error ? error.message : "Failed to fetch escorts",
+      total: 0,
+      page: 1,
+      totalPages: 0,
+      hasMore: false,
+    };
   }
+}
 
 // ============================================
 // GET AGENCY BY OWNER (Clerk user id)
@@ -742,8 +769,12 @@ export async function getAgencyByOwnerId(
       featuredEmployeesCount: data.featuredEmployeesCount || 0,
       isActive: data.isActive !== undefined ? data.isActive : true,
       isFeatured: data.isFeatured || false,
-      createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt || null,
-      updatedAt: data.updatedAt?.toDate?.() ? data.updatedAt.toDate().toISOString() : data.updatedAt || null,
+      createdAt: data.createdAt?.toDate?.()
+        ? data.createdAt.toDate().toISOString()
+        : data.createdAt || null,
+      updatedAt: data.updatedAt?.toDate?.()
+        ? data.updatedAt.toDate().toISOString()
+        : data.updatedAt || null,
     };
   } catch (error) {
     console.error("Error fetching agency by owner:", error);
@@ -937,8 +968,7 @@ export async function createAgency(
     console.error("Error creating agency:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to create agency",
+      error: error instanceof Error ? error.message : "Failed to create agency",
     };
   }
 }
@@ -1025,8 +1055,7 @@ export async function updateAgency(
     console.error("Error updating agency:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to update agency",
+      error: error instanceof Error ? error.message : "Failed to update agency",
     };
   }
 }
@@ -1063,7 +1092,8 @@ export async function submitAgencyVerification(
 
     const verificationDocuments = {
       ...currentDocs,
-      businessLicense: data.businessRegistration || currentDocs.businessLicense || "",
+      businessLicense:
+        data.businessRegistration || currentDocs.businessLicense || "",
       idProof: data.idFront || currentDocs.idProof || "",
       otherDocuments: [
         ...(data.idBack ? [data.idBack] : []),
@@ -1073,13 +1103,20 @@ export async function submitAgencyVerification(
 
     await docRef.update({
       verificationDocuments,
-      verificationStatus: "pending",
+      verificationStatus: "under_review",
       isVerified: false,
       updatedAt: new Date(),
     });
 
+    await notifyAdminOfAgencyVerification({
+      name: existing.name || "",
+      id: docRef.id,
+      ownerId: existing.ownerId || data.ownerId,
+      verificationDocuments,
+    });
+
     revalidatePath("/agency-profile");
-    revalidatePath("/verify/done");
+    revalidatePath("/agency-verification-status");
 
     return { success: true };
   } catch (error) {

@@ -36,7 +36,7 @@ const page = () => {
               {/* <VerifyButton /> */}
 
               <Link
-                href="agency-verify"
+                href="/agency-verify"
                 className="px-5 py-3 bg-primary text-lg text-white uppercase font-semibold rounded-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Start Verification

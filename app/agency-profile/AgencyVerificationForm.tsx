@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FileText, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -123,6 +124,7 @@ export default function AgencyVerificationForm({
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
   const [accepted, setAccepted] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +170,7 @@ export default function AgencyVerificationForm({
       setRegCert(null);
       setIdFront(null);
       setIdBack(null);
+      router.push("/agency-verification-status");
     } catch (err: any) {
       toast.error(err?.message || "Something went wrong while uploading");
     } finally {

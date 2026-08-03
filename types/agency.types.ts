@@ -46,7 +46,7 @@ export interface IAgency {
 
   // Verification
   isVerified: boolean;
-  verificationStatus: "pending" | "verified" | "rejected";
+  verificationStatus: "pending" | "under_review" | "verified" | "rejected";
   verificationDocuments?: {
     businessLicense?: string;
     taxCertificate?: string;
