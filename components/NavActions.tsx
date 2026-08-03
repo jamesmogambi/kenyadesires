@@ -173,7 +173,7 @@ const NavActions = ({
 
           <DropdownMenuItem className="text-stone-800 group">
             <Link
-              href={isBusiness ? "/agency-admin-profile" : "adjustment"}
+              href={isBusiness ? "/agency-profile" : "adjustment"}
               className="flex items-center gap-2"
             >
               <svg
@@ -191,7 +191,7 @@ const NavActions = ({
                 ></path>
               </svg>
               <span className="uppercase font-normal text-base group-hover:font-bold">
-                edit profile
+                {isBusiness ? "edit agency profile" : "edit profile"}
               </span>
             </Link>
           </DropdownMenuItem>

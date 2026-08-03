@@ -1032,6 +1032,69 @@ export async function updateAgency(
 }
 
 // ============================================
+// AGENCY IDENTITY VERIFICATION DOCUMENTS
+// ============================================
+export interface AgencyVerificationInput {
+  ownerId: string;
+  businessRegistration?: string; // Business Registration Certificate URL
+  idFront?: string; // National ID front URL
+  idBack?: string; // National ID back URL
+}
+
+export async function submitAgencyVerification(
+  agencyId: string,
+  data: AgencyVerificationInput,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const docRef = adminDb.collection("agencies").doc(agencyId);
+    const snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      return { success: false, error: "Agency profile not found" };
+    }
+
+    const existing = snapshot.data() || {};
+
+    if (existing.ownerId !== data.ownerId) {
+      return { success: false, error: "Not allowed to verify this agency" };
+    }
+
+    const currentDocs = existing.verificationDocuments || {};
+
+    const verificationDocuments = {
+      ...currentDocs,
+      businessLicense: data.businessRegistration || currentDocs.businessLicense || "",
+      idProof: data.idFront || currentDocs.idProof || "",
+      otherDocuments: [
+        ...(data.idBack ? [data.idBack] : []),
+        ...(currentDocs.otherDocuments || []),
+      ].filter(Boolean),
+    };
+
+    await docRef.update({
+      verificationDocuments,
+      verificationStatus: "pending",
+      isVerified: false,
+      updatedAt: new Date(),
+    });
+
+    revalidatePath("/agency-profile");
+    revalidatePath("/verify/done");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error submitting agency verification:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to submit agency verification",
+    };
+  }
+}
+
+// ============================================
 // LEGACY EXPORTS (for backward compatibility)
 // ============================================
 // These point to the direct (uncached) versions

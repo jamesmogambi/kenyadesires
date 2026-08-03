@@ -2,6 +2,7 @@ import SectionCard from "@/components/SectionCard";
 import React from "react";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
+import Link from "next/link";
 
 const page = () => {
   return (
@@ -33,6 +34,13 @@ const page = () => {
 
             <div className="flex justify-center items-center">
               {/* <VerifyButton /> */}
+
+              <Link
+                href="agency-verify"
+                className="px-5 py-3 bg-primary text-lg text-white uppercase font-semibold rounded-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Start Verification
+              </Link>
             </div>
           </div>
         </SectionCard>
