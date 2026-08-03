@@ -35,6 +35,7 @@ type State = {
   clearTags: () => void;
   clearDescription: () => void;
   reset: () => void;
+  resetLocations: () => void;
 };
 
 // N/B: 'City belongs to region e.g Umoje, Buru Buru cities belong to Nairobi region'
@@ -55,8 +56,8 @@ export const useFormStore = create(
       files: null,
       setFiles: (files) => set({ files }),
       clearFiles: () => set({ files: null }),
-      setRegion: (region) => set({ region, county: "", towns: [] }),
-      setCounty: (county) => set({ county, towns: [] }),
+      setRegion: (region) => set({ region, towns: [] }),
+      setCounty: (county) => set({ county, region: "", towns: [] }),
       setTown: (town) =>
         set((state) =>
           state.towns.includes(town)
@@ -103,6 +104,8 @@ export const useFormStore = create(
           experience: "",
           tags: [],
         }),
+
+      resetLocations: () => set({ county: "", region: "", towns: [] }),
     }),
     {
       name: "form-store", // localStorage key

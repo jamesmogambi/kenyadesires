@@ -15,6 +15,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { RefreshCw } from "lucide-react";
 import { useFormStore } from "@/store/formStore";
 import { useSettingStore } from "@/store/settingStore";
 import { useVariantStore } from "@/store/variantStore";
@@ -32,7 +39,8 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
   const [townOpen, setTownOpen] = useState<boolean>(false);
   const [availabilityOpen, setAvailabilityOpen] = useState<boolean>(false);
 
-  const { towns, region, county, setRegion, setCounty } = useFormStore();
+  const { towns, region, county, setRegion, setCounty, resetLocations } =
+    useFormStore();
 
   const { availability, setAvailability } = useSettingStore();
 
@@ -167,8 +175,8 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
           )}
         />
 
-        {/* ROW 1: County (left) + Primary Region (right) */}
-        <div className="flex-row justify-end flex gap-2">
+        {/* ROW 1: County + Primary Region + Reset (far right end) */}
+        <div className="relative flex-row justify-end flex gap-2">
           <DropdownMenu open={countyOpen} onOpenChange={setCountyOpen}>
             <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
               {county ? (
@@ -295,9 +303,27 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
               </DropdownMenuContent>
             )}
           </DropdownMenu>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => resetLocations()}
+                  className="absolute left-full ml-2 inset-y-0 z-20 flex items-center justify-center w-10 rounded-md bg-gray-1 hover:bg-[#262322] text-white/50 hover:text-primary transition-colors"
+                  aria-label="Reset locations"
+                >
+                  <RefreshCw className="size-5 text-primary" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className=" py-2">
+                <p className="">Reset locations</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
-        {/* ROW 2: Areas/Town (left) + Availability (right) */}
+        {/* ROW 2: Areas/Town + Availability (right-aligned, aligned with ROW 1) */}
         <div className="flex-row justify-end flex gap-2">
           <DropdownMenu open={townOpen} onOpenChange={setTownOpen}>
             <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
@@ -354,8 +380,12 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
                 <div className="flex flex-row w-full gap-1.5 gap-y-2.5 flex-wrap">
                   {selectedCountyData &&
                     selectedCountyData.regions
-                      .find((r) => r === region)
-                      ?.split?.(",")
+                      .flatMap((regionName: string) =>
+                        regionName
+                          .split(",")
+                          .map((t) => t.trim())
+                          .filter(Boolean),
+                      )
                       .map((townName: string) => (
                         <DropdownMenuItem
                           key={townName.trim()}
