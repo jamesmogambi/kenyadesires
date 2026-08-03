@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import SectionCard from "@/components/SectionCard";
 import { Check, Clock, XCircle, AlertTriangle, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -32,7 +33,7 @@ function getStatusConfig(status: VerificationStatus) {
           "Your identity has been verified successfully. You now have access to all verified features.",
         showCredits: true,
         creditsAmount: 50,
-        creditsValue: "10 KSH",
+        creditsValue: "500 KSH",
       };
     case "declined":
       return {
@@ -112,6 +113,36 @@ export default function VerifyDonePage() {
     fetchStatus();
   }, []);
 
+  useEffect(() => {
+    if (result?.status === "approved") {
+      toast.custom(
+        () => (
+          <div className="bg-primary text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="size-6 flex-shrink-0"
+            >
+              <path
+                fillRule="evenodd"
+                d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div>
+              <p className="font-semibold">Verification Approved</p>
+              <p className="text-sm opacity-90">
+                +50 credits (500 KSH) credited to your account
+              </p>
+            </div>
+          </div>
+        ),
+        { duration: 5000 }
+      );
+    }
+  }, [result?.status]);
+
   if (loading) {
     return (
       <div>
@@ -132,7 +163,7 @@ export default function VerifyDonePage() {
 
   return (
     <div>
-      <SectionCard className="mt-14">
+      <SectionCard>
         <div className="flex items-center justify-center">
           <div className="mx-auto p-8 text-center">
             <div

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +11,7 @@ import {
 import Link from "next/link";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import SearchSheet from "./SearchSheet";
 import { BadgeCheck } from "lucide-react";
 
@@ -25,14 +28,35 @@ const NavActions = ({
 }: Prop) => {
   const { signOut } = useAuth();
   const { user } = useUser();
-
   const router = useRouter();
+  const [credits, setCredits] = useState<number>(0);
+  const [creditsLoading, setCreditsLoading] = useState(true);
+
   const handleLogout = async () => {
     await signOut();
     router.refresh();
   };
 
   const isBusiness = (user?.unsafeMetadata?.role as string) === "business";
+
+  useEffect(() => {
+    async function fetchCredits() {
+      try {
+        const res = await fetch("/api/credits");
+        if (!res.ok) {
+          setCredits(0);
+          return;
+        }
+        const data = await res.json();
+        setCredits(data.credits ?? 0);
+      } catch {
+        setCredits(0);
+      } finally {
+        setCreditsLoading(false);
+      }
+    }
+    fetchCredits();
+  }, []);
 
   return (
     <div className="flex items-center gap-4">
@@ -90,7 +114,12 @@ const NavActions = ({
             </svg>
 
             <span className="uppercase font-normal text-base group-hover:font-bold">
-              Number of Credits : 0
+              Number of Credits :{" "}
+              {creditsLoading ? (
+                <span className="animate-pulse">...</span>
+              ) : (
+                credits
+              )}
             </span>
           </DropdownMenuItem>
 
