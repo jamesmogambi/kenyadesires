@@ -22,6 +22,7 @@ import Head from "next/head";
 import { getAllCounties } from "@/server-actions/county.action";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getEscortByClerkUserId } from "@/server-actions/girl.action";
+import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
 
@@ -62,7 +63,9 @@ export default async function RootLayout({
   const user = await currentUser();
   const escortRole = user?.unsafeMetadata?.role as string | undefined;
   const isEscort = escortRole === "user";
+  const isBusiness = escortRole === "business";
   const escort = isEscort && userId ? await getEscortByClerkUserId(userId) : null;
+  const agency = isBusiness && userId ? await getAgencyByOwnerId(userId) : null;
 
   // ✅ Pre-fetch on server
   const [counties, regions, lookup, allCounties] = await Promise.all([
@@ -178,6 +181,10 @@ export default async function RootLayout({
                 ((escort as any)?.verificationStatus as string) || "not_started"
               }
               isEscort={isEscort}
+              agencyIsVerified={agency?.isVerified ?? false}
+              agencyVerificationStatus={
+                (agency?.verificationStatus as string) || "not_started"
+              }
             />
           </header>
 

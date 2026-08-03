@@ -18,8 +18,17 @@ interface Prop {
   isEscort?: boolean;
   escortIsVerified?: boolean;
   escortVerificationStatus?: string;
+  agencyIsVerified?: boolean;
+  agencyVerificationStatus?: string;
 }
-const Header = ({ initialCounties, isEscort, escortIsVerified, escortVerificationStatus }: Prop) => {
+const Header = ({
+  initialCounties,
+  isEscort,
+  escortIsVerified,
+  escortVerificationStatus,
+  agencyIsVerified,
+  agencyVerificationStatus,
+}: Prop) => {
   const { isSignedIn } = useUser();
 
   // set to zustand store
@@ -45,6 +54,8 @@ const Header = ({ initialCounties, isEscort, escortIsVerified, escortVerificatio
               isEscort={isEscort}
               escortIsVerified={escortIsVerified}
               escortVerificationStatus={escortVerificationStatus}
+              agencyIsVerified={agencyIsVerified}
+              agencyVerificationStatus={agencyVerificationStatus}
             />
           ) : (
             <div className="flex gap-3 items-center">

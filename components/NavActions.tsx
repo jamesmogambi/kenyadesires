@@ -19,12 +19,16 @@ interface Prop {
   isEscort?: boolean;
   escortIsVerified?: boolean;
   escortVerificationStatus?: string;
+  agencyIsVerified?: boolean;
+  agencyVerificationStatus?: string;
 }
 
 const NavActions = ({
   isEscort,
   escortIsVerified,
   escortVerificationStatus,
+  agencyIsVerified,
+  agencyVerificationStatus,
 }: Prop) => {
   const { signOut } = useAuth();
   const { user } = useUser();
@@ -94,7 +98,7 @@ const NavActions = ({
             />
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-full max-w-62.5 space-y-2">
+        <DropdownMenuContent className="w-full max-w-64 space-y-2">
           {/* <DropdownM>My Account</DropdownM enuLabel> */}
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-stone-700 group">
@@ -219,7 +223,7 @@ const NavActions = ({
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="size-6 text-orange-500"
+                    className="size-9 text-orange-500"
                   >
                     <path
                       fill-rule="evenodd"
@@ -230,6 +234,27 @@ const NavActions = ({
 
                   <span className="uppercase font-semibold text-base group-hover:font-bold text-primary">
                     Verify identity
+                  </span>
+                </Link>
+              )}
+            </DropdownMenuItem>
+          )}
+
+          {/* Agency verification: verify identity or view status */}
+          {isBusiness && (
+            <DropdownMenuItem className="text-stone-800 group">
+              {agencyIsVerified ? (
+                <Link href="/verify/done" className="flex items-center gap-2">
+                  <BadgeCheck className="size-6 text-green-400" />
+                  <span className="uppercase font-normal text-base group-hover:font-bold">
+                    View verification status
+                  </span>
+                </Link>
+              ) : (
+                <Link href="/verify-agency" className="flex items-center gap-2">
+                  <BadgeCheck className="size-5 text-orange-500" />
+                  <span className="uppercase font-semibold text-base group-hover:font-bold text-primary">
+                    Verify Agency Identity
                   </span>
                 </Link>
               )}
