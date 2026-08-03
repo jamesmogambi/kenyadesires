@@ -27,6 +27,7 @@ import { createAgency, updateAgency } from "@/server-actions/agency.action";
 import type { IAgency } from "@/types/agency.types";
 import WorkHoursForm from "../new-profile/WorkHoursForm";
 import AgencySelectField from "./AgencySelectField";
+import AgencyMultiSelectField from "./AgencyMultiSelectField";
 import AgencyTagsInput from "./AgencyTagsInput";
 import AgencyImageField from "./AgencyImageField";
 
@@ -79,12 +80,12 @@ const FIELD_LABELS: Record<string, string> = {
   whatsappPhone: "WhatsApp",
   website: "Website",
   county: "County",
-  region: "Region",
-  town: "Town or area",
+  regions: "Regions",
+  primaryRegion: "Primary region",
   estate: "Estate",
   address: "Address",
   street: "Street",
-  postalCode: "Postal code",
+
   monday: "Monday hours",
   tuesday: "Tuesday hours",
   wednesday: "Wednesday hours",
@@ -160,12 +161,11 @@ export const agencySchema = z.object({
 
   // Location
   county: z.string().min(1, "Select a county"),
-  region: z.string().min(1, "Select a region"),
-  town: z.string().min(2, "Town or area is required"),
+  regions: z.array(z.string()).min(1, "Select at least one region"),
+  primaryRegion: z.string().min(1, "Select a primary region"),
   estate: z.string(),
   address: z.string(),
   street: z.string(),
-  postalCode: z.string(),
 
   // Opening hours
   monday: daySchema,
@@ -213,12 +213,16 @@ const buildDefaultValues = (
   whatsappPhone: agency?.whatsappPhone || "",
   website: agency?.website || "",
   county: agency?.county || "",
-  region: agency?.region || "",
-  town: agency?.town || "",
+  regions: agency?.regions?.length
+    ? agency.regions
+    : agency?.region
+      ? [agency.region]
+      : [],
+  primaryRegion:
+    agency?.primaryRegion || agency?.region || "",
   estate: agency?.estate || "",
   address: agency?.address || "",
   street: agency?.street || "",
-  postalCode: agency?.postalCode || "",
   monday: agency?.openingHours?.monday || DEFAULT_HOURS,
   tuesday: agency?.openingHours?.tuesday || DEFAULT_HOURS,
   wednesday: agency?.openingHours?.wednesday || DEFAULT_HOURS,
@@ -285,6 +289,8 @@ const AgencyProfileForm = ({
   });
 
   const selectedCounty = form.watch("county");
+  const [regionsOpen, setRegionsOpen] = useState(false);
+  const [primaryRegionOpen, setPrimaryRegionOpen] = useState(false);
 
   const countyOptions = useMemo(
     () =>
@@ -306,11 +312,19 @@ const AgencyProfileForm = ({
     }));
   }, [selectedCounty]);
 
-  // Reset the region whenever a different county is picked
+  // Reset the regions/primary region whenever a different county is picked
   useEffect(() => {
-    const region = form.getValues("region");
-    if (region && !regionOptions.some((option) => option.value === region)) {
-      form.setValue("region", "");
+    const validOptions = regionOptions.map((option) => option.value);
+
+    const currentRegions = form.getValues("regions") || [];
+    const keptRegions = currentRegions.filter((r) => validOptions.includes(r));
+    if (keptRegions.length !== currentRegions.length) {
+      form.setValue("regions", keptRegions);
+    }
+
+    const currentPrimary = form.getValues("primaryRegion") || "";
+    if (currentPrimary && !validOptions.includes(currentPrimary)) {
+      form.setValue("primaryRegion", "");
     }
   }, [regionOptions, form]);
 
@@ -399,15 +413,18 @@ const AgencyProfileForm = ({
         whatsappPhone: values.whatsappPhone,
         website: values.website,
         ownerId,
-        county: values.county,
-        countyCode: slugify(values.county),
-        region: values.region,
-        town: values.town,
-        estate: values.estate,
-        address: values.address,
-        street: values.street,
-        postalCode: values.postalCode,
-        categories: values.categories,
+         county: values.county,
+         countyCode: slugify(values.county),
+         regions: Array.from(
+           new Set([...(values.regions || []), values.primaryRegion]),
+         ),
+         primaryRegion: values.primaryRegion,
+         region: values.primaryRegion,
+         town: "",
+         estate: values.estate,
+         address: values.address,
+         street: values.street,
+         categories: values.categories,
         services: values.services,
         specialties: values.specialties,
         languages: values.languages,
@@ -692,20 +709,32 @@ const AgencyProfileForm = ({
                   )}
                 />
 
-                <FormField
+                 <FormField
                   control={form.control}
-                  name="region"
+                  name="regions"
                   render={({ field }) => (
                     <FormItem className="border-none">
-                      <FormLabel className={labelClass}>Region *</FormLabel>
+                      <FormLabel className={labelClass}>Regions *</FormLabel>
                       <FormControl>
-                        <AgencySelectField
-                          value={field.value}
+                        <AgencyMultiSelectField
+                          value={field.value ?? []}
                           onChange={field.onChange}
+                          isOpen={regionsOpen}
+                          onIsOpenChange={(next) => {
+                            if (next && !selectedCounty) {
+                              toast.warning("Select a county first", {
+                                description:
+                                  "Choose a county before selecting regions.",
+                              });
+                              setRegionsOpen(false);
+                              return;
+                            }
+                            setRegionsOpen(next);
+                          }}
                           options={regionOptions}
                           placeholder={
                             selectedCounty
-                              ? "Select region"
+                              ? "Select regions"
                               : "Select a county first"
                           }
                         />
@@ -715,19 +744,36 @@ const AgencyProfileForm = ({
                   )}
                 />
 
-                <FormField
+                 <FormField
                   control={form.control}
-                  name="town"
+                  name="primaryRegion"
                   render={({ field }) => (
                     <FormItem className="border-none">
                       <FormLabel className={labelClass}>
-                        Town or area *
+                        Primary Region *
                       </FormLabel>
-                      <FormControl className="border border-primary">
-                        <Input
-                          placeholder="Westlands"
-                          {...field}
-                          className={inputClass}
+                      <FormControl>
+                        <AgencySelectField
+                          value={field.value}
+                          onChange={field.onChange}
+                          isOpen={primaryRegionOpen}
+                          onIsOpenChange={(next) => {
+                            if (next && !selectedCounty) {
+                              toast.warning("Select a county first", {
+                                description:
+                                  "Choose a county before selecting a primary region.",
+                              });
+                              setPrimaryRegionOpen(false);
+                              return;
+                            }
+                            setPrimaryRegionOpen(next);
+                          }}
+                          options={regionOptions}
+                          placeholder={
+                            selectedCounty
+                              ? "Select primary region"
+                              : "Select a county first"
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -771,42 +817,24 @@ const AgencyProfileForm = ({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="street"
-                  render={({ field }) => (
-                    <FormItem className="border-none">
-                      <FormLabel className={labelClass}>Street</FormLabel>
-                      <FormControl className="border border-primary">
-                        <Input
-                          placeholder="Waiyaki Way"
-                          {...field}
-                          className={inputClass}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="postalCode"
-                  render={({ field }) => (
-                    <FormItem className="border-none">
-                      <FormLabel className={labelClass}>Postal code</FormLabel>
-                      <FormControl className="border border-primary">
-                        <Input
-                          placeholder="00100"
-                          {...field}
-                          className={inputClass}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                 <FormField
+                   control={form.control}
+                   name="street"
+                   render={({ field }) => (
+                     <FormItem className="border-none">
+                       <FormLabel className={labelClass}>Street</FormLabel>
+                       <FormControl className="border border-primary">
+                         <Input
+                           placeholder="Waiyaki Way"
+                           {...field}
+                           className={inputClass}
+                         />
+                       </FormControl>
+                       <FormMessage />
+                     </FormItem>
+                   )}
+                 />
+               </div>
             </section>
 
             {/* OPENING HOURS */}

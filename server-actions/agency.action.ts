@@ -73,6 +73,8 @@ function convertFirebaseDocToAgency(
     countyCode: data.countyCode || "",
     region: data.region || "",
     town: data.town || "",
+    regions: data.regions || (data.region ? [data.region] : []),
+    primaryRegion: data.primaryRegion || data.region || "",
     estate: data.estate,
     address: data.address,
     street: data.street,
@@ -335,6 +337,8 @@ function convertAdminDocToAgency(doc: any): IAgency {
     countyCode: data.countyCode || "",
     region: data.region || "",
     town: data.town || "",
+    regions: data.regions || (data.region ? [data.region] : []),
+    primaryRegion: data.primaryRegion || data.region || "",
     estate: data.estate,
     address: data.address,
     street: data.street,
@@ -700,6 +704,8 @@ export async function getAgencyByOwnerId(
       countyCode: data.countyCode || "",
       region: data.region || "",
       town: data.town || "",
+      regions: data.regions || (data.region ? [data.region] : []),
+      primaryRegion: data.primaryRegion || data.region || "",
       estate: data.estate,
       address: data.address,
       street: data.street,
@@ -761,6 +767,8 @@ export interface CreateAgencyInput {
   countyCode?: string;
   region: string;
   town: string;
+  regions?: string[];
+  primaryRegion?: string;
   estate?: string;
   address?: string;
   street?: string;
@@ -872,6 +880,8 @@ export async function createAgency(
         data.countyCode || data.county.toLowerCase().replace(/\s+/g, "-"),
       region: data.region,
       town: data.town,
+      regions: data.regions || (data.region ? [data.region] : []),
+      primaryRegion: data.primaryRegion || data.region,
       estate: data.estate || "",
       address: data.address || "",
       street: data.street || "",

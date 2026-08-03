@@ -21,6 +21,8 @@ interface Prop {
   options: Option[];
   placeholder?: string;
   className?: string;
+  isOpen?: boolean;
+  onIsOpenChange?: (open: boolean) => void;
 }
 
 const AgencySelectField = ({
@@ -29,9 +31,16 @@ const AgencySelectField = ({
   options,
   placeholder = "- Select -",
   className,
+  isOpen,
+  onIsOpenChange,
 }: Prop) => {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select
+      value={value}
+      onValueChange={onChange}
+      open={isOpen}
+      onOpenChange={onIsOpenChange}
+    >
       <SelectTrigger
         className={cn(
           "bg-white w-full border-primary text-black px-6 h-10 rounded-full text-lg focus-visible:ring-0",

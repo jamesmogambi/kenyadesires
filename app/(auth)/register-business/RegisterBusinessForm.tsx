@@ -108,7 +108,7 @@ const RegisterBusinessForm = ({ className }: Prop) => {
         emailAddress: email,
         password,
         username,
-        unsafeMetadata: { role: "business" }
+        unsafeMetadata: { role: "business" },
       });
 
       // 2. Save User to DB
@@ -345,7 +345,8 @@ const RegisterBusinessForm = ({ className }: Prop) => {
             >
               complete registration
             </Button> */}
-
+            {/* Clerk's CAPTCHA widget */}
+            <div id="clerk-captcha" />
             <Button
               type="submit"
               disabled={loading}

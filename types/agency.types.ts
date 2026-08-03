@@ -18,6 +18,8 @@ export interface IAgency {
   countyCode: string;
   region: string;
   town: string;
+  regions?: string[];
+  primaryRegion?: string;
   estate?: string;
   address?: string;
   street?: string;
@@ -109,6 +111,8 @@ export interface CreateAgencyDTO {
   county: string;
   region: string;
   town: string;
+  regions?: string[];
+  primaryRegion?: string;
   estate?: string;
   address?: string;
   businessType?: "agency" | "spa" | "massage_parlor" | "brothel";
