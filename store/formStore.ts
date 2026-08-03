@@ -5,7 +5,8 @@ import { persist } from "zustand/middleware";
 
 type State = {
   region: string;
-  town: string;
+  county: string;
+  towns: string[];
   description: string;
   age: string;
   breast: string;
@@ -18,7 +19,9 @@ type State = {
   setFiles: (files: FileList) => void;
   clearFiles: () => void;
   setRegion: (region: string) => void;
+  setCounty: (county: string) => void;
   setTown: (town: string) => void;
+  removeTown: (town: string) => void;
   setDescription: (description: string) => void;
   setAge: (age: string) => void;
   setBreast: (breast: string) => void;
@@ -39,7 +42,8 @@ export const useFormStore = create(
   persist<State>(
     (set) => ({
       region: "",
-      town: "",
+      county: "",
+      towns: [],
       description: "",
       age: "",
       breast: "",
@@ -51,8 +55,18 @@ export const useFormStore = create(
       files: null,
       setFiles: (files) => set({ files }),
       clearFiles: () => set({ files: null }),
-      setRegion: (region) => set({ region, town: "" }),
-      setTown: (town) => set({ town }),
+      setRegion: (region) => set({ region, county: "", towns: [] }),
+      setCounty: (county) => set({ county, towns: [] }),
+      setTown: (town) =>
+        set((state) =>
+          state.towns.includes(town)
+            ? state
+            : { towns: [...state.towns, town] },
+        ),
+      removeTown: (town) =>
+        set((state) => ({
+          towns: state.towns.filter((t) => t !== town),
+        })),
       setDescription: (description) => set({ description }),
       setAge: (age) => set({ age }),
       setBreast: (breast) => set({ breast }),
@@ -78,7 +92,8 @@ export const useFormStore = create(
       reset: () =>
         set({
           region: "",
-          town: "",
+          county: "",
+          towns: [],
           description: "",
           age: "",
           breast: "",

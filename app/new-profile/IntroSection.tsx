@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   FormControl,
   FormField,
@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useFormStore } from "@/store/formStore";
 import { useSettingStore } from "@/store/settingStore";
-import { useLocationStore } from "@/store/locationStore";
 import { useVariantStore } from "@/store/variantStore";
 import countiesAndRegions from "@/data/development/countiesAndRegions.json";
 
@@ -28,49 +27,43 @@ interface Prop {
 }
 
 const IntroSection = ({ form, className, isEscort }: Prop) => {
-  const [regionOpen, setRegionOpen] = React.useState<boolean>(false);
-  const [cityOpen, setCityOpen] = React.useState<boolean>(false);
+  const [regionOpen, setRegionOpen] = useState<boolean>(false);
+  const [countyOpen, setCountyOpen] = useState<boolean>(false);
+  const [townOpen, setTownOpen] = useState<boolean>(false);
   const [availabilityOpen, setAvailabilityOpen] =
-    React.useState<boolean>(false);
+    useState<boolean>(false);
 
-  const [countyRegions, setCountyRegions] = useState<
-    { id: string; name: string }[]
-  >([]);
-
-  const { town, region, setTown, setRegion } = useFormStore();
+  const { towns, region, county, setRegion, setCounty } = useFormStore();
 
   const { availability, setAvailability } = useSettingStore();
 
   const { availability: variantAvailability } = useVariantStore();
 
-  const selectedCounty = countiesAndRegions.find(
-    (c) => c.countyName === region,
+  const allRegions = countiesAndRegions.flatMap((c) =>
+    c.regions.map((r) => ({ countyCode: c.countyCode, countyName: c.countyName, name: r })),
   );
 
-  useEffect(() => {
-    if (selectedCounty) {
-      const regions = selectedCounty.regions.map((name, idx) => ({
-        id: `${selectedCounty.countyCode}-${idx}`,
-        name,
-      }));
-      setCountyRegions(regions);
-    } else {
-      setCountyRegions([]);
-    }
-  }, [selectedCounty]);
+  const selectedCountyData = countiesAndRegions.find(
+    (c) => c.countyName === county,
+  );
+
+  const countyOtherRegions = selectedCountyData
+    ? selectedCountyData.regions.filter((r) => r !== region)
+    : [];
+
+  const handleSelectRegion = (regionName: string) => {
+    setRegion(regionName);
+  };
 
   const handleSelectCounty = (countyName: string) => {
-    setRegion(countyName);
+    setCounty(countyName);
+  };
 
-    const found = countiesAndRegions.find((c) => c.countyName === countyName);
-    if (found) {
-      const regions = found.regions.map((name, idx) => ({
-        id: `${found.countyCode}-${idx}`,
-        name,
-      }));
-      setCountyRegions(regions);
+  const handleSelectTown = (townName: string) => {
+    if (towns.includes(townName)) {
+      useFormStore.getState().removeTown(townName);
     } else {
-      setCountyRegions([]);
+      useFormStore.getState().setTown(townName);
     }
   };
 
@@ -79,21 +72,21 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
       className={cn("flex gap-2 flex-col lg:flex-row lg:gap-10", className)}
     >
       {/* 1 */}
-      <div className=" space-y-6 basis-full  lg:basis-1/3">
+      <div className="space-y-6 basis-full lg:basis-1/3">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <>
-              <FormItem className=" flex-row justify-between   flex gap-4  border-none">
-                <FormLabel className=" font-medium text-nowrap mb-2 text-white/40 text-base">
+              <FormItem className="flex-row justify-between flex gap-4 border-none">
+                <FormLabel className="font-medium text-nowrap mb-2 text-white/40 text-base">
                   Escort's name:
                 </FormLabel>
                 <FormControl className="border w-2/3 lg:w-1/ border-primary">
                   <Input
                     placeholder=""
                     {...field}
-                    className="bg-white  text-black px-6 h-10 rounded-full text-sm lg:text-xl focus-visible:ring-0 "
+                    className="bg-white text-black px-6 h-10 rounded-full text-sm lg:text-xl focus-visible:ring-0 "
                   />
                 </FormControl>
               </FormItem>
@@ -107,17 +100,17 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
           name="email"
           render={({ field }) => (
             <>
-              <FormItem className="  flex-row justify-between items-start flex gap-4  border-none">
-                <FormLabel className=" font-medium text-nowrap mb-2 text-white/40 text-base">
+              <FormItem className="flex-row justify-between items-start flex gap-4 border-none">
+                <FormLabel className="font-medium text-nowrap mb-2 text-white/40 text-base">
                   Email:
                 </FormLabel>
                 <FormControl className="border w-2/3 lg:w-1/ border-primary">
-<Input
-                     placeholder=""
-                     {...field}
-                     disabled={isEscort}
-                     className=" bg-white  text-black px-6 h-10 rounded-full text-sm lg:text-lg focus-visible:ring-0 "
-                   />
+                  <Input
+                    placeholder=""
+                    {...field}
+                    disabled={isEscort}
+                    className="bg-white text-black px-6 h-10 rounded-full text-sm lg:text-lg focus-visible:ring-0 "
+                  />
                 </FormControl>
               </FormItem>
               <FormMessage className="-mt-4" />
@@ -130,8 +123,8 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
           name="street"
           render={({ field }) => (
             <>
-              <FormItem className=" flex-row flex gap-4 justify-between border-none">
-                <FormLabel className=" font-medium text-nowrap mb-2 text-white/40 text-base">
+              <FormItem className="flex-row flex gap-4 justify-between border-none">
+                <FormLabel className="font-medium text-nowrap mb-2 text-white/40 text-base">
                   Street:
                 </FormLabel>
                 <FormControl className="border w-2/3 lg:w-1/ border-primary">
@@ -142,29 +135,27 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
                   />
                 </FormControl>
               </FormItem>
-
               <FormMessage className="-mt-4" />
             </>
           )}
         />
       </div>
       {/* 2 */}
-
-      <div className="  space-y-6 basis-full  lg:basis-1/3">
+      <div className="space-y-6 basis-full lg:basis-1/3">
         <FormField
           control={form.control}
           name="phone"
           render={({ field }) => (
             <>
-              <FormItem className=" flex-row  justify-between flex gap-2  border-none">
-                <FormLabel className=" font-medium text-nowrap mb-2 text-white/40 text-base">
+              <FormItem className="flex-row justify-between flex gap-2 border-none">
+                <FormLabel className="font-medium text-nowrap mb-2 text-white/40 text-base">
                   Phone:
                 </FormLabel>
                 <FormControl className="border w-2/3 lg:w-1/ border-primary">
                   <Input
                     placeholder=""
                     {...field}
-                    className="bg-white  text-black px-6 h-10 rounded-full text-lg lg:text-xl focus-visible:ring-0 "
+                    className="bg-white text-black px-6 h-10 rounded-full text-lg lg:text-xl focus-visible:ring-0 "
                   />
                 </FormControl>
               </FormItem>
@@ -173,215 +164,319 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
           )}
         />
 
-        <div className=" flex-row   justify-end flex gap-2  ">
-          <DropdownMenu
-            open={regionOpen}
-            onOpenChange={setRegionOpen}
-
-            // onOpenChange={(val) =>
-            //   onHandleRegion(val, field.onChange)
-            // }
-          >
-            <DropdownMenuTrigger className=" outline-0  self-end  cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
-              {region ? (
-                <span className="text-white/50 text-base font-semibold">
-                  {region}
-                </span>
-              ) : (
-                <span className="text-white/50 text-base font-semibold">
-                  County
-                </span>
-              )}
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={18}
-                height={18}
-                viewBox="0 0 32 32"
-                className="text-white/50"
-              >
-                <path
-                  fill="currentColor"
-                  d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
-                  strokeWidth={1}
-                  stroke="currentColor"
-                ></path>
-              </svg>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              //   side="left"
-              className="flex border-0 flex-col outline-none p-5 gap-3 w-screen  lg:max-w-[900px] bg-gray-1 "
+        {/* ROW 1: County (left) + Primary Region (right) */}
+        <div className="flex flex-row gap-4">
+          {/* County Dropdown */}
+          <div className="flex-1">
+            <DropdownMenu
+              open={countyOpen}
+              onOpenChange={setCountyOpen}
             >
-              <div className="flex flex-row w-full gap-1.5 gap-y-2.5  flex-wrap">
+              <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
+                {county ? (
+                  <span className="text-white/50 text-base font-semibold">
+                    {county}
+                  </span>
+                ) : (
+                  <span className="text-white/50 text-base font-semibold">
+                    County
+                  </span>
+                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={18}
+                  height={18}
+                  viewBox="0 0 32 32"
+                  className="text-white/50"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
+                    strokeWidth={1}
+                    stroke="currentColor"
+                  ></path>
+                </svg>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="flex border-0 flex-col outline-none p-4 gap-3 w-screen bg-gray-1 max-h-[300px] overflow-y-auto">
                 {countiesAndRegions.map((item) => (
                   <DropdownMenuItem
-                    className="rounded-lg  cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                    // onSelect={(e) => setRegion(item.location)}
-                    onSelect={(val: any) => handleSelectCounty(item.countyName)}
                     key={item.countyCode}
+                    className={`rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-base font-medium bg-[#262322] ${
+                      county === item.countyName
+                        ? "bg-primary/30 text-primary"
+                        : "text-white/70"
+                    }`}
+                    onSelect={() => handleSelectCounty(item.countyName)}
                   >
+                    {county === item.countyName && (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="size-4 mr-1"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M2.25 12c0-5.385 4.365-9.75 10-9.75s10 4.365 10 9.75s-4.365 9.75-10 9.75S2.25 17.385 2.25 12zm13.5 4.5l8.25-8.25a.75.75 0 0 0-1.06-1.06L12.75 14.44l-3.69-3.69a.75.75 0 0 0-1.06 0L6.75 12.75V15a.75.75 0 0 0 .75.75h3v-3a2.25 2.25 0 0 1 2.25-2.25h.75a.75.75 0 0 1 .75.75v3h3a.75.75 0 0 0 .75-.75v-2.25z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
                     {item.countyName}
                   </DropdownMenuItem>
                 ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
-        {/* AVAILABILITY */}
-        <div className="flex  mt-12 mb-6  justify-end items-center gap-3">
-          <label className="text-white/50 text-base font-medium">
-            Availability:
-          </label>
-          <DropdownMenu
-            open={availabilityOpen}
-            onOpenChange={setAvailabilityOpen}
-          >
-            <DropdownMenuTrigger className=" outline-0  self-end  cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
-              <span className="text-white/50 text-base font-semibold">
-                {availability.length > 0
-                  ? `${availability.length} selected`
-                  : "Select availability"}
-              </span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={18}
-                height={18}
-                viewBox="0 0 32 32"
-                className="text-white/50"
+          {/* Primary Region Dropdown */}
+          <div className="flex-1">
+            <DropdownMenu
+              open={regionOpen}
+              onOpenChange={setRegionOpen}
+            >
+              <DropdownMenuTrigger
+                className={`outline-0 self-end cursor-pointer border-0 flex w-full justify-between items-center p-2 text-base px-5 rounded-md ${
+                  !county
+                    ? "bg-gray-1 text-white/30 cursor-not-allowed"
+                    : "bg-gray-1 text-white/50"
+                }`}
+                disabled={!county}
               >
-                <path
-                  fill="currentColor"
-                  d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
-                  strokeWidth={1}
-                  stroke="currentColor"
-                ></path>
-              </svg>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="flex border-0 flex-col outline-none p-5 gap-3 w-screen lg:max-w-[900px] bg-gray-1 max-h-[300px] overflow-y-auto">
-              {variantAvailability.map((i, k) => {
-                const item: any = i;
-                const label = typeof item === "string" ? item : item.name;
-                const key =
-                  typeof item === "string" ? item : (item.id ?? item.name ?? k);
-                const checked = availability.includes(label);
-                return (
-                  <DropdownMenuItem
-                    key={key}
-                    className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] flex items-center gap-3"
-                    onSelect={(val) => {
-                      setAvailability(label, !checked);
-                    }}
-                  >
-                    <div
-                      className={`size-5 rounded border flex items-center justify-center ${
-                        checked
-                          ? "bg-primary border-primary"
-                          : "border-white/30"
+                {region ? (
+                  <span className="text-base font-semibold">
+                    {region}
+                  </span>
+                ) : (
+                  <span className="text-base font-semibold">
+                    Primary Region
+                  </span>
+                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={18}
+                  height={18}
+                  viewBox="0 0 32 32"
+                  className={!county ? "text-white/20" : "text-white/50"}
+                >
+                  <path
+                    fill="currentColor"
+                    d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
+                    strokeWidth={1}
+                    stroke="currentColor"
+                  ></path>
+                </svg>
+              </DropdownMenuTrigger>
+              {county && (
+                <DropdownMenuContent className="flex border-0 flex-col outline-none p-4 gap-3 w-screen bg-gray-1 max-h-[300px] overflow-y-auto">
+                  {countyOtherRegions.map((regionName) => (
+                    <DropdownMenuItem
+                      key={regionName}
+                      className={`rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-base font-medium bg-[#262322] ${
+                        region === regionName
+                          ? "bg-primary/30 text-primary"
+                          : "text-white/70"
                       }`}
+                      onSelect={() => handleSelectRegion(regionName)}
                     >
-                      {checked && (
+                      {region === regionName && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          width={14}
-                          height={14}
                           viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="white"
-                          strokeWidth={3}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                          fill="currentColor"
+                          className="size-4 mr-1"
                         >
-                          <path d="M20 6L9 17l-5-5" />
+                          <path
+                            fillRule="evenodd"
+                            d="M2.25 12c0-5.385 4.365-9.75 10-9.75s10 4.365 10 9.75s-4.365 9.75-10 9.75S2.25 17.385 2.25 12zm13.5 4.5l8.25-8.25a.75.75 0 0 0-1.06-1.06L12.75 14.44l-3.69-3.69a.75.75 0 0 0-1.06 0L6.75 12.75V15a.75.75 0 0 0 .75.75h3v-3a2.25 2.25 0 0 1 2.25-2.25h.75a.75.75 0 0 1 .75.75v3h3a.75.75 0 0 0 .75-.75v-2.25z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       )}
-                    </div>
-                    <span>{label}</span>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <div className="  space-y-6 basis-full  lg:basis-1/3">
-        <FormField
-          control={form.control}
-          name="whatsappNumber"
-          render={({ field }) => (
-            <>
-              <FormItem className=" flex-row  justify-between flex gap-2  border-none">
-                <FormLabel className=" font-medium text-nowrap mb-2 text-white/40 text-base">
-                  WhatsApp:
-                </FormLabel>
-                <FormControl className="border w-2/3 lg:w-1/ border-primary">
-                  <Input
-                    placeholder=""
-                    type="tel"
-                    {...field}
-                    className="bg-white  text-black px-6 h-10 rounded-full text-lg lg:text-xl focus-visible:ring-0 "
-                  />
-                </FormControl>
-              </FormItem>
-              <FormMessage className="-mt-4" />
-            </>
-          )}
-        />
-
-        {/* TODO: // FIX AREA HANDLER */}
-        <div className=" flex-row   justify-end flex gap-2  ">
-          <DropdownMenu
-            open={cityOpen}
-            onOpenChange={setCityOpen}
-            // onOpenChange={(val) =>
-            //   onHandleRegion(val, field.onChange)
-            // }
-          >
-            <DropdownMenuTrigger className=" outline-0  self-end  cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
-              {town ? (
-                <span className="text-white/50 text-base font-semibold">
-                  {town}
-                </span>
-              ) : (
-                <span className="text-white/50 text-base font-semibold">
-                  Area or Town
-                </span>
+                      {regionName}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
               )}
+            </DropdownMenu>
+          </div>
+        </div>
 
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={18}
-                height={18}
-                viewBox="0 0 32 32"
-                className="text-white/50"
-              >
-                <path
-                  fill="currentColor"
-                  d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
-                  strokeWidth={1}
-                  stroke="currentColor"
-                ></path>
-              </svg>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              //   side="left"
-              className="flex border-0 flex-col outline-none p-4 gap-3 w-screen  lg:max-w-[900px] bg-gray-1 "
+        {/* ROW 2: Areas/Town (left) + Availability (right) */}
+        <div className="flex flex-row gap-4">
+          {/* Areas/Town Dropdown */}
+          <div className="flex-1">
+            <DropdownMenu
+              open={townOpen}
+              onOpenChange={setTownOpen}
             >
-              <div className="flex flex-row w-full gap-1.5 gap-y-2.5  flex-wrap">
-                {countyRegions.map((item) => (
-                  <DropdownMenuItem
-                    className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                    // onSelect={(e) => setRegion(item.location)}
-                    onSelect={(val: any) => setTown(item.name)}
-                    key={item.id}
-                  >
-                    {item.name}
-                  </DropdownMenuItem>
-                ))}
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
+                {towns.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {towns.map((t) => (
+                      <span
+                        key={t}
+                        className="bg-primary/30 text-primary text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+                      >
+                        {t}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            useFormStore.getState().removeTown(t);
+                          }}
+                          className="ml-1 text-primary hover:text-red-400"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-white/50 text-base font-semibold">
+                    Area or Town
+                  </span>
+                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={18}
+                  height={18}
+                  viewBox="0 0 32 32"
+                  className="text-white/50"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
+                    strokeWidth={1}
+                    stroke="currentColor"
+                  ></path>
+                </svg>
+              </DropdownMenuTrigger>
+              {!county && (
+                <DropdownMenuContent className="flex border-0 flex-col outline-none p-4 gap-3 w-screen bg-gray-1">
+                  <p className="text-yellow-400 text-base font-medium px-2">
+                    Please select a county first before selecting an area or
+                    town.
+                  </p>
+                </DropdownMenuContent>
+              )}
+              {county && (
+                <DropdownMenuContent className="flex border-0 flex-col outline-none p-4 gap-3 w-screen bg-gray-1 max-h-[300px] overflow-y-auto">
+                  <div className="flex flex-row w-full gap-1.5 gap-y-2.5 flex-wrap">
+                    {selectedCountyData &&
+                      selectedCountyData.regions
+                        .find((r) => r === region)
+                        ?.split?.(",")
+                        .map((townName: string) => (
+                          <DropdownMenuItem
+                            key={townName.trim()}
+                            className={`rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-base font-medium bg-[#262322] ${
+                              towns.includes(townName.trim())
+                                ? "bg-primary/30 text-primary"
+                                : "text-white/70"
+                            }`}
+                            onSelect={() =>
+                              handleSelectTown(townName.trim())
+                            }
+                          >
+                            {towns.includes(townName.trim()) && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="size-4 mr-1"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M2.25 12c0-5.385 4.365-9.75 10-9.75s10 4.365 10 9.75s-4.365 9.75-10 9.75S2.25 17.385 2.25 12zm13.5 4.5l8.25-8.25a.75.75 0 0 0-1.06-1.06L12.75 14.44l-3.69-3.69a.75.75 0 0 0-1.06 0L6.75 12.75V15a.75.75 0 0 0 .75.75h3v-3a2.25 2.25 0 0 1 2.25-2.25h.75a.75.75 0 0 1 .75.75v3h3a.75.75 0 0 0 .75-.75v-2.25z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                            {townName.trim()}
+                          </DropdownMenuItem>
+                        ))}
+                  </div>
+                </DropdownMenuContent>
+              )}
+            </DropdownMenu>
+          </div>
+
+          {/* Availability Dropdown */}
+          <div className="flex-1">
+            <DropdownMenu
+              open={availabilityOpen}
+              onOpenChange={setAvailabilityOpen}
+            >
+              <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
+                <span className="text-white/50 text-base font-semibold">
+                  {availability.length > 0
+                    ? `${availability.length} selected`
+                    : "Availability"}
+                </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width={18}
+                  height={18}
+                  viewBox="0 0 32 32"
+                  className="text-white/50"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M8.037 11.166L14.5 22.36c.825 1.43 2.175 1.43 3 0l6.463-11.195c.826-1.43.15-2.598-1.5-2.598H9.537c-1.65 0-2.326 1.17-1.5 2.6z"
+                    strokeWidth={1}
+                    stroke="currentColor"
+                  ></path>
+                </svg>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="flex border-0 flex-col outline-none p-5 gap-3 w-screen lg:max-w-[900px] bg-gray-1 max-h-[300px] overflow-y-auto">
+                {variantAvailability.map((i, k) => {
+                  const item: any = i;
+                  const label =
+                    typeof item === "string" ? item : item.name;
+                  const key =
+                    typeof item === "string"
+                      ? item
+                      : item.id ?? item.name ?? k;
+                  const checked = availability.includes(label);
+                  return (
+                    <DropdownMenuItem
+                      key={key}
+                      className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] flex items-center gap-3"
+                      onSelect={() => {
+                        setAvailability(label, !checked);
+                      }}
+                    >
+                      <div
+                        className={`size-5 rounded border flex items-center justify-center ${
+                          checked
+                            ? "bg-primary border-primary"
+                            : "border-white/30"
+                        }`}
+                      >
+                        {checked && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width={14}
+                            height={14}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth={3}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                        )}
+                      </div>
+                      <span>{label}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </section>

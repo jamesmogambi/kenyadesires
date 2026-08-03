@@ -226,8 +226,9 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
       street,
       phone,
       whatsappNumber,
-      region,
-      town,
+region,
+       county,
+       towns,
       nationality,
       age,
       height,
@@ -276,7 +277,7 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
     useFormStore.setState({
       description: about || "",
       region: region || "",
-      town: town || "",
+      towns: towns || [],
       age: ageCategory || "",
       breast: bustSize || "",
       character: character || "",
@@ -300,12 +301,10 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
       files: [],
     });
 
-    if (region || town) {
-      useFormStore.getState().setRegion(region || "");
-      if (town) {
-        useFormStore.getState().setTown(town);
-      }
-    }
+if (region || towns.length > 0) {
+       useFormStore.getState().setRegion(region || "");
+       towns.forEach((t) => useFormStore.getState().setTown(t));
+     }
 
     setHydrated(true);
   }, [mode, initialData, setValue]);
@@ -313,7 +312,8 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
   const {
     description,
     region,
-    town,
+    county,
+    towns,
     age,
     breast,
     character,
@@ -396,7 +396,7 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
           setLoader(false);
           return;
         }
-        if (!town) {
+        if (towns.length === 0) {
           setError("Please select your area or town");
           setLoader(false);
           return;
@@ -455,13 +455,14 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
           telephone: phone,
           whatsappPhone: whatsappNumber,
           images: galleryImageUrls,
-          about: description,
-          availability,
-          nationality,
-          bustSize: breast,
-          languages,
-          town,
-          region,
+about: description,
+           availability,
+           nationality,
+bustSize: breast,
+            languages,
+            towns,
+            county,
+            region,
           practices: selected,
           bdsm,
           massages,

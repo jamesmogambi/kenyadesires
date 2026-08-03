@@ -491,7 +491,8 @@ export interface NewEscortProfileInput {
   phone: string;
   whatsappNumber: string;
   region: string;
-  town: string;
+  towns: string[];
+  county: string;
   nationality: string;
   age: string;
   height: string;
@@ -586,7 +587,7 @@ export async function saveNewEscortProfile(
       sexualOrientation: "",
       gender: "girl",
       country: "Kenya",
-      county: data.region || "",
+      county: data.county || "",
       countyCode: "",
       primaryRegion: data.region || "",
       locations: [],
