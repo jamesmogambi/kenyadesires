@@ -276,6 +276,7 @@ region,
 
     useFormStore.setState({
       description: about || "",
+      county: county || "",
       region: region || "",
       towns: towns || [],
       age: ageCategory || "",
@@ -301,10 +302,10 @@ region,
       files: [],
     });
 
-if (region || towns.length > 0) {
-       useFormStore.getState().setRegion(region || "");
-       towns.forEach((t) => useFormStore.getState().setTown(t));
-     }
+    if (region || towns?.length) {
+      useFormStore.getState().setRegion(region || "");
+      (towns ?? []).forEach((t) => useFormStore.getState().setTown(t));
+    }
 
     setHydrated(true);
   }, [mode, initialData, setValue]);

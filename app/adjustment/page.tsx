@@ -28,7 +28,10 @@ const page = async () => {
         region: (escort.locations?.[0]?.region ??
           escort.primaryRegion ??
           "") as string,
-        town: (escort.locations?.[0]?.town ?? "") as string,
+        county: escort.county || "",
+        towns: (escort.regions?.filter(
+          (r: string) => r !== escort.primaryRegion,
+        ) || []) as string[],
         nationality: escort.nationality,
         age: escort.age,
         height: "",
