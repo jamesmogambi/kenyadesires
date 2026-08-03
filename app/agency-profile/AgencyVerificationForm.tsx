@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FileText, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { submitAgencyVerification } from "@/server-actions/agency.action";
 import type { IAgency } from "@/types/agency.types";
 
@@ -75,7 +76,11 @@ const DocPicker = ({
               hasNew || hasExisting ? "text-black" : "text-black/40",
             )}
           >
-            {hasNew ? file?.name : hasExisting ? "Uploaded - click to replace" : "No file selected"}
+            {hasNew
+              ? file?.name
+              : hasExisting
+                ? "Uploaded - click to replace"
+                : "No file selected"}
           </span>
           <span className="shrink-0 bg-primary h-full flex items-center justify-center text-white font-semibold text-base px-4 rounded-r-full">
             <Upload className="size-4" />
@@ -117,6 +122,7 @@ export default function AgencyVerificationForm({
   const [regCert, setRegCert] = useState<File | null>(null);
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
+  const [accepted, setAccepted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,10 +211,26 @@ export default function AgencyVerificationForm({
         Accepted: JPG, PNG, PDF. Max 10MB each.
       </div>
 
+      <div className="flex items-center gap-3">
+        <Checkbox
+          id="agency-verify-accept"
+          checked={accepted}
+          onCheckedChange={(checked) => setAccepted(checked === true)}
+          className="mt-1 size-6"
+        />
+        <label
+          htmlFor="agency-verify-accept"
+          className="text-sm text-white/70 leading-snug cursor-pointer"
+        >
+          I confirm that all information submitted is accurate and that I am
+          authorized to represent this agency.
+        </label>
+      </div>
+
       <Button
         type="submit"
-        disabled={loading}
-        className="w-full lg:w-1/3 rounded-none font-bold items-center gap-2 p-3 text-white bg-primary"
+        disabled={loading || !accepted}
+        className="w-full lg:w-1/3 rounded-none font-bold items-center gap-2 py-6 uppercase text-lg text-white bg-primary"
       >
         {loading ? "Submitting…" : "Submit verification documents"}
       </Button>

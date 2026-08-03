@@ -4,7 +4,6 @@ import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import SectionCard from "@/components/SectionCard";
 import AgencyProfileForm from "./AgencyProfileForm";
-import AgencyVerificationForm from "./AgencyVerificationForm";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 
 export const metadata: Metadata = {
@@ -37,22 +36,12 @@ const page = async () => {
   const agency = await getAgencyByOwnerId(userId);
 
   return (
-    <div className="space-y-12">
+    <div>
       <AgencyProfileForm
         ownerId={userId}
         defaultEmail={user?.primaryEmailAddress?.emailAddress}
         agency={agency}
       />
-
-      {agency && (
-        <SectionCard className="lg:px-12">
-          <AgencyVerificationForm
-            agencyId={agency.id}
-            ownerId={userId}
-            existingDocs={agency.verificationDocuments}
-          />
-        </SectionCard>
-      )}
     </div>
   );
 };
