@@ -3,8 +3,23 @@ import React from "react";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { getAgencyByOwnerId } from "@/server-actions/agency.action";
+import type { IAgency } from "@/types/agency.types";
 
-const page = () => {
+async function page() {
+  const { userId } = await auth();
+  const agency: IAgency | null = userId ? await getAgencyByOwnerId(userId) : null;
+
+  const verificationStarted =
+    !!agency && agency.verificationStatus !== "pending";
+  const ctaHref = verificationStarted
+    ? "/agency-verification-status"
+    : "/agency-verify";
+  const ctaLabel = verificationStarted
+    ? "View verification status"
+    : "Start Verification";
+
   return (
     <>
       <div>
@@ -33,13 +48,11 @@ const page = () => {
             />
 
             <div className="flex justify-center items-center">
-              {/* <VerifyButton /> */}
-
               <Link
-                href="/agency-verify"
+                href={ctaHref}
                 className="px-5 py-3 bg-primary text-lg text-white uppercase font-semibold rounded-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Start Verification
+                {ctaLabel}
               </Link>
             </div>
           </div>
