@@ -328,11 +328,11 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
           <DropdownMenu open={townOpen} onOpenChange={setTownOpen}>
             <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
               {towns.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {towns.map((t) => (
+                <div className="flex flex-nowrap items-center gap-1 overflow-hidden min-w-0 flex-1">
+                  {towns.slice(0, 2).map((t) => (
                     <span
                       key={t}
-                      className="bg-primary/30 text-primary text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+                      className="shrink-0 overflow-hidden text-ellipsis whitespace-nowrap max-w-[90px] bg-primary/30 text-primary text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
                     >
                       {t}
                       <button
@@ -347,6 +347,11 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
                       </button>
                     </span>
                   ))}
+                  {towns.length > 2 && (
+                    <span className="shrink-0 bg-primary/30 text-primary text-xs px-2 py-0.5 rounded-full">
+                      +{towns.length - 2} more
+                    </span>
+                  )}
                 </div>
               ) : (
                 <span className="text-white/50 text-base font-semibold">
