@@ -425,7 +425,7 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
             <DropdownMenuTrigger className="outline-0 self-end cursor-pointer border-0 flex w-full lg:w-[250px] justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md">
               <span className="text-white/50 text-base font-semibold">
                 {availability.length > 0
-                  ? `${availability.length} selected`
+                  ? ` Availability ${availability.length} selected`
                   : "Availability"}
               </span>
               <svg

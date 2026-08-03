@@ -493,6 +493,7 @@ export interface NewEscortProfileInput {
   region: string;
   towns: string[];
   county: string;
+  regions?: string[];
   nationality: string;
   age: string;
   height: string;
@@ -564,7 +565,9 @@ export async function saveNewEscortProfile(
       bustSize: data.bustSize || data.breasts || "",
       breastSize: data.bustSize || data.breasts || "",
       languages: data.languages || [],
-      regions: data.region ? [data.region] : [],
+      regions: (data.regions && data.regions.length > 0)
+        ? data.regions
+        : (data.region ? [data.region] : []),
       practices: data.practices || [],
       bdsm: data.bdsm || [],
       massage: data.massages || [],
