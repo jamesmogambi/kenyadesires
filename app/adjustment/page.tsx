@@ -62,6 +62,7 @@ const page = async () => {
         mode={initialData ? "edit" : "create"}
         initialData={initialData || undefined}
         fresh={!initialData}
+        isEscort
       />
     </div>
   );

@@ -24,9 +24,10 @@ import countiesAndRegions from "@/data/development/countiesAndRegions.json";
 interface Prop {
   className?: string;
   form: any;
+  isEscort?: boolean;
 }
 
-const IntroSection = ({ form, className }: Prop) => {
+const IntroSection = ({ form, className, isEscort }: Prop) => {
   const [regionOpen, setRegionOpen] = React.useState<boolean>(false);
   const [cityOpen, setCityOpen] = React.useState<boolean>(false);
   const [availabilityOpen, setAvailabilityOpen] =
@@ -111,11 +112,12 @@ const IntroSection = ({ form, className }: Prop) => {
                   Email:
                 </FormLabel>
                 <FormControl className="border w-2/3 lg:w-1/ border-primary">
-                  <Input
-                    placeholder=""
-                    {...field}
-                    className=" bg-white  text-black px-6 h-10 rounded-full text-sm lg:text-lg focus-visible:ring-0 "
-                  />
+<Input
+                     placeholder=""
+                     {...field}
+                     disabled={isEscort}
+                     className=" bg-white  text-black px-6 h-10 rounded-full text-sm lg:text-lg focus-visible:ring-0 "
+                   />
                 </FormControl>
               </FormItem>
               <FormMessage className="-mt-4" />

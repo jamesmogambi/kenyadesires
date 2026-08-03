@@ -42,6 +42,7 @@ interface Prop {
   initialData?: NewEscortProfileInput;
   agencyId?: string;
   fresh?: boolean;
+  isEscort?: boolean;
 }
 
 const timeRangeRegex =
@@ -129,7 +130,7 @@ const DEFAULT_VALUES = {
   variantAvailability: [],
 };
 
-const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fresh }: Prop) => {
+const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fresh, isEscort }: Prop) => {
   const router = useRouter();
 
   const [error, setError] = useState<any>(null);
@@ -199,18 +200,18 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
     form.reset(DEFAULT_VALUES);
   }, [fresh, form]);
 
-  useEffect(() => {
-    if (!isLoaded || !user) return;
-    if (fresh) return;
-    setValue("email", user.primaryEmailAddress?.emailAddress || "");
-  }, [setValue, user, isLoaded, fresh]);
-
   // Clear stores and reset form when creating a new profile without existing data
   useEffect(() => {
     if (mode !== "create" || initialData || !isLoaded) return;
     clearStoresRef.current?.();
     form.reset(DEFAULT_VALUES);
   }, [mode, initialData, isLoaded, form]);
+
+  // Prepopulate email from Clerk user on create
+  useEffect(() => {
+    if (mode !== "create" || !isLoaded || !user) return;
+    setValue("email", user.primaryEmailAddress?.emailAddress || "");
+  }, [mode, isLoaded, user, setValue]);
 
   // Prepopulate form and stores when editing
   useEffect(() => {
@@ -566,7 +567,7 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
             className="space-y-3"
           >
             {/* about section */}
-            <IntroSection form={form} />
+            <IntroSection form={form} isEscort={isEscort} />
             {/* description and setting section */}
             <section className="flex flex-col lg:flex-row mt-12 gap-6">
               {/* 1 */}
