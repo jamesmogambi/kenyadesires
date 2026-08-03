@@ -241,25 +241,42 @@ const NavActions = ({
           )}
 
           {/* Agency verification: verify identity or view status */}
-          {isBusiness && (
-            <DropdownMenuItem className="text-stone-800 group">
-              {agencyIsVerified ? (
-                <Link href="/agency-verification-status" className="flex items-center gap-2">
-                  <BadgeCheck className="size-6 text-green-400" />
-                  <span className="uppercase font-normal text-base group-hover:font-bold">
-                    View verification status
-                  </span>
-                </Link>
-              ) : (
+          {isBusiness && (() => {
+            const verificationInitiated =
+              agencyVerificationStatus === "under_review" ||
+              agencyVerificationStatus === "rejected";
+            if (agencyIsVerified || verificationInitiated) {
+              const label = agencyIsVerified
+                ? "View verification status"
+                : "Check verification status";
+              const badge = agencyIsVerified
+                ? "text-green-400"
+                : "text-orange-400";
+              return (
+                <DropdownMenuItem className="text-stone-800 group">
+                  <Link
+                    href="/agency-verification-status"
+                    className="flex items-center gap-2"
+                  >
+                    <BadgeCheck className={`size-5 ${badge}`} />
+                    <span className="uppercase font-normal text-base group-hover:font-bold">
+                      {label}
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+              );
+            }
+            return (
+              <DropdownMenuItem className="text-stone-800 group">
                 <Link href="/verify-agency" className="flex items-center gap-2">
                   <BadgeCheck className="size-5 text-orange-500" />
                   <span className="uppercase font-semibold text-base group-hover:font-bold text-primary">
                     Verify Agency Identity
                   </span>
                 </Link>
-              )}
-            </DropdownMenuItem>
-          )}
+              </DropdownMenuItem>
+            );
+          })()}
 
           {isBusiness && (
             <DropdownMenuItem className="text-stone-800 group">
