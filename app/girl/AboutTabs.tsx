@@ -100,7 +100,7 @@ const AboutTabs = ({ girl, className }: Prop) => {
           </div>
         </TabsContent>
         <TabsContent value="practices">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4">
             {[col1, col2, col3].map((column, i) => (
               <div key={i} className="space-y-3 flex flex-col">
                 {column.map((practice: any, j) => (
