@@ -223,7 +223,7 @@ const NavActions = ({
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="size-9 text-orange-500"
+                    className="size-7 text-orange-500"
                   >
                     <path
                       fill-rule="evenodd"
@@ -241,42 +241,46 @@ const NavActions = ({
           )}
 
           {/* Agency verification: verify identity or view status */}
-          {isBusiness && (() => {
-            const verificationInitiated =
-              agencyVerificationStatus === "under_review" ||
-              agencyVerificationStatus === "rejected";
-            if (agencyIsVerified || verificationInitiated) {
-              const label = agencyIsVerified
-                ? "View verification status"
-                : "Check verification status";
-              const badge = agencyIsVerified
-                ? "text-green-400"
-                : "text-orange-400";
+          {isBusiness &&
+            (() => {
+              const verificationInitiated =
+                agencyVerificationStatus === "under_review" ||
+                agencyVerificationStatus === "rejected";
+              if (agencyIsVerified || verificationInitiated) {
+                const label = agencyIsVerified
+                  ? "View verification status"
+                  : "Check verification status";
+                const badge = agencyIsVerified
+                  ? "text-green-400"
+                  : "text-orange-400";
+                return (
+                  <DropdownMenuItem className="text-stone-800 group">
+                    <Link
+                      href="/agency-verification-status"
+                      className="flex items-center gap-2"
+                    >
+                      <BadgeCheck className={`size-5 ${badge}`} />
+                      <span className="uppercase font-normal text-base group-hover:font-bold">
+                        {label}
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              }
               return (
                 <DropdownMenuItem className="text-stone-800 group">
                   <Link
-                    href="/agency-verification-status"
+                    href="/verify-agency"
                     className="flex items-center gap-2"
                   >
-                    <BadgeCheck className={`size-5 ${badge}`} />
-                    <span className="uppercase font-normal text-base group-hover:font-bold">
-                      {label}
+                    <BadgeCheck className="size-5 text-orange-500" />
+                    <span className="uppercase font-semibold text-base group-hover:font-bold text-primary">
+                      Verify Agency Identity
                     </span>
                   </Link>
                 </DropdownMenuItem>
               );
-            }
-            return (
-              <DropdownMenuItem className="text-stone-800 group">
-                <Link href="/verify-agency" className="flex items-center gap-2">
-                  <BadgeCheck className="size-5 text-orange-500" />
-                  <span className="uppercase font-semibold text-base group-hover:font-bold text-primary">
-                    Verify Agency Identity
-                  </span>
-                </Link>
-              </DropdownMenuItem>
-            );
-          })()}
+            })()}
 
           {isBusiness && (
             <DropdownMenuItem className="text-stone-800 group">

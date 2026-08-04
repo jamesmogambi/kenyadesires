@@ -140,6 +140,7 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
   const { user, isLoaded, isSignedIn } = useUser();
 
   const imageFiles = useFileStore((state) => state.files);
+  const { videoFiles, clearVideoFiles } = useFileStore();
 
   const previewPhotoRef = useRef<{
     getPreviewFile: () => File | null;
@@ -300,6 +301,8 @@ region,
     useFileStore.setState({
       existingImages: images || [],
       files: [],
+      existingVideos: initialData?.videos || [],
+      videoFiles: [],
     });
 
     if (region || towns?.length) {
@@ -496,7 +499,10 @@ bustSize: breast,
           isAgencyOwned: !!agencyId || initialData?.isAgencyOwned || false,
         };
 
+        let escortId: string | undefined;
+
         if (mode === "edit" && initialData?.id) {
+          escortId = initialData.id;
           await updateEscort(initialData.id, escortData);
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />
@@ -508,10 +514,73 @@ bustSize: breast,
             setLoader(false);
             return;
           }
+          escortId = res.id;
           toast.custom(() => (
             <SuccessToast message="Your profile was created successfully." />
           ));
         }
+
+        // Upload videos to Mux for this escort
+        const { existingVideos: currentExistingVideos } = useFileStore.getState();
+        const newPlaybackIds: string[] = [];
+
+        if (videoFiles && videoFiles.length > 0 && escortId) {
+          toast.loading("Uploading videos...", { id: "video-upload-batch" });
+
+          for (let i = 0; i < videoFiles.length; i++) {
+            const videoFile = videoFiles[i];
+            const videoForm = new FormData();
+            videoForm.append("escortId", escortId);
+            videoForm.append("video", videoFile);
+
+            try {
+              const uploadRes = await fetch("/api/mux/escort-video", {
+                method: "POST",
+                body: videoForm,
+              });
+
+              const result = await uploadRes.json();
+
+              if (result.success && result.playbackId) {
+                newPlaybackIds.push(result.playbackId);
+                toast.success(
+                  `Video ${i + 1}/${videoFiles.length} uploaded successfully`,
+                  { id: `video-upload-${i}` },
+                );
+              } else {
+                toast.error(
+                  `Video ${i + 1}/${videoFiles.length} upload issue: ${result.message || result.error}`,
+                  { id: `video-upload-${i}` },
+                );
+              }
+            } catch (err: any) {
+              toast.error(
+                `Video ${i + 1}/${videoFiles.length} failed to upload: ${err?.message || "Unknown error"}`,
+                { id: `video-upload-${i}` },
+              );
+            }
+          }
+
+          toast.success("Video upload complete!", { id: "video-upload-batch" });
+        }
+
+        // Sync videos in Firestore: kept existing + newly uploaded playback IDs
+        const finalVideos = Array.from(
+          new Set([...currentExistingVideos, ...newPlaybackIds]),
+        );
+        if (escortId && finalVideos.length > 0) {
+          try {
+            await fetch(`/api/escorts/${escortId}/videos`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ videos: finalVideos }),
+            });
+          } catch (err: any) {
+            console.error("Failed to sync videos:", err);
+          }
+        }
+
+        clearVideoFiles();
 
         form.reset(DEFAULT_VALUES);
         localStorage.removeItem("form-store");
@@ -530,6 +599,7 @@ bustSize: breast,
         clearAll();
         clearFiles();
         clearEscortGallery();
+        clearVideoFiles();
         hasClearedRef.current = false;
 
         router.push("/administration");

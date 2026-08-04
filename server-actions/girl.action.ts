@@ -506,6 +506,7 @@ export interface NewEscortProfileInput {
   about: string;
   previewPhoto: string;
   images: string[];
+  videos?: string[];
   telephone: string;
   whatsappPhone: string;
   availability: string[];
