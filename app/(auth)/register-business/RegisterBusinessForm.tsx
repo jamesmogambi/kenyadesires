@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useSignUp } from "@clerk/nextjs";
 import { Eye, EyeOff } from "lucide-react";
+import { sendRegistrationEmails } from "@/server-actions/email";
 
 interface Prop {
   className?: String;
@@ -128,6 +129,14 @@ const RegisterBusinessForm = ({ className }: Prop) => {
 
         // Set the session as active
         await setActive({ session: result.createdSessionId });
+
+        // Send welcome and admin emails (server action)
+        await sendRegistrationEmails({
+          email,
+          name: username,
+          clerkUserId: result.id,
+          role: "business",
+        });
 
         // Show success message
         setMessage(

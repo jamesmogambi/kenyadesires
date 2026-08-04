@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { sendVerificationNotificationEmail } from "@/server-actions/email";
 
 const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET!;
 const TIMESTAMP_TOLERANCE = 300;
@@ -70,6 +71,13 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
       await escortRef.update({
         credits: FieldValue.increment(50),
       });
+
+      await sendVerificationNotificationEmail(
+        clerkUserId,
+        clerkUserId,
+        "Approved",
+        decision ? JSON.stringify(decision) : null,
+      );
       break;
     }
 
@@ -85,6 +93,13 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
           verificationWarnings: decision.warnings,
         });
       }
+
+      await sendVerificationNotificationEmail(
+        clerkUserId,
+        clerkUserId,
+        "Declined",
+        decision?.warnings ? JSON.stringify(decision.warnings) : null,
+      );
       break;
     }
 

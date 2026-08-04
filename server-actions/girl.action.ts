@@ -6,6 +6,10 @@ import { revalidateTag } from "next/cache";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 import { slugify } from "@/lib/utils";
+import {
+  sendWelcomeEmail,
+  sendAdminNotificationEmail,
+} from "./email";
 
 // Helper to convert Firestore doc to plain serializable object
 function convertDocToEscort(
@@ -614,6 +618,7 @@ export async function saveNewEscortProfile(
       totalReviews: 0,
       rating: 0,
       totalViews: 0,
+      credits: 20,
       createdAt: now,
       updatedAt: now,
       cleaningHistory: [],
@@ -622,6 +627,19 @@ export async function saveNewEscortProfile(
     };
 
     await docRef.set(newEscort);
+
+    // Send welcome email to the new escort
+    if (data.email) {
+      await sendWelcomeEmail(data.email, data.name, 20, "user");
+    }
+
+    // Notify admin of new registration
+    await sendAdminNotificationEmail(
+      data.name,
+      data.email || "",
+      "user",
+      data.clerkUserId || "",
+    );
 
     return {
       success: true,

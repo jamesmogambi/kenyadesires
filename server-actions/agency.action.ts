@@ -21,6 +21,7 @@ import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
 import { notifyAdminOfAgencyVerification } from "./agency-verification-email";
+import { sendWelcomeEmail, sendAdminNotificationEmail } from "./email";
 
 // ============================================
 // CONVERT FIREBASE DOC TO AGENCY
@@ -944,6 +945,7 @@ export async function createAgency(
       totalReviews: 0,
       totalBookings: 0,
       totalViews: 0,
+      credits: 100,
       featuredEmployeesCount: 0,
       isActive: true,
       isFeatured: false,
@@ -962,6 +964,19 @@ export async function createAgency(
 
     revalidatePath("/agencies");
     revalidatePath(`/agencies/${slug}`);
+
+    // Send welcome email to the new agency owner
+    if (data.contactEmail) {
+      await sendWelcomeEmail(data.contactEmail, data.name, 100, "business");
+    }
+
+    // Notify admin of new registration
+    await sendAdminNotificationEmail(
+      data.name,
+      data.contactEmail,
+      "business",
+      data.ownerId,
+    );
 
     return { success: true, id: docRef.id, slug };
   } catch (error) {
