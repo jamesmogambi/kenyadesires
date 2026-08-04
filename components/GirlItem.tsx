@@ -92,7 +92,9 @@ const GirlItem = ({
     return Array.from(unique);
   }, [regions, primaryRegion]);
 
-  const primaryRegionTitle = formatSlugToTitle(`${primaryRegion}` || "Not Specified");
+  const primaryRegionTitle = formatSlugToTitle(
+    `${primaryRegion}` || "Not Specified",
+  );
   const allRegionsTitle = allRegions.map(formatSlugToTitle).join(", ");
   const countyTitle = formatSlugToTitle(`${county}` || "Not Specified");
 
@@ -137,17 +139,17 @@ const GirlItem = ({
                 <div className="flex items-center gap-1 min-w-0">
                   <MapPin className="size-3 text-stone-400 lg:size-4 shrink-0" />
 
-                  <span className="text-white text-sm font-semibold lg:text-lg text-nowrap min-w-0 truncate">
+                  <span className="text-white text-base font-semibold  text-nowrap min-w-0 truncate">
                     {primaryRegionTitle}
                   </span>
                 </div>
 
-                <span className="text-white text-nowrap text-sm lg:text-lg shrink-0">
+                <span className="text-white text-nowrap  font-semibold text-sm lg:text-lg shrink-0">
                   {age} years
                 </span>
               </div>
 
-              <p className="text-lg font-semibold mt-2 lg:mt-3">
+              <p className="text-lg font-semibold mt-3">
                 {formatPhoneNumber(telephone || whatsappPhone)}
               </p>
             </div>

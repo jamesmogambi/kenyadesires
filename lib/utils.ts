@@ -170,7 +170,7 @@ export const getFlagEmoji = (locale: string): string =>
 export function formatSlugToTitle(slug: any) {
     if (!slug) return "";
     return slug
-        .split(/[\s-]+/) // Split by spaces or hyphens
+        .split(/[\s_-]+/) // Split by spaces, hyphens, or underscores
         .map(
             (word: string) =>
                 word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
