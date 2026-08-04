@@ -2,207 +2,301 @@ import crypto from "node:crypto";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-function shortenFloats(v: unknown): unknown {
-  if (Array.isArray(v)) return v.map(shortenFloats);
-  if (v && typeof v === "object") {
-    return Object.fromEntries(
-      Object.entries(v as Record<string, unknown>).map(([k, x]) => [
-        k,
-        shortenFloats(x),
-      ]),
-    );
+const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET!;
+const TIMESTAMP_TOLERANCE = 300;
+
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
-  if (typeof v === "number" && !Number.isInteger(v) && v % 1 === 0) {
-    return Math.trunc(v);
-  }
-  return v;
+  return result === 0;
 }
 
-function sortKeys(v: unknown): unknown {
-  if (Array.isArray(v)) return v.map(sortKeys);
-  if (v && typeof v === "object") {
-    return Object.keys(v as object)
-      .sort()
-      .reduce<Record<string, unknown>>((acc, k) => {
-        acc[k] = sortKeys((v as Record<string, unknown>)[k]);
-        return acc;
-      }, {});
-  }
-  return v;
-}
+async function processEvent(parsed: any, eventId: string): Promise<void> {
+  const {
+    session_id,
+    webhook_type,
+    status,
+    vendor_data,
+    decision,
+    resubmit_info,
+    business_session_id,
+    session_kind,
+  } = parsed;
 
-export async function POST(req: Request) {
-  const raw = await req.text();
-  const sig = req.headers.get("x-signature-v2") ?? "";
-  const ts = Number(req.headers.get("x-timestamp"));
+  if (!vendor_data) return;
 
-  if (!ts || Math.abs(Date.now() / 1000 - ts) > 300) {
-    return new Response("stale", { status: 401 });
-  }
+  const clerkUserId = vendor_data;
 
-  let parsed: any;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return new Response("bad json", { status: 400 });
-  }
-
-  const canonical = JSON.stringify(sortKeys(shortenFloats(parsed)));
-
-  const expected = crypto
-    .createHmac("sha256", process.env.DIDIT_WEBHOOK_SECRET!)
-    .update(canonical, "utf8")
-    .digest("hex");
-
-  if (
-    sig.length !== expected.length ||
-    !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig))
-  ) {
-    return new Response("bad sig", { status: 401 });
-  }
-
-  if (!parsed.event_id) {
-    return new Response("missing event_id", { status: 400 });
-  }
-
-  const existing = await adminDb
-    .collection("kyc_webhook_events")
-    .doc(parsed.event_id)
-    .get();
-
-  if (existing.exists) {
-    return new Response("ok");
-  }
-
-  await adminDb.collection("kyc_webhook_events").doc(parsed.event_id).set({
-    ...parsed,
+  const verificationRecord = {
+    vendor_data: clerkUserId,
+    session_id: session_id ?? null,
+    business_session_id: business_session_id ?? null,
+    webhook_type,
+    status,
+    decision: decision ?? null,
     processed_at: new Date(),
-  });
+  };
 
-  const vendorData = parsed.vendor_data;
+  await adminDb.collection("kyc_verifications").doc(eventId).set(verificationRecord, { merge: true });
 
-  switch (parsed.status) {
+  const isBusiness = session_kind === "business";
+
+  const escortRef = adminDb.collection("escorts").doc(clerkUserId);
+  const agencyRef = adminDb.collection("agencies").doc(clerkUserId);
+
+  switch (status) {
     case "Approved": {
-      await adminDb.collection("kyc_verifications").doc(vendorData).set(
-        {
-          vendor_data: vendorData,
-          status: "approved",
-          decision: parsed.decision,
-          verified_at: new Date(),
-          updated_at: new Date(),
-        },
-        { merge: true },
-      );
+      await escortRef.update({
+        isVerified: true,
+        verificationStatus: "verified",
+        verifiedAt: new Date(),
+      });
 
-      const escortSnap = await adminDb
-        .collection("escorts")
-        .where("clerkUserId", "==", vendorData)
-        .limit(1)
-        .get();
-
-      if (!escortSnap.empty) {
-        await escortSnap.docs[0].ref.update({
-          isVerified: true,
-          verificationStatus: "verified",
-          verificationDocuments: {
-            idProof: parsed.decision?.id_verifications?.[0]?.document_number,
-          },
-          credits: FieldValue.increment(50),
+      if (decision) {
+        await escortRef.update({
+          diditDecision: decision,
+          idVerificationDocument: decision.id_verifications?.[0]?.document_number ?? null,
         });
       }
 
-      const agencySnap = await adminDb
-        .collection("agencies")
-        .where("ownerId", "==", vendorData)
-        .limit(1)
-        .get();
+      await adminDb.collection("kyc_webhook_events").doc(eventId).set({
+        ...parsed,
+        processed_at: new Date(),
+      });
 
-      if (!agencySnap.empty) {
-        await agencySnap.docs[0].ref.update({
-          isVerified: true,
-          verificationStatus: "verified",
-        });
-      }
+      await escortRef.update({
+        credits: FieldValue.increment(50),
+      });
       break;
     }
 
     case "Declined": {
-      await adminDb.collection("kyc_verifications").doc(vendorData).set(
-        {
-          vendor_data: vendorData,
-          status: "declined",
-          decision: parsed.decision,
-          updated_at: new Date(),
-        },
-        { merge: true },
-      );
+      await escortRef.update({
+        isVerified: false,
+        verificationStatus: "rejected",
+        rejectedAt: new Date(),
+      });
 
-      const escortSnap = await adminDb
-        .collection("escorts")
-        .where("clerkUserId", "==", vendorData)
-        .limit(1)
-        .get();
-
-      if (!escortSnap.empty) {
-        await escortSnap.docs[0].ref.update({
-          isVerified: false,
-          verificationStatus: "rejected",
+      if (decision?.warnings) {
+        await escortRef.update({
+          verificationWarnings: decision.warnings,
         });
       }
       break;
     }
 
     case "In Review": {
-      await adminDb.collection("kyc_verifications").doc(vendorData).set(
-        {
-          vendor_data: vendorData,
-          status: "pending_review",
-          updated_at: new Date(),
-        },
-        { merge: true },
-      );
+      await escortRef.update({
+        verificationStatus: "pending_review",
+      });
+      break;
+    }
 
-      const escortSnap = await adminDb
-        .collection("escorts")
-        .where("clerkUserId", "==", vendorData)
-        .limit(1)
-        .get();
+    case "In Progress": {
+      await escortRef.update({
+        verificationStatus: "in_progress",
+      });
+      break;
+    }
 
-      if (!escortSnap.empty) {
-        await escortSnap.docs[0].ref.update({
-          verificationStatus: "pending_review",
+    case "Resubmitted": {
+      await escortRef.update({
+        verificationStatus: "resubmitted",
+        resubmittedAt: new Date(),
+      });
+
+      if (resubmit_info) {
+        await adminDb.collection("kyc_resubmissions").doc(eventId).set({
+          event_id: eventId,
+          clerkUserId,
+          resubmit_info,
+          created_at: new Date(),
         });
       }
       break;
     }
 
-    case "Kyc Expired": {
-      await adminDb.collection("kyc_verifications").doc(vendorData).set(
-        {
-          vendor_data: vendorData,
-          status: "expired",
-          updated_at: new Date(),
-        },
-        { merge: true },
-      );
+    case "Abandoned": {
+      await escortRef.update({
+        verificationStatus: "abandoned",
+        abandonedAt: new Date(),
+      });
+      break;
+    }
 
-      const escortSnap = await adminDb
-        .collection("escorts")
-        .where("clerkUserId", "==", vendorData)
-        .limit(1)
-        .get();
+    case "Expired":
+    case "KYC Expired": {
+      await escortRef.update({
+        verificationStatus: "expired",
+        expiredAt: new Date(),
+      });
+      break;
+    }
 
-      if (!escortSnap.empty) {
-        await escortSnap.docs[0].ref.update({
-          verificationStatus: "expired",
-        });
-      }
+    case "Not Started": {
+      await escortRef.update({
+        verificationStatus: "not_started",
+      });
       break;
     }
 
     default:
       break;
   }
+
+  if (isBusiness) {
+    switch (status) {
+      case "Approved": {
+        await agencyRef.update({
+          isVerified: true,
+          verificationStatus: "verified",
+          verifiedAt: new Date(),
+        });
+        break;
+      }
+      case "Declined": {
+        await agencyRef.update({
+          isVerified: false,
+          verificationStatus: "rejected",
+          rejectedAt: new Date(),
+        });
+        break;
+      }
+      case "In Review": {
+        await agencyRef.update({
+          verificationStatus: "pending_review",
+        });
+        break;
+      }
+      case "In Progress": {
+        await agencyRef.update({
+          verificationStatus: "in_progress",
+        });
+        break;
+      }
+      case "Expired":
+      case "KYC Expired": {
+        await agencyRef.update({
+          verificationStatus: "expired",
+          expiredAt: new Date(),
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  }
+}
+
+export async function POST(req: Request) {
+  const raw = await req.text();
+
+  const sigV2 = req.headers.get("x-signature-v2") ?? "";
+  const sigSimple = req.headers.get("x-signature-simple") ?? "";
+  const tsHeader = req.headers.get("x-timestamp") ?? "";
+
+  console.log("Didit webhook received", {
+    hasSigV2: !!sigV2,
+    hasSigSimple: !!sigSimple,
+    hasTimestamp: !!tsHeader,
+    timestamp: tsHeader,
+    rawBodyLength: raw.length,
+    rawBody: raw.slice(0, 500),
+  });
+
+  const ts = Number(tsHeader);
+  if (!ts) {
+    console.error("Didit webhook rejected: missing timestamp");
+    return new Response("missing timestamp", { status: 400 });
+  }
+  if (Math.abs(Date.now() / 1000 - ts) > TIMESTAMP_TOLERANCE) {
+    console.error("Didit webhook rejected: stale timestamp", {
+      serverTime: Date.now() / 1000,
+      webhookTime: ts,
+      diff: Math.abs(Date.now() / 1000 - ts),
+    });
+    return new Response("stale", { status: 401 });
+  }
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    console.error("Didit webhook rejected: bad json", { raw: raw.slice(0, 500) });
+    return new Response("bad json", { status: 400 });
+  }
+
+  const eventId = parsed.event_id ?? `${parsed.session_id}:${parsed.webhook_type}:${parsed.timestamp}`;
+
+  if (!parsed.session_id && !parsed.vendor_data) {
+    console.error("Didit webhook rejected: missing session_id and vendor_data", { parsed });
+    return new Response("missing session_id and vendor_data", { status: 400 });
+  }
+
+  const existing = await adminDb
+    .collection("kyc_webhook_events")
+    .doc(eventId)
+    .get();
+
+  if (existing.exists) {
+    return new Response("ok");
+  }
+
+  let signatureValid = false;
+
+  if (sigV2) {
+    const expected = crypto
+      .createHmac("sha256", DIDIT_WEBHOOK_SECRET)
+      .update(raw, "utf8")
+      .digest("hex");
+    console.log("Expected Sig:", expected);
+    console.log("Received Sig:", sigV2);
+    console.log("Timestamp Diff:", Math.abs(Date.now() / 1000 - ts));
+    signatureValid = constantTimeCompare(expected, sigV2);
+  }
+
+  if (!signatureValid && sigSimple) {
+    const payload = `${ts}:${parsed.session_id}:${parsed.status}:${parsed.webhook_type}`;
+    const expected = crypto
+      .createHmac("sha256", DIDIT_WEBHOOK_SECRET)
+      .update(payload, "utf8")
+      .digest("hex");
+    console.log("Expected Sig (Simple):", expected);
+    console.log("Received Sig (Simple):", sigSimple);
+    console.log("Simple payload:", payload);
+    console.log("Timestamp Diff:", Math.abs(Date.now() / 1000 - ts));
+    signatureValid = constantTimeCompare(expected, sigSimple);
+  }
+
+  if (!signatureValid) {
+    console.error("Didit webhook signature verification failed", {
+      event_id: eventId,
+      hasSigV2: !!sigV2,
+      hasSigSimple: !!sigSimple,
+    });
+    return new Response("bad signature", { status: 401 });
+  }
+
+  await adminDb.collection("kyc_webhook_events").doc(eventId).set({
+    ...parsed,
+    processed_at: new Date(),
+  });
+
+  processEvent(parsed, eventId).catch((err) => {
+    console.error("Didit webhook processing error", {
+      event_id: eventId,
+      error: err.message,
+    });
+  });
+
+  console.log("Didit webhook processed successfully", {
+    event_id: eventId,
+    webhook_type: parsed.webhook_type,
+    status: parsed.status,
+  });
 
   return new Response("ok");
 }
