@@ -112,7 +112,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent className="mt-4" value="practices">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4">
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
             {[practiceCol1, practiceCol2, practiceCol3].map((column, i) => (
               <div key={i} className="space-y-3 flex flex-col">
                 {column.map((item, j) => (
@@ -134,7 +134,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           </div>
         </TabsContent>
         <TabsContent className="mt-4" value="massage">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4">
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
             {[massageCol1, massageCol2, massageCol3].map((column, i) => (
               <div key={i} className="space-y-3 flex flex-col">
                 {column.map((item, j) => (
@@ -156,7 +156,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           </div>
         </TabsContent>
         <TabsContent className="mt-4" value="bdsm">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4">
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
             {[bdsmCol1, bdsmCol2, bdsmCol3].map((column, i) => (
               <div key={i} className="space-y-3 flex flex-col">
                 {column.map((item, j) => (

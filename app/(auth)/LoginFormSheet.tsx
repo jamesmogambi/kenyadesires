@@ -73,17 +73,15 @@ const LoginFormSheet = ({ className, children }: Prop) => {
     setError(null);
     setLoader(true);
 
-    try {
-      if (signIn) {
-        await signIn.create({ identifier: email, password });
-        setOpen(false);
-
-        router.push("/");
-        router.refresh();
-      } else {
-        throw new Error("SignIn instance is undefined.");
-      }
-    } catch (error: any) {
+try {
+        if (signIn) {
+          await signIn.create({ identifier: email, password });
+          setOpen(false);
+          window.location.href = "/";
+        } else {
+          throw new Error("SignIn instance is undefined.");
+        }
+      } catch (error: any) {
       setError(error.errors[0]?.message || "Login failed");
     } finally {
       setLoader(false);

@@ -1,3 +1,4 @@
+"use client";
 // components/GirlItem.tsx
 import { cn, formatSlugToTitle } from "@/lib/utils";
 import Link from "next/link";
