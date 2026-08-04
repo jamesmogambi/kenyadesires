@@ -967,7 +967,7 @@ export async function createAgency(
 
     // Send welcome email to the new agency owner
     if (data.contactEmail) {
-      await sendWelcomeEmail(data.contactEmail, data.name, 100, "business");
+      await sendWelcomeEmail(data.contactEmail, data.name, "business", 100);
     }
 
     // Notify admin of new registration

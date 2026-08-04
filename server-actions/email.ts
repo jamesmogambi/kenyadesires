@@ -29,20 +29,19 @@ export async function sendRegistrationEmails(data: {
   role: string;
 }): Promise<void> {
   const { email, name, clerkUserId, role } = data;
-  const credits = role === "business" ? 100 : 20;
 
-  await sendWelcomeEmail(email, name, credits, role);
+  await sendWelcomeEmail(email, name, role);
   await sendAdminNotificationEmail(name, email, role, clerkUserId);
 }
 
 export async function sendWelcomeEmail(
   to: string,
   name: string,
-  credits: number,
   role: string,
+  credits = 0,
 ): Promise<void> {
   try {
-    const { subject, html, text } = welcomeEmail(name, credits, role);
+    const { subject, html, text } = welcomeEmail(name, role, credits);
     const transporter = getTransporter();
     await transporter.sendMail({
       from: `"KenyaDesires" <${process.env.EMAIL_USER}>`,
@@ -87,12 +86,14 @@ export async function sendVerificationNotificationEmail(
   name: string,
   status: string,
   decision?: string | null,
+  credits = 0,
 ): Promise<void> {
   try {
     const { subject, html, text } = verificationNotificationEmail(
       name,
       status,
       decision,
+      credits,
     );
     const transporter = getTransporter();
     await transporter.sendMail({

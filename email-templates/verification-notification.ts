@@ -2,6 +2,7 @@ export function verificationNotificationEmail(
   name: string,
   status: string,
   decision?: string | null,
+  credits = 0,
 ): { subject: string; html: string; text: string } {
   const statusLabel = status === "Approved" ? "Verified" : status;
   const statusColor = status === "Approved" ? "#2e7d32" : status === "Declined" ? "#c62828" : "#e65100";
@@ -27,10 +28,10 @@ export function verificationNotificationEmail(
               <p style="color:#555;font-size:14px;margin:0;white-space:pre-wrap;">${decision}</p>
             </div>
             ` : ""}
-            ${status === "Approved" ? `
+            ${status === "Approved" && credits > 0 ? `
             <div style="background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 100%);border:1px solid #a5d6a7;border-radius:10px;padding:20px;margin:0 0 24px;text-align:center;">
-              <p style="color:#2e7d32;font-size:14px;margin:0 0 8px;font-weight:600;">&#x1F4B0; 50 Bonus Credits Added</p>
-              <p style="color:#555;font-size:13px;margin:0;">Your account has been credited with 50 credits for completing verification.</p>
+              <p style="color:#2e7d32;font-size:14px;margin:0 0 8px;font-weight:600;">&#x1F4B0; ${credits} Bonus Credits Added</p>
+              <p style="color:#555;font-size:13px;margin:0;">Your account has been credited with ${credits} credits for completing verification.</p>
             </div>
             ` : ""}
             <div style="text-align:center;margin:30px 0;">
@@ -50,7 +51,7 @@ Hello ${name},
 
 Your identity verification has been ${statusLabel}.
 ${decision ? `\nDecision Details:\n${decision}` : ""}
-${status === "Approved" ? "\n50 bonus credits have been added to your account for completing verification." : ""}
+${status === "Approved" && credits > 0 ? `\n${credits} bonus credits have been added to your account for completing verification.` : ""}
 
 Go to https://kenyadesires.com to access your dashboard.
 

@@ -90,6 +90,7 @@ export default async function AgencyVerificationStatusPage() {
   const status = STATUS_LABELS[statusKey];
   const docs = agency.verificationDocuments || {};
   const hasDocs = Boolean(docs.businessLicense || docs.idProof || docs.otherDocuments?.length);
+  const showCredits = statusKey === "verified";
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -107,6 +108,17 @@ export default async function AgencyVerificationStatusPage() {
         </div>
 
         <p className="text-white/70 text-lg mb-6">{status.subtitle}</p>
+
+        {showCredits && (
+          <div className="bg-primary/10 rounded-lg p-4 mb-6">
+            <p className="text-primary font-semibold text-lg">
+              +200 Credits
+            </p>
+            <p className="text-white/60 text-sm">
+              Worth 2,000 KSH — credited to your account for completing verification
+            </p>
+          </div>
+        )}
 
         {statusKey === "pending" && !hasDocs && (
           <Link

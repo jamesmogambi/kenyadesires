@@ -45,83 +45,183 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
 
   const isBusiness = session_kind === "business";
 
-  const escortRef = adminDb.collection("escorts").doc(clerkUserId);
-  const agencyRef = adminDb.collection("agencies").doc(clerkUserId);
+  const escortsSnap = await adminDb
+    .collection("escorts")
+    .where("clerkUserId", "==", clerkUserId)
+    .limit(1)
+    .get();
+
+  let escortRef: FirebaseFirestore.DocumentReference | null = null;
+  let escortData: any = null;
+  if (!escortsSnap.empty) {
+    const escortDoc = escortsSnap.docs[0];
+    escortRef = adminDb.collection("escorts").doc(escortDoc.id);
+    escortData = escortDoc.data();
+  }
+
+  let agencyRef: FirebaseFirestore.DocumentReference | null = null;
+  let agencyData: any = null;
+  if (isBusiness) {
+    const agenciesSnap = await adminDb
+      .collection("agencies")
+      .where("ownerId", "==", clerkUserId)
+      .limit(1)
+      .get();
+
+    if (!agenciesSnap.empty) {
+      const agencyDoc = agenciesSnap.docs[0];
+      agencyRef = adminDb.collection("agencies").doc(agencyDoc.id);
+      agencyData = agencyDoc.data();
+    }
+  }
 
   switch (status) {
     case "Approved": {
-      await escortRef.update({
-        isVerified: true,
-        verificationStatus: "verified",
-        verifiedAt: new Date(),
-      });
-
-      if (decision) {
+      if (escortRef) {
         await escortRef.update({
-          diditDecision: decision,
-          idVerificationDocument: decision.id_verifications?.[0]?.document_number ?? null,
+          isVerified: true,
+          verificationStatus: "verified",
+          verifiedAt: new Date(),
         });
+
+        if (decision) {
+          await escortRef.update({
+            diditDecision: decision,
+            idVerificationDocument: decision.id_verifications?.[0]?.document_number ?? null,
+          });
+        }
+
+        await adminDb.collection("kyc_webhook_events").doc(eventId).set({
+          ...parsed,
+          processed_at: new Date(),
+        });
+
+        await escortRef.update({
+          credits: FieldValue.increment(100),
+        });
+
+        if (escortData?.email) {
+          await sendVerificationNotificationEmail(
+            escortData.email,
+            escortData.name || "there",
+            "Approved",
+            decision ? JSON.stringify(decision) : null,
+            100,
+          );
+        }
       }
 
-      await adminDb.collection("kyc_webhook_events").doc(eventId).set({
-        ...parsed,
-        processed_at: new Date(),
-      });
+      if (agencyRef) {
+        await agencyRef.update({
+          isVerified: true,
+          verificationStatus: "verified",
+          verifiedAt: new Date(),
+        });
 
-      await escortRef.update({
-        credits: FieldValue.increment(50),
-      });
+        if (decision) {
+          await agencyRef.update({
+            diditDecision: decision,
+            idVerificationDocument: decision.id_verifications?.[0]?.document_number ?? null,
+          });
+        }
 
-      await sendVerificationNotificationEmail(
-        clerkUserId,
-        clerkUserId,
-        "Approved",
-        decision ? JSON.stringify(decision) : null,
-      );
+        await agencyRef.update({
+          credits: FieldValue.increment(200),
+        });
+
+        if (agencyData?.contactEmail) {
+          await sendVerificationNotificationEmail(
+            agencyData.contactEmail,
+            agencyData.name || "there",
+            "Approved",
+            decision ? JSON.stringify(decision) : null,
+            200,
+          );
+        }
+      }
       break;
     }
 
     case "Declined": {
-      await escortRef.update({
-        isVerified: false,
-        verificationStatus: "rejected",
-        rejectedAt: new Date(),
-      });
-
-      if (decision?.warnings) {
+      if (escortRef) {
         await escortRef.update({
-          verificationWarnings: decision.warnings,
+          isVerified: false,
+          verificationStatus: "rejected",
+          rejectedAt: new Date(),
         });
+
+        if (decision?.warnings) {
+          await escortRef.update({
+            verificationWarnings: decision.warnings,
+          });
+        }
+
+        if (escortData?.email) {
+          await sendVerificationNotificationEmail(
+            escortData.email,
+            escortData.name || "there",
+            "Declined",
+            decision?.warnings ? JSON.stringify(decision.warnings) : null,
+            0,
+          );
+        }
       }
 
-      await sendVerificationNotificationEmail(
-        clerkUserId,
-        clerkUserId,
-        "Declined",
-        decision?.warnings ? JSON.stringify(decision.warnings) : null,
-      );
+      if (isBusiness && agencyRef) {
+        await agencyRef.update({
+          isVerified: false,
+          verificationStatus: "rejected",
+          rejectedAt: new Date(),
+        });
+
+        if (agencyData?.contactEmail) {
+          await sendVerificationNotificationEmail(
+            agencyData.contactEmail,
+            agencyData.name || "there",
+            "Declined",
+            decision?.warnings ? JSON.stringify(decision.warnings) : null,
+            0,
+          );
+        }
+      }
       break;
     }
 
     case "In Review": {
-      await escortRef.update({
-        verificationStatus: "pending_review",
-      });
+      if (escortRef) {
+        await escortRef.update({
+          verificationStatus: "pending_review",
+        });
+      }
+      if (isBusiness && agencyRef) {
+        await agencyRef.update({
+          verificationStatus: "pending_review",
+        });
+      }
       break;
     }
 
     case "In Progress": {
-      await escortRef.update({
-        verificationStatus: "in_progress",
-      });
+      if (escortRef) {
+        await escortRef.update({
+          verificationStatus: "in_progress",
+        });
+      }
+      if (isBusiness && agencyRef) {
+        await agencyRef.update({
+          verificationStatus: "in_progress",
+        });
+      }
       break;
     }
 
     case "Resubmitted": {
-      await escortRef.update({
-        verificationStatus: "resubmitted",
-        resubmittedAt: new Date(),
-      });
+      if (escortRef) {
+        await escortRef.update({
+          verificationStatus: "resubmitted",
+          resubmittedAt: new Date(),
+        });
+      }
 
       if (resubmit_info) {
         await adminDb.collection("kyc_resubmissions").doc(eventId).set({
@@ -135,74 +235,54 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
     }
 
     case "Abandoned": {
-      await escortRef.update({
-        verificationStatus: "abandoned",
-        abandonedAt: new Date(),
-      });
+      if (escortRef) {
+        await escortRef.update({
+          verificationStatus: "abandoned",
+          abandonedAt: new Date(),
+        });
+      }
+      if (isBusiness && agencyRef) {
+        await agencyRef.update({
+          verificationStatus: "abandoned",
+          abandonedAt: new Date(),
+        });
+      }
       break;
     }
 
     case "Expired":
     case "KYC Expired": {
-      await escortRef.update({
-        verificationStatus: "expired",
-        expiredAt: new Date(),
-      });
+      if (escortRef) {
+        await escortRef.update({
+          verificationStatus: "expired",
+          expiredAt: new Date(),
+        });
+      }
+      if (isBusiness && agencyRef) {
+        await agencyRef.update({
+          verificationStatus: "expired",
+          expiredAt: new Date(),
+        });
+      }
       break;
     }
 
     case "Not Started": {
-      await escortRef.update({
-        verificationStatus: "not_started",
-      });
+      if (escortRef) {
+        await escortRef.update({
+          verificationStatus: "not_started",
+        });
+      }
+      if (isBusiness && agencyRef) {
+        await agencyRef.update({
+          verificationStatus: "not_started",
+        });
+      }
       break;
     }
 
     default:
       break;
-  }
-
-  if (isBusiness) {
-    switch (status) {
-      case "Approved": {
-        await agencyRef.update({
-          isVerified: true,
-          verificationStatus: "verified",
-          verifiedAt: new Date(),
-        });
-        break;
-      }
-      case "Declined": {
-        await agencyRef.update({
-          isVerified: false,
-          verificationStatus: "rejected",
-          rejectedAt: new Date(),
-        });
-        break;
-      }
-      case "In Review": {
-        await agencyRef.update({
-          verificationStatus: "pending_review",
-        });
-        break;
-      }
-      case "In Progress": {
-        await agencyRef.update({
-          verificationStatus: "in_progress",
-        });
-        break;
-      }
-      case "Expired":
-      case "KYC Expired": {
-        await agencyRef.update({
-          verificationStatus: "expired",
-          expiredAt: new Date(),
-        });
-        break;
-      }
-      default:
-        break;
-    }
   }
 }
 

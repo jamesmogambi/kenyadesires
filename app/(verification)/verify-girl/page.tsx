@@ -28,7 +28,7 @@ const page = () => {
 
           <InfoSection
             title="Verification reward"
-            description="When your identity verification is approved, you will receive 50 credits (equivalent to KSH 500) credited to your account. These credits can be used to boost your listings and extend your advertising."
+            description="When your identity verification is approved, you will receive 100 credits (equivalent to KSH 1,000) credited to your account. These credits can be used to boost your listings and extend your advertising."
           />
 
           <div className="flex justify-center items-center">

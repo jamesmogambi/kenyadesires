@@ -618,7 +618,7 @@ export async function saveNewEscortProfile(
       totalReviews: 0,
       rating: 0,
       totalViews: 0,
-      credits: 20,
+      credits: 50,
       createdAt: now,
       updatedAt: now,
       cleaningHistory: [],
@@ -630,7 +630,7 @@ export async function saveNewEscortProfile(
 
     // Send welcome email to the new escort
     if (data.email) {
-      await sendWelcomeEmail(data.email, data.name, 20, "user");
+      await sendWelcomeEmail(data.email, data.name, "user", 50);
     }
 
     // Notify admin of new registration

@@ -89,6 +89,7 @@ export interface IAgency {
   totalReviews: number;
   totalBookings: number;
   totalViews: number;
+  credits?: number;
   featuredEmployeesCount: number;
 
   // Status

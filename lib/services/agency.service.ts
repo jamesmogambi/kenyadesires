@@ -12,10 +12,11 @@ import {
   where,
   orderBy,
   limit as firestoreLimit,
-  QueryConstraint,
+   QueryConstraint,
   Timestamp,
   DocumentData,
   QueryDocumentSnapshot,
+  increment,
 } from "firebase/firestore";
 import {
   IAgency,
@@ -192,6 +193,7 @@ export class AgencyService {
         totalReviews: 0,
         totalBookings: 0,
         totalViews: 0,
+        credits: 100,
         featuredEmployeesCount: 0,
         isActive: true,
         isFeatured: false,
@@ -463,6 +465,11 @@ export class AgencyService {
         if (data[field] !== undefined) {
           updateData[field] = data[field];
         }
+      }
+
+      // Award 200 credits when verification transitions to approved
+      if (data.isVerified === true && currentData.isVerified !== true) {
+        updateData.credits = increment(200);
       }
 
       // Handle county code update

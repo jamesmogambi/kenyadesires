@@ -1,6 +1,7 @@
 // app/api/agencies/[id]/route.ts (Get, Update, Delete)
 import {NextRequest, NextResponse} from "next/server";
 import AgencyService from "@/lib/services/agency.service";
+import {sendVerificationNotificationEmail} from "@/server-actions/email";
 
 // GET - Get agency by ID
 export async function GET(
@@ -48,7 +49,25 @@ export async function PUT(
         const {id} = await params;
         const body = await request.json();
 
+        const existingAgency = await AgencyService.getAgencyById(id);
+
         const agency = await AgencyService.updateAgency(id, body);
+
+        const wasVerified = existingAgency?.isVerified === true;
+        const isNowVerified = body.isVerified === true;
+
+        if (!wasVerified && isNowVerified && agency?.contactEmail) {
+            const verificationCredits = 200;
+            await sendVerificationNotificationEmail(
+                agency.contactEmail,
+                agency.name || "there",
+                "Approved",
+                null,
+                verificationCredits,
+            ).catch((err) => {
+                console.error("Failed to send agency verification email:", err);
+            });
+        }
 
         return NextResponse.json({
             success: true,

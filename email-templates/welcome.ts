@@ -1,7 +1,23 @@
-export function welcomeEmail(name: string, credits: number, role: string): { subject: string; html: string; text: string } {
+export function welcomeEmail(name: string, role: string, credits = 0): { subject: string; html: string; text: string } {
   const roleLabel = role === "business" ? "Agency" : "Escort";
+  const subject = credits > 0
+    ? `Welcome to KenyaDesires! Your ${roleLabel} Account is Ready`
+    : `Welcome to KenyaDesires!`;
+
+  const creditsSection = credits > 0
+    ? `<div style="background:linear-gradient(135deg,#fdf2f8 0%,#fce4ec 100%);border:1px solid #f8bbd0;border-radius:10px;padding:20px;margin:0 0 24px;text-align:center;">
+      <p style="color:#c2185b;font-size:14px;margin:0 0 8px;font-weight:600;">&#x1F4B0; Credits Credited</p>
+      <p style="color:#1a1a2e;font-size:36px;font-weight:700;margin:0;">${credits}</p>
+      <p style="color:#888;font-size:13px;margin:4px 0 0;">credits have been added to your account</p>
+    </div>`
+    : "";
+
+  const creditsText = credits > 0
+    ? `\n\n${credits} credits have been credited to your account.`
+    : "";
+
   return {
-    subject: `Welcome to KenyaDesires! Your ${roleLabel} Account is Ready`,
+    subject,
     html: `
       <div style="max-width:600px;margin:0 auto;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f9f9f9;padding:40px 20px;">
         <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
@@ -14,11 +30,7 @@ export function welcomeEmail(name: string, credits: number, role: string): { sub
             <p style="color:#555;font-size:16px;line-height:1.7;margin:0 0 24px;">
               Your account has been created successfully. You are now part of the KenyaDesires community.
             </p>
-            <div style="background:linear-gradient(135deg,#fdf2f8 0%,#fce4ec 100%);border:1px solid #f8bbd0;border-radius:10px;padding:20px;margin:0 0 24px;text-align:center;">
-              <p style="color:#c2185b;font-size:14px;margin:0 0 8px;font-weight:600;">&#x1F4B0; Credits Credited</p>
-              <p style="color:#1a1a2e;font-size:36px;font-weight:700;margin:0;">${credits}</p>
-              <p style="color:#888;font-size:13px;margin:4px 0 0;">credits have been added to your account</p>
-            </div>
+            ${creditsSection}
             <p style="color:#555;font-size:16px;line-height:1.7;margin:0 0 24px;">
               You can now complete your profile, add photos, and start exploring. If you have any questions, feel free to reach out to our support team.
             </p>
@@ -35,9 +47,7 @@ export function welcomeEmail(name: string, credits: number, role: string): { sub
     `,
     text: `Welcome to KenyaDesires, ${name}!
 
-Your ${roleLabel} account has been created successfully.
-
-${credits} credits have been credited to your account.
+Your ${roleLabel} account has been created successfully.${creditsText}
 
 You can now complete your profile, add photos, and start exploring.
 

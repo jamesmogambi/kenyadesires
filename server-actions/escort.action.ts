@@ -63,6 +63,7 @@ export interface Escort {
   totalReviews: number;
   rating: number;
   totalViews: number;
+  credits?: number;
   createdAt: Date;
   updatedAt: Date;
 
