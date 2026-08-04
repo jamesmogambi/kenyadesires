@@ -3,7 +3,7 @@ import { cn, formatSlugToTitle } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 import GirlImageSwiper from "./GirlImageSwiper";
-import { Images, BadgeCheck } from "lucide-react";
+import { Images, BadgeCheck, MapPin } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phone";
 import { Escort } from "@/server-actions/escort.action";
 import {
@@ -41,6 +41,7 @@ const GirlItem = ({
     imagesMetadata,
     id, // ← Get the ID from the escort object
     isVerified,
+    regions,
   } = girl;
 
   // ✅ Ensure we have a valid ID - use slug or username as fallback
@@ -83,14 +84,28 @@ const GirlItem = ({
 
   const displayImages = getDisplayImages();
 
+  // ✅ Build display text for operating regions
+  const allRegions = React.useMemo(() => {
+    const unique = new Set<string>();
+    if (primaryRegion) unique.add(primaryRegion);
+    (regions || []).forEach((r) => r && unique.add(r));
+    return Array.from(unique);
+  }, [regions, primaryRegion]);
+
+  const extraRegionCount = Math.max(allRegions.length - 1, 0);
+  const primaryRegionTitle = formatSlugToTitle(
+    `${primaryRegion}` || "Not Specified",
+  );
+  const allRegionsTitle = allRegions.map(formatSlugToTitle).join(", ");
+
   return (
     <div
       className={cn(
-        "text-4xl font-bold hover:shadow-xl shadow-stone-200/60 relative cursor-pointer border-[0.2px] p-0 rounded-md overflow-hidden border-gray-500",
+        "text-4xl font-bold hover:shadow-xl shadow-stone-200/60 relative border-[0.2px] p-0 rounded-md overflow-hidden border-gray-500",
         className,
       )}
     >
-      <Link href={profilePath}>
+      <Link href={profilePath} className="cursor-pointer">
         {/* Header - Image */}
         <GirlImageSwiper images={displayImages} priority={priority} />
 
@@ -109,43 +124,50 @@ const GirlItem = ({
             </Tooltip>
           </TooltipProvider>
         )}
+      </Link>
 
-        {/* Footer */}
-        <div className="p-4">
-          <h4 className="text-primary ml-0 md:ml-2 mb-1 text-nowrap text-base lg:text-xl font-bold capitalize">
-            {escortName.split(" ").slice(0, 2).join(" ") || "Escort"}
-          </h4>
+      {/* Footer - not linkable */}
+      <div className="p-4">
+        <h4 className="text-primary ml-0 md:ml-2 mb-1 text-nowrap text-base lg:text-xl font-bold capitalize">
+          {escortName.split(" ").slice(0, 2).join(" ") || "Escort"}
+        </h4>
 
-          <div className="flex w-full flex-nowrap overflow-hidden border-b-[0.2px] border-gray-500 pb-2.5 font-medium lg:items-center justify-between">
-            <div className="flex items-center gap-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="size-4 text-stone-500 hidden lg:block"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-                  clipRule="evenodd"
-                />
-              </svg>
+        <div className="flex w-full flex-nowrap overflow-hidden border-b-[0.2px] border-gray-500 pb-2 gap-2 items-center justify-between">
+          <div className="flex items-center gap-1 min-w-0">
+            <MapPin className="size-3 text-stone-400 lg:size-4 shrink-0" />
 
-              <span className="text-white text-sm font-semibold lg:text-lg">
-                {formatSlugToTitle(`${primaryRegion}` || "Not Specified")}
+            {extraRegionCount > 0 ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-white text-sm font-semibold lg:text-lg text-nowrap min-w-0 truncate">
+                      {primaryRegionTitle}{" "}
+                      <span className="text-stone-400 text-sm">
+                        +{extraRegionCount} more
+                      </span>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs">{allRegionsTitle}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <span className="text-white text-sm font-semibold lg:text-lg text-nowrap min-w-0 truncate">
+                {primaryRegionTitle}
               </span>
-            </div>
-
-            <span className="text-white text-nowrap text-sm lg:text-lg">
-              {age} years
-            </span>
+            )}
           </div>
 
-          <p className="text-lg font-semibold mt-2 lg:mt-3">
-            {formatPhoneNumber(telephone || whatsappPhone)}
-          </p>
+          <span className="text-white text-nowrap text-sm lg:text-lg shrink-0">
+            {age} years
+          </span>
         </div>
-      </Link>
+
+        <p className="text-lg font-semibold mt-2 lg:mt-3">
+          {formatPhoneNumber(telephone || whatsappPhone)}
+        </p>
+      </div>
 
       {/* Display number of media */}
       <div className="fiex top-0 -left-2 absolute z-10">
