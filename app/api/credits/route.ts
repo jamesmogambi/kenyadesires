@@ -15,13 +15,23 @@ export async function GET(req: Request) {
       .limit(1)
       .get();
 
-    if (escortSnap.empty) {
-      return NextResponse.json({ credits: 0 });
+    if (!escortSnap.empty) {
+      const credits = escortSnap.docs[0].data().credits ?? 0;
+      return NextResponse.json({ credits });
     }
 
-    const credits = escortSnap.docs[0].data().credits ?? 0;
+    const agencySnap = await adminDb
+      .collection("agencies")
+      .where("ownerId", "==", userId)
+      .limit(1)
+      .get();
 
-    return NextResponse.json({ credits });
+    if (!agencySnap.empty) {
+      const credits = agencySnap.docs[0].data().credits ?? 0;
+      return NextResponse.json({ credits });
+    }
+
+    return NextResponse.json({ credits: 0 });
   } catch (error: any) {
     console.error("Error fetching credits:", error);
     return NextResponse.json(

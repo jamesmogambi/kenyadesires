@@ -476,6 +476,10 @@ const AgencyProfileForm = ({
         />
       ));
 
+      if (!isEdit) {
+        window.dispatchEvent(new CustomEvent("credits-updated"));
+      }
+
       form.reset(DEFAULT_VALUES);
       setLogoFile(null);
       setCoverFile(null);

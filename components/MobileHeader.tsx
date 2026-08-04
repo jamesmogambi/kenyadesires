@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { memo, useCallback, useState, lazy, Suspense } from "react";
+import React, { memo, useCallback, useState, lazy, Suspense, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -78,28 +78,63 @@ const ChevronDownIcon = memo(() => (
 ));
 ChevronDownIcon.displayName = "ChevronDownIcon";
 
-// ✅ Memoized dropdown items
-const CreditsItem = memo(() => (
-  <DropdownMenuItem className="text-stone-700 group cursor-pointer">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={384}
-      height={512}
-      viewBox="0 0 384 512"
-      className="text-stone-400 flex-shrink-0"
-    >
-      <path
-        fill="currentColor"
-        d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c19.8 27.1 39.7 54.4 49.2 86.2h160zm-80 128c44.2 0 80-35.8 80-80v-16H112v16c0 44.2 35.8 80 80 80m-80-336c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80"
-        strokeWidth={13}
-        stroke="currentColor"
-      />
-    </svg>
-    <span className="uppercase text-base group-hover:font-bold ml-2">
-      Number of Credits : 0
-    </span>
-  </DropdownMenuItem>
-));
+// ✅ Credits display with live fetching
+const CreditsItem = memo(({ onClose }: { onClose: () => void }) => {
+  const [credits, setCredits] = useState<number>(0);
+  const [creditsLoading, setCreditsLoading] = useState(true);
+
+  async function fetchCredits() {
+    try {
+      const res = await fetch("/api/credits");
+      if (!res.ok) {
+        setCredits(0);
+        return;
+      }
+      const data = await res.json();
+      setCredits(data.credits ?? 0);
+    } catch {
+      setCredits(0);
+    } finally {
+      setCreditsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchCredits();
+    const handler = () => {
+      fetchCredits();
+    };
+    window.addEventListener("credits-updated", handler);
+    return () => window.removeEventListener("credits-updated", handler);
+  }, []);
+
+  return (
+    <DropdownMenuItem className="text-stone-700 group cursor-pointer" onClick={onClose}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={384}
+        height={512}
+        viewBox="0 0 384 512"
+        className="text-stone-400 flex-shrink-0"
+      >
+        <path
+          fill="currentColor"
+          d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c19.8 27.1 39.7 54.4 49.2 86.2h160zm-80 128c44.2 0 80-35.8 80-80v-16H112v16c0 44.2 35.8 80 80 80m-80-336c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80"
+          strokeWidth={13}
+          stroke="currentColor"
+        />
+      </svg>
+      <span className="uppercase text-base group-hover:font-bold ml-2">
+        Number of Credits :{" "}
+        {creditsLoading ? (
+          <span className="animate-pulse">...</span>
+        ) : (
+          `${credits} (KSH ${(credits * 10).toLocaleString()})`
+        )}
+      </span>
+    </DropdownMenuItem>
+  );
+});
 CreditsItem.displayName = "CreditsItem";
 
 // ✅ Memoized menu items with onClose
@@ -367,7 +402,7 @@ const MobileHeader = memo(({ className }: Prop) => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-full max-w-[250px] space-y-2">
                     <DropdownMenuSeparator />
-                    <CreditsItem />
+                    <CreditsItem onClose={onClose} />
                     <AdviceItem onClose={onClose} />
                     <BuyCreditsItem onClose={onClose} />
                     <EditProfileItem onClose={onClose} />

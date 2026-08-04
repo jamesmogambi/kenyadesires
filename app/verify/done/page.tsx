@@ -138,8 +138,10 @@ export default function VerifyDonePage() {
             </div>
           </div>
         ),
-        { duration: 5000 }
-      );
+         { duration: 5000 }
+       );
+
+      window.dispatchEvent(new CustomEvent("credits-updated"));
     }
   }, [result?.status]);
 

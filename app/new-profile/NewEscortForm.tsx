@@ -513,9 +513,11 @@ bustSize: breast,
             return;
           }
           escortId = res.id;
-          toast.custom(() => (
-            <SuccessToast message="Your profile was created successfully." />
-          ));
+           toast.custom(() => (
+             <SuccessToast message="Your profile was created successfully." />
+           ));
+
+           window.dispatchEvent(new CustomEvent("credits-updated"));
         }
 
         // Upload videos to Mux for this escort

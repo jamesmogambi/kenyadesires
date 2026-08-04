@@ -43,23 +43,32 @@ const NavActions = ({
 
   const isBusiness = (user?.unsafeMetadata?.role as string) === "business";
 
-  useEffect(() => {
-    async function fetchCredits() {
-      try {
-        const res = await fetch("/api/credits");
-        if (!res.ok) {
-          setCredits(0);
-          return;
-        }
-        const data = await res.json();
-        setCredits(data.credits ?? 0);
-      } catch {
+  async function fetchCredits() {
+    try {
+      const res = await fetch("/api/credits");
+      if (!res.ok) {
         setCredits(0);
-      } finally {
-        setCreditsLoading(false);
+        return;
       }
+      const data = await res.json();
+      setCredits(data.credits ?? 0);
+    } catch {
+      setCredits(0);
+    } finally {
+      setCreditsLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchCredits();
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      fetchCredits();
+    };
+    window.addEventListener("credits-updated", handler);
+    return () => window.removeEventListener("credits-updated", handler);
   }, []);
 
   return (
@@ -122,7 +131,7 @@ const NavActions = ({
               {creditsLoading ? (
                 <span className="animate-pulse">...</span>
               ) : (
-                credits
+                `${credits} (KSH ${(credits * 10).toLocaleString()})`
               )}
             </span>
           </DropdownMenuItem>
