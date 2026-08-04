@@ -84,7 +84,7 @@ const GirlItem = ({
 
   const displayImages = getDisplayImages();
 
-  // ✅ Build display text for operating regions
+  // ✅ Build display text for operating regions and county
   const allRegions = React.useMemo(() => {
     const unique = new Set<string>();
     if (primaryRegion) unique.add(primaryRegion);
@@ -92,11 +92,9 @@ const GirlItem = ({
     return Array.from(unique);
   }, [regions, primaryRegion]);
 
-  const extraRegionCount = Math.max(allRegions.length - 1, 0);
-  const primaryRegionTitle = formatSlugToTitle(
-    `${primaryRegion}` || "Not Specified",
-  );
+  const primaryRegionTitle = formatSlugToTitle(`${primaryRegion}` || "Not Specified");
   const allRegionsTitle = allRegions.map(formatSlugToTitle).join(", ");
+  const countyTitle = formatSlugToTitle(`${county}` || "Not Specified");
 
   return (
     <div
@@ -126,48 +124,42 @@ const GirlItem = ({
         )}
       </Link>
 
-      {/* Footer - not linkable */}
-      <div className="p-4">
-        <h4 className="text-primary ml-0 md:ml-2 mb-1 text-nowrap text-base lg:text-xl font-bold capitalize">
-          {escortName.split(" ").slice(0, 2).join(" ") || "Escort"}
-        </h4>
+      {/* Footer - not linkable, hover reveals all regions + county */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="p-4 cursor-help">
+              <h4 className="text-primary ml-0 md:ml-2 mb-1 text-nowrap text-base lg:text-xl font-bold capitalize">
+                {escortName.split(" ").slice(0, 2).join(" ") || "Escort"}
+              </h4>
 
-        <div className="flex w-full flex-nowrap overflow-hidden border-b-[0.2px] border-gray-500 pb-2 gap-2 items-center justify-between">
-          <div className="flex items-center gap-1 min-w-0">
-            <MapPin className="size-3 text-stone-400 lg:size-4 shrink-0" />
+              <div className="flex w-full flex-nowrap overflow-hidden border-b-[0.2px] border-gray-500 pb-2 gap-2 items-center justify-between">
+                <div className="flex items-center gap-1 min-w-0">
+                  <MapPin className="size-3 text-stone-400 lg:size-4 shrink-0" />
 
-            {extraRegionCount > 0 ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-white text-sm font-semibold lg:text-lg text-nowrap min-w-0 truncate">
-                      {primaryRegionTitle}{" "}
-                      <span className="text-stone-400 text-sm">
-                        +{extraRegionCount} more
-                      </span>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="max-w-xs">{allRegionsTitle}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <span className="text-white text-sm font-semibold lg:text-lg text-nowrap min-w-0 truncate">
-                {primaryRegionTitle}
-              </span>
-            )}
-          </div>
+                  <span className="text-white text-sm font-semibold lg:text-lg text-nowrap min-w-0 truncate">
+                    {primaryRegionTitle}
+                  </span>
+                </div>
 
-          <span className="text-white text-nowrap text-sm lg:text-lg shrink-0">
-            {age} years
-          </span>
-        </div>
+                <span className="text-white text-nowrap text-sm lg:text-lg shrink-0">
+                  {age} years
+                </span>
+              </div>
 
-        <p className="text-lg font-semibold mt-2 lg:mt-3">
-          {formatPhoneNumber(telephone || whatsappPhone)}
-        </p>
-      </div>
+              <p className="text-lg font-semibold mt-2 lg:mt-3">
+                {formatPhoneNumber(telephone || whatsappPhone)}
+              </p>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div>
+              <p className="font-semibold">Regions: {allRegionsTitle}</p>
+              <p className="text-sm opacity-70">County: {countyTitle}</p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       {/* Display number of media */}
       <div className="fiex top-0 -left-2 absolute z-10">
