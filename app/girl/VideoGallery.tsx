@@ -9,9 +9,7 @@ interface Prop {
 }
 
 const VideoGallery = ({ videos, className }: Prop) => {
-  const [activeVideo, setActiveVideo] = React.useState(
-    videos?.[0] || "",
-  );
+  const [activeVideo, setActiveVideo] = React.useState(videos?.[0] || "");
 
   const getThumbnailUrl = (playbackId: string) => {
     if (!playbackId) return null;
@@ -19,11 +17,9 @@ const VideoGallery = ({ videos, className }: Prop) => {
   };
 
   return (
-    <div
-      className={`flex h-[800px] flex-1 flex-col gap-4 ${className || ""}`}
-    >
+    <div className={`flex h-200 flex-1 flex-col gap-4 ${className || ""}`}>
       {/* Main player */}
-      <div className="h-[70%] w-full">
+      <div className="h-[70%] mt-4 w-full">
         {videos.length > 0 && activeVideo ? (
           <MuxPlayer
             className="h-full w-full rounded-xl"
@@ -46,7 +42,7 @@ const VideoGallery = ({ videos, className }: Prop) => {
         <div className="flex w-full gap-2 overflow-x-auto">
           {videos.map((playbackId: string, index: number) => (
             <div
-              className="relative aspect-video w-1/4 min-w-[120px] cursor-pointer overflow-hidden rounded-lg"
+              className="relative aspect-video w-1/4 min-w-30 cursor-pointer overflow-hidden rounded-lg"
               key={playbackId || index}
               onClick={() => setActiveVideo(playbackId)}
             >
