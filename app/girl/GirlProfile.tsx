@@ -1,8 +1,8 @@
 import SectionCard from "@/components/SectionCard";
-import Link from "next/link";
 import React from "react";
 import ProfileGallery from "./ProfileGallery";
 import BioSection from "./BioSection";
+import BackToListButton from "./BackToListButton";
 import { formatSlugToTitle, slugify } from "@/lib/utils";
 import { Escort } from "@/server-actions/escort.action";
 
@@ -58,24 +58,9 @@ const GirlProfile = ({ girl, className }: Prop) => {
           </span>
         </h3>
 
-        <Link
-          className="text-primary lg:text-lg hover:underline gap-2 pb-1.5 flex items-center font-bold "
-          href={`/girls?region=${slugify(girl.primaryRegion)}`}
-        >
-          back to list of girls
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="size-6"
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.72 7.72a.75.75 0 0 1 1.06 0l3.75 3.75a.75.75 0 0 1 0 1.06l-3.75 3.75a.75.75 0 1 1-1.06-1.06l2.47-2.47H3a.75.75 0 0 1 0-1.5h16.19l-2.47-2.47a.75.75 0 0 1 0-1.06Z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </Link>
+        <BackToListButton
+          fallbackHref={`/girls?region=${slugify(girl.primaryRegion)}`}
+        />
       </div>
 
       {/* body section */}
