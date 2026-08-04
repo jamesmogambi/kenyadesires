@@ -3,9 +3,15 @@ import { cn, formatSlugToTitle } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 import GirlImageSwiper from "./GirlImageSwiper";
-import { Images } from "lucide-react";
+import { Images, BadgeCheck } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phone";
 import { Escort } from "@/server-actions/escort.action";
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 interface GirlItemProps {
   girl: Escort;
@@ -34,6 +40,7 @@ const GirlItem = ({
     county,
     imagesMetadata,
     id, // ← Get the ID from the escort object
+    isVerified,
   } = girl;
 
   // ✅ Ensure we have a valid ID - use slug or username as fallback
@@ -86,6 +93,22 @@ const GirlItem = ({
       <Link href={profilePath}>
         {/* Header - Image */}
         <GirlImageSwiper images={displayImages} priority={priority} />
+
+        {/* Verification badge - only rendered for verified escorts */}
+        {isVerified && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="absolute top-2 right-2 z-20 bg-green-500 rounded-full p-1.5 shadow-lg">
+                  <BadgeCheck className="size-4 text-white" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Verified</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
 
         {/* Footer */}
         <div className="p-4">
