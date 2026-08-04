@@ -12,9 +12,24 @@ export function welcomeEmail(name: string, role: string, credits = 0): { subject
     </div>`
     : "";
 
+  const profileCredits = role === "business" ? 100 : 50;
+  const verificationCredits = role === "business" ? 200 : 100;
+
+  const upcomingCreditsSection = credits === 0
+    ? `<div style="background:linear-gradient(135deg,#e3f2fd 0%,#bbdefb 100%);border:1px solid #90caf9;border-radius:10px;padding:20px;margin:0 0 24px;text-align:center;">
+      <p style="color:#1565c0;font-size:14px;margin:0 0 8px;font-weight:600;">&#x1F4B0; Your Credits Await</p>
+      <p style="color:#1a1a2e;font-size:14px;margin:0 0 8px;">
+        Once you create your ${roleLabel.toLowerCase()} profile, you will receive <strong>${profileCredits} credits</strong>.
+      </p>
+      <p style="color:#1a1a2e;font-size:14px;margin:0;">
+        After your verification is approved, you will receive an additional <strong>${verificationCredits} credits</strong>.
+      </p>
+    </div>`
+    : "";
+
   const creditsText = credits > 0
     ? `\n\n${credits} credits have been credited to your account.`
-    : "";
+    : `\n\nComplete your profile to receive ${profileCredits} credits, and verify your identity to receive an additional ${verificationCredits} credits.`;
 
   return {
     subject,
@@ -31,6 +46,7 @@ export function welcomeEmail(name: string, role: string, credits = 0): { subject
               Your account has been created successfully. You are now part of the KenyaDesires community.
             </p>
             ${creditsSection}
+            ${upcomingCreditsSection}
             <p style="color:#555;font-size:16px;line-height:1.7;margin:0 0 24px;">
               You can now complete your profile, add photos, and start exploring. If you have any questions, feel free to reach out to our support team.
             </p>
