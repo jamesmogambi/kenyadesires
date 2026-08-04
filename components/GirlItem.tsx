@@ -98,6 +98,8 @@ const GirlItem = ({
   const allRegionsTitle = allRegions.map(formatSlugToTitle).join(", ");
   const countyTitle = formatSlugToTitle(`${county}` || "Not Specified");
 
+  const [showRegionsTooltip, setShowRegionsTooltip] = React.useState(false);
+
   return (
     <div
       className={cn(
@@ -126,11 +128,17 @@ const GirlItem = ({
         )}
       </Link>
 
-      {/* Footer - not linkable, hover reveals all regions + county */}
-      <TooltipProvider>
-        <Tooltip>
+      {/* Footer - not linkable, hover/tap reveals all regions + county */}
+      <TooltipProvider delayDuration={0}>
+        <Tooltip open={showRegionsTooltip} onOpenChange={setShowRegionsTooltip}>
           <TooltipTrigger asChild>
-            <div className="p-4 cursor-help">
+            <div
+              className="p-4 cursor-help"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowRegionsTooltip(!showRegionsTooltip);
+              }}
+            >
               <h4 className="text-primary ml-0 md:ml-2 mb-1 text-nowrap text-base lg:text-xl font-bold capitalize">
                 {escortName.split(" ").slice(0, 2).join(" ") || "Escort"}
               </h4>

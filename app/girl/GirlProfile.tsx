@@ -53,7 +53,7 @@ const GirlProfile = ({ girl, className }: Prop) => {
             from{" "}
             <span className="font-bold capitalize">
               {" "}
-              {formatSlugToTitle(girl.primaryRegion)}
+              {formatSlugToTitle(girl.county)}
             </span>
           </span>
         </h3>

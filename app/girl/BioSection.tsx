@@ -118,6 +118,7 @@ import RenderEditorContent from "./RenderEditorContent";
 import PhonePicker from "./PhonePicker";
 import AboutTabs from "./AboutTabs";
 import Link from "next/link";
+import { formatSlugToTitle } from "@/lib/utils";
 import { Escort } from "@/server-actions/escort.action";
 
 interface Prop {
@@ -132,17 +133,24 @@ const BioSection = ({ girl }: Prop) => {
     whatsappPhone,
     county,
     primaryRegion,
+    regions,
   } = girl;
 
   const getDisplayAddress = (): string => {
-    const parts: string[] = [];
+    const uniqueRegions = new Set<string>();
 
     if (primaryRegion && primaryRegion.trim()) {
-      parts.push(primaryRegion);
+      uniqueRegions.add(primaryRegion);
     }
 
-    if (county && county.trim() && county !== primaryRegion) {
-      parts.push(county);
+    (regions || []).forEach((r: string) => {
+      if (r && r.trim()) uniqueRegions.add(r);
+    });
+
+    const parts: string[] = Array.from(uniqueRegions).map(formatSlugToTitle);
+
+    if (county && county.trim() && !Array.from(uniqueRegions).includes(county)) {
+      parts.push(formatSlugToTitle(county));
     }
 
     if (parts.length > 0) {
@@ -165,7 +173,7 @@ const BioSection = ({ girl }: Prop) => {
 
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="font-bold text-lg text-primary">Location:</h3>
+          <h3 className="font-bold text-lg text-primary">Locations:</h3>
 
           {hasAddress ? (
             <p className="text-white/50 font-light mt-1">{displayAddress}</p>
