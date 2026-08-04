@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import React from "react";
 import {
   Select,
   SelectContent,
@@ -6,11 +7,7 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { ChevronDown, X } from "lucide-react";
-import React, { useState } from "react";
 
 interface Props {
   name?: string;
@@ -20,9 +17,9 @@ interface Props {
   isMust?: boolean;
   className?: string;
   label?: string;
+  prefix?: string;
   options: any[];
   placeholder?: string;
-  // onChange: (value: any, name: any) => void;
   onChange: (value: any) => void;
   value?: any;
   defaultValue?: any;
@@ -38,17 +35,14 @@ const ProfileSelectInput = ({
   className = "",
   options,
   label,
+  prefix,
   placeholder = "- Select -",
   onChange,
   value,
   defaultValue,
   inputClass,
 }: Props) => {
-  // const handleSelectChange = (value: string) => {
-  //     if (onChange) {
-  //       onChange(value, name); // Call the onChange handler with the selected value
-  //     }
-  //   };
+  const selectedOption = options.find((opt) => opt.name === value);
 
   return (
     <div className={cn("w-full", className)}>
@@ -57,7 +51,6 @@ const ProfileSelectInput = ({
       <Select
         defaultValue={defaultValue}
         value={value}
-        // onValueChange={(val) => onChange(val, name)}
         onValueChange={onChange}
       >
         <SelectTrigger
@@ -66,10 +59,11 @@ const ProfileSelectInput = ({
             inputClass
           )}
         >
-          <SelectValue
-            className="text-base text-black/80"
-            placeholder={placeholder}
-          />
+          {selectedOption
+            ? prefix
+              ? `${prefix}: ${selectedOption.name}`
+              : selectedOption.name
+            : placeholder}
         </SelectTrigger>
         <SelectContent className="rounded-none outline-none border-0 bg-white text-black/80 text-xl ">
           <SelectGroup>

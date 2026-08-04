@@ -42,7 +42,8 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={age}
             name="variantAge"
             options={variantSettings.age}
-            placeholder={age ? `Age: ${age}` : "Select age"}
+            placeholder="Select age"
+            prefix="Age"
           />
         </div>
       </div>
@@ -54,7 +55,8 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={breast}
             name="variantBreast"
             options={variantSettings.breast}
-            placeholder={breast ? `Breasts: ${breast}` : "Select breasts"}
+            placeholder="Select breasts"
+            prefix="Breast Size"
           />
         </div>
       </div>
@@ -66,7 +68,8 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={character}
             name="variantCharacter"
             options={variantSettings.character}
-            placeholder={character ? `Character: ${character}` : "Select a character"}
+            placeholder="Select a character"
+            prefix="Character"
           />
         </div>
       </div>
@@ -78,7 +81,8 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={hairColor}
             name="variantHairColor"
             options={variantSettings.hairColor}
-            placeholder={hairColor ? `Hair: ${hairColor}` : "Select hair color"}
+            placeholder="Select hair color"
+            prefix="Hair"
           />
         </div>
       </div>
@@ -90,7 +94,8 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={nationality}
             name="variantNationality"
             options={variantSettings.nationality}
-            placeholder={nationality ? `Nationality: ${nationality}` : "Select Nationality"}
+            placeholder="Select Nationality"
+            prefix="Nationality"
           />
         </div>
       </div>
@@ -102,7 +107,8 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={experience}
             name="variantExperience"
             options={variantSettings.experience}
-            placeholder={experience ? `Experience: ${experience}` : "Select Experience"}
+            placeholder="Select Experience"
+            prefix="Experience"
           />
         </div>
       </div>
