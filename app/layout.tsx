@@ -64,7 +64,8 @@ export default async function RootLayout({
   const escortRole = user?.unsafeMetadata?.role as string | undefined;
   const isEscort = escortRole === "user";
   const isBusiness = escortRole === "business";
-  const escort = isEscort && userId ? await getEscortByClerkUserId(userId) : null;
+  const escort =
+    isEscort && userId ? await getEscortByClerkUserId(userId) : null;
   const agency = isBusiness && userId ? await getAgencyByOwnerId(userId) : null;
 
   // ✅ Pre-fetch on server
@@ -214,7 +215,7 @@ export default async function RootLayout({
 
           <ScrollToTopBottom />
 
-          <AgeVerificationModal />
+          {/* <AgeVerificationModal /> */}
         </body>
       </html>
     </ClerkProvider>

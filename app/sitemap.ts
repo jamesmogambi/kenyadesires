@@ -204,12 +204,97 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       console.error(`❌ Error fetching agencies for sitemap:`, error);
     }
 
+    // ==================== 5. COUNTY-FILTERED GIRLS PAGES ====================
+    let countyEntries: MetadataRoute.Sitemap = [];
+
+    try {
+      const { getAllCounties } = await import("@/server-actions/county.action");
+      const res = await getAllCounties();
+      const counties = res?.data || [];
+
+      countyEntries = (counties || [])
+        .filter((county: any) => county?.name)
+        .map((county: any) => ({
+          url: sanitizeUrl(
+            baseUrl,
+            `girls?county=${encodeURIComponent(county.name)}`,
+          ),
+          lastModified: new Date(),
+          changeFrequency: "daily" as const,
+          priority: 0.7,
+        }));
+
+      console.log(
+        `✅ Added ${countyEntries.length} county-filtered girls pages to sitemap`,
+      );
+    } catch (error) {
+      console.error(`❌ Error fetching counties for sitemap:`, error);
+    }
+
+    // ==================== 6. PRACTICE-FILTERED GIRLS PAGES ====================
+    let practiceEntries: MetadataRoute.Sitemap = [];
+
+    try {
+      const { getPracticesFromCleanedEscorts } = await import(
+        "@/server-actions/cleaned-escorts.action",
+      );
+      const practices = await getPracticesFromCleanedEscorts();
+
+      practiceEntries = (practices || [])
+        .filter((p: any) => p?.practice)
+        .map((p: any) => ({
+          url: sanitizeUrl(
+            baseUrl,
+            `girls?practice=${encodeURIComponent(p.practice)}&page=1`,
+          ),
+          lastModified: new Date(),
+          changeFrequency: "daily" as const,
+          priority: 0.6,
+        }));
+
+      console.log(
+        `✅ Added ${practiceEntries.length} practice-filtered girls pages to sitemap`,
+      );
+    } catch (error) {
+      console.error(`❌ Error fetching practices for sitemap:`, error);
+    }
+
+    // ==================== 7. COUNTY + REGION COMBO GIRLS PAGES ====================
+    let comboEntries: MetadataRoute.Sitemap = [];
+
+    try {
+      const { getAllRegions } = await import("@/server-actions/region.action");
+      const res = await getAllRegions();
+      const regions = res?.data || [];
+
+      comboEntries = (regions || [])
+        .filter((r: any) => r?.county && r?.name)
+        .map((r: any) => ({
+          url: sanitizeUrl(
+            baseUrl,
+            `girls?county=${encodeURIComponent(r.county)}&region=${encodeURIComponent(r.name)}`,
+          ),
+          lastModified: new Date(),
+          changeFrequency: "daily" as const,
+          priority: 0.5,
+        }));
+
+      console.log(
+        `✅ Added ${comboEntries.length} county+region combo girls pages to sitemap`,
+      );
+    } catch (error) {
+      console.error(`❌ Error fetching regions for sitemap:`, error);
+    }
+
     // ==================== 5. COMBINE AND VALIDATE ====================
     const allEntries = [
       ...staticEntries,
       ...blogEntries,
       ...escortEntries,
       ...agencyEntries,
+      ...countyEntries,
+      ...practiceEntries,
+      ...comboEntries,
     ];
 
     // Validate entries
@@ -225,6 +310,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       blog: blogEntries.length,
       escorts: escortEntries.length,
       agencies: agencyEntries.length,
+      counties: countyEntries.length,
+      practices: practiceEntries.length,
+      combos: comboEntries.length,
     };
 
     logSitemapStats(valid, categories);
