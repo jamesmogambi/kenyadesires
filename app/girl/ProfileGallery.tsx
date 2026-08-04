@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import PhotoGallery from "./PhotoGallery";
 import VideoGallery from "./VideoGallery";
-import { girls } from "@/fixtures/girl";
 
 interface Prop {
   photos: string[];
@@ -50,7 +49,7 @@ const ProfileGallery = ({ photos, videos }: Prop) => {
           <PhotoGallery photos={photos} />
         </TabsContent>
         <TabsContent value="videos">
-          <VideoGallery videos={girls[0].videos} />
+          <VideoGallery videos={videos} />
         </TabsContent>
       </Tabs>
     </div>

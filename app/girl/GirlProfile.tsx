@@ -82,7 +82,7 @@ const GirlProfile = ({ girl, className }: Prop) => {
       <div className="w-full my-5 pt-5 gap-4  flex flex-col lg:flex-row  ">
         {/* section 1 */}
         <div className="  border-green-900  lg:w-[40%]">
-          <ProfileGallery videos={[]} photos={allPhotos} />
+          <ProfileGallery videos={girl.videos || []} photos={allPhotos} />
         </div>
         {/* section 2 */}
         <div className=" p-5 w-full lg:flex-1">

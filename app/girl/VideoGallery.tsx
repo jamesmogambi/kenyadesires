@@ -1,59 +1,66 @@
 "use client";
-import React, { act } from "react";
+import React from "react";
 import MuxPlayer from "@mux/mux-player-react";
 import Image from "next/image";
 
 interface Prop {
   className?: string;
-  videos: any;
+  videos: string[];
 }
+
 const VideoGallery = ({ videos, className }: Prop) => {
-  const [activeVideo, setActiveVideo] = React.useState(videos[0]?.path || "");
+  const [activeVideo, setActiveVideo] = React.useState(
+    videos?.[0] || "",
+  );
+
+  const getThumbnailUrl = (playbackId: string) => {
+    if (!playbackId) return null;
+    return `https://image.mux.com/${playbackId}/thumbnail.jpg`;
+  };
+
   return (
-    <div className="flex h-[800px] flex-1 border-yellow-400  flex-col gap-4">
-      {/* // section 1 */}
-      <div className="h-[70%] w-full border-pink-400">
-        {videos.length > 0 ? (
+    <div
+      className={`flex h-[800px] flex-1 flex-col gap-4 ${className || ""}`}
+    >
+      {/* Main player */}
+      <div className="h-[70%] w-full">
+        {videos.length > 0 && activeVideo ? (
           <MuxPlayer
-            className="w-full h-full"
-            playbackId={""}
-            src={activeVideo}
+            className="h-full w-full rounded-xl"
+            playbackId={activeVideo}
             preload="auto"
             metadata={{
-              video_id: videos[0].videoId,
-              video_title: "video title",
+              video_id: activeVideo,
+              video_title: "Escort video",
             }}
           />
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex h-full items-center justify-center">
             <p className="text-2xl text-gray-500">No videos available</p>
           </div>
         )}
       </div>
 
-      {/* section 2 */}
-
-      <div className="flex-1 w-full  border-blue-400 flex gap-2 ">
-        {videos.map((video: any, index: any) => (
-          <div
-            className="relative w-1/4 cursor-pointer overflow-hidden rounded-lg   h-3/4"
-            key={index}
-            onClick={() => setActiveVideo(video.path)}
-          >
-            <Image
-              key={index}
-              src={"/escort5.jpg"}
-              alt={`Video thumbnail ${index + 1}`}
-              //   width={200}
-              //   height={150}
-              priority
-              fill
-              quality={90}
-              className="object-cover  absolute cursor-pointer"
-            />
-          </div>
-        ))}
-      </div>
+      {/* Thumbnail strip */}
+      {videos.length > 0 && (
+        <div className="flex w-full gap-2 overflow-x-auto">
+          {videos.map((playbackId: string, index: number) => (
+            <div
+              className="relative aspect-video w-1/4 min-w-[120px] cursor-pointer overflow-hidden rounded-lg"
+              key={playbackId || index}
+              onClick={() => setActiveVideo(playbackId)}
+            >
+              <Image
+                src={getThumbnailUrl(playbackId) || "/favicon.svg"}
+                alt={`Video thumbnail ${index + 1}`}
+                fill
+                priority={index === 0}
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

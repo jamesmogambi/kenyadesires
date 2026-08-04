@@ -328,6 +328,8 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
   // Get the identifier for display (use ID if available, otherwise use the slug)
   const profileIdentifier = escort.id || slug;
 
+  console.log("escort ==> ", escort);
+
   return (
     <>
       {/* Structured Data Scripts */}
