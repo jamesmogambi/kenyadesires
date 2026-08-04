@@ -46,6 +46,8 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
 
   const { availability: variantAvailability } = useVariantStore();
 
+  const variantGender = form.watch("variantGender");
+
   const allRegions = countiesAndRegions.flatMap((c) =>
     c.regions.map((r) => ({
       countyCode: c.countyCode,
@@ -143,6 +145,30 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
                     placeholder=""
                     {...field}
                     className="bg-white text-black px-6 h-10 rounded-full text-lg lg:text-xl focus-visible:ring-0 "
+                  />
+                </FormControl>
+              </FormItem>
+              <FormMessage className="-mt-4" />
+            </>
+          )}
+        />
+
+        {/* Gender - locked to female */}
+        <FormField
+          control={form.control}
+          name="variantGender"
+          render={({ field }) => (
+            <>
+              <FormItem className="flex-row justify-between flex gap-4 border-none">
+                <FormLabel className="font-medium text-nowrap mb-2 text-white/40 text-base">
+                  Gender:
+                </FormLabel>
+                <FormControl className="border w-2/3 lg:w-1/ border-primary">
+                  <Input
+                    placeholder=""
+                    value="Female"
+                    readOnly
+                    className="bg-white text-black px-6 h-10 rounded-full text-sm lg:text-xl focus-visible:ring-0 "
                   />
                 </FormControl>
               </FormItem>

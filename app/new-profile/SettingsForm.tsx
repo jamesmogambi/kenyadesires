@@ -42,7 +42,7 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={age}
             name="variantAge"
             options={variantSettings.age}
-            placeholder="Select age"
+            placeholder={age ? `Age: ${age}` : "Select age"}
           />
         </div>
       </div>
@@ -54,7 +54,7 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={breast}
             name="variantBreast"
             options={variantSettings.breast}
-            placeholder="Select breasts"
+            placeholder={breast ? `Breasts: ${breast}` : "Select breasts"}
           />
         </div>
       </div>
@@ -66,7 +66,7 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={character}
             name="variantCharacter"
             options={variantSettings.character}
-            placeholder="Select a character"
+            placeholder={character ? `Character: ${character}` : "Select a character"}
           />
         </div>
       </div>
@@ -78,7 +78,7 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={hairColor}
             name="variantHairColor"
             options={variantSettings.hairColor}
-            placeholder="Select hair color"
+            placeholder={hairColor ? `Hair: ${hairColor}` : "Select hair color"}
           />
         </div>
       </div>
@@ -90,7 +90,7 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={nationality}
             name="variantNationality"
             options={variantSettings.nationality}
-            placeholder="Select Nationality"
+            placeholder={nationality ? `Nationality: ${nationality}` : "Select Nationality"}
           />
         </div>
       </div>
@@ -102,7 +102,7 @@ const SettingsForm = ({ form, className }: Prop) => {
             value={experience}
             name="variantExperience"
             options={variantSettings.experience}
-            placeholder="Select Experience"
+            placeholder={experience ? `Experience: ${experience}` : "Select Experience"}
           />
         </div>
       </div>

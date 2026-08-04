@@ -99,6 +99,7 @@ export const formSchema: any = z.object({
   saturday: daySchema,
   sunday: daySchema,
   variantAge: z.string(),
+  variantGender: z.string().default("female"),
 
   myAge: z.string(),
   myHeight: z.string(),
@@ -120,6 +121,7 @@ const DEFAULT_VALUES = {
   myWeight: "",
   myHeight: "",
   variantAge: "",
+  variantGender: "female",
   monday: "",
   tuesday: "",
   wednesday: "",
@@ -470,6 +472,7 @@ bustSize: breast,
           massages,
           extraServices: tags,
           role: "escort",
+          gender: "female",
           openingHours: {
             monday,
             tuesday,
