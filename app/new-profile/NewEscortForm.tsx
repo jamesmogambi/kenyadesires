@@ -400,11 +400,6 @@ region,
           setLoader(false);
           return;
         }
-        if (towns.length === 0) {
-          setError("Please select your area or town");
-          setLoader(false);
-          return;
-        }
         if (settingCategories.length === 0) {
           setError("Please select categories you want to appear");
           setLoader(false);

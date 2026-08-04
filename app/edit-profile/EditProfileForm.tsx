@@ -228,11 +228,6 @@ const EditEscortForm = ({className, initialData}: Props) => {
                 return;
             }
 
-            if (!town) {
-                setError("Please select your area or town");
-                return;
-            }
-
             if (settingCategories.length === 0) {
                 setError("Please select at least one category");
                 return;
