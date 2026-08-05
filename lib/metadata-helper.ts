@@ -66,12 +66,22 @@ function docIsBDSMescort(d: any): boolean {
   });
 }
 
+function docMatchesBDSMPractice(d: any, practice: string): boolean {
+  const keyword = normalizeSlug(practice);
+  return SERVICE_ARRAYS.some((field) => {
+    const arr = d[field];
+    return arr && arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
+  });
+}
+
 const METADATA_FIELDS = [
   "previewPhoto", "name", "username", "county", "regions", "primaryRegion",
   "practices", "bdsm", "massage", "extraServices", "isActive",
 ];
 
 const BATCH_SIZE = 1000;
+
+type FilterType = "none" | "massage" | "bdsm";
 
 // ============================================
 // GIRLS ESCORTS METADATA HELPERS
@@ -82,7 +92,7 @@ export async function getEscortCountForMetadata(params: {
   region?: string;
   practice?: string;
 }): Promise<number> {
-  return countEscorts(params, false);
+  return countEscorts(params, "none");
 }
 
 export async function getFirstEscortForMetadata(params: {
@@ -94,7 +104,7 @@ export async function getFirstEscortForMetadata(params: {
   name?: string;
   username?: string;
 } | null> {
-  return findFirstEscort(params, false);
+  return findFirstEscort(params, "none");
 }
 
 // ============================================
@@ -106,7 +116,7 @@ export async function getMassageEscortCount(params: {
   region?: string;
   massageType?: string;
 }): Promise<number> {
-  return countEscorts(params, true, params.massageType);
+  return countEscorts(params, "massage", params.massageType);
 }
 
 export async function getFirstMassageEscort(params: {
@@ -114,7 +124,7 @@ export async function getFirstMassageEscort(params: {
   region?: string;
   massageType?: string;
 }): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
-  return findFirstEscort(params, true, params.massageType);
+  return findFirstEscort(params, "massage", params.massageType);
 }
 
 // ============================================
@@ -126,7 +136,7 @@ export async function getBDSMEscortCount(params: {
   region?: string;
   practice?: string;
 }): Promise<number> {
-  return countEscorts(params, true);
+  return countEscorts(params, "bdsm", params.practice);
 }
 
 export async function getFirstBDSMEscort(params: {
@@ -134,7 +144,7 @@ export async function getFirstBDSMEscort(params: {
   region?: string;
   practice?: string;
 }): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
-  return findFirstEscort(params, true);
+  return findFirstEscort(params, "bdsm", params.practice);
 }
 
 // ============================================
@@ -143,16 +153,16 @@ export async function getFirstBDSMEscort(params: {
 
 async function countEscorts(
   params: { county?: string; region?: string; practice?: string; massageType?: string },
-  isMassage: boolean,
-  massageType?: string,
+  filterType: FilterType,
+  practiceOrMassageType?: string,
   skipArrayContains?: boolean,
 ): Promise<number> {
   try {
     const { county, region, practice } = params;
     const hasRegionFilter = !!(region && region !== "all");
     const hasPracticeFilter = !!(practice && practice !== "all");
-    const hasMassageTypeFilter = !!(isMassage && massageType && massageType !== "all");
-    const hasMassageFilter = isMassage && !hasMassageTypeFilter;
+    const hasTypeFilter = filterType !== "none" && practiceOrMassageType && practiceOrMassageType !== "all";
+    const hasCategoryFilter = filterType !== "none" && !hasTypeFilter;
 
     let query: any = adminDb
       .collection("escorts")
@@ -183,17 +193,22 @@ async function countEscorts(
 
       const docs = snapshot.docs.map((doc: any) => doc.data());
 
-      if (!useArrayContains || hasRegionFilter || hasPracticeFilter || hasMassageFilter || hasMassageTypeFilter) {
+      if (hasRegionFilter || hasPracticeFilter || hasCategoryFilter || hasTypeFilter) {
         const filtered = docs.filter((d: any) => {
           if (hasRegionFilter && !docMatchesRegion(d, region!)) return false;
           if (hasPracticeFilter && !docHasPractice(d, practice!)) return false;
-          if (hasMassageFilter && !docIsMassageEscort(d)) return false;
-          if (hasMassageTypeFilter && !docMatchesMassageType(d, massageType!)) return false;
+          if (hasCategoryFilter) {
+            if (filterType === "massage" && !docIsMassageEscort(d)) return false;
+            if (filterType === "bdsm" && !docIsBDSMescort(d)) return false;
+          }
+          if (hasTypeFilter) {
+            if (filterType === "massage" && !docMatchesMassageType(d, practiceOrMassageType!)) return false;
+            if (filterType === "bdsm" && !docMatchesBDSMPractice(d, practiceOrMassageType!)) return false;
+          }
           return true;
         });
         count += filtered.length;
       } else {
-        // No client-side filters needed — count all
         count += docs.length;
       }
 
@@ -205,9 +220,9 @@ async function countEscorts(
     // Fallback: if array-contains returned 0 and we have region filter, retry without it
     if (count === 0 && hasRegionFilter && useArrayContains) {
       return countEscorts(
-        { county, region, practice, massageType },
-        isMassage,
-        massageType,
+        { county, region, practice, massageType: params.massageType },
+        filterType,
+        practiceOrMassageType,
         true, // skipArrayContains
       );
     }
@@ -221,15 +236,15 @@ async function countEscorts(
 
 async function findFirstEscort(
   params: { county?: string; region?: string; practice?: string; massageType?: string },
-  isMassage: boolean,
-  massageType?: string,
+  filterType: FilterType,
+  practiceOrMassageType?: string,
 ): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
   try {
     const { county, region, practice } = params;
     const hasRegionFilter = !!(region && region !== "all");
     const hasPracticeFilter = !!(practice && practice !== "all");
-    const hasMassageTypeFilter = !!(isMassage && massageType && massageType !== "all");
-    const hasMassageFilter = isMassage && !hasMassageTypeFilter;
+    const hasTypeFilter = filterType !== "none" && practiceOrMassageType && practiceOrMassageType !== "all";
+    const hasCategoryFilter = filterType !== "none" && !hasTypeFilter;
 
     let query: any = adminDb
       .collection("escorts")
@@ -257,8 +272,14 @@ async function findFirstEscort(
       const filtered = docs.filter((d: any) => {
         if (hasRegionFilter && !docMatchesRegion(d, region!)) return false;
         if (hasPracticeFilter && !docHasPractice(d, practice!)) return false;
-        if (hasMassageFilter && !docIsMassageEscort(d)) return false;
-        if (hasMassageTypeFilter && !docMatchesMassageType(d, massageType!)) return false;
+        if (hasCategoryFilter) {
+          if (filterType === "massage" && !docIsMassageEscort(d)) return false;
+          if (filterType === "bdsm" && !docIsBDSMescort(d)) return false;
+        }
+        if (hasTypeFilter) {
+          if (filterType === "massage" && !docMatchesMassageType(d, practiceOrMassageType!)) return false;
+          if (filterType === "bdsm" && !docMatchesBDSMPractice(d, practiceOrMassageType!)) return false;
+        }
         return true;
       });
 
