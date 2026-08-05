@@ -38,7 +38,7 @@ export default async function Home({ searchParams }: PageProps) {
       {/* <div className="flex justify-center">
         <YouTargetsAd />
       </div> */}
-      <div className="-mt-12">
+      <div className="">
         <GirlRegions />
       </div>
       <div className="">
