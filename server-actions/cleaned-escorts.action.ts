@@ -114,6 +114,11 @@ function applySorting(query: any, sortBy: string, sortOrder: string): any {
 function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort[] {
   let filtered = escorts;
 
+  if (params.county && params.county !== "all") {
+    const countyLower = normalize(params.county);
+    filtered = filtered.filter((e) => normalize(e.county) === countyLower);
+  }
+
   if (params.region && params.region !== "all") {
     const regionLower = normalize(params.region);
     filtered = filtered.filter((e) =>
@@ -260,11 +265,13 @@ async function runQueryWithFilters(
   sortBy: string,
   sortOrder: string,
   useArrayContains: boolean,
+  serverSideParams?: GetEscortsParams,
 ): Promise<GetEscortsResponse> {
   const batchSize = Math.max(validLimit * 5, 200);
+  const effectiveServerParams = serverSideParams || params;
 
   let query = buildBaseQuery();
-  query = applyServerSideFilters(query, params, useArrayContains);
+  query = applyServerSideFilters(query, effectiveServerParams, useArrayContains);
   query = applySorting(query, sortBy, sortOrder);
 
   let lastDoc: any = null;
@@ -371,6 +378,35 @@ async function fetchEscortsWithCleanedImagesInternal(
       } catch (fallbackError: any) {
         console.warn(
           "Phase 2 fallback failed:",
+          fallbackError?.message || fallbackError,
+        );
+      }
+    }
+
+    // Phase 3: If still 0 results and county filter exists, retry with
+    // county filter stripped from server-side (handles case mismatches like
+    // "Mombasa" vs "mombasa")
+    if (
+      result.total === 0 &&
+      (hasRegionFilter || hasPracticeFilter) &&
+      params.county &&
+      params.county !== "all"
+    ) {
+      try {
+        const countyStrippedParams = { ...params, county: undefined };
+        const fallback = await runQueryWithFilters(
+          params,
+          validPage,
+          validLimit,
+          sortBy,
+          sortOrder,
+          false,
+          countyStrippedParams,
+        );
+        return applyCleanedImagesWrapper(fallback, validPage, validLimit);
+      } catch (fallbackError: any) {
+        console.warn(
+          "Phase 3 county-stripped fallback failed:",
           fallbackError?.message || fallbackError,
         );
       }
@@ -497,6 +533,48 @@ async function fetchMassageEscortsWithCleanedImagesInternal(
       } catch (fallbackError: any) {
         console.warn(
           "Massage escorts: Phase 2 fallback failed:",
+          fallbackError?.message || fallbackError,
+        );
+      }
+    }
+
+    // Phase 3: If still 0 results and county filter exists, retry with
+    // county filter stripped from server-side (handles case mismatches)
+    if (
+      massageFiltered.length === 0 &&
+      hasRegionFilter &&
+      params.county &&
+      params.county !== "all"
+    ) {
+      try {
+        const countyStrippedParams = { ...params, county: undefined };
+        const fallback = await runQueryWithFilters(
+          params,
+          validPage,
+          validLimit,
+          sortBy,
+          sortOrder,
+          false,
+          countyStrippedParams,
+        );
+
+        const fallbackFiltered = filterForMassage(fallback.escorts);
+        return {
+          escorts: applyCleanedImages(
+            fallbackFiltered.slice(
+              (validPage - 1) * validLimit,
+              Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
+            ),
+          ),
+          total: fallbackFiltered.length,
+          page: validPage,
+          totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
+          hasMore:
+            fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
+        };
+      } catch (fallbackError: any) {
+        console.warn(
+          "Massage escorts: Phase 3 county-stripped fallback failed:",
           fallbackError?.message || fallbackError,
         );
       }
@@ -642,13 +720,96 @@ async function fetchBDSMEscortsWithCleanedImagesInternal(
     const endIndex = Math.min(startIndex + validLimit, total);
     const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
 
-    return {
+    const response = {
       escorts: applyCleanedImages(paginatedEscorts),
       total,
       page: validPage,
       totalPages: Math.max(1, Math.ceil(total / validLimit)),
       hasMore: endIndex < total || hasMore,
     };
+
+    // Phase 3: If 0 results and region/practice filter exists with county,
+    // retry with county stripped from server-side (handles case mismatches)
+    if (
+      total === 0 &&
+      (params.region || params.practice) &&
+      params.county &&
+      params.county !== "all"
+    ) {
+      try {
+        const countyStrippedParams = { ...params, county: undefined };
+        const fallbackQuery = buildBaseQuery();
+        const fallbackQuery2 = applyServerSideFilters(fallbackQuery, countyStrippedParams);
+        const fallbackQuery3 = applySorting(fallbackQuery2, sortBy, sortOrder);
+
+        const fallbackAllFiltered: Escort[] = [];
+        let fallbackLastDoc: any = null;
+        let fallbackHasMore = false;
+
+        while (true) {
+          let pageQuery = fallbackQuery3;
+          if (fallbackLastDoc) {
+            pageQuery = pageQuery.startAfter(fallbackLastDoc);
+          }
+
+          const snapshot = await pageQuery.limit(batchSize).get();
+
+          if (snapshot.empty) break;
+
+          const docs = snapshot.docs.map(convertDocToEscortFast);
+          const filtered = applyClientFilters(docs, params);
+
+          const bdsmFiltered = filtered.filter((escort) => {
+            const allServices: string[] = [
+              ...(escort.practices || []),
+              ...((escort as any).bdsm || []),
+              ...((escort as any).massage || []),
+              ...((escort as any).extraServices || []),
+            ];
+
+            const hasBDSMPractice = allServices.some(
+              (p: string) => p && isBDSMPractice(p),
+            );
+            if (!hasBDSMPractice) return false;
+
+            if (practice && practice !== "all") {
+              const lowerPractice = normalizeSlug(practice);
+              const matches = allServices.some(
+                (p: string) => p && normalizeSlug(p).includes(lowerPractice),
+              );
+              if (!matches) return false;
+            }
+
+            return true;
+          });
+
+          fallbackAllFiltered.push(...bdsmFiltered);
+          fallbackLastDoc = snapshot.docs[snapshot.docs.length - 1];
+          fallbackHasMore = snapshot.size === batchSize;
+
+          if (!fallbackHasMore) break;
+        }
+
+        const fallbackTotal = fallbackAllFiltered.length;
+        const fallbackStartIndex = (validPage - 1) * validLimit;
+        const fallbackEndIndex = Math.min(fallbackStartIndex + validLimit, fallbackTotal);
+
+        return {
+          escorts: applyCleanedImages(fallbackAllFiltered.slice(fallbackStartIndex, fallbackEndIndex)),
+          total: fallbackTotal,
+          page: validPage,
+          totalPages: Math.max(1, Math.ceil(fallbackTotal / validLimit)),
+          hasMore: fallbackEndIndex < fallbackTotal || fallbackHasMore,
+        };
+      } catch (fallbackError: any) {
+        console.warn(
+          "BDSM: Phase 3 county-stripped fallback failed:",
+          fallbackError?.message || fallbackError,
+        );
+      }
+    }
+
+    return response;
   } catch (error) {
     console.error("Error fetching BDSM escorts with cleaned images:", error);
     return {
