@@ -292,6 +292,8 @@ export async function getCachedFirstAgency(filters?: {
 // OPTIMIZED: GET AGENCIES SERVER (adminDb + select + filters + streaming-ready)
 // ============================================
 
+const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
 // Only select the fields needed for the listing page — reduces network I/O dramatically
 const AGENCY_LISTING_FIELDS = [
   "name",
@@ -316,6 +318,7 @@ const AGENCY_LISTING_FIELDS = [
   "paymentMethods",
   "services",
   "specialties",
+  "isActive",
 ];
 
 interface GetAgenciesServerParams {
@@ -449,13 +452,13 @@ async function fetchAgenciesServer(
   const validPage = Math.max(1, page);
   const validLimit = Math.min(100, Math.max(1, limitParam));
 
-  const filterParams = { county, region, business, verified, featured };
-  const countConstraints = buildAgencyCountQuery(filterParams);
+  const hasCountyFilter = !!(county && county !== "all");
+  const hasRegionFilter = !!(region && region !== "all");
+  const hasBusinessFilter = !!(business && business !== "all");
 
-  // Count query — server-side count via getCountFromServer (fast, no doc download)
-  const countQuery = query(collection(db, "agencies"), ...countConstraints);
+  // Phase 1: Try server-side exact-match filters (fast path)
+  const countConstraints = buildAgencyCountQuery({ county, region, business, verified, featured });
 
-  // Data query — adminDb + field selection (only fetch what we need)
   const q = adminDb.collection("agencies");
   let adminQuery: any = q
     .select(...AGENCY_LISTING_FIELDS)
@@ -479,19 +482,72 @@ async function fetchAgenciesServer(
 
   adminQuery = adminQuery.orderBy("createdAt", "desc");
 
-  // Parallel: server-side count + adminDb data fetch with offset
-  const [countSnapshot, dataSnapshot] = await Promise.all([
-    getCountFromServer(countQuery),
-    adminQuery
-      .offset((validPage - 1) * validLimit)
-      .limit(validLimit)
-      .get(),
-  ]);
+  let total: number;
+  let agencies: IAgency[];
 
-  const total = countSnapshot.data().count;
-  const totalPages = Math.ceil(total / validLimit);
+  try {
+    const countQuery = query(
+      collection(db, "agencies"),
+      ...countConstraints,
+    );
+    const [countSnapshot, dataSnapshot] = await Promise.all([
+      getCountFromServer(countQuery),
+      adminQuery
+        .offset((validPage - 1) * validLimit)
+        .limit(validLimit)
+        .get(),
+    ]);
 
-  let agencies: IAgency[] = dataSnapshot.docs.map(convertAdminDocToAgency);
+    total = countSnapshot.data().count;
+    agencies = dataSnapshot.docs.map(convertAdminDocToAgency);
+  } catch (queryError: any) {
+    console.warn(
+      "Agencies: Server-side query failed, falling back to client-side filtering:",
+      queryError?.message || queryError,
+    );
+    total = 0;
+    agencies = [];
+  }
+
+  // Phase 2: Fallback to case-insensitive client-side filtering if 0 results
+  // and there are any filters (handles case mismatches like "Nairobi" vs "nairobi")
+  if (
+    total === 0 &&
+    (hasCountyFilter || hasRegionFilter || hasBusinessFilter)
+  ) {
+    try {
+      const fallbackQuery = adminDb.collection("agencies")
+        .select(...AGENCY_LISTING_FIELDS)
+        .where("isActive", "==", true)
+        .orderBy("createdAt", "desc");
+
+      const fallbackSnapshot = await fallbackQuery.get();
+      const allAgencies = fallbackSnapshot.docs.map(convertAdminDocToAgency);
+
+      const countyLower = county?.toLowerCase();
+      const regionLower = region?.toLowerCase();
+      const businessLower = business?.toLowerCase();
+
+      const filtered = allAgencies.filter((agency) => {
+        if (hasCountyFilter && normalize(agency.county) !== countyLower) return false;
+        if (hasRegionFilter && normalize(agency.region) !== regionLower) return false;
+        if (hasBusinessFilter && normalize(agency.businessType) !== businessLower) return false;
+        if (verified === "true" && !agency.isVerified) return false;
+        if (featured === "true" && !agency.isFeatured) return false;
+        return true;
+      });
+
+      total = filtered.length;
+      const startIndex = (validPage - 1) * validLimit;
+      const endIndex = Math.min(startIndex + validLimit, filtered.length);
+      agencies = filtered.slice(startIndex, endIndex);
+    } catch (fallbackError: any) {
+      console.warn(
+        "Agencies: Phase 2 fallback failed:",
+        fallbackError?.message || fallbackError,
+      );
+    }
+  }
 
   // Apply search client-side (Firestore doesn't support full-text search)
   if (search && search !== "all") {
@@ -502,6 +558,8 @@ async function fetchAgenciesServer(
         agency.description?.toLowerCase().includes(searchLower),
     );
   }
+
+  const totalPages = Math.ceil(total / validLimit);
 
   return {
     agencies,
@@ -519,11 +577,47 @@ async function fetchAgenciesCountServer(params: {
   region?: string;
   business?: string;
 }): Promise<number> {
+  const hasCountyFilter = !!(params.county && params.county !== "all");
+  const hasRegionFilter = !!(params.region && params.region !== "all");
+  const hasBusinessFilter = !!(params.business && params.business !== "all");
+
+  // Phase 1: Try server-side exact match using client SDK
+  const constraints = buildAgencyCountQuery(params);
+  const q = query(collection(db, "agencies"), ...constraints);
+
   try {
-    const constraints = buildAgencyCountQuery(params);
-    const q = query(collection(db, "agencies"), ...constraints);
     const snapshot = await getCountFromServer(q);
-    return snapshot.data().count;
+    const count = snapshot.data().count;
+
+    // Phase 2: Fallback to client-side count if 0 results with filters
+    // (handles case mismatches like "Nairobi" vs "nairobi")
+    if (
+      count === 0 &&
+      (hasCountyFilter || hasRegionFilter || hasBusinessFilter)
+    ) {
+      const allQuery = query(
+        collection(db, "agencies"),
+        where("isActive", "==", true),
+      );
+      const allSnapshot = await getDocs(allQuery);
+
+      const countyLower = params.county?.toLowerCase();
+      const regionLower = params.region?.toLowerCase();
+      const businessLower = params.business?.toLowerCase();
+
+      let filteredCount = 0;
+      allSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (hasCountyFilter && normalize(data.county) !== countyLower) return;
+        if (hasRegionFilter && normalize(data.region) !== regionLower) return;
+        if (hasBusinessFilter && normalize(data.businessType) !== businessLower) return;
+        filteredCount++;
+      });
+
+      return filteredCount;
+    }
+
+    return count;
   } catch (error) {
     console.error("Error getting agencies count:", error);
     return 0;
@@ -537,31 +631,59 @@ async function fetchFirstAgencyServer(params: {
   region?: string;
   business?: string;
 }): Promise<IAgency | null> {
+  const hasCountyFilter = !!(params.county && params.county !== "all");
+  const hasRegionFilter = !!(params.region && params.region !== "all");
+  const hasBusinessFilter = !!(params.business && params.business !== "all");
+
+  // Phase 1: Try server-side exact match
+  const q = adminDb.collection("agencies");
+  let adminQuery: any = q
+    .select(...AGENCY_LISTING_FIELDS)
+    .where("isActive", "==", true)
+    .orderBy("createdAt", "desc")
+    .limit(1);
+
+  if (params.county && params.county !== "all") {
+    adminQuery = adminQuery.where("county", "==", params.county);
+  }
+  if (params.region && params.region !== "all") {
+    adminQuery = adminQuery.where("region", "==", params.region);
+  }
+  if (params.business && params.business !== "all") {
+    adminQuery = adminQuery.where("businessType", "==", params.business);
+  }
+
   try {
-    const q = adminDb.collection("agencies");
-    let adminQuery: any = q
-      .select(...AGENCY_LISTING_FIELDS)
-      .where("isActive", "==", true)
-      .orderBy("createdAt", "desc")
-      .limit(1);
-
-    if (params.county && params.county !== "all") {
-      adminQuery = adminQuery.where("county", "==", params.county);
-    }
-    if (params.region && params.region !== "all") {
-      adminQuery = adminQuery.where("region", "==", params.region);
-    }
-    if (params.business && params.business !== "all") {
-      adminQuery = adminQuery.where("businessType", "==", params.business);
-    }
-
     const snapshot = await adminQuery.get();
 
-    if (snapshot.empty) {
-      return null;
+    if (!snapshot.empty) {
+      return convertAdminDocToAgency(snapshot.docs[0]);
     }
 
-    return convertAdminDocToAgency(snapshot.docs[0]);
+    // Phase 2: Fallback to case-insensitive client-side matching if 0 results
+    if (hasCountyFilter || hasRegionFilter || hasBusinessFilter) {
+      const fallbackQuery = adminDb.collection("agencies")
+        .select(...AGENCY_LISTING_FIELDS)
+        .where("isActive", "==", true)
+        .orderBy("createdAt", "desc")
+        .limit(50);
+
+      const fallbackSnapshot = await fallbackQuery.get();
+
+      const countyLower = params.county?.toLowerCase();
+      const regionLower = params.region?.toLowerCase();
+      const businessLower = params.business?.toLowerCase();
+
+      for (const doc of fallbackSnapshot.docs) {
+        const data = doc.data();
+        if (hasCountyFilter && data.county?.toLowerCase() !== countyLower) continue;
+        if (hasRegionFilter && data.region?.toLowerCase() !== regionLower) continue;
+        if (hasBusinessFilter && data.businessType?.toLowerCase() !== businessLower) continue;
+        return convertAdminDocToAgency(doc);
+      }
+    }
+
+    return null;
   } catch (error) {
     console.error("Error getting first agency:", error);
     return null;
