@@ -445,12 +445,24 @@ async function getEscorts(
 
       const docs = snapshot.docs.map(convertDocToEscortFast);
 
+      const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
       let filtered = docs;
       if (region && region !== "all") {
-        filtered = filtered.filter((e) => e.regions?.includes(region));
+        const regionLower = normalize(region);
+        filtered = filtered.filter((e) =>
+          e.regions?.some((r) => normalize(r) === regionLower) ||
+          normalize(e.primaryRegion) === regionLower
+        );
       }
       if (practice && practice !== "all") {
-        filtered = filtered.filter((e) => e.practices?.includes(practice));
+        const practiceLower = normalize(practice);
+        filtered = filtered.filter((e) =>
+          (e.practices || []).some((p) => normalize(p) === practiceLower) ||
+          (e.bdsm || []).some((p) => normalize(p) === practiceLower) ||
+          (e.massage || []).some((p) => normalize(p) === practiceLower) ||
+          (e.extraServices || []).some((p) => normalize(p) === practiceLower)
+        );
       }
 
       allFiltered.push(...filtered);
@@ -521,15 +533,19 @@ export async function getEscortsWithClientFiltering(
     );
 
     // Apply all array filters client-side
+    const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
     if (region && region !== "all") {
+      const regionLower = normalize(region);
       allEscorts = allEscorts.filter((escort) =>
-        escort.regions?.includes(region),
+        escort.regions?.some((r) => normalize(r) === regionLower),
       );
     }
 
     if (practice && practice !== "all") {
+      const practiceLower = normalize(practice);
       allEscorts = allEscorts.filter((escort) =>
-        escort.practices?.includes(practice),
+        escort.practices?.some((p) => normalize(p) === practiceLower),
       );
     }
 

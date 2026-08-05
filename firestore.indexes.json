@@ -14,6 +14,74 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collection": "escorts",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "hasCleanedImages", "order": "ASCENDING"},
+        {"fieldPath": "isActive", "order": "ASCENDING"},
+        {"fieldPath": "county", "order": "ASCENDING"},
+        {"fieldPath": "regions", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collection": "escorts",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "hasCleanedImages", "order": "ASCENDING"},
+        {"fieldPath": "isActive", "order": "ASCENDING"},
+        {"fieldPath": "regions", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collection": "escorts",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "hasCleanedImages", "order": "ASCENDING"},
+        {"fieldPath": "isActive", "order": "ASCENDING"},
+        {"fieldPath": "county", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collection": "escorts",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "hasCleanedImages", "order": "ASCENDING"},
+        {"fieldPath": "isActive", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collection": "escorts",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "hasCleanedImages", "order": "ASCENDING"},
+        {"fieldPath": "isActive", "order": "ASCENDING"},
+        {"fieldPath": "isVerified", "order": "ASCENDING"},
+        {"fieldPath": "rating", "order": "DESCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collection": "escorts",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "hasCleanedImages", "order": "ASCENDING"},
+        {"fieldPath": "isActive", "order": "ASCENDING"},
+        {"fieldPath": "county", "order": "ASCENDING"},
+        {"fieldPath": "isVerified", "order": "ASCENDING"},
+        {"fieldPath": "rating", "order": "DESCENDING"}
+      ]
     }
   ],
   "fieldOverrides": []

@@ -40,6 +40,9 @@ const LISTING_FIELDS = [
   "regions",
   "primaryRegion",
   "practices",
+  "bdsm",
+  "massage",
+  "extraServices",
   "categories",
   "slug",
   "telephone",
@@ -56,6 +59,7 @@ function buildBaseQuery() {
 function applyServerSideFilters(
   query: any,
   params: GetEscortsParams,
+  useArrayContains: boolean = false,
 ): any {
   if (params.isActive !== undefined) {
     query = query.where("isActive", "==", params.isActive);
@@ -71,6 +75,13 @@ function applyServerSideFilters(
   }
   if (params.nationality && params.nationality !== "all") {
     query = query.where("nationality", "==", params.nationality);
+  }
+  if (
+    useArrayContains &&
+    params.region &&
+    params.region !== "all"
+  ) {
+    query = query.where("regions", "array-contains", params.region);
   }
   return query;
 }
@@ -91,39 +102,61 @@ function applySorting(query: any, sortBy: string, sortOrder: string): any {
 function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort[] {
   let filtered = escorts;
 
+  const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
   if (params.region && params.region !== "all") {
-    filtered = filtered.filter((e) => e.regions?.includes(params.region!));
+    const regionLower = normalize(params.region);
+    filtered = filtered.filter((e) =>
+      (e.regions || []).some((r) => normalize(r) === regionLower) ||
+      normalize(e.primaryRegion) === regionLower
+    );
   }
 
   if (params.town && params.town !== "all") {
+    const townLower = normalize(params.town);
     filtered = filtered.filter((e) =>
-      e.locations?.some((loc) => loc.town === params.town),
+      e.locations?.some((loc) => normalize(loc.town) === townLower),
     );
   }
 
   if (params.estate && params.estate !== "all") {
+    const estateLower = normalize(params.estate);
     filtered = filtered.filter((e) =>
-      e.locations?.some((loc) => loc.estate === params.estate),
+      e.locations?.some((loc) => normalize(loc.estate) === estateLower),
     );
   }
 
   if (params.practice && params.practice !== "all") {
-    filtered = filtered.filter((e) => e.practices?.includes(params.practice!));
+    const practiceLower = normalize(params.practice);
+    filtered = filtered.filter((e) =>
+      (e.practices || []).some((p) => normalize(p) === practiceLower) ||
+      (e.bdsm || []).some((p) => normalize(p) === practiceLower) ||
+      (e.massage || []).some((p) => normalize(p) === practiceLower) ||
+      (e.extraServices || []).some((p) => normalize(p) === practiceLower)
+    );
   }
 
   if (params.practices && params.practices.length > 0) {
+    const practicesLower = params.practices.map(normalize);
     filtered = filtered.filter((e) =>
-      params.practices!.some((p) => e.practices?.includes(p)),
+      (e.practices || []).some((p) => practicesLower.includes(normalize(p))) ||
+      (e.bdsm || []).some((p) => practicesLower.includes(normalize(p))) ||
+      (e.massage || []).some((p) => practicesLower.includes(normalize(p))) ||
+      (e.extraServices || []).some((p) => practicesLower.includes(normalize(p)))
     );
   }
 
   if (params.category && params.category !== "all") {
-    filtered = filtered.filter((e) => e.categories?.includes(params.category!));
+    const categoryLower = normalize(params.category);
+    filtered = filtered.filter((e) =>
+      e.categories?.some((c) => normalize(c) === categoryLower),
+    );
   }
 
   if (params.categories && params.categories.length > 0) {
+    const categoriesLower = params.categories.map(normalize);
     filtered = filtered.filter((e) =>
-      params.categories!.some((c) => e.categories?.includes(c)),
+      e.categories?.some((c) => categoriesLower.includes(normalize(c))),
     );
   }
 
@@ -192,6 +225,79 @@ function applyCleanedImages(escorts: Escort[]): Escort[] {
   });
 }
 
+function applyCleanedImagesWrapper(
+  result: GetEscortsResponse,
+  validPage: number,
+  validLimit: number,
+): GetEscortsResponse {
+  const total = result.total;
+  const startIndex = (validPage - 1) * validLimit;
+  const endIndex = Math.min(startIndex + validLimit, total);
+  const paginatedEscorts = result.escorts.slice(startIndex, endIndex);
+  return {
+    escorts: applyCleanedImages(paginatedEscorts),
+    total,
+    page: validPage,
+    totalPages: Math.max(1, Math.ceil(total / validLimit)),
+    hasMore: endIndex < total || result.hasMore,
+  };
+}
+
+async function runQueryWithFilters(
+  params: GetEscortsParams,
+  validPage: number,
+  validLimit: number,
+  sortBy: string,
+  sortOrder: string,
+  useArrayContains: boolean,
+): Promise<GetEscortsResponse> {
+  const batchSize = Math.max(validLimit * 5, 200);
+
+  let query = buildBaseQuery();
+  query = applyServerSideFilters(query, params, useArrayContains);
+  query = applySorting(query, sortBy, sortOrder);
+
+  let lastDoc: any = null;
+  const allResults: Escort[] = [];
+  let hasMore = false;
+
+  let iterations = 0;
+  const maxIterations = 10;
+
+  while (allResults.length < validLimit * 2 && iterations < maxIterations) {
+    iterations++;
+    let pageQuery = query;
+    if (lastDoc) {
+      pageQuery = pageQuery.startAfter(lastDoc);
+    }
+
+    const snapshot = await pageQuery.limit(batchSize).get();
+
+    if (snapshot.empty) {
+      break;
+    }
+
+    const docs = snapshot.docs.map(convertDocToEscortFast);
+    const filtered = applyClientFilters(docs, params);
+    allResults.push(...filtered);
+
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    hasMore = snapshot.size === batchSize;
+
+    if (!hasMore) {
+      break;
+    }
+  }
+
+  return {
+    escorts: allResults,
+    total: allResults.length,
+    page: validPage,
+    totalPages: Math.max(1, Math.ceil(allResults.length / validLimit)),
+    hasMore: allResults.length > validPage * validLimit || hasMore,
+  };
+}
+
 async function fetchEscortsWithCleanedImagesInternal(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
@@ -206,51 +312,54 @@ async function fetchEscortsWithCleanedImagesInternal(
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    let query = buildBaseQuery();
-    query = applyServerSideFilters(query, params);
-    query = applySorting(query, sortBy, sortOrder);
+    // Phase 1: Try with server-side array-contains for region (fast, exact match)
+    const hasRegionFilter = !!(params.region && params.region !== "all");
+    const hasPracticeFilter = !!(params.practice && params.practice !== "all");
 
-    const batchSize = 500;
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-    let hasMore = false;
+    let result: GetEscortsResponse;
 
-    while (true) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      const docs = snapshot.docs.map(convertDocToEscortFast);
-      const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-      hasMore = snapshot.size === batchSize;
-
-      if (!hasMore) {
-        break;
-      }
+    try {
+      result = await runQueryWithFilters(
+        params,
+        validPage,
+        validLimit,
+        sortBy,
+        sortOrder,
+        hasRegionFilter,
+      );
+    } catch (queryError: any) {
+      console.warn(
+        "Server-side array-contains query failed, falling back to client-side filtering:",
+        queryError?.message || queryError,
+      );
+      result = {
+        escorts: [],
+        total: 0,
+        page: validPage,
+        totalPages: 0,
+        hasMore: false,
+      };
     }
 
-    const total = allFiltered.length;
-    const startIndex = (validPage - 1) * validLimit;
-    const endIndex = Math.min(startIndex + validLimit, total);
-    const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
+    // Phase 2: Fallback to case-insensitive client-side filtering if 0 results
+    // and there is a region or practice filter (handles case mismatches in data
+    // or missing composite indexes)
+    if (
+      result.total === 0 &&
+      (hasRegionFilter || hasPracticeFilter)
+    ) {
+      const fallback = await runQueryWithFilters(
+        params,
+        validPage,
+        validLimit,
+        sortBy,
+        sortOrder,
+        false,
+      );
+      return applyCleanedImagesWrapper(fallback, validPage, validLimit);
+    }
 
-    return {
-      escorts: applyCleanedImages(paginatedEscorts),
-      total,
-      page: validPage,
-      totalPages: Math.max(1, Math.ceil(total / validLimit)),
-      hasMore: endIndex < total || hasMore,
-    };
+    return applyCleanedImagesWrapper(result, validPage, validLimit);
   } catch (error) {
     console.error("Error fetching escorts with cleaned images:", error);
     return {
@@ -287,32 +396,10 @@ async function fetchMassageEscortsWithCleanedImagesInternal(
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    let query = buildBaseQuery();
-    query = applyServerSideFilters(query, params);
-    query = applySorting(query, sortBy, sortOrder);
+    const normalize = (val?: string) => (val || "").toLowerCase().trim();
 
-    const batchSize = 500;
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-    let hasMore = false;
-
-    while (true) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      let docs = snapshot.docs.map(convertDocToEscortFast);
-      let filtered = applyClientFilters(docs, params);
-
-      // Filter for escorts that offer massage services
-      filtered = filtered.filter((escort) => {
+    function filterForMassage(escorts: Escort[]): Escort[] {
+      return escorts.filter((escort) => {
         const practices = escort.practices || [];
         const massages = (escort as any).massage || [];
 
@@ -325,42 +412,88 @@ async function fetchMassageEscortsWithCleanedImagesInternal(
 
         if (!hasMassagePractice && !hasMassageEntry) return false;
 
-        // If a specific massage type is requested, filter further
         if (massageType && massageType !== "all") {
-          const lowerType = massageType.toLowerCase();
+          const lowerType = normalize(massageType);
           const matchesPractice = practices.some(
-            (p: string) => p && p.toLowerCase().includes(lowerType),
+            (p: string) => p && normalize(p).includes(lowerType),
           );
           const matchesMassage = massages.some(
-            (m: string) => m && m.toLowerCase().includes(lowerType),
+            (m: string) => m && normalize(m).includes(lowerType),
           );
           if (!matchesPractice && !matchesMassage) return false;
         }
 
         return true;
       });
-
-      allFiltered.push(...filtered);
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-      hasMore = snapshot.size === batchSize;
-
-      if (!hasMore) {
-        break;
-      }
     }
 
-    const total = allFiltered.length;
+    // Phase 1: Try with server-side array-contains for region
+    const hasRegionFilter = !!(params.region && params.region !== "all");
+
+    let result: GetEscortsResponse;
+
+    try {
+      result = await runQueryWithFilters(
+        params,
+        validPage,
+        validLimit,
+        sortBy,
+        sortOrder,
+        hasRegionFilter,
+      );
+    } catch (queryError: any) {
+      console.warn(
+        "Massage escorts: Server-side array-contains query failed, falling back to client-side filtering:",
+        queryError?.message || queryError,
+      );
+      result = {
+        escorts: [],
+        total: 0,
+        page: validPage,
+        totalPages: 0,
+        hasMore: false,
+      };
+    }
+
+    const massageFiltered = filterForMassage(result.escorts);
+
+    // Phase 2: Fallback if 0 results and region filter
+    if (massageFiltered.length === 0 && hasRegionFilter) {
+      const fallback = await runQueryWithFilters(
+        params,
+        validPage,
+        validLimit,
+        sortBy,
+        sortOrder,
+        false,
+      );
+
+      const fallbackFiltered = filterForMassage(fallback.escorts);
+      return {
+        escorts: applyCleanedImages(
+          fallbackFiltered.slice(
+            (validPage - 1) * validLimit,
+            Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
+          ),
+        ),
+        total: fallbackFiltered.length,
+        page: validPage,
+        totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
+        hasMore:
+          fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
+      };
+    }
+
+    const allResults = massageFiltered;
     const startIndex = (validPage - 1) * validLimit;
-    const endIndex = Math.min(startIndex + validLimit, total);
-    const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
+    const endIndex = Math.min(startIndex + validLimit, allResults.length);
 
     return {
-      escorts: applyCleanedImages(paginatedEscorts),
-      total,
+      escorts: applyCleanedImages(allResults.slice(startIndex, endIndex)),
+      total: allResults.length,
       page: validPage,
-      totalPages: Math.max(1, Math.ceil(total / validLimit)),
-      hasMore: endIndex < total || hasMore,
+      totalPages: Math.max(1, Math.ceil(allResults.length / validLimit)),
+      hasMore: endIndex < allResults.length || result.hasMore,
     };
   } catch (error) {
     console.error("Error fetching massage escorts with cleaned images:", error);

@@ -7,6 +7,8 @@ export async function getEscortCountForMetadata(params: {
   practice?: string;
 }): Promise<number> {
   try {
+    const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
     let query: any = adminDb
       .collection("escorts")
       .where("isActive", "==", true);
@@ -19,11 +21,17 @@ export async function getEscortCountForMetadata(params: {
     let docs = snapshot.docs.map((doc: any) => doc.data());
 
     if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      const regionLower = normalize(params.region);
+      docs = docs.filter((d: any) =>
+        d.regions?.some((r: string) => normalize(r) === regionLower),
+      );
     }
 
     if (params.practice && params.practice !== "all") {
-      docs = docs.filter((d: any) => d.practices?.includes(params.practice));
+      const practiceLower = normalize(params.practice);
+      docs = docs.filter((d: any) =>
+        d.practices?.some((p: string) => normalize(p) === practiceLower),
+      );
     }
 
     return docs.length;
@@ -42,7 +50,9 @@ export async function getFirstEscortForMetadata(params: {
   name?: string;
   username?: string;
 } | null> {
-  try {
+   try {
+    const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
     let query: any = adminDb
       .collection("escorts")
       .where("isActive", "==", true);
@@ -55,11 +65,17 @@ export async function getFirstEscortForMetadata(params: {
     let docs = snapshot.docs.map((doc: any) => doc.data());
 
     if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      const regionLower = normalize(params.region);
+      docs = docs.filter((d: any) =>
+        d.regions?.some((r: string) => normalize(r) === regionLower),
+      );
     }
 
     if (params.practice && params.practice !== "all") {
-      docs = docs.filter((d: any) => d.practices?.includes(params.practice));
+      const practiceLower = normalize(params.practice);
+      docs = docs.filter((d: any) =>
+        d.practices?.some((p: string) => normalize(p) === practiceLower),
+      );
     }
 
     if (docs.length === 0) return null;
@@ -100,7 +116,10 @@ export async function getMassageEscortCount(params: {
     let docs = snapshot.docs.map((doc: any) => doc.data());
 
     if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      const regionLower = (params.region || "").toLowerCase().trim();
+      docs = docs.filter((d: any) =>
+        d.regions?.some((r: string) => (r || "").toLowerCase().trim() === regionLower),
+      );
     }
 
     const eroticMassageTerms = [
@@ -120,7 +139,7 @@ export async function getMassageEscortCount(params: {
     docs = docs.filter((d: any) => {
       if (!d.practices) return false;
       return d.practices.some((p: string) => {
-        const lower = p.toLowerCase();
+        const lower = (p || "").toLowerCase();
         return eroticMassageTerms.some((term) =>
           lower.includes(term.toLowerCase()),
         );
@@ -155,7 +174,10 @@ export async function getFirstMassageEscort(params: {
     let docs = snapshot.docs.map((doc: any) => doc.data());
 
     if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
+      const regionLower = (params.region || "").toLowerCase().trim();
+      docs = docs.filter((d: any) =>
+        d.regions?.some((r: string) => (r || "").toLowerCase().trim() === regionLower),
+      );
     }
 
     const eroticMassageTerms = [
@@ -175,7 +197,7 @@ export async function getFirstMassageEscort(params: {
     docs = docs.filter((d: any) => {
       if (!d.practices) return false;
       return d.practices.some((p: string) => {
-        const lower = p.toLowerCase();
+        const lower = (p || "").toLowerCase();
         return eroticMassageTerms.some((term) =>
           lower.includes(term.toLowerCase()),
         );
