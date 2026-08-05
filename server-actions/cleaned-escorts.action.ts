@@ -28,6 +28,9 @@ function convertDocToEscortFast(doc: any): Escort {
   return result as Escort;
 }
 
+const normalize = (val?: string) => (val || "").toLowerCase().trim();
+const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
+
 const LISTING_FIELDS = [
   "name",
   "username",
@@ -47,6 +50,15 @@ const LISTING_FIELDS = [
   "slug",
   "telephone",
   "whatsappPhone",
+  "isActive",
+  "isVerified",
+  "isFeatured",
+  "hasCleanedImages",
+  "createdAt",
+  "updatedAt",
+  "totalViews",
+  "rating",
+  "totalBookings",
 ];
 
 function buildBaseQuery() {
@@ -101,8 +113,6 @@ function applySorting(query: any, sortBy: string, sortOrder: string): any {
 
 function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort[] {
   let filtered = escorts;
-
-  const normalize = (val?: string) => (val || "").toLowerCase().trim();
 
   if (params.region && params.region !== "all") {
     const regionLower = normalize(params.region);
@@ -348,15 +358,22 @@ async function fetchEscortsWithCleanedImagesInternal(
       result.total === 0 &&
       (hasRegionFilter || hasPracticeFilter)
     ) {
-      const fallback = await runQueryWithFilters(
-        params,
-        validPage,
-        validLimit,
-        sortBy,
-        sortOrder,
-        false,
-      );
-      return applyCleanedImagesWrapper(fallback, validPage, validLimit);
+      try {
+        const fallback = await runQueryWithFilters(
+          params,
+          validPage,
+          validLimit,
+          sortBy,
+          sortOrder,
+          false,
+        );
+        return applyCleanedImagesWrapper(fallback, validPage, validLimit);
+      } catch (fallbackError: any) {
+        console.warn(
+          "Phase 2 fallback failed:",
+          fallbackError?.message || fallbackError,
+        );
+      }
     }
 
     return applyCleanedImagesWrapper(result, validPage, validLimit);
@@ -396,31 +413,25 @@ async function fetchMassageEscortsWithCleanedImagesInternal(
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    const normalize = (val?: string) => (val || "").toLowerCase().trim();
-
     function filterForMassage(escorts: Escort[]): Escort[] {
       return escorts.filter((escort) => {
         const practices = escort.practices || [];
+        const bdsm = (escort as any).bdsm || [];
         const massages = (escort as any).massage || [];
+        const extraServices = (escort as any).extraServices || [];
+        const allServices: string[] = [...practices, ...bdsm, ...massages, ...extraServices];
 
-        const hasMassagePractice = practices.some(
-          (p: string) => p && isMassageType(p),
-        );
-        const hasMassageEntry = massages.some(
-          (m: string) => m && isMassageType(m),
-        );
+        // Escort must offer at least one massage-related service
+        const hasMassage = allServices.some((p: string) => p && isMassageType(p));
+        if (!hasMassage) return false;
 
-        if (!hasMassagePractice && !hasMassageEntry) return false;
-
+        // If a specific massage type is selected, further filter
         if (massageType && massageType !== "all") {
-          const lowerType = normalize(massageType);
-          const matchesPractice = practices.some(
-            (p: string) => p && normalize(p).includes(lowerType),
+          const lowerType = normalizeSlug(massageType);
+          const matches = allServices.some(
+            (p: string) => p && normalizeSlug(p).includes(lowerType),
           );
-          const matchesMassage = massages.some(
-            (m: string) => m && normalize(m).includes(lowerType),
-          );
-          if (!matchesPractice && !matchesMassage) return false;
+          if (!matches) return false;
         }
 
         return true;
@@ -459,29 +470,36 @@ async function fetchMassageEscortsWithCleanedImagesInternal(
 
     // Phase 2: Fallback if 0 results and region filter
     if (massageFiltered.length === 0 && hasRegionFilter) {
-      const fallback = await runQueryWithFilters(
-        params,
-        validPage,
-        validLimit,
-        sortBy,
-        sortOrder,
-        false,
-      );
+      try {
+        const fallback = await runQueryWithFilters(
+          params,
+          validPage,
+          validLimit,
+          sortBy,
+          sortOrder,
+          false,
+        );
 
-      const fallbackFiltered = filterForMassage(fallback.escorts);
-      return {
-        escorts: applyCleanedImages(
-          fallbackFiltered.slice(
-            (validPage - 1) * validLimit,
-            Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
+        const fallbackFiltered = filterForMassage(fallback.escorts);
+        return {
+          escorts: applyCleanedImages(
+            fallbackFiltered.slice(
+              (validPage - 1) * validLimit,
+              Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
+            ),
           ),
-        ),
-        total: fallbackFiltered.length,
-        page: validPage,
-        totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
-        hasMore:
-          fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
-      };
+          total: fallbackFiltered.length,
+          page: validPage,
+          totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
+          hasMore:
+            fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
+        };
+      } catch (fallbackError: any) {
+        console.warn(
+          "Massage escorts: Phase 2 fallback failed:",
+          fallbackError?.message || fallbackError,
+        );
+      }
     }
 
     const allResults = massageFiltered;
@@ -564,7 +582,8 @@ async function fetchBDSMEscortsWithCleanedImagesInternal(
     query = applyServerSideFilters(query, params);
     query = applySorting(query, sortBy, sortOrder);
 
-    const batchSize = 500;
+    const batchSize = 1000;
+
     let lastDoc: any = null;
     const allFiltered: Escort[] = [];
     let hasMore = false;
@@ -585,31 +604,28 @@ async function fetchBDSMEscortsWithCleanedImagesInternal(
       let filtered = applyClientFilters(docs, params);
 
       filtered = filtered.filter((escort) => {
-        const practices = escort.practices || [];
-        const bdsms = (escort as any).bdsm || [];
+        const allServices: string[] = [
+          ...(escort.practices || []),
+          ...((escort as any).bdsm || []),
+          ...((escort as any).massage || []),
+          ...((escort as any).extraServices || []),
+        ];
 
-        const hasBDSMPractice = practices.some(
-          (p: string) => p && isBDSMPractice(p),
+      const hasBDSMPractice = allServices.some(
+        (p: string) => p && isBDSMPractice(p),
+      );
+      if (!hasBDSMPractice) return false;
+
+      if (practice && practice !== "all") {
+        const lowerPractice = normalizeSlug(practice);
+        const matches = allServices.some(
+          (p: string) => p && normalizeSlug(p).includes(lowerPractice),
         );
-        const hasBDSMEntry = bdsms.some(
-          (b: string) => b && isBDSMPractice(b),
-        );
+        if (!matches) return false;
+      }
 
-        if (!hasBDSMPractice && !hasBDSMEntry) return false;
-
-        if (practice && practice !== "all") {
-          const lowerPractice = practice.toLowerCase();
-          const matchesPractice = practices.some(
-            (p: string) => p && p.toLowerCase().includes(lowerPractice),
-          );
-          const matchesBDSm = bdsms.some(
-            (b: string) => b && b.toLowerCase().includes(lowerPractice),
-          );
-          if (!matchesPractice && !matchesBDSm) return false;
-        }
-
-        return true;
-      });
+      return true;
+    });
 
       allFiltered.push(...filtered);
 
@@ -666,7 +682,7 @@ async function fetchBDSMsFromCleanedEscortsInternal(
     let query = buildBaseQuery();
     query = applyServerSideFilters(query, params);
 
-    const batchSize = 500;
+    const batchSize = 1000;
     let lastDoc: any = null;
     const allFiltered: Escort[] = [];
 
@@ -696,25 +712,20 @@ async function fetchBDSMsFromCleanedEscortsInternal(
     const valueCounts: Record<string, number> = {};
 
     allFiltered.forEach((escort) => {
-      // Extract from `practices` field
-      const practices = escort.practices || [];
-      if (Array.isArray(practices)) {
-        practices.forEach((practice: string) => {
-          if (practice && isBDSMPractice(practice)) {
-            valueCounts[practice] = (valueCounts[practice] || 0) + 1;
-          }
-        });
-      }
+      const serviceArrays = [
+        escort.practices,
+        (escort as any).bdsm,
+        (escort as any).massage,
+        (escort as any).extraServices,
+      ].filter(Array.isArray);
 
-      // Extract from `bdsm` field
-      const bdsms = (escort as any).bdsm || [];
-      if (Array.isArray(bdsms)) {
-        bdsms.forEach((bdsm: string) => {
-          if (bdsm && isBDSMPractice(bdsm) && !valueCounts[bdsm]) {
-            valueCounts[bdsm] = (valueCounts[bdsm] || 0) + 1;
+      serviceArrays.forEach((arr: any[]) => {
+        arr.forEach((item: string) => {
+          if (item && isBDSMPractice(item) && !valueCounts[item]) {
+            valueCounts[item] = (valueCounts[item] || 0) + 1;
           }
         });
-      }
+      });
     });
 
     return Object.entries(valueCounts)
@@ -745,7 +756,7 @@ async function fetchPracticesFromCleanedEscortsInternal(
     let query = buildBaseQuery();
     query = applyServerSideFilters(query, params);
 
-    const batchSize = 500;
+    const batchSize = 1000;
     let lastDoc: any = null;
     const allFiltered: Escort[] = [];
 
@@ -775,13 +786,20 @@ async function fetchPracticesFromCleanedEscortsInternal(
     const practiceCounts: Record<string, number> = {};
 
     allFiltered.forEach((escort) => {
-      if (escort.practices && Array.isArray(escort.practices)) {
-        escort.practices.forEach((practice) => {
+      const serviceArrays = [
+        escort.practices,
+        (escort as any).bdsm,
+        (escort as any).massage,
+        (escort as any).extraServices,
+      ].filter(Array.isArray);
+
+      serviceArrays.forEach((arr: any[]) => {
+        arr.forEach((practice: string) => {
           if (practice) {
             practiceCounts[practice] = (practiceCounts[practice] || 0) + 1;
           }
         });
-      }
+      });
     });
 
     return Object.entries(practiceCounts)
@@ -926,7 +944,7 @@ async function fetchMassagesFromCleanedEscortsInternal(
     let query = buildBaseQuery();
     query = applyServerSideFilters(query, params);
 
-    const batchSize = 500;
+    const batchSize = 1000;
     let lastDoc: any = null;
     const allFiltered: Escort[] = [];
 
@@ -956,25 +974,20 @@ async function fetchMassagesFromCleanedEscortsInternal(
     const valueCounts: Record<string, number> = {};
 
     allFiltered.forEach((escort) => {
-      // Extract from `practices` field
-      const practices = escort.practices;
-      if (practices && Array.isArray(practices)) {
-        practices.forEach((practice: string) => {
-          if (practice && isMassageType(practice)) {
-            valueCounts[practice] = (valueCounts[practice] || 0) + 1;
-          }
-        });
-      }
+      const serviceArrays = [
+        escort.practices,
+        (escort as any).bdsm,
+        (escort as any).massage,
+        (escort as any).extraServices,
+      ].filter(Array.isArray);
 
-      // Extract from `massage` field
-      const massages = (escort as any).massage;
-      if (massages && Array.isArray(massages)) {
-        massages.forEach((massage: string) => {
-          if (massage && isMassageType(massage) && !valueCounts[massage]) {
-            valueCounts[massage] = (valueCounts[massage] || 0) + 1;
+      serviceArrays.forEach((arr: any[]) => {
+        arr.forEach((item: string) => {
+          if (item && isMassageType(item) && !valueCounts[item]) {
+            valueCounts[item] = (valueCounts[item] || 0) + 1;
           }
         });
-      }
+      });
     });
 
     return Object.entries(valueCounts)

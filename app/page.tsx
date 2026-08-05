@@ -35,9 +35,9 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <>
       {/* YouTargets Ad - 300x250 medium rectangle */}
-      <div className="flex justify-center">
+      {/* <div className="flex justify-center">
         <YouTargetsAd />
-      </div>
+      </div> */}
       <div className="-mt-12">
         <GirlRegions />
       </div>

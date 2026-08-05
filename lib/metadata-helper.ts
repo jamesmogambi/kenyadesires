@@ -1,44 +1,88 @@
 // ✅ Lightweight metadata fetch - only gets what's needed (no caching for girls page)
 import { adminDb } from "@/lib/firebase-admin";
 
+const normalize = (val?: string) => (val || "").toLowerCase().trim();
+const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
+
+const SERVICE_ARRAYS = ["practices", "bdsm", "massage", "extraServices"] as const;
+
+function docMatchesRegion(d: any, region?: string): boolean {
+  if (!region || region === "all") return true;
+  const regionLower = normalize(region);
+  return (
+    (d.regions || []).some((r: string) => normalize(r) === regionLower) ||
+    normalize(d.primaryRegion) === regionLower
+  );
+}
+
+function docHasPractice(d: any, practice: string): boolean {
+  const practiceLower = normalize(practice);
+  return SERVICE_ARRAYS.some((field) => {
+    const arr = d[field];
+    return arr && arr.some((p: string) => normalize(p) === practiceLower);
+  });
+}
+
+const MASSAGE_TYPE_TERMS = [
+  "erotic massage", "erotic", "massage", "body to body",
+  "sensual massage", "nuru massage", "tantric massage",
+  "lingam massage", "yoni massage", "b2b", "body-to-body",
+  "sensual", "tantric", "nuru", "lingam", "yoni",
+  "four hands", "4 hands",
+];
+
+function isMassageTerm(value: string): boolean {
+  if (!value) return false;
+  const lower = value.toLowerCase();
+  return MASSAGE_TYPE_TERMS.some((term) => lower.includes(term));
+}
+
+function docIsMassageEscort(d: any): boolean {
+  return SERVICE_ARRAYS.some((field) => {
+    const arr = d[field];
+    return arr && arr.some((p: string) => p && isMassageTerm(p));
+  });
+}
+
+function docMatchesMassageType(d: any, massageType: string): boolean {
+  const keyword = normalizeSlug(massageType);
+  return SERVICE_ARRAYS.some((field) => {
+    const arr = d[field];
+    return arr && arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
+  });
+}
+
+const BDSM_TERMS = [
+  "bdsm", "domination", "submission", "bondage", "discipline",
+  "sadomasochism", "dominatrix", "mistress", "slave", "master",
+  "kinky", "fetish", "spanking", "whipping", "role play", "roleplay",
+  "leather", "latex", "pegging", "strap-on",
+];
+
+function docIsBDSMescort(d: any): boolean {
+  return SERVICE_ARRAYS.some((field) => {
+    const arr = d[field];
+    return arr && arr.some((p: string) => p && BDSM_TERMS.some((term) => p.toLowerCase().includes(term)));
+  });
+}
+
+const METADATA_FIELDS = [
+  "previewPhoto", "name", "username", "county", "regions", "primaryRegion",
+  "practices", "bdsm", "massage", "extraServices", "isActive",
+];
+
+const BATCH_SIZE = 1000;
+
+// ============================================
+// GIRLS ESCORTS METADATA HELPERS
+// ============================================
+
 export async function getEscortCountForMetadata(params: {
   county?: string;
   region?: string;
   practice?: string;
 }): Promise<number> {
-  try {
-    const normalize = (val?: string) => (val || "").toLowerCase().trim();
-
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
-
-    const snapshot = await query.limit(500).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      const regionLower = normalize(params.region);
-      docs = docs.filter((d: any) =>
-        d.regions?.some((r: string) => normalize(r) === regionLower),
-      );
-    }
-
-    if (params.practice && params.practice !== "all") {
-      const practiceLower = normalize(params.practice);
-      docs = docs.filter((d: any) =>
-        d.practices?.some((p: string) => normalize(p) === practiceLower),
-      );
-    }
-
-    return docs.length;
-  } catch (error) {
-    console.error("Error getting count for metadata:", error);
-    return 0;
-  }
+  return countEscorts(params, false);
 }
 
 export async function getFirstEscortForMetadata(params: {
@@ -50,343 +94,190 @@ export async function getFirstEscortForMetadata(params: {
   name?: string;
   username?: string;
 } | null> {
-   try {
-    const normalize = (val?: string) => (val || "").toLowerCase().trim();
-
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
-
-    const snapshot = await query.limit(20).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      const regionLower = normalize(params.region);
-      docs = docs.filter((d: any) =>
-        d.regions?.some((r: string) => normalize(r) === regionLower),
-      );
-    }
-
-    if (params.practice && params.practice !== "all") {
-      const practiceLower = normalize(params.practice);
-      docs = docs.filter((d: any) =>
-        d.practices?.some((p: string) => normalize(p) === practiceLower),
-      );
-    }
-
-    if (docs.length === 0) return null;
-
-    return {
-      previewPhoto: docs[0].previewPhoto,
-      name: docs[0].name,
-      username: docs[0].username,
-    };
-  } catch (error) {
-    console.error("Error getting first escort for metadata:", error);
-    return null;
-  }
+  return findFirstEscort(params, false);
 }
 
 // ============================================
 // MASSAGE ESCORTS METADATA HELPERS
 // ============================================
 
-/**
- * Get count of massage escorts for metadata
- */
 export async function getMassageEscortCount(params: {
   county?: string;
   region?: string;
   massageType?: string;
 }): Promise<number> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
-
-    const snapshot = await query.limit(500).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      const regionLower = (params.region || "").toLowerCase().trim();
-      docs = docs.filter((d: any) =>
-        d.regions?.some((r: string) => (r || "").toLowerCase().trim() === regionLower),
-      );
-    }
-
-    const eroticMassageTerms = [
-      "erotic massage",
-      "erotic",
-      "massage",
-      "body to body",
-      "sensual massage",
-      "nuru massage",
-      "tantric massage",
-      "lingam massage",
-      "yoni massage",
-      "b2b",
-      "body-to-body",
-    ];
-
-    docs = docs.filter((d: any) => {
-      if (!d.practices) return false;
-      return d.practices.some((p: string) => {
-        const lower = (p || "").toLowerCase();
-        return eroticMassageTerms.some((term) =>
-          lower.includes(term.toLowerCase()),
-        );
-      });
-    });
-
-    return docs.length;
-  } catch (error) {
-    console.error("Error getting massage count:", error);
-    return 0;
-  }
+  return countEscorts(params, true, params.massageType);
 }
 
-/**
- * Get first massage escort for metadata
- */
 export async function getFirstMassageEscort(params: {
   county?: string;
   region?: string;
   massageType?: string;
 }): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
-
-    const snapshot = await query.limit(20).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      const regionLower = (params.region || "").toLowerCase().trim();
-      docs = docs.filter((d: any) =>
-        d.regions?.some((r: string) => (r || "").toLowerCase().trim() === regionLower),
-      );
-    }
-
-    const eroticMassageTerms = [
-      "erotic massage",
-      "erotic",
-      "massage",
-      "body to body",
-      "sensual massage",
-      "nuru massage",
-      "tantric massage",
-      "lingam massage",
-      "yoni massage",
-      "b2b",
-      "body-to-body",
-    ];
-
-    docs = docs.filter((d: any) => {
-      if (!d.practices) return false;
-      return d.practices.some((p: string) => {
-        const lower = (p || "").toLowerCase();
-        return eroticMassageTerms.some((term) =>
-          lower.includes(term.toLowerCase()),
-        );
-      });
-    });
-
-    if (docs.length === 0) return null;
-
-    return {
-      previewPhoto: docs[0].previewPhoto,
-      name: docs[0].name,
-      username: docs[0].username,
-    };
-  } catch (error) {
-    console.error("Error getting first massage escort:", error);
-    return null;
-  }
+  return findFirstEscort(params, true, params.massageType);
 }
 
 // ============================================
 // BDSM ESCORTS METADATA HELPERS
 // ============================================
 
-/**
- * Get count of BDSM escorts for metadata
- */
 export async function getBDSMEscortCount(params: {
   county?: string;
   region?: string;
   practice?: string;
 }): Promise<number> {
-  try {
-    let query: any = adminDb
-      .collection("escorts")
-      .where("isActive", "==", true);
-
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
-    }
-
-    const snapshot = await query.limit(500).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
-    }
-
-    const bdsmTerms = [
-      "BDSM",
-      "bdsm",
-      "Domination",
-      "domination",
-      "Submission",
-      "submission",
-      "Bondage",
-      "bondage",
-      "Discipline",
-      "discipline",
-      "Sadomasochism",
-      "sadomasochism",
-      "Dominatrix",
-      "dominatrix",
-      "Mistress",
-      "mistress",
-      "Slave",
-      "slave",
-      "Master",
-      "master",
-      "Kinky",
-      "kinky",
-      "Fetish",
-      "fetish",
-      "Spanking",
-      "spanking",
-      "Whipping",
-      "whipping",
-      "Role play",
-      "role play",
-      "Roleplay",
-      "roleplay",
-      "Leather",
-      "leather",
-      "Latex",
-      "latex",
-      "Pegging",
-      "pegging",
-      "Strap-on",
-      "strap-on",
-    ];
-
-    docs = docs.filter((d: any) => {
-      if (!d.practices) return false;
-      return d.practices.some((p: string) => {
-        const lower = p.toLowerCase();
-        return bdsmTerms.some((term) => lower.includes(term.toLowerCase()));
-      });
-    });
-
-    return docs.length;
-  } catch (error) {
-    console.error("Error getting BDSM count:", error);
-    return 0;
-  }
+  return countEscorts(params, true);
 }
 
-/**
- * Get first BDSM escort for metadata
- */
 export async function getFirstBDSMEscort(params: {
   county?: string;
   region?: string;
   practice?: string;
 }): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
+  return findFirstEscort(params, true);
+}
+
+// ============================================
+// SHARED INTERNAL HELPERS
+// ============================================
+
+async function countEscorts(
+  params: { county?: string; region?: string; practice?: string; massageType?: string },
+  isMassage: boolean,
+  massageType?: string,
+  skipArrayContains?: boolean,
+): Promise<number> {
   try {
+    const { county, region, practice } = params;
+    const hasRegionFilter = !!(region && region !== "all");
+    const hasPracticeFilter = !!(practice && practice !== "all");
+    const hasMassageTypeFilter = !!(isMassage && massageType && massageType !== "all");
+    const hasMassageFilter = isMassage && !hasMassageTypeFilter;
+
     let query: any = adminDb
       .collection("escorts")
+      .select(...METADATA_FIELDS)
       .where("isActive", "==", true);
 
-    if (params.county && params.county !== "all") {
-      query = query.where("county", "==", params.county);
+    if (county && county !== "all") {
+      query = query.where("county", "==", county);
     }
 
-    const snapshot = await query.limit(20).get();
-    let docs = snapshot.docs.map((doc: any) => doc.data());
-
-    if (params.region && params.region !== "all") {
-      docs = docs.filter((d: any) => d.regions?.includes(params.region));
+    let useArrayContains = !skipArrayContains;
+    if (hasRegionFilter && useArrayContains) {
+      query = query.where("regions", "array-contains", region!);
     }
 
-    const bdsmTerms = [
-      "BDSM",
-      "bdsm",
-      "Domination",
-      "domination",
-      "Submission",
-      "submission",
-      "Bondage",
-      "bondage",
-      "Discipline",
-      "discipline",
-      "Sadomasochism",
-      "sadomasochism",
-      "Dominatrix",
-      "dominatrix",
-      "Mistress",
-      "mistress",
-      "Slave",
-      "slave",
-      "Master",
-      "master",
-      "Kinky",
-      "kinky",
-      "Fetish",
-      "fetish",
-      "Spanking",
-      "spanking",
-      "Whipping",
-      "whipping",
-      "Role play",
-      "role play",
-      "Roleplay",
-      "roleplay",
-      "Leather",
-      "leather",
-      "Latex",
-      "latex",
-      "Pegging",
-      "pegging",
-      "Strap-on",
-      "strap-on",
-    ];
+    let count = 0;
+    let lastDoc: any = null;
 
-    docs = docs.filter((d: any) => {
-      if (!d.practices) return false;
-      return d.practices.some((p: string) => {
-        const lower = p.toLowerCase();
-        return bdsmTerms.some((term) => lower.includes(term.toLowerCase()));
-      });
-    });
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
 
-    if (docs.length === 0) return null;
+      const snapshot = await pageQuery.limit(BATCH_SIZE).get();
 
-    return {
-      previewPhoto: docs[0].previewPhoto,
-      name: docs[0].name,
-      username: docs[0].username,
-    };
+      if (snapshot.empty) break;
+
+      const docs = snapshot.docs.map((doc: any) => doc.data());
+
+      if (!useArrayContains || hasRegionFilter || hasPracticeFilter || hasMassageFilter || hasMassageTypeFilter) {
+        const filtered = docs.filter((d: any) => {
+          if (hasRegionFilter && !docMatchesRegion(d, region!)) return false;
+          if (hasPracticeFilter && !docHasPractice(d, practice!)) return false;
+          if (hasMassageFilter && !docIsMassageEscort(d)) return false;
+          if (hasMassageTypeFilter && !docMatchesMassageType(d, massageType!)) return false;
+          return true;
+        });
+        count += filtered.length;
+      } else {
+        // No client-side filters needed — count all
+        count += docs.length;
+      }
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      if (snapshot.size < BATCH_SIZE) break;
+    }
+
+    // Fallback: if array-contains returned 0 and we have region filter, retry without it
+    if (count === 0 && hasRegionFilter && useArrayContains) {
+      return countEscorts(
+        { county, region, practice, massageType },
+        isMassage,
+        massageType,
+        true, // skipArrayContains
+      );
+    }
+
+    return count;
   } catch (error) {
-    console.error("Error getting first BDSM escort:", error);
+    console.error("Error getting escort count:", error);
+    return 0;
+  }
+}
+
+async function findFirstEscort(
+  params: { county?: string; region?: string; practice?: string; massageType?: string },
+  isMassage: boolean,
+  massageType?: string,
+): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
+  try {
+    const { county, region, practice } = params;
+    const hasRegionFilter = !!(region && region !== "all");
+    const hasPracticeFilter = !!(practice && practice !== "all");
+    const hasMassageTypeFilter = !!(isMassage && massageType && massageType !== "all");
+    const hasMassageFilter = isMassage && !hasMassageTypeFilter;
+
+    let query: any = adminDb
+      .collection("escorts")
+      .select(...METADATA_FIELDS)
+      .where("isActive", "==", true);
+
+    if (county && county !== "all") {
+      query = query.where("county", "==", county);
+    }
+
+    let lastDoc: any = null;
+
+    while (true) {
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
+
+      const snapshot = await pageQuery.limit(BATCH_SIZE).get();
+
+      if (snapshot.empty) break;
+
+      const docs = snapshot.docs.map((doc: any) => doc.data());
+
+      const filtered = docs.filter((d: any) => {
+        if (hasRegionFilter && !docMatchesRegion(d, region!)) return false;
+        if (hasPracticeFilter && !docHasPractice(d, practice!)) return false;
+        if (hasMassageFilter && !docIsMassageEscort(d)) return false;
+        if (hasMassageTypeFilter && !docMatchesMassageType(d, massageType!)) return false;
+        return true;
+      });
+
+      if (filtered.length > 0) {
+        return {
+          previewPhoto: filtered[0].previewPhoto,
+          name: filtered[0].name,
+          username: filtered[0].username,
+        };
+      }
+
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+      if (snapshot.size < BATCH_SIZE) break;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error getting first escort for metadata:", error);
     return null;
   }
 }
@@ -395,9 +286,6 @@ export async function getFirstBDSMEscort(params: {
 // AGENCIES METADATA HELPERS
 // ============================================
 
-/**
- * Get agencies count for metadata (lightweight)
- */
 export async function getAgenciesCount(params: {
   county?: string;
   region?: string;
@@ -436,9 +324,6 @@ export async function getAgenciesCount(params: {
   }
 }
 
-/**
- * Get first agency for metadata (lightweight)
- */
 export async function getFirstAgency(params: {
   county?: string;
   region?: string;
@@ -485,13 +370,6 @@ export async function getFirstAgency(params: {
   }
 }
 
-// ============================================
-// INDIVIDUAL AGENCY METADATA HELPERS
-// ============================================
-
-/**
- * Get agency by slug for metadata (lightweight)
- */
 export async function getAgencyForMetadata(slug: string): Promise<{
   name: string;
   county: string;
