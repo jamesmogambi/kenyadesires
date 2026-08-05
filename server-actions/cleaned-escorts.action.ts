@@ -279,9 +279,9 @@ async function runQueryWithFilters(
   let hasMore = false;
 
   let iterations = 0;
-  const maxIterations = 10;
+  const maxIterations = 50;
 
-  while (allResults.length < validLimit * 2 && iterations < maxIterations) {
+  while (iterations < maxIterations) {
     iterations++;
     let pageQuery = query;
     if (lastDoc) {
