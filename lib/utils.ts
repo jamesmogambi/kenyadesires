@@ -220,3 +220,42 @@ export function formatPracticeName(name: string): string {
   const words = withoutBrackets.split(/\s+/).filter((w) => w.length > 0);
   return words.slice(0, 3).join(" ");
 }
+
+type FilterValue = string | number | boolean | undefined;
+
+interface FilterUpdate {
+  [key: string]: FilterValue;
+}
+
+export function buildFilterUrl(
+  basePath: string,
+  currentSearchParams: URLSearchParams,
+  updates: FilterUpdate,
+  resetPage: boolean = true,
+): string {
+  const params = new URLSearchParams();
+
+  // Start with existing params, excluding ones being updated
+  currentSearchParams.forEach((value, key) => {
+    if (!(key in updates)) {
+      params.set(key, value);
+    }
+  });
+
+  // Apply updates
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "" || value === "all") {
+      params.delete(key);
+    } else {
+      params.set(key, String(value));
+    }
+  });
+
+  // Always reset page to 1 when filters change
+  if (resetPage) {
+    params.set("page", "1");
+  }
+
+  const queryString = params.toString();
+  return queryString ? `${basePath}?${queryString}` : basePath;
+}

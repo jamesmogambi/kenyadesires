@@ -1,5 +1,5 @@
 "use client";
-import { cn, formatSlugToTitle } from "@/lib/utils";
+import { cn, formatSlugToTitle, buildFilterUrl } from "@/lib/utils";
 import React, { useEffect, useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -113,11 +113,8 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
     setMassageType("");
     setRegions([]);
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("county");
-    params.delete("region");
-    params.delete("massageType");
-    router.replace(`?${params.toString()}`);
+    const targetUrl = buildFilterUrl("/erotic-massages", searchParams, {}, false);
+    router.replace(targetUrl);
   };
 
   // Handle county selection
@@ -143,31 +140,17 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
 
   // Update URL params helper
   const updateURLParams = (params: {
-    county: string;
-    region: string;
-    massageType: string;
+    county?: string;
+    region?: string;
+    massageType?: string;
   }) => {
-    const urlParams = new URLSearchParams(searchParams.toString());
+    const targetUrl = buildFilterUrl("/erotic-massages", searchParams, {
+      county: params.county,
+      region: params.region,
+      massageType: params.massageType,
+    });
 
-    if (params.county) {
-      urlParams.set("county", params.county);
-    } else {
-      urlParams.delete("county");
-    }
-
-    if (params.region) {
-      urlParams.set("region", params.region);
-    } else {
-      urlParams.delete("region");
-    }
-
-    if (params.massageType) {
-      urlParams.set("massageType", params.massageType);
-    } else {
-      urlParams.delete("massageType");
-    }
-
-    router.replace(`?${urlParams.toString()}`);
+    router.replace(targetUrl);
   };
 
   // Apply filters

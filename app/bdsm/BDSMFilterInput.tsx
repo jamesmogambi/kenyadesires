@@ -1,5 +1,5 @@
 "use client";
-import { cn, formatSlugToTitle } from "@/lib/utils";
+import { cn, formatSlugToTitle, buildFilterUrl } from "@/lib/utils";
 import React, { useEffect, useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -112,11 +112,8 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
     setPractice("");
     setRegions([]);
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("county");
-    params.delete("region");
-    params.delete("practice");
-    router.replace(`?${params.toString()}`);
+    const targetUrl = buildFilterUrl("/bdsm", searchParams, {}, false);
+    router.replace(targetUrl);
   };
 
   // Handle county selection
@@ -142,31 +139,17 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
 
   // Update URL params helper
   const updateURLParams = (params: {
-    county: string;
-    region: string;
-    practice: string;
+    county?: string;
+    region?: string;
+    practice?: string;
   }) => {
-    const urlParams = new URLSearchParams(searchParams.toString());
+    const targetUrl = buildFilterUrl("/bdsm", searchParams, {
+      county: params.county,
+      region: params.region,
+      practice: params.practice,
+    });
 
-    if (params.county) {
-      urlParams.set("county", params.county);
-    } else {
-      urlParams.delete("county");
-    }
-
-    if (params.region) {
-      urlParams.set("region", params.region);
-    } else {
-      urlParams.delete("region");
-    }
-
-    if (params.practice) {
-      urlParams.set("practice", params.practice);
-    } else {
-      urlParams.delete("practice");
-    }
-
-    router.replace(`?${urlParams.toString()}`);
+    router.replace(targetUrl);
   };
 
   // Apply filters

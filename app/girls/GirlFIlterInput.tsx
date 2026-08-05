@@ -1,5 +1,5 @@
 "use client";
-import { cn, formatSlugToTitle } from "@/lib/utils";
+import { cn, formatSlugToTitle, buildFilterUrl } from "@/lib/utils";
 import React, { useEffect, useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -123,41 +123,19 @@ const GirlFilterInput = ({ className }: Prop) => {
 
   // Update URL params helper - navigates to /girls with params
   const updateURLParams = (params: {
-    county: string;
-    region: string;
-    practice: string;
-    sort: string;
-    order: string;
+    county?: string;
+    region?: string;
+    practice?: string;
+    sort?: string;
+    order?: string;
   }) => {
-    const urlParams = new URLSearchParams();
-
-    // Add non-empty params only
-    if (params.county && params.county !== "") {
-      urlParams.set("county", params.county);
-    }
-
-    if (params.region && params.region !== "") {
-      urlParams.set("region", params.region);
-    }
-
-    if (params.practice && params.practice !== "") {
-      urlParams.set("practice", params.practice);
-    }
-
-    if (params.sort && params.sort !== "createdAt") {
-      urlParams.set("sort", params.sort);
-    }
-
-    if (params.order && params.order !== "desc") {
-      urlParams.set("order", params.order);
-    }
-
-    // Always reset to page 1 when filters change
-    urlParams.set("page", "1");
-
-    // Build the URL and navigate
-    const queryString = urlParams.toString();
-    const targetUrl = queryString ? `/girls?${queryString}` : "/girls";
+    const targetUrl = buildFilterUrl("/girls", searchParams, {
+      county: params.county,
+      region: params.region,
+      practice: params.practice,
+      sort: params.sort,
+      order: params.order,
+    });
 
     router.push(targetUrl);
   };
