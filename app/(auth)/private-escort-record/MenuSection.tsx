@@ -11,7 +11,7 @@ const MenuSection = () => {
         <div className="w-full flex justify-end">
           <p className="text-xl font-light">
             Do you need advice? Call
-            <span className="font-bold text-primary"> 0701 694 004</span>
+            <span className="font-bold text-primary"> 0743 129 621</span>
           </p>
         </div>
 

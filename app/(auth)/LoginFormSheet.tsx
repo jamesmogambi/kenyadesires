@@ -67,21 +67,21 @@ const LoginFormSheet = ({ className, children }: Prop) => {
   const { handleSubmit } = form;
 
   const onSubmit = async (data: FormData) => {
-    console.log("login form data", data);
+    // console.log("login form data", data);
     const { email, password } = data;
 
     setError(null);
     setLoader(true);
 
-try {
-        if (signIn) {
-          await signIn.create({ identifier: email, password });
-          setOpen(false);
-          window.location.href = "/";
-        } else {
-          throw new Error("SignIn instance is undefined.");
-        }
-      } catch (error: any) {
+    try {
+      if (signIn) {
+        await signIn.create({ identifier: email, password });
+        setOpen(false);
+        window.location.href = "/";
+      } else {
+        throw new Error("SignIn instance is undefined.");
+      }
+    } catch (error: any) {
       setError(error.errors[0]?.message || "Login failed");
     } finally {
       setLoader(false);
