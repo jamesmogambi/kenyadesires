@@ -134,7 +134,7 @@ const RegisterForm = ({ className }: Prop) => {
         await sendRegistrationEmails({
           email,
           name: username,
-          clerkUserId: result.id,
+          clerkUserId: result.id!,
           role: "user",
         });
 
