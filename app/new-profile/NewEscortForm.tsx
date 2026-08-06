@@ -98,7 +98,7 @@ export const formSchema: any = z.object({
   friday: daySchema,
   saturday: daySchema,
   sunday: daySchema,
-  variantAge: z.string().min(1, "Age category is required"),
+  variantAge: z.string().optional(),
   variantGender: z.string().default("female"),
 
   myAge: z.string().min(1, "Age is required"),

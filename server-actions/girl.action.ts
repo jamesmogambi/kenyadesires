@@ -503,7 +503,7 @@ export interface NewEscortProfileInput {
   height: string;
   breasts: string;
   weight: string;
-  ageCategory: string;
+  ageCategory?: string;
   character: string;
   hairColor: string;
   experience: string;
