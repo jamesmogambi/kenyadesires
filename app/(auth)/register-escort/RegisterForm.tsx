@@ -355,7 +355,7 @@ const RegisterForm = ({ className }: Prop) => {
               complete registration
             </Button> */}
             {/* Clerk's CAPTCHA widget */}
-            <div id="clerk-captcha" />
+            {/* <div id="clerk-captcha" /> */}
             <Button
               type="submit"
               disabled={loading}
