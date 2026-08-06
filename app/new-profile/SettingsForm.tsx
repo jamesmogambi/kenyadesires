@@ -38,11 +38,14 @@ const SettingsForm = ({ form, className }: Prop) => {
       <div className=" flex-row  w-full justify-between flex gap-2  border-none">
         <div className=" w-full  border-primary">
           <ProfileSelectInput
-            onChange={setAge}
+            onChange={(value) => {
+              setAge(value);
+              setValue("variantAge", value);
+            }}
             value={age}
             name="variantAge"
             options={variantSettings.age}
-            placeholder="Select age"
+            placeholder="Select Age Category"
             prefix="Age"
           />
         </div>

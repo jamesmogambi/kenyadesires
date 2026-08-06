@@ -17,7 +17,7 @@ const page = async () => {
 
   return (
     <div>
-      <NewEscortForm />
+      <NewEscortForm fresh />
     </div>
   );
 };

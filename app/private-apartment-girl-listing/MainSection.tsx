@@ -26,13 +26,13 @@ const MainSection = () => {
         {/* section two*/}
         <div className="flex justify-center flex-col items-center gap-2">
           <h4 className="text-2xl font-semibold">
-            Profile editing and creating girls
+            Buy Advertisent to Boost Your Listing
           </h4>
           <Link
             className="bg-primary p-3 px-8 text-lg font-semibold text-white"
-            href="/administration"
+            href="/extend"
           >
-            Go to profile editing
+            Choose Package
           </Link>
         </div>
       </div>

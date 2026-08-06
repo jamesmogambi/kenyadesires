@@ -166,7 +166,8 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
                 <FormControl className="border w-2/3 lg:w-1/ border-primary">
                   <Input
                     placeholder=""
-                    value="Female"
+                    {...field}
+                    value={field.value === "female" ? "Female" : field.value}
                     readOnly
                     className="bg-white text-black px-6 h-10 rounded-full text-sm lg:text-xl focus-visible:ring-0 "
                   />
