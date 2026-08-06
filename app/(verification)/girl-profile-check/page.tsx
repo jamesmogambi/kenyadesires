@@ -34,7 +34,7 @@ const page = async () => {
   }
 
   return (
-    <SectionCard>
+    <SectionCard className="py-16 flex mt-8 justify-center items-center flex-col">
       <h3 className="text-2xl font-semibold text-white mb-4">
         Create your Girl profile first
       </h3>

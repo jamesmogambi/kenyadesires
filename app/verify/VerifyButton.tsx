@@ -20,6 +20,10 @@ export default function VerifyButton() {
       const data = await res.json();
 
       if (!res.ok || !data.url) {
+        if (data.no_profile) {
+          window.location.href = "/girl-profile-check";
+          return;
+        }
         const detail = data.detail || data.error || "Unknown error";
         console.error("Failed to create verification session:", detail);
         setError(detail);

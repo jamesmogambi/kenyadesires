@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/lib/firebase-admin";
+import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 
 const WORKFLOW_ID = "f97e57f7-0890-41e1-b38a-53871b5192a4";
 const DIDIT_TIMEOUT_MS = 10000;
@@ -10,6 +11,11 @@ export async function POST(req: Request) {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+
+    const escort = await getEscortByClerkUserId(userId);
+    if (!escort) {
+      return NextResponse.json({ no_profile: true }, { status: 403 });
     }
 
     const { callback } = await req.json().catch(() => ({}));
