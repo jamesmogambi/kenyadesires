@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import PassionateMoments from "@/components/blog/PassionateMoments";
 import WhyProfile from "@/components/blog/WhyProfile";
 import GirlList from "@/components/GirlList";
@@ -6,9 +7,19 @@ import NotFoundList from "@/components/NotFoundList";
 import YouTargetsAd from "@/components/YouTargetsAd";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
-// import { getEscortsWithOnlyCleanedImages } from "@/server-actions/cleaned-escorts.action";
 
 export const dynamic = "force-dynamic";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+
+export const metadata: Metadata = {
+  title: "Kenya Desires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
+  description:
+    "KenyaDesires is Kenya's premier escort directory. Find 900+ verified, high-class companions in Nairobi, Mombasa, Kisumu, and all major cities. Real photos, honest reviews, and discreet booking.",
+  alternates: {
+    canonical: SITE_URL,
+  },
+};
 
 interface PageProps {
   searchParams: Promise<{

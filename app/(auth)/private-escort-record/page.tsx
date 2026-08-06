@@ -6,6 +6,10 @@ import WhyProfile from "@/components/blog/WhyProfile";
 export const metadata: Metadata = {
   title: "Private room registration for girls",
   description: "Private room registration for girls",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 const page = () => {

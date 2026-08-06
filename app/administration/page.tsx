@@ -15,6 +15,10 @@ import AgencyGirls from "./AgencyGirls";
 
 export const metadata: Metadata = {
   title: "Update Profile 💖 | kenyadesires.com",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 const page = async () => {

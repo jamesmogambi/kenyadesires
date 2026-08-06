@@ -3,9 +3,17 @@ import React from "react";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
 import Link from "next/link";
+import { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import type { IAgency } from "@/types/agency.types";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 async function page() {
   const { userId } = await auth();

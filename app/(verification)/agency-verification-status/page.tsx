@@ -1,9 +1,17 @@
 import React from "react";
 import Link from "next/link";
+import { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import SectionCard from "@/components/SectionCard";
 import type { IAgency } from "@/types/agency.types";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 const STATUS_LABELS: Record<
   NonNullable<IAgency["verificationStatus"]>,

@@ -9,6 +9,10 @@ import type { NewEscortProfileInput } from "@/server-actions/girl.action";
 
 export const metadata: Metadata = {
   title: "Agency Admin Profile 💖 | kenyadesires.com",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 const page = async () => {

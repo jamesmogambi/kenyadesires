@@ -1,8 +1,16 @@
 import SectionCard from "@/components/SectionCard";
 import React from "react";
+import { Metadata } from "next";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
 import VerifyButton from "@/app/verify/VerifyButton";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 const page = () => {
   return (

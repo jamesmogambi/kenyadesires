@@ -7,6 +7,10 @@ import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 
 export const metadata: Metadata = {
   title: "Add Girl 💖 | kenyadesires.com",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 const page = async () => {

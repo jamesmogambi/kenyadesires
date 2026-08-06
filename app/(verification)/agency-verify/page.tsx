@@ -1,9 +1,17 @@
 import React from "react";
 import Link from "next/link";
+import { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import SectionCard from "@/components/SectionCard";
 import AgencyVerificationForm from "@/app/agency-profile/AgencyVerificationForm";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 const page = async () => {
   const { userId } = await auth();

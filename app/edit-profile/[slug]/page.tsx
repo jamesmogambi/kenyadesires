@@ -4,7 +4,11 @@ import EditEscortForm from "../EditProfileForm";
 
 export const metadata: Metadata = {
     title: "Update Profile 💖 | EscortKE.com",
-};
+    robots: {
+      index: false,
+      follow: true,
+    },
+  };
 const page = async () => {
     // const escort = await getCurrentEscort();
     const escort: any = null

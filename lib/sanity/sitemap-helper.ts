@@ -31,7 +31,8 @@ export function firebaseTimestampToDate(timestamp: any): Date {
 export function sanitizeUrl(baseUrl: string, path: string): string {
   // Remove duplicate slashes
   const cleanPath = path.replace(/^\/+/, "");
-  return `${baseUrl}/${cleanPath}`;
+  const url = `${baseUrl}/${cleanPath}`;
+  return url.replace(/&/g, "&amp;");
 }
 
 /**

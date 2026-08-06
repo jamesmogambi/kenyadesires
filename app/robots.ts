@@ -23,7 +23,6 @@ export default function robots(): MetadataRoute.Robots {
           "/bookings/",
           "/messages/",
           "/favorites/",
-          "/*?*", // Block all query parameters
           "/_next/",
           "/static/",
         ],

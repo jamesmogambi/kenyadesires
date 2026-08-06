@@ -114,7 +114,7 @@ export const metadata: Metadata = {
     creator: "@kenyadesires",
     title: "KenyaDesires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
     description:
-      "Kenya's most trusted escort directory. 900+ verified companions in Nairobi, Mombasa, Kisumu & all major cities. Real photos, authentic reviews.",
+      "Kenya's most trusted escort directory. 900+ verified companions in Nairobi, Mombasa, Kisumu &amp; all major cities. Real photos, authentic reviews.",
     images: ["/twitter-image.jpg"],
   },
 
@@ -159,13 +159,7 @@ export const metadata: Metadata = {
     },
   ],
 
-  alternates: {
-    canonical: SITE_URL,
-    languages: {
-      "en-KE": SITE_URL,
-      "en-US": `${SITE_URL}/en`,
-    },
-  },
+  // alternates canonical is defined per-page where needed
 
   appleWebApp: {
     capable: true,

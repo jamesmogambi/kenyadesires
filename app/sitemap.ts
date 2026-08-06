@@ -245,7 +245,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .map((p: any) => ({
           url: sanitizeUrl(
             baseUrl,
-            `girls?practice=${encodeURIComponent(p.practice)}&amp;page=1`,
+            `girls?practice=${encodeURIComponent(p.practice)}&page=1`,
           ),
           lastModified: new Date(),
           changeFrequency: "daily" as const,
@@ -272,7 +272,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .map((r: any) => ({
           url: sanitizeUrl(
             baseUrl,
-            `girls?county=${encodeURIComponent(r.county)}&amp;region=${encodeURIComponent(r.name)}`,
+            `girls?county=${encodeURIComponent(r.county)}&region=${encodeURIComponent(r.name)}`,
           ),
           lastModified: new Date(),
           changeFrequency: "daily" as const,

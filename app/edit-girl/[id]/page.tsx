@@ -8,6 +8,10 @@ import type { NewEscortProfileInput } from "@/server-actions/girl.action";
 
 export const metadata: Metadata = {
   title: "Edit Girl 💖 | kenyadesires.com",
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 interface EditGirlPageProps {
