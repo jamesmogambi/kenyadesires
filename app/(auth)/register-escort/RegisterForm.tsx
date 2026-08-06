@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useSignUp } from "@clerk/nextjs";
 import { Eye, EyeOff } from "lucide-react";
 import { sendRegistrationEmails } from "@/server-actions/email";
+import Link from "next/link";
 
 interface Prop {
   className?: String;
@@ -319,13 +320,16 @@ const RegisterForm = ({ className }: Prop) => {
                           <p className="">
                             {" "}
                             I agree to the{" "}
-                            <span className="text-primary">
+                            <Link
+                              href="/privacy-policy"
+                              className="text-primary"
+                            >
                               processing of personal data
-                            </span>{" "}
+                            </Link>{" "}
                             and to the{" "}
-                            <span className="text-primary">
+                            <Link href="/terms" className="text-primary">
                               terms and conditions.
-                            </span>
+                            </Link>
                           </p>
                         </Label>
                       </div>
