@@ -143,6 +143,7 @@ const BusinessPage = async ({ params }: PageProps) => {
     }
 
     const agency: IAgency = result.data;
+    console.log("Agency data fetched successfully:", agency);
 
     return (
       <div className="w-full lg:max-w-7xl mx-auto p-4 md:p-8 lg:p-12">

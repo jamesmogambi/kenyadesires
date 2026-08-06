@@ -6,7 +6,7 @@ import {sendVerificationNotificationEmail} from "@/server-actions/email";
 // GET - Get agency by ID
 export async function GET(
     request: NextRequest,
-    {params}: { params: { id: string } },
+    {params}: { params: Promise<{ id: string }> },
 ) {
     try {
         const {id} = await params;
@@ -43,7 +43,7 @@ export async function GET(
 // PUT - Update agency
 export async function PUT(
     request: NextRequest,
-    {params}: { params: { id: string } },
+    {params}: { params: Promise<{ id: string }> },
 ) {
     try {
         const {id} = await params;
@@ -86,14 +86,18 @@ export async function PUT(
 // DELETE - Delete agency
 export async function DELETE(
     request: NextRequest,
-    {params}: { params: { id: string } },
+    {params}: { params: Promise<{ id: string }> },
 ) {
     try {
         const {id} = await params;
         const searchParams = request.nextUrl.searchParams;
         const hardDelete = searchParams.get("hardDelete") === "true";
 
+        console.log(`[DELETE] Attempting to ${hardDelete ? "permanently" : "soft"} delete agency:`, id);
+
         await AgencyService.deleteAgency(id, hardDelete);
+
+        console.log(`[DELETE] Successfully deleted agency:`, id);
 
         return NextResponse.json({
             success: true,
