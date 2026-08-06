@@ -407,6 +407,11 @@ region,
           setLoader(false);
           return;
         }
+        if (imageFiles.length === 0 && existingImages.length === 0 && !(previewPhotoRef.current?.getPreviewFile() || previewPhotoRef.current?.getPreviewUrl())) {
+          setError("Please upload at least one image for your profile");
+          setLoader(false);
+          return;
+        }
 
         const previewFile = previewPhotoRef.current?.getPreviewFile() ?? null;
         const storedPreviewUrl = previewPhotoRef.current?.getPreviewUrl() || "";
