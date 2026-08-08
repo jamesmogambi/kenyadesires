@@ -44,7 +44,7 @@ const ExtendPage = () => {
 
       <div className="w-full mt-8 lg:mt-16 lg:max-w-200 my-3 mx-auto px-4">
         <h4 className="text-2xl md:text-4xl text-center font-extrabold text-red-700">
-          Purchase credits to extend or boost your listing
+          Purchase credits to boost your listing
         </h4>
 
         <PurchaseInfoSection className="mt-8 lg:mt-20" />
@@ -55,9 +55,8 @@ const ExtendPage = () => {
       </div>
       <p className="text-lg md:text-2xl pb-8 max-w-250 text-red-700 mx-auto text-center my-6 font-semibold px-4">
         After the payment is received, the credits will be added automatically.
-        If you advertise as a standalone profile and the membership has ended or
-        only 5 days remain, your membership will be automatically extended from
-        this payment.
+        You can then use your credits to purchase a boost package and increase
+        your visibility.
       </p>
     </div>
   );

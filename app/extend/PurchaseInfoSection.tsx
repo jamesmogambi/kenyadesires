@@ -18,31 +18,31 @@ export const PurchaseInfoSection = ({ className }: Prop) => {
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            Select the credit package that suits you
+            Choose a boost package that fits your needs
           </p>
         </li>
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            The 180 credits package includes a 20% discount
+            Use existing credits or buy credits via M-Pesa
           </p>
         </li>
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            Buy ad packages using your credits
-          </p>
-        </li>
-        <li className="flex gap-2 md:gap-3">
-          <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
-          <p className="text-black font-semibold text-base md:text-xl">
-            Click Buy to see the payment details
+            Click Buy to purchase your boost
           </p>
         </li>
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
             Payment is made by M-Pesa STK Push
+          </p>
+        </li>
+        <li className="flex gap-2 md:gap-3">
+          <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
+          <p className="text-black font-semibold text-base md:text-xl">
+            Boost activates immediately after purchase
           </p>
         </li>
       </ul>
