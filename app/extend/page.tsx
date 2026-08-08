@@ -36,7 +36,7 @@ const ExtendPage = () => {
           <div>
             <p className="text-sm text-gray-600">Your Credits</p>
             <p className="text-2xl md:text-3xl font-bold text-red-700">
-              {loading ? "..." : credits}
+              {loading ? "..." : `${credits}`}
             </p>
           </div>
         </div>

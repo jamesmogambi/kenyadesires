@@ -132,7 +132,7 @@ const AdvertisingPriceLIst = ({
 
       <div className="flex flex-col sm:flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
         <Checkbox
-          className="bg-white size-6 md:size-8 shrink-0"
+          className="bg-white border-2 border-blue-300 size-6 md:size-8 shrink-0"
           id="acceptTerms"
           checked={termsAccepted}
           onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
@@ -171,6 +171,52 @@ const AdvertisingPriceLIst = ({
               <Label className="border border-primary shadow-lg mt-3 md:mt-4 mb-8 md:mb-10 bg-white text-red-800 text-lg md:text-xl p-2 font-bold rounded-2xl">
                 Popular
               </Label>
+            )}
+            {pkg.type === "boost" && (
+              <div className="mt-3 md:mt-4 mb-6 md:mb-8">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="4em"
+                  height="4em"
+                  viewBox="0 0 24 24"
+                  className="md:w-5em md:h-5em"
+                >
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <g
+                    fill="none"
+                    stroke="#c7c7c7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M4.58 8.607L2 8.454C3.849 3.704 9.158 1 14.333 2.344c5.513 1.433 8.788 6.918 7.314 12.25c-1.219 4.411-5.304 7.337-9.8 7.406" />
+                    <path strokeDasharray=".5 3" d="M12 22C6.5 22 2 17 2 11" />
+                    <path d="M13.604 9.722c-.352-.37-1.213-1.237-2.575-.62c-1.361.615-1.577 2.596.482 2.807c.93.095 1.537-.11 2.093.47c.556.582.659 2.198-.761 2.634s-2.341-.284-2.588-.509m1.653-6.484v.79m0 6.337v.873" />
+                  </g>
+                </svg>
+              </div>
+            )}
+            {pkg.type === "featured" && (
+              <div className="mt-3 md:mt-4 mb-6 md:mb-8">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="4em"
+                  height="4em"
+                  viewBox="0 0 24 24"
+                  className="md:w-5em md:h-5em"
+                >
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <g
+                    fill="none"
+                    stroke="#c7c7c7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </g>
+                </svg>
+              </div>
             )}
             <div
               className={cn(
