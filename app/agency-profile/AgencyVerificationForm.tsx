@@ -240,7 +240,7 @@ const DocPicker = ({
 export default function AgencyVerificationForm({
   agencyId,
   ownerId,
-  agencyName,
+  agencyName: initialAgencyName,
   existingDocs,
 }: Prop) {
   const [loading, setLoading] = useState(false);
@@ -248,6 +248,7 @@ export default function AgencyVerificationForm({
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
   const [kraPin, setKraPin] = useState("");
+  const [agencyName, setAgencyName] = useState(initialAgencyName || "");
   const [accepted, setAccepted] = useState(false);
   const router = useRouter();
 
@@ -270,7 +271,12 @@ export default function AgencyVerificationForm({
         idBackUrl = await uploadToCloudinary(idBack);
       }
 
-      if (!businessRegistration || !idFrontUrl || !idBackUrl || !kraPin.trim()) {
+      if (
+        !businessRegistration ||
+        !idFrontUrl ||
+        !idBackUrl ||
+        !kraPin.trim()
+      ) {
         toast.error("Please upload all required documents and provide KRA PIN");
         return;
       }
@@ -281,7 +287,7 @@ export default function AgencyVerificationForm({
         idFront: idFrontUrl,
         idBack: idBackUrl,
         kraPin: kraPin.trim(),
-        agencyName: agencyName || "",
+        agencyName: agencyName.trim(),
       });
 
       if (!res.success) {
@@ -315,7 +321,7 @@ export default function AgencyVerificationForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div>
-        <h3 className="text-xl font-bold text-primary mb-1">
+        <h3 className="text-2xl font-bold text-primary mb-1">
           Agency verification documents
         </h3>
         <p className="text-white/50 text-sm">
@@ -356,16 +362,18 @@ export default function AgencyVerificationForm({
         />
       </div>
 
-      {agencyName && (
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-white/40 text-base">
-            Agency Name
-          </label>
-          <div className="w-full h-12 rounded-md border border-gray-300 px-3 py-2 text-base bg-gray-50 flex items-center">
-            {agencyName}
-          </div>
-        </div>
-      )}
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-white/40 text-base">
+          Agency Name
+        </label>
+        <input
+          type="text"
+          value={agencyName}
+          onChange={(e) => setAgencyName(e.target.value)}
+          placeholder="Enter agency name"
+          className="w-full h-12 rounded-md border border-gray-300 px-3 py-2 text-base shadow-sm focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-700/20"
+        />
+      </div>
 
       <div className="flex items-center gap-2 text-xs text-white/50">
         <FileText className="size-4" />
@@ -377,7 +385,7 @@ export default function AgencyVerificationForm({
           id="agency-verify-accept"
           checked={accepted}
           onCheckedChange={(checked) => setAccepted(checked === true)}
-          className="mt-1 size-6"
+          className="mt-1 size-6 border-primary"
         />
         <label
           htmlFor="agency-verify-accept"
@@ -393,9 +401,12 @@ export default function AgencyVerificationForm({
         disabled={loading || !accepted}
         className="w-full lg:w-1/3 rounded-none font-bold items-center gap-2 py-6 uppercase text-lg text-white bg-primary"
       >
-        {loading ? "Submitting…" : hasExisting ? "Update verification documents" : "Submit verification documents"}
+        {loading
+          ? "Submitting…"
+          : hasExisting
+            ? "Update verification documents"
+            : "Submit verification documents"}
       </Button>
     </form>
   );
 }
-

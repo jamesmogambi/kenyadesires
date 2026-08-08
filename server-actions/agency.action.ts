@@ -1250,10 +1250,17 @@ export async function submitAgencyVerification(
       verificationStatus: "under_review",
       isVerified: false,
       updatedAt: new Date(),
+      ...(data.agencyName && data.agencyName !== existing.name
+        ? { name: data.agencyName }
+        : {}),
     });
 
+    const updatedName = data.agencyName && data.agencyName !== existing.name
+      ? data.agencyName
+      : existing.name || "";
+
     await notifyAdminOfAgencyVerification({
-      name: existing.name || "",
+      name: updatedName,
       id: docRef.id,
       ownerId: existing.ownerId || data.ownerId,
       verificationDocuments,
@@ -1262,7 +1269,7 @@ export async function submitAgencyVerification(
     if (existing.contactEmail) {
       await sendVerificationSubmittedEmail(
         existing.contactEmail,
-        existing.name || "Agency",
+        updatedName,
         "agency",
       );
     }
