@@ -44,7 +44,7 @@ const Footer = () => {
                 ></path>
               </svg>{" "}
               <Link
-                href="/https://kenyadesires.com/blog/erectile-dysfunction-treatment"
+                href="/blog/erectile-dysfunction-treatment"
                 className="text-[#e33bb3] group-hover:font-bold font-medium"
               >
                 erection support
