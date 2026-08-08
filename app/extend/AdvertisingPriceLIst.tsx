@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import React from "react";
@@ -42,18 +40,27 @@ const AdvertisingPriceLIst = ({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [status, setStatus] = useState<
     "idle" | "pending" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   const handleBuyClick = (packageId: string) => {
     setSelectedPackage(packageId);
-    setDialogOpen(true);
     setStatus("idle");
     setMessage("");
+    setPhoneNumber("");
   };
+
+  useEffect(() => {
+    if (selectedPackage) {
+      const timer = setTimeout(() => {
+        phoneInputRef.current?.focus();
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPackage]);
 
   const handleUseCredits = async () => {
     if (!selectedPackage) return;
@@ -66,7 +73,7 @@ const AdvertisingPriceLIst = ({
         setStatus("success");
         setMessage("Ad package purchased successfully with credits!");
         onPurchaseSuccess?.();
-        setTimeout(() => setDialogOpen(false), 1500);
+        setTimeout(() => setSelectedPackage(null), 1500);
       } else {
         setStatus("error");
         setMessage(result.error || "Failed to purchase package");
@@ -79,7 +86,8 @@ const AdvertisingPriceLIst = ({
     }
   };
 
-  const handleBuyWithMpesa = async () => {
+  const handleBuyWithMpesa = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!selectedPackage || !phoneNumber || !termsAccepted) return;
 
     setLoading(true);
@@ -105,7 +113,7 @@ const AdvertisingPriceLIst = ({
           `Payment initiated! Check your phone (${phoneNumber}) and enter PIN. After payment, ${pkg.credits} credits will be added and your ${pkg.name} package will be activated automatically.`,
         );
         onPurchaseSuccess?.();
-        setTimeout(() => setDialogOpen(false), 3000);
+        setTimeout(() => setSelectedPackage(null), 3000);
       } else {
         setStatus("error");
         setMessage(
@@ -294,42 +302,46 @@ const AdvertisingPriceLIst = ({
               </span>
             </div>
 
-            <Dialog
-              open={dialogOpen && selectedPackage === pkg.id}
-              onOpenChange={setDialogOpen}
+            <Button
+              type="button"
+              className={cn(
+                "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
+                (pkg as any).bestValue
+                  ? "bg-white text-red-700 hover:bg-white/90"
+                  : "bg-red-800 hover:bg-red-700",
+              )}
+              onClick={() => handleBuyClick(pkg.id)}
             >
-              <DialogTrigger asChild>
-                <Button
-                  className={cn(
-                    "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
-                    (pkg as any).bestValue
-                      ? "bg-white text-red-700 hover:bg-white/90"
-                      : "bg-red-800 hover:bg-red-700",
-                  )}
-                  onClick={() => handleBuyClick(pkg.id)}
-                >
-                  Buy
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
+              Buy
+            </Button>
+            <Dialog
+              open={selectedPackage === pkg.id}
+              onOpenChange={() => {}}
+            >
+              <DialogContent
+                className="sm:max-w-lg md:max-w-xl lg:max-w-2xl w-full"
+                showCloseButton={false}
+              >
                 <DialogHeader>
-                  <DialogTitle>Buy {pkg.name}</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-2xl md:text-3xl">
+                    Buy {pkg.name}
+                  </DialogTitle>
+                  <DialogDescription className="text-base md:text-lg">
                     {pkg.description}. This package costs {pkg.credits} credits
                     (KSH {(pkg.credits * 10).toLocaleString()}).
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="bg-stone-100 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600">
+                <div className="space-y-5 py-5">
+                  <div className="bg-stone-100 p-4 rounded-lg">
+                    <p className="text-base md:text-lg text-gray-600">
                       Your Credits:{" "}
-                      <span className="font-bold text-red-700">
+                      <span className="font-bold text-red-700 text-lg md:text-xl">
                         {userCredits}
                       </span>
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-base md:text-lg text-gray-600">
                       Required:{" "}
-                      <span className="font-bold text-red-700">
+                      <span className="font-bold text-red-700 text-lg md:text-xl">
                         {pkg.credits} credits
                       </span>
                     </p>
@@ -338,7 +350,7 @@ const AdvertisingPriceLIst = ({
                   {message && (
                     <p
                       className={cn(
-                        "text-sm font-semibold",
+                        "text-base md:text-lg font-semibold",
                         status === "error" ? "text-red-600" : "text-green-600",
                       )}
                     >
@@ -347,11 +359,11 @@ const AdvertisingPriceLIst = ({
                   )}
 
                   {status !== "success" && (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
                       <Button
                         onClick={handleUseCredits}
                         disabled={loading || !canAffordCredits}
-                        className="w-full"
+                        className="w-full h-12 md:h-14 text-base md:text-lg"
                         variant={canAffordCredits ? "default" : "secondary"}
                       >
                         {loading
@@ -365,41 +377,59 @@ const AdvertisingPriceLIst = ({
                         <div className="absolute inset-0 flex items-center">
                           <span className="w-full border-t" />
                         </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-gray-500">
+                        <div className="relative flex justify-center text-sm uppercase">
+                          <span className="bg-white px-3 text-gray-500">
                             Or
                           </span>
                         </div>
                       </div>
 
-                      <div>
-                        <Label htmlFor="phone">M-Pesa Phone Number</Label>
-                        <Input
-                          id="phone"
-                          type="tel"
-                          placeholder="e.g. 0712345678"
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <Button
-                        onClick={handleBuyWithMpesa}
-                        disabled={loading || !phoneNumber || !termsAccepted}
-                        className="w-full bg-green-600 hover:bg-green-700"
+                      <form
+                        onSubmit={handleBuyWithMpesa}
+                        className="flex flex-col gap-3"
                       >
-                        {loading
-                          ? "Processing..."
-                          : `Buy ${pkg.credits} Credits + ${pkg.name} with M-Pesa`}
-                      </Button>
+                        <div>
+                          <Label
+                            htmlFor="phone"
+                            className="text-base md:text-lg"
+                          >
+                            M-Pesa Phone Number
+                          </Label>
+                          <input
+                            ref={phoneInputRef}
+                            id="phone"
+                            type="tel"
+                            placeholder="e.g. 0712345678"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="mt-2 h-12 md:h-14 w-full rounded-md border border-gray-300 px-3 py-2 text-base md:text-lg shadow-sm focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-700/20"
+                            autoFocus
+                          />
+                        </div>
+                        <Button
+                          type="submit"
+                          disabled={loading || !phoneNumber || !termsAccepted}
+                          className="w-full bg-green-600 hover:bg-green-700 h-12 md:h-14 text-base md:text-lg"
+                        >
+                          {loading
+                            ? "Processing..."
+                            : `Buy ${pkg.credits} Credits + ${pkg.name} with M-Pesa`}
+                        </Button>
+                      </form>
                     </div>
                   )}
                 </div>
                 <DialogFooter>
                   <Button
                     variant="secondary"
-                    onClick={() => setDialogOpen(false)}
+                    onClick={() => {
+                      setSelectedPackage(null);
+                      setStatus("idle");
+                      setMessage("");
+                      setPhoneNumber("");
+                    }}
                     disabled={loading && status !== "success"}
+                    className="h-10 md:h-12 text-base md:text-lg"
                   >
                     Close
                   </Button>
@@ -411,7 +441,7 @@ const AdvertisingPriceLIst = ({
       </div>
 
       <div className="mt-12 max-w-3xl mx-auto">
-        <h4 className="text-xl md:text-2xl text-center text-red-700 font-bold mb-4">
+        <h4 className="text-xl mt-6 md:text-2xl text-center text-red-700 font-bold mb-4">
           Boost Plan Details
         </h4>
         <p className="text-center text-gray-600 mb-6">
