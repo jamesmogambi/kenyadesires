@@ -142,15 +142,15 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           >
             {photos.map((src, index) => (
               <SwiperSlide key={index}>
-                <div
-                  className={cn(
-                    "relative h-16 cursor-pointer transition-all duration-200 rounded-lg overflow-hidden border-2",
-                    index === currentIndex
-                      ? "border-primary scale-95 shadow-lg"
-                      : "border-transparent opacity-60 hover:opacity-100 hover:scale-95",
-                  )}
-                  onClick={() => handleThumbClick(index)}
-                >
+                 <div
+                   className={cn(
+                     "relative w-full aspect-square cursor-pointer transition-all duration-200 rounded-lg overflow-hidden border-2",
+                     index === currentIndex
+                       ? "border-primary scale-95 shadow-lg"
+                       : "border-transparent opacity-60 hover:opacity-100 hover:scale-95",
+                   )}
+                   onClick={() => handleThumbClick(index)}
+                 >
                   <Image
                     src={src}
                     alt={`Thumbnail ${index + 1}`}
