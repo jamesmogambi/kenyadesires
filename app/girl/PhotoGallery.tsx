@@ -127,15 +127,15 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
         <div className="mt-4 w-full">
           <Swiper
             modules={[Navigation, Scrollbar]}
-            spaceBetween={8}
+            spaceBetween={6}
             slidesPerView={4}
             breakpoints={{
-              320: { slidesPerView: 3, spaceBetween: 6 },
-              480: { slidesPerView: 4, spaceBetween: 8 },
-              640: { slidesPerView: 5, spaceBetween: 10 },
-              768: { slidesPerView: 6, spaceBetween: 10 },
-              1024: { slidesPerView: 7, spaceBetween: 10 },
-              1280: { slidesPerView: 8, spaceBetween: 10 },
+              320: { slidesPerView: 3, spaceBetween: 4 },
+              480: { slidesPerView: 4, spaceBetween: 6 },
+              640: { slidesPerView: 5, spaceBetween: 8 },
+              768: { slidesPerView: 6, spaceBetween: 8 },
+              1024: { slidesPerView: 7, spaceBetween: 8 },
+              1280: { slidesPerView: 8, spaceBetween: 8 },
             }}
             onSwiper={(swiper: any) => (thumbSwiperRef.current = swiper)}
             className="thumbnails-swiper"
@@ -144,7 +144,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
               <SwiperSlide key={index}>
                 <div
                   className={cn(
-                    "relative aspect-square cursor-pointer transition-all duration-200 rounded-lg overflow-hidden border-2",
+                    "relative h-16 cursor-pointer transition-all duration-200 rounded-lg overflow-hidden border-2",
                     index === currentIndex
                       ? "border-primary scale-95 shadow-lg"
                       : "border-transparent opacity-60 hover:opacity-100 hover:scale-95",

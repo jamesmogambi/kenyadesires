@@ -24,14 +24,13 @@ export const PurchaseInfoSection = ({ className }: Prop) => {
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            The 150 credits package includes a 10% discount
+            The 180 credits package includes a 20% discount
           </p>
         </li>
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            You can use remaining credits later or for{" "}
-            <span className="text-red-800">boosting</span> your listing
+            Buy ad packages using your credits
           </p>
         </li>
         <li className="flex gap-2 md:gap-3">
@@ -43,7 +42,7 @@ export const PurchaseInfoSection = ({ className }: Prop) => {
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            Payment is made by Mpesa
+            Payment is made by M-Pesa STK Push
           </p>
         </li>
       </ul>

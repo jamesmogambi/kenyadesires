@@ -16,8 +16,12 @@ export async function GET(req: Request) {
       .get();
 
     if (!escortSnap.empty) {
-      const credits = escortSnap.docs[0].data().credits ?? 0;
-      return NextResponse.json({ credits });
+      const data = escortSnap.docs[0].data();
+      return NextResponse.json({
+        credits: data.credits ?? 0,
+        plan: data.plan?.type || "free",
+        role: "escort",
+      });
     }
 
     const agencySnap = await adminDb
@@ -27,11 +31,15 @@ export async function GET(req: Request) {
       .get();
 
     if (!agencySnap.empty) {
-      const credits = agencySnap.docs[0].data().credits ?? 0;
-      return NextResponse.json({ credits });
+      const data = agencySnap.docs[0].data();
+      return NextResponse.json({
+        credits: data.credits ?? 0,
+        plan: data.plan?.type || "free",
+        role: "agency",
+      });
     }
 
-    return NextResponse.json({ credits: 0 });
+    return NextResponse.json({ credits: 0, plan: "free", role: null });
   } catch (error: any) {
     console.error("Error fetching credits:", error);
     return NextResponse.json(

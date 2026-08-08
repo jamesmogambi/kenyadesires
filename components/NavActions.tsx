@@ -13,7 +13,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import SearchSheet from "./SearchSheet";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Package } from "lucide-react";
 
 interface Prop {
   isEscort?: boolean;
@@ -34,6 +34,7 @@ const NavActions = ({
   const { user } = useUser();
   const router = useRouter();
   const [credits, setCredits] = useState<number>(0);
+  const [plan, setPlan] = useState<string>("free");
   const [creditsLoading, setCreditsLoading] = useState(true);
 
   const handleLogout = async () => {
@@ -48,12 +49,15 @@ const NavActions = ({
       const res = await fetch("/api/credits");
       if (!res.ok) {
         setCredits(0);
+        setPlan("free");
         return;
       }
       const data = await res.json();
       setCredits(data.credits ?? 0);
+      setPlan(data.plan || "free");
     } catch {
       setCredits(0);
+      setPlan("free");
     } finally {
       setCreditsLoading(false);
     }
@@ -108,14 +112,21 @@ const NavActions = ({
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-full max-w-64 space-y-2">
-          {/* <DropdownM>My Account</DropdownM enuLabel> */}
           <DropdownMenuSeparator />
+
+          <DropdownMenuItem className="text-stone-700 group">
+            <Package className="size-6 text-stone-400 shrink-0" />
+            <span className="uppercase font-normal text-base group-hover:font-bold">
+              Plan: <span className="font-bold capitalize text-red-700">{plan}</span>
+            </span>
+          </DropdownMenuItem>
+
           <DropdownMenuItem className="text-stone-700 group">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="size-6 text-stone-400"
+              className="size-6 text-stone-400 shrink-0"
             >
               <path d="M12 7.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5Z" />
               <path
@@ -278,11 +289,7 @@ const NavActions = ({
               }
               return (
                 <DropdownMenuItem className="text-stone-800 group">
-                  <Link
-                    href="/verify-agency"
-                    className="flex items-center gap-2"
-                  >
-                    {/* <BadgeCheck className="size-9 bg-orange-500" /> */}
+                  <Link href="/verify-agency" className="flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"

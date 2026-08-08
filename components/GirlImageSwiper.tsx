@@ -40,7 +40,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full relative bg-transparent rounded-t-lg flex items-center justify-center h-50 lg:h-75">
+      <div className="w-full relative bg-transparent rounded-t-lg flex items-center justify-center h-60 md:h-80 lg:h-96">
         <span className="text-gray-400">No images available</span>
       </div>
     );
@@ -64,7 +64,7 @@ const GirlImageSwiper = ({ images, priority = false }: Prop) => {
 
             return (
               <SwiperSlide key={index}>
-                <div className="relative w-full h-50 lg:h-75 bg-transparent">
+                <div className="relative w-full h-60 md:h-80 lg:h-96 bg-transparent">
                   <div className="absolute inset-0 pb-1.25">
                     <Image
                       src={imageSrc}
