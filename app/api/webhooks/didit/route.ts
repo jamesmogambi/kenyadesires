@@ -107,6 +107,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
             "Approved",
             decision ? JSON.stringify(decision) : null,
             100,
+            "escort",
           );
         }
       }
@@ -136,6 +137,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
             "Approved",
             decision ? JSON.stringify(decision) : null,
             200,
+            "agency",
           );
         }
       }
@@ -163,6 +165,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
             "Declined",
             decision?.warnings ? JSON.stringify(decision.warnings) : null,
             0,
+            "escort",
           );
         }
       }
@@ -181,6 +184,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
             "Declined",
             decision?.warnings ? JSON.stringify(decision.warnings) : null,
             0,
+            "agency",
           );
         }
       }

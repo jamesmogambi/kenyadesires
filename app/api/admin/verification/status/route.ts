@@ -95,6 +95,7 @@ export async function POST(req: Request) {
           status === "verified" ? "Approved" : "Declined",
           decision || null,
           credits,
+          type,
         );
       } catch (emailError) {
         console.error("Failed to send verification email:", emailError);

@@ -64,6 +64,7 @@ export async function PUT(
                 "Approved",
                 null,
                 verificationCredits,
+                "agency",
             ).catch((err) => {
                 console.error("Failed to send agency verification email:", err);
             });

@@ -88,6 +88,7 @@ export async function sendVerificationNotificationEmail(
   status: string,
   decision?: string | null,
   credits = 0,
+  type: "escort" | "agency" = "escort",
 ): Promise<void> {
   try {
     const { subject, html, text } = verificationNotificationEmail(
@@ -95,6 +96,7 @@ export async function sendVerificationNotificationEmail(
       status,
       decision,
       credits,
+      type,
     );
     const transporter = getTransporter();
     await transporter.sendMail({
