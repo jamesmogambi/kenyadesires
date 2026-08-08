@@ -117,7 +117,8 @@ const NavActions = ({
           <DropdownMenuItem className="text-stone-700 group">
             <Package className="size-6 text-stone-400 shrink-0" />
             <span className="uppercase font-normal text-base group-hover:font-bold">
-              Plan: <span className="font-bold capitalize text-red-700">{plan}</span>
+              Plan:{" "}
+              <span className="font-bold capitalize text-red-700">{plan}</span>
             </span>
           </DropdownMenuItem>
 
@@ -148,7 +149,7 @@ const NavActions = ({
           </DropdownMenuItem>
 
           <DropdownMenuItem className="text-stone-800 group">
-            <Link href="frequent-questions" className="flex items-center gap-2">
+            <Link href="/frequent-questions" className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width={384}
@@ -170,7 +171,7 @@ const NavActions = ({
           </DropdownMenuItem>
 
           <DropdownMenuItem className="text-stone-800 group">
-            <Link href="extend" className="flex items-center gap-2">
+            <Link href="/extend" className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width={576}
@@ -193,7 +194,7 @@ const NavActions = ({
 
           <DropdownMenuItem className="text-stone-800 group">
             <Link
-              href={isBusiness ? "/agency-profile" : "adjustment"}
+              href={isBusiness ? "/agency-profile" : "/adjustment"}
               className="flex items-center gap-2"
             >
               <svg
@@ -289,7 +290,10 @@ const NavActions = ({
               }
               return (
                 <DropdownMenuItem className="text-stone-800 group">
-                  <Link href="/verify-agency" className="flex items-center gap-2">
+                  <Link
+                    href="/verify-agency"
+                    className="flex items-center gap-2"
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -354,7 +358,7 @@ const NavActions = ({
           )}
 
           <DropdownMenuItem className="text-stone-800 group">
-            <Link href="invoices" className="flex items-center gap-2">
+            <Link href="/invoices" className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
