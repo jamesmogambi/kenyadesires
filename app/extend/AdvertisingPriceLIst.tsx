@@ -177,7 +177,7 @@ const AdvertisingPriceLIst = ({
         </h6>
       </div>
 
-      <div className="flex flex-col sm:flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
+      <div className="flex flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
         <Checkbox
           className="bg-white size-6 border-2 border-blue-300 md:size-8 shrink-0"
           id="acceptTerms"
