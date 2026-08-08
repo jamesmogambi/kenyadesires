@@ -112,61 +112,127 @@ const DocPicker = ({
   onChange: (file: File | null) => void;
   existingUrl?: string;
 }) => {
-  const hasExisting = Boolean(existingUrl);
-  const hasNew = Boolean(file);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    if (selected) {
+      const url = URL.createObjectURL(selected);
+      setPreviewUrl(url);
+      onChange(selected);
+    } else {
+      setPreviewUrl(null);
+      onChange(null);
+    }
+    e.target.value = "";
+  };
 
   const clear = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
     onChange(null);
   };
+
+  const hasExisting = Boolean(existingUrl);
+  const hasNew = Boolean(file);
 
   return (
     <div className="flex flex-col gap-2">
       <label className="font-medium text-white/40 text-base">{label}</label>
 
       <div className="flex items-center gap-3">
-        <label
-          htmlFor={label}
-          className="flex-1 flex items-center justify-between border border-primary bg-white text-black px-4 h-10 rounded-full text-base cursor-pointer overflow-hidden"
-        >
-          <span
-            className={cn(
-              "truncate",
-              hasNew || hasExisting ? "text-black" : "text-black/40",
-            )}
-          >
-            {hasNew
-              ? file?.name
-              : hasExisting
-                ? "Uploaded - click to replace"
-                : "No file selected"}
-          </span>
-          <span className="shrink-0 bg-primary h-full flex items-center justify-center text-white font-semibold text-base px-4 rounded-r-full">
-            <Upload className="size-4" />
-          </span>
-          <input
-            id={label}
-            type="file"
-            accept="image/*,.pdf"
-            className="hidden"
-            onChange={(e) => {
-              const selected = e.target.files?.[0];
-              onChange(selected ?? null);
-              e.target.value = "";
-            }}
-          />
-        </label>
+        <div className="flex-1 flex items-center gap-3">
+          {(previewUrl || existingUrl) && (
+            <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 shrink-0">
+              <img
+                src={previewUrl || existingUrl}
+                alt={label}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            </div>
+          )}
 
-        {(hasNew || hasExisting) && (
-          <button
-            type="button"
-            onClick={clear}
-            aria-label={`Clear ${label}`}
-            className="shrink-0 rounded-full bg-primary p-2 text-white hover:bg-red-600 transition-colors"
+          <label
+            htmlFor={label}
+            className="flex-1 flex items-center justify-between border border-primary bg-white text-black px-4 h-10 rounded-full text-base cursor-pointer overflow-hidden"
           >
-            <X className="size-4" />
-          </button>
+            <span
+              className={cn(
+                "truncate",
+                hasNew || hasExisting ? "text-black" : "text-black/40",
+              )}
+            >
+              {hasNew
+                ? file?.name
+                : hasExisting
+                  ? "Uploaded - click to replace"
+                  : "No file selected"}
+            </span>
+            <span className="shrink-0 bg-primary h-full flex items-center justify-center text-white font-semibold text-base px-4 rounded-r-full">
+              <Upload className="size-4" />
+            </span>
+            <input
+              id={label}
+              type="file"
+              accept="image/*,.pdf"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </label>
+        </div>
+
+        {(previewUrl || existingUrl) && (
+          <>
+            <button
+              type="button"
+              onClick={() => setShowPreview(true)}
+              className="shrink-0 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+              title="Preview"
+            >
+              <Eye className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={clear}
+              aria-label={`Clear ${label}`}
+              className="shrink-0 rounded-full bg-primary p-2 text-white hover:bg-red-600 transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+          </>
         )}
       </div>
+
+      {showPreview && (previewUrl || existingUrl) && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setShowPreview(false)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]">
+            <img
+              src={previewUrl || existingUrl}
+              alt={label}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className="absolute -top-10 right-0 text-white text-sm hover:underline"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -257,28 +323,6 @@ export default function AgencyVerificationForm({
           National ID (front and back).
         </p>
       </div>
-
-      {hasExisting && (
-        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-          <p className="text-sm text-white/70 mb-3 font-medium">
-            Previously submitted documents
-          </p>
-          <div className="flex flex-col gap-4">
-            {existingDocs?.businessLicense && (
-              <DocPreview url={existingDocs.businessLicense} label="Business Registration Certificate" />
-            )}
-            {existingDocs?.idProof && (
-              <DocPreview url={existingDocs.idProof} label="National ID (front)" />
-            )}
-            {existingDocs?.otherDocuments?.[0] && (
-              <DocPreview url={existingDocs.otherDocuments[0]} label="National ID (back)" />
-            )}
-          </div>
-          <p className="text-xs text-white/40 mt-3">
-            Upload new files below to replace existing documents
-          </p>
-        </div>
-      )}
 
       <DocPicker
         label="Business Registration Certificate"

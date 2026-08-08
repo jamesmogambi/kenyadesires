@@ -662,9 +662,9 @@ export async function saveNewEscortProfile(
 export interface EscortVerificationInput {
   escortId: string;
   fullName: string;
-  idFront: string;
-  idBack: string;
-  selfie: string;
+  idFront?: string;
+  idBack?: string;
+  selfie?: string;
 }
 
 export async function submitEscortVerification(
@@ -687,6 +687,15 @@ export async function submitEscortVerification(
       idBack: data.idBack || currentDocs.idBack || "",
       selfieWithId: data.selfie || currentDocs.selfieWithId || "",
     };
+
+    const hasAnyDoc =
+      verificationDocuments.idProof ||
+      verificationDocuments.idBack ||
+      verificationDocuments.selfieWithId;
+
+    if (!hasAnyDoc) {
+      return { success: false, error: "Please upload at least one document" };
+    }
 
     await docRef.update({
       verificationDocuments,
