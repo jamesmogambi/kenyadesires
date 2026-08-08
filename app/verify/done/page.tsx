@@ -138,8 +138,8 @@ export default function VerifyDonePage() {
             </div>
           </div>
         ),
-         { duration: 5000 }
-       );
+        { duration: 5000 },
+      );
 
       window.dispatchEvent(new CustomEvent("credits-updated"));
     }
@@ -197,12 +197,22 @@ export default function VerifyDonePage() {
                 Re-submit your documents to regain verified status.
               </p>
             )}
-            <Link
-              href="/"
-              className="inline-block px-6 text-lg py-4 bg-primary text-white font-semibold rounded-none hover:bg-primary/80 transition-colors"
-            >
-              Back to KenyaDesires
-            </Link>
+            {result?.status !== "approved" && (
+              <Link
+                href="/girl-documents-verification"
+                className="inline-block uppercase px-6 text-xl py-4 bg-primary text-white font-semibold rounded-none hover:bg-primary/80 transition-colors"
+              >
+                Re-submit documents
+              </Link>
+            )}
+            {result?.status === "approved" && (
+              <Link
+                href="/"
+                className="inline-block px-6 text-lg py-4 bg-primary text-white font-semibold rounded-none hover:bg-primary/80 transition-colors"
+              >
+                Back to KenyaDesires
+              </Link>
+            )}
           </div>
         </div>
       </SectionCard>
