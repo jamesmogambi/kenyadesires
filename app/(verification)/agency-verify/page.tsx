@@ -72,6 +72,7 @@ const page = async () => {
         <AgencyVerificationForm
           agencyId={agency.id}
           ownerId={userId}
+          agencyName={agency.name}
           existingDocs={agency.verificationDocuments}
         />
       </SectionCard>

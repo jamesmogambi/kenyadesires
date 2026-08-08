@@ -3,7 +3,7 @@ import React from "react";
 import { Metadata } from "next";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
-import VerifyButton from "@/app/verify/VerifyButton";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   robots: {
@@ -31,7 +31,7 @@ const page = () => {
 
           <InfoSection
             title="How to start verifying?"
-            description="To begin the verification process, click the button below. You will be guided to upload a valid government-issued ID and take a live selfie. Once submitted, our team will review your documents and approve your verification within one business day."
+            description="To begin the verification process, click the button below. You will be guided to upload a valid government-issued ID and take a live selfie. Once submitted, our team will review your documents and approve your verification within a few hours."
           />
 
           <InfoSection
@@ -40,7 +40,12 @@ const page = () => {
           />
 
           <div className="flex justify-center items-center">
-            <VerifyButton />
+            <Link
+              href="/girl-documents-verification"
+              className="px-5 py-3 bg-primary text-lg text-white uppercase font-semibold rounded-none transition-colors"
+            >
+              Start Verification
+            </Link>
           </div>
         </div>
       </SectionCard>

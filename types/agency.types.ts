@@ -51,6 +51,7 @@ export interface IAgency {
     businessLicense?: string;
     taxCertificate?: string;
     idProof?: string;
+    kraPin?: string;
     otherDocuments?: string[];
   };
 

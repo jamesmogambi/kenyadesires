@@ -13,6 +13,7 @@ import type { IAgency } from "@/types/agency.types";
 interface Prop {
   agencyId: string;
   ownerId: string;
+  agencyName?: string;
   existingDocs?: IAgency["verificationDocuments"];
 }
 
@@ -117,12 +118,14 @@ const DocPicker = ({
 export default function AgencyVerificationForm({
   agencyId,
   ownerId,
+  agencyName,
   existingDocs,
 }: Prop) {
   const [loading, setLoading] = useState(false);
   const [regCert, setRegCert] = useState<File | null>(null);
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
+  const [kraPin, setKraPin] = useState("");
   const [accepted, setAccepted] = useState(false);
   const router = useRouter();
 
@@ -145,8 +148,8 @@ export default function AgencyVerificationForm({
         idBackUrl = await uploadToCloudinary(idBack);
       }
 
-      if (!businessRegistration || !idFrontUrl || !idBackUrl) {
-        toast.error("Please upload all required documents");
+      if (!businessRegistration || !idFrontUrl || !idBackUrl || !kraPin.trim()) {
+        toast.error("Please upload all required documents and provide KRA PIN");
         return;
       }
 
@@ -155,6 +158,8 @@ export default function AgencyVerificationForm({
         businessRegistration,
         idFront: idFrontUrl,
         idBack: idBackUrl,
+        kraPin: kraPin.trim(),
+        agencyName: agencyName || "",
       });
 
       if (!res.success) {
@@ -170,6 +175,7 @@ export default function AgencyVerificationForm({
       setRegCert(null);
       setIdFront(null);
       setIdBack(null);
+      setKraPin("");
       router.push("/agency-verification-status");
     } catch (err: any) {
       toast.error(err?.message || "Something went wrong while uploading");
@@ -197,17 +203,41 @@ export default function AgencyVerificationForm({
         existingUrl={existingDocs?.businessLicense}
       />
       <DocPicker
-        label="National ID (front)"
+        label="National ID (front) - Agency Representative"
         file={idFront}
         onChange={setIdFront}
         existingUrl={existingDocs?.idProof}
       />
       <DocPicker
-        label="National ID (back)"
+        label="National ID (back) - Agency Representative"
         file={idBack}
         onChange={setIdBack}
         existingUrl={existingDocs?.otherDocuments?.[0]}
       />
+
+      <div className="flex flex-col gap-2">
+        <label className="font-medium text-white/40 text-base">
+          KRA PIN / Registration Number
+        </label>
+        <input
+          type="text"
+          value={kraPin}
+          onChange={(e) => setKraPin(e.target.value)}
+          placeholder="e.g. P051234567X or Registration Number"
+          className="w-full h-12 rounded-md border border-gray-300 px-3 py-2 text-base shadow-sm focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-700/20"
+        />
+      </div>
+
+      {agencyName && (
+        <div className="flex flex-col gap-2">
+          <label className="font-medium text-white/40 text-base">
+            Agency Name
+          </label>
+          <div className="w-full h-12 rounded-md border border-gray-300 px-3 py-2 text-base bg-gray-50 flex items-center">
+            {agencyName}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 text-xs text-white/50">
         <FileText className="size-4" />

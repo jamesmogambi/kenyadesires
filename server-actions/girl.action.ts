@@ -2,13 +2,15 @@
 "use server";
 
 import { adminDb } from "@/lib/firebase-admin";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 import { slugify } from "@/lib/utils";
 import {
   sendWelcomeEmail,
   sendAdminNotificationEmail,
+  sendVerificationNotificationEmail,
+  sendVerificationSubmittedEmail,
 } from "./email";
 
 // Helper to convert Firestore doc to plain serializable object
@@ -650,6 +652,77 @@ export async function saveNewEscortProfile(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to save profile",
+    };
+  }
+}
+
+// ============================================
+// ESCORT IDENTITY VERIFICATION DOCUMENTS
+// ============================================
+export interface EscortVerificationInput {
+  escortId: string;
+  fullName: string;
+  idFront: string;
+  idBack: string;
+  selfie: string;
+}
+
+export async function submitEscortVerification(
+  data: EscortVerificationInput,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const docRef = adminDb.collection("escorts").doc(data.escortId);
+    const snapshot = await docRef.get();
+
+    if (!snapshot.exists) {
+      return { success: false, error: "Profile not found" };
+    }
+
+    const existing = snapshot.data() || {};
+    const currentDocs = existing.verificationDocuments || {};
+
+    const verificationDocuments = {
+      ...currentDocs,
+      idProof: data.idFront || currentDocs.idProof || "",
+      idBack: data.idBack || currentDocs.idBack || "",
+      selfieWithId: data.selfie || currentDocs.selfieWithId || "",
+    };
+
+    await docRef.update({
+      verificationDocuments,
+      verificationStatus: "pending",
+      isVerified: false,
+      updatedAt: new Date(),
+    });
+
+    const email = existing.email;
+    if (email) {
+      await sendVerificationSubmittedEmail(
+        email,
+        data.fullName || existing.name || "User",
+        "escort",
+      );
+    }
+
+    await sendAdminNotificationEmail(
+      data.fullName || existing.name || "Escort",
+      email || "",
+      "escort",
+      existing.clerkUserId || data.escortId,
+    );
+
+    revalidatePath(`/girl/${existing.slug}`);
+    revalidatePath(`/girl/${data.escortId}`);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error submitting escort verification:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to submit escort verification",
     };
   }
 }

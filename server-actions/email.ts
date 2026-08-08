@@ -6,6 +6,7 @@ import {
   adminNotificationEmail,
   verificationNotificationEmail,
 } from "@/email-templates";
+import { verificationSubmittedEmail } from "@/email-templates/verification-submitted";
 
 const ADMIN_EMAIL = "hello@kenyadesires.com";
 
@@ -105,5 +106,25 @@ export async function sendVerificationNotificationEmail(
     });
   } catch (err: any) {
     console.error("Failed to send verification email:", err?.message || err);
+  }
+}
+
+export async function sendVerificationSubmittedEmail(
+  to: string,
+  name: string,
+  type: "escort" | "agency",
+): Promise<void> {
+  try {
+    const { subject, html, text } = verificationSubmittedEmail(name, type);
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: `"KenyaDesires" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html,
+      text,
+    });
+  } catch (err: any) {
+    console.error("Failed to send verification submitted email:", err?.message || err);
   }
 }

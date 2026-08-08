@@ -76,6 +76,7 @@ export interface IEscort {
   verificationStatus: "pending" | "verified" | "rejected";
   verificationDocuments?: {
     idProof?: string;
+    idBack?: string;
     selfieWithId?: string;
     policeClearance?: string;
   };

@@ -23,7 +23,7 @@ async function page() {
     !!agency && agency.verificationStatus !== "pending";
   const ctaHref = verificationStarted
     ? "/agency-verification-status"
-    : "/agency-verify";
+    : "/agency-documents-verification";
   const ctaLabel = verificationStarted
     ? "View verification status"
     : "Start Verification";

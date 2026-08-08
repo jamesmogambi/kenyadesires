@@ -21,7 +21,11 @@ import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
 import { notifyAdminOfAgencyVerification } from "./agency-verification-email";
-import { sendWelcomeEmail, sendAdminNotificationEmail } from "./email";
+import {
+  sendWelcomeEmail,
+  sendAdminNotificationEmail,
+  sendVerificationSubmittedEmail,
+} from "./email";
 
 // ============================================
 // CONVERT FIREBASE DOC TO AGENCY
@@ -1202,9 +1206,11 @@ export async function updateAgency(
 // ============================================
 export interface AgencyVerificationInput {
   ownerId: string;
-  businessRegistration?: string; // Business Registration Certificate URL
-  idFront?: string; // National ID front URL
-  idBack?: string; // National ID back URL
+  businessRegistration?: string;
+  idFront?: string;
+  idBack?: string;
+  kraPin?: string;
+  agencyName?: string;
 }
 
 export async function submitAgencyVerification(
@@ -1232,6 +1238,7 @@ export async function submitAgencyVerification(
       businessLicense:
         data.businessRegistration || currentDocs.businessLicense || "",
       idProof: data.idFront || currentDocs.idProof || "",
+      kraPin: data.kraPin || currentDocs.kraPin || "",
       otherDocuments: [
         ...(data.idBack ? [data.idBack] : []),
         ...(currentDocs.otherDocuments || []),
@@ -1251,6 +1258,14 @@ export async function submitAgencyVerification(
       ownerId: existing.ownerId || data.ownerId,
       verificationDocuments,
     });
+
+    if (existing.contactEmail) {
+      await sendVerificationSubmittedEmail(
+        existing.contactEmail,
+        existing.name || "Agency",
+        "agency",
+      );
+    }
 
     revalidatePath("/agency-profile");
     revalidatePath("/agency-verification-status");
