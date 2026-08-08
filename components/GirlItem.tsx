@@ -189,7 +189,7 @@ const GirlItem = ({
       {/* Display number of media */}
       <div className="flex -top-1 -left-2 absolute z-10">
         {videos && videos.length > 0 ? (
-          <div className="flex items-center rounded-br-lg gap-1.5 p-1.5 px-2 bg-red-700 text-white">
+          <div className="flex items-center rounded-br-lg gap-1.5 p-2.5 px-4 bg-red-700 text-white">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -202,8 +202,8 @@ const GirlItem = ({
             <span className="text-sm font-semibold">{videos.length}</span>
           </div>
         ) : (
-          <div className="hidden lg:flex items-center font-semibold rounded-br-lg gap-2 p-1.5 px-3 bg-stone-300/50 text-black/60">
-            <Images className="h-5 w-6" />
+          <div className="hidden lg:flex items-center font-semibold rounded-br-lg gap-2 p-2.5 px-4 bg-stone-300/50 text-black/60">
+            <Images className="h-6 w-7" />
             <span className="text-sm">
               {displayImages.length > 0 ? displayImages.length : 1}
               <span className="text-xs uppercase ml-0.5">x</span>
