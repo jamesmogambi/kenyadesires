@@ -43,13 +43,20 @@ const Footer = () => {
                   d="M24 33a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
                 ></path>
               </svg>{" "}
-              <span className="text-[#e33bb3] group-hover:font-bold font-medium">
+              <Link
+                href="/https://kenyadesires.com/blog/erectile-dysfunction-treatment"
+                className="text-[#e33bb3] group-hover:font-bold font-medium"
+              >
                 erection support
-              </span>
+              </Link>
             </Link>
 
             <Link
-              href={isLoggedIn ? "/private-apartment-girl-listing" : "/private-escort-record"}
+              href={
+                isLoggedIn
+                  ? "/private-apartment-girl-listing"
+                  : "/private-escort-record"
+              }
               className="uppercase group  font-medium flex items-center  gap-2 lg:py-5 lg:text-lg text-base"
             >
               <svg

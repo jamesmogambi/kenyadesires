@@ -159,7 +159,7 @@ const AdvertisingPriceLIst = ({
             key={pkg.id}
             className={cn(
               "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
-              pkg.type === "extend" ? "bg-red-700 text-white" : "bg-stone-100",
+              pkg.type === "extend" ? "bg-red-700 text-white" : "bg-stone-100 ",
             )}
           >
             {(pkg as any).savings && (
@@ -180,8 +180,8 @@ const AdvertisingPriceLIst = ({
             >
               <h5
                 className={cn(
-                  "text-4xl md:text-5xl mt-4 font-bold text-center",
-                  !pkg.type === "extend" && "text-red-700",
+                  "text-4xl md:text-5xl mt-4 font-bold text-center ",
+                  pkg.type !== "extend" && "text-red-700",
                 )}
               >
                 {pkg.credits}{" "}
@@ -189,7 +189,7 @@ const AdvertisingPriceLIst = ({
               <span
                 className={cn(
                   "text-xl md:text-2xl font-extrabold",
-                  !pkg.type === "extend" && "text-red-700",
+                  pkg.type !== "extend" && "text-red-700",
                 )}
               >
                 Credits
@@ -200,7 +200,7 @@ const AdvertisingPriceLIst = ({
               <span
                 className={cn(
                   "font-bold text-base md:text-lg text-center",
-                  !pkg.type === "extend" && "text-black",
+                  pkg.type !== "extend" && "text-black",
                 )}
               >
                 Price
@@ -208,7 +208,7 @@ const AdvertisingPriceLIst = ({
               <span
                 className={cn(
                   "text-2xl md:text-3xl font-bold",
-                  !pkg.type === "extend" && "text-black",
+                  pkg.type !== "extend" && "text-black",
                 )}
               >
                 KSH {(pkg.credits * 10).toLocaleString()}
@@ -216,7 +216,7 @@ const AdvertisingPriceLIst = ({
               <span
                 className={cn(
                   "text-sm md:text-base font-bold",
-                  !pkg.type === "extend" && "text-black",
+                  pkg.type !== "extend" && "text-black",
                 )}
               >
                 including VAT
