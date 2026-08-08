@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,6 +11,12 @@ import { submitEscortVerification } from "@/server-actions/girl.action";
 
 interface Prop {
   escortId: string;
+  existingDocs?: {
+    idProof?: string;
+    idBack?: string;
+    selfieWithId?: string;
+  };
+  existingName?: string;
 }
 
 const uploadToCloudinary = async (file: File): Promise<string> => {
@@ -41,14 +47,74 @@ const uploadToCloudinary = async (file: File): Promise<string> => {
   return data.secure_url as string;
 };
 
+const DocPreview = ({ url, label }: { url: string; label: string }) => {
+  const [showPreview, setShowPreview] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="font-medium text-white/40 text-base">{label}</label>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 flex items-center gap-3">
+          <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
+            <img
+              src={url}
+              alt={label}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-white/70 truncate">Previously uploaded</p>
+            <p className="text-xs text-white/40">Click replace to update</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPreview(true)}
+          className="shrink-0 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+          title="Preview"
+        >
+          <Eye className="size-4" />
+        </button>
+      </div>
+
+      {showPreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setShowPreview(false)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh]">
+            <img
+              src={url}
+              alt={label}
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className="absolute -top-10 right-0 text-white text-sm hover:underline"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DocPicker = ({
   label,
   file,
   onChange,
+  existingUrl,
 }: {
   label: string;
   file: File | null;
   onChange: (file: File | null) => void;
+  existingUrl?: string;
 }) => {
   const clear = () => {
     onChange(null);
@@ -102,9 +168,13 @@ const DocPicker = ({
   );
 };
 
-export default function EscortVerificationForm({ escortId }: Prop) {
+export default function EscortVerificationForm({
+  escortId,
+  existingDocs,
+  existingName,
+}: Prop) {
   const [loading, setLoading] = useState(false);
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(existingName || "");
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
@@ -161,6 +231,8 @@ export default function EscortVerificationForm({ escortId }: Prop) {
     }
   };
 
+  const hasExisting = Boolean(existingDocs?.idProof || existingDocs?.idBack || existingDocs?.selfieWithId);
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div>
@@ -185,6 +257,28 @@ export default function EscortVerificationForm({ escortId }: Prop) {
           className="w-full h-12 rounded-md border border-gray-300 px-3 py-2 text-base shadow-sm focus:border-red-700 focus:outline-none focus:ring-2 focus:ring-red-700/20"
         />
       </div>
+
+      {hasExisting && (
+        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+          <p className="text-sm text-white/70 mb-3 font-medium">
+            Previously submitted documents
+          </p>
+          <div className="flex flex-col gap-4">
+            {existingDocs?.idProof && (
+              <DocPreview url={existingDocs.idProof} label="National ID (front)" />
+            )}
+            {existingDocs?.idBack && (
+              <DocPreview url={existingDocs.idBack} label="National ID (back)" />
+            )}
+            {existingDocs?.selfieWithId && (
+              <DocPreview url={existingDocs.selfieWithId} label="Selfie" />
+            )}
+          </div>
+          <p className="text-xs text-white/40 mt-3">
+            Upload new files below to replace existing documents
+          </p>
+        </div>
+      )}
 
       <DocPicker
         label="National ID (front)"
@@ -228,7 +322,7 @@ export default function EscortVerificationForm({ escortId }: Prop) {
         disabled={loading || !accepted}
         className="w-full lg:w-1/3 rounded-none font-bold items-center gap-2 py-6 uppercase text-lg text-white bg-primary"
       >
-        {loading ? "Submitting…" : "Submit verification documents"}
+        {loading ? "Submitting…" : hasExisting ? "Update verification documents" : "Submit verification documents"}
       </Button>
     </form>
   );

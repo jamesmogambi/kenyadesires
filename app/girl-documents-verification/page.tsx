@@ -68,7 +68,11 @@ const page = async () => {
             ← Back to verification info
           </Link>
         </div>
-        <EscortVerificationForm escortId={escort.id} />
+        <EscortVerificationForm
+          escortId={escort.id}
+          existingName={escort.name}
+          existingDocs={escort.verificationDocuments}
+        />
       </SectionCard>
     </div>
   );

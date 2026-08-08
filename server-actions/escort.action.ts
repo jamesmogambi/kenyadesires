@@ -57,6 +57,13 @@ export interface Escort {
   isAgencyFeatured: boolean;
   isActive: boolean;
   isVerified: boolean;
+  verificationStatus?: "pending" | "verified" | "rejected";
+  verificationDocuments?: {
+    idProof?: string;
+    idBack?: string;
+    selfieWithId?: string;
+    policeClearance?: string;
+  };
   isFeatured: boolean;
   plan: Plan;
   totalBookings: number;
