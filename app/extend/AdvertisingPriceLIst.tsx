@@ -155,13 +155,13 @@ const AdvertisingPriceLIst = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {AD_PACKAGES.map((pkg) => (
-          <div
-            key={pkg.id}
-            className={cn(
-              "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
-              "bg-stone-100",
-            )}
-          >
+            <div
+              key={pkg.id}
+              className={cn(
+                "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
+                (pkg as any).bestValue ? "bg-red-700 text-white" : "bg-stone-100",
+              )}
+            >
             {(pkg as any).popular && (
               <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-green-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
                 Popular
@@ -189,7 +189,7 @@ const AdvertisingPriceLIst = ({
                   <path d="M0 0h24v24H0z" fill="none" />
                   <g
                     fill="none"
-                    stroke="#c7c7c7"
+                    stroke={(pkg as any).bestValue ? "#ffffff" : "#c7c7c7"}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="1.5"
@@ -204,14 +204,16 @@ const AdvertisingPriceLIst = ({
             <div className="mt-6 md:mt-8">
               <h5
                 className={cn(
-                  "text-4xl md:text-5xl mt-4 font-bold text-center text-red-700",
+                  "text-4xl md:text-5xl mt-4 font-bold text-center",
+                  (pkg as any).bestValue ? "text-white" : "text-red-700",
                 )}
               >
                 {pkg.credits}{" "}
               </h5>
               <span
                 className={cn(
-                  "text-xl md:text-2xl font-extrabold text-red-700",
+                  "text-xl md:text-2xl font-extrabold",
+                  (pkg as any).bestValue ? "text-white" : "text-red-700",
                 )}
               >
                 Credits
@@ -221,21 +223,24 @@ const AdvertisingPriceLIst = ({
             <div className="mt-6 md:mt-8 flex items-center justify-center flex-col gap-2 md:gap-3">
               <span
                 className={cn(
-                  "font-bold text-base md:text-lg text-center text-black",
+                  "font-bold text-base md:text-lg text-center",
+                  (pkg as any).bestValue ? "text-white" : "text-black",
                 )}
               >
                 Price
               </span>
               <span
                 className={cn(
-                  "text-2xl md:text-3xl font-bold text-black",
+                  "text-2xl md:text-3xl font-bold",
+                  (pkg as any).bestValue ? "text-white" : "text-black",
                 )}
               >
                 KSH {(pkg.credits * 10).toLocaleString()}
               </span>
               <span
                 className={cn(
-                  "text-sm md:text-base font-bold text-black",
+                  "text-sm md:text-base font-bold",
+                  (pkg as any).bestValue ? "text-white/90" : "text-black",
                 )}
               >
                 including VAT
@@ -250,7 +255,9 @@ const AdvertisingPriceLIst = ({
                 <Button
                   className={cn(
                     "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
-                    "bg-red-800 hover:bg-red-700",
+                    (pkg as any).bestValue
+                      ? "bg-white text-red-700 hover:bg-white/90"
+                      : "bg-red-800 hover:bg-red-700",
                   )}
                   onClick={() => handleBuyClick(pkg.id)}
                 >
