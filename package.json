@@ -69,6 +69,7 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.62.0",
     "react-hook-form-persist": "^3.0.0",
+    "react-phone-number-input": "^3.4.17",
     "react-quill-new": "^3.6.0",
     "reading-time": "^1.5.0",
     "rehype-slug": "^6.0.0",
