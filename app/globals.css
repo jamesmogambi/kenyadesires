@@ -197,6 +197,10 @@ co
 
 /* app/globals.css */
 /* app/globals.css */
+a[href^="tel"] {
+  text-decoration: none !important;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
