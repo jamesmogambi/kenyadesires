@@ -53,7 +53,7 @@ const ExtendPage = () => {
           onPurchaseSuccess={() => router.refresh()}
         />
       </div>
-      <p className="text-lg md:text-2xl pb-8 max-w-250 text-red-700 mx-auto text-center my-6 font-semibold px-4">
+      <p className="text-lg md:text-2xl mb-12 pb-8 max-w-250 text-red-700 mx-auto text-center my-6 font-semibold px-4">
         After the payment is received, the credits will be added automatically.
         You can then use your credits to purchase a boost package and increase
         your visibility.

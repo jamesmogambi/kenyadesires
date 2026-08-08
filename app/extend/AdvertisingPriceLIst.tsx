@@ -20,6 +20,12 @@ import { initiateSTKPush } from "@/lib/mpesa";
 import { AD_PACKAGES } from "@/lib/constants/packages";
 import { purchaseAdPackage } from "@/server-actions/payment.action";
 import Link from "next/link";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface Prop {
   className?: string;
@@ -119,6 +125,47 @@ const AdvertisingPriceLIst = ({
     ? userCredits >= selectedPkg.credits
     : false;
 
+  const packageDetails: Record<string, { features: string[]; badge?: string }> =
+    {
+      quick_boost: {
+        badge: "Quick Boost",
+        features: [
+          "Boosted listing ranking",
+          // '"Boosted" badge',
+          "Active for 24 hours",
+        ],
+      },
+      weekly_boost: {
+        badge: "Weekly Boost",
+        features: [
+          "Higher listing ranking",
+          // '"Featured" badge',
+          "Active for 7 days",
+          "Higher priority than Quick Boost",
+        ],
+      },
+      premium_boost: {
+        badge: "Premium Boost",
+        features: [
+          "Higher listing ranking",
+          // '"Premium" badge',
+          "Active for 14 days",
+          "Higher priority than Weekly Boost",
+          "Eligible for featured/category placement",
+        ],
+      },
+      monthly_vip: {
+        badge: "Monthly VIP",
+        features: [
+          "Highest standard listing priority",
+          // '"VIP" badge',
+          "Active for 30 days",
+          "Eligible for homepage/category featured placement",
+          "Highest priority among normal boosted listings",
+        ],
+      },
+    };
+
   return (
     <section className={cn("px-4", className)}>
       <div>
@@ -132,7 +179,7 @@ const AdvertisingPriceLIst = ({
 
       <div className="flex flex-col sm:flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
         <Checkbox
-          className="bg-white border-2 border-blue-300 size-6 md:size-8 shrink-0"
+          className="bg-white size-6 border-2 border-blue-300 md:size-8 shrink-0"
           id="acceptTerms"
           checked={termsAccepted}
           onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
@@ -155,13 +202,13 @@ const AdvertisingPriceLIst = ({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {AD_PACKAGES.map((pkg) => (
-            <div
-              key={pkg.id}
-              className={cn(
-                "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
-                (pkg as any).bestValue ? "bg-red-700 text-white" : "bg-stone-100",
-              )}
-            >
+          <div
+            key={pkg.id}
+            className={cn(
+              "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
+              (pkg as any).bestValue ? "bg-red-700 text-white" : "bg-stone-100",
+            )}
+          >
             {(pkg as any).popular && (
               <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-green-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
                 Popular
@@ -362,6 +409,64 @@ const AdvertisingPriceLIst = ({
           </div>
         ))}
       </div>
+
+      <div className="mt-12 max-w-3xl mx-auto">
+        <h4 className="text-xl md:text-2xl text-center text-red-700 font-bold mb-4">
+          Boost Plan Details
+        </h4>
+        <p className="text-center text-gray-600 mb-6">
+          Click each plan below to see what's included
+        </p>
+        <div className="space-y-3">
+          {AD_PACKAGES.map((pkg) => {
+            const details = packageDetails[pkg.id];
+            if (!details) return null;
+
+            return (
+              <Collapsible
+                key={pkg.id}
+                className="bg-stone-100 rounded-lg shadow-md"
+              >
+                <CollapsibleTrigger className="w-full flex items-center justify-between p-4 md:p-5 text-left">
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-base md:text-lg text-red-700">
+                      {pkg.name}
+                    </span>
+                    <span className="text-sm text-gray-600">
+                      {pkg.credits} credits / KSH{" "}
+                      {(pkg.credits * 10).toLocaleString()}
+                    </span>
+                  </div>
+                  <ChevronDown className="size-5 text-gray-500 collapsible-chevron" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-4 md:px-5 pb-4 md:pb-5">
+                    <ul className="space-y-2">
+                      {details.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-red-700 mt-1">•</span>
+                          <span className="text-gray-800 text-sm md:text-base">
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
+        </div>
+      </div>
+
+      <style jsx global>{`
+        .collapsible-chevron {
+          transition: transform 0.2s ease-in-out;
+        }
+        [data-state="open"] .collapsible-chevron {
+          transform: rotate(180deg);
+        }
+      `}</style>
     </section>
   );
 };
