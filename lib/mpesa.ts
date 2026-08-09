@@ -34,7 +34,9 @@ const MPESA_BASE_URL = {
 
 export function getMpesaBaseUrl(): string {
   const env = process.env.MPESA_ENV || "sandbox";
-  return MPESA_BASE_URL[env as keyof typeof MPESA_BASE_URL] || MPESA_BASE_URL.sandbox;
+  return (
+    MPESA_BASE_URL[env as keyof typeof MPESA_BASE_URL] || MPESA_BASE_URL.sandbox
+  );
 }
 
 export function getMpesaShortcode(): string {
@@ -70,7 +72,11 @@ export function validateMpesaConfig(): { valid: boolean; error?: string } {
 }
 
 export function getCallbackUrl(): string {
-  const callbackUrl = (process.env.MPESA_CALLBACK_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim();
+  const callbackUrl = (
+    process.env.MPESA_CALLBACK_URL ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    ""
+  ).trim();
 
   if (!callbackUrl) {
     throw new Error(
@@ -90,10 +96,7 @@ export function getCallbackUrl(): string {
     throw new Error(`Invalid CallbackURL format: ${callbackUrl}`);
   }
 
-  if (
-    callbackUrl.includes("localhost") ||
-    callbackUrl.includes("127.0.0.1")
-  ) {
+  if (callbackUrl.includes("localhost") || callbackUrl.includes("127.0.0.1")) {
     throw new Error(
       "CallbackURL cannot be localhost. Use ngrok or a live URL instead.",
     );
@@ -112,7 +115,9 @@ export async function getMpesaAccessToken(): Promise<string> {
     throw new Error("M-Pesa credentials not configured");
   }
 
-  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
+  const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString(
+    "base64",
+  );
   const url = `${getMpesaBaseUrl()}/oauth/v1/generate?grant_type=client_credentials`;
 
   const response = await fetch(url, {
@@ -127,9 +132,11 @@ export async function getMpesaAccessToken(): Promise<string> {
   }
 
   const data = await response.json();
-  
+
   if (!data.access_token) {
-    throw new Error("M-Pesa did not return an access token. Check your credentials.");
+    throw new Error(
+      "M-Pesa did not return an access token. Check your credentials.",
+    );
   }
 
   return data.access_token;
@@ -174,15 +181,15 @@ export async function initiateSTKPush(
   }
 
   const payload = {
-    BusinessShortCode: parseInt(shortcode),
+    BusinessShortCode: shortcode,
     Password: password,
     Timestamp: timestamp,
     TransactionType: "CustomerPayBillOnline",
-    Amount: request.amount,
+    Amount: Math.round(request.amount),
     PartyA: formatPhoneNumber(request.phoneNumber),
     PartyB: shortcode,
     PhoneNumber: formatPhoneNumber(request.phoneNumber),
-    CallbackURL: `${callbackUrl}/api/mpesa/callback`,
+    CallBackURL: `${callbackUrl}/api/mpesa/callback`,
     AccountReference: request.accountReference,
     TransactionDesc: request.transactionDesc,
   };
@@ -194,7 +201,7 @@ export async function initiateSTKPush(
 
   const url = `${getMpesaBaseUrl()}/mpesa/stkpush/v1/processrequest`;
   console.log("[M-Pesa] Request URL:", url);
-  
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -228,7 +235,7 @@ export async function initiateSTKPush(
   }
 
   const data = JSON.parse(responseText);
-  
+
   if (data.ResponseCode && data.ResponseCode !== "0") {
     throw new Error(data.ResponseDescription || "M-Pesa rejected the request");
   }
