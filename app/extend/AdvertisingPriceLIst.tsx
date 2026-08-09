@@ -64,34 +64,18 @@ const AdvertisingPriceLIst = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
 
-  const formatKenyanPhone = (
-    raw: string,
-  ): { display: string; clean: string } => {
-    let digits = raw.replace(/\D/g, "");
-
-    if (digits.length === 0) {
-      return { display: "", clean: "" };
-    }
-
+  const formatPhoneForDisplay = (digits: string): string => {
+    if (!digits) return "";
     if (digits.startsWith("254")) {
-      digits = digits.slice(0, 12);
-      const display = `+${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-      return { display, clean: `+${digits}` };
+      return `+${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
     }
-
     if (digits.startsWith("0")) {
-      digits = digits.slice(0, 10);
-      const display = `0${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-      return { display, clean: digits };
+      return `${digits.slice(0, 1)}${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
     }
-
     if (digits.length <= 9) {
-      return { display: digits, clean: `0${digits}` };
+      return digits;
     }
-
-    digits = digits.slice(0, 9);
-    const display = `0${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-    return { display, clean: `0${digits}` };
+    return `0${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
   };
 
   const validatePhoneNumber = (phone: string): boolean => {
@@ -129,14 +113,15 @@ const AdvertisingPriceLIst = ({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const { display, clean } = formatKenyanPhone(raw);
-    setDisplayPhone(display);
-    setPhoneNumber(clean);
+    const digits = raw.replace(/\D/g, "");
+    setPhoneNumber(digits);
+    setDisplayPhone(raw);
     if (phoneError) setPhoneError(null);
   };
 
   const handlePhoneBlur = () => {
-    if (displayPhone) {
+    if (phoneNumber) {
+      setDisplayPhone(formatPhoneForDisplay(phoneNumber));
       validatePhoneNumber(phoneNumber);
     }
   };
@@ -144,9 +129,9 @@ const AdvertisingPriceLIst = ({
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text");
-    const { display, clean } = formatKenyanPhone(pasted);
-    setDisplayPhone(display);
-    setPhoneNumber(clean);
+    const digits = pasted.replace(/\D/g, "");
+    setPhoneNumber(digits);
+    setDisplayPhone(formatPhoneForDisplay(digits));
     if (phoneError) setPhoneError(null);
   };
 
@@ -290,8 +275,12 @@ const AdvertisingPriceLIst = ({
       setPhoneError(null);
       setPhoneNumber("");
       setDisplayPhone("");
+    } else if (open && userPhone) {
+      const digits = userPhone.replace(/\D/g, "");
+      setPhoneNumber(digits);
+      setDisplayPhone(formatPhoneForDisplay(digits));
     }
-  }, [open]);
+  }, [open, userPhone]);
 
   const selectedPkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
   const canAffordCredits = selectedPkg
