@@ -72,11 +72,7 @@ export function validateMpesaConfig(): { valid: boolean; error?: string } {
 }
 
 export function getCallbackUrl(): string {
-  const callbackUrl = (
-    process.env.MPESA_CALLBACK_URL ||
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    ""
-  ).trim();
+  const callbackUrl = (process.env.MPESA_CALLBACK_URL || "").trim();
 
   if (!callbackUrl) {
     throw new Error(
