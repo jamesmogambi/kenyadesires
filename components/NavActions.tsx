@@ -190,7 +190,7 @@ const NavActions = ({
       <SearchSheet></SearchSheet>
 
       <DropdownMenu>
-        <DropdownMenuTrigger className="bg-primary group text-white rounded-md flex items-center gap-2 p-3 px-2">
+        <DropdownMenuTrigger className="bg-primary group text-white rounded-md flex items-center justify-center gap-2 p-3 min-h-[44px]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -204,7 +204,7 @@ const NavActions = ({
             />
           </svg>
 
-          <span className="text-base group-hover:font-bold uppercase font-semibold">
+          <span className="text-base group-hover:font-bold uppercase font-semibold hidden md:inline">
             account settings
           </span>
 
@@ -221,7 +221,7 @@ const NavActions = ({
             />
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-full max-w-64 space-y-2">
+        <DropdownMenuContent className="w-[calc(100vw-2rem)] md:w-64 max-w-64">
           <DropdownMenuSeparator />
 
           {/* <DropdownMenuItem className="text-stone-700 group">

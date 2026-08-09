@@ -35,7 +35,13 @@ const Header = ({
 
   return (
     <>
-      <MobileHeader />
+      <MobileHeader
+        isEscort={isEscort}
+        escortIsVerified={escortIsVerified}
+        escortVerificationStatus={escortVerificationStatus}
+        agencyIsVerified={agencyIsVerified}
+        agencyVerificationStatus={agencyVerificationStatus}
+      />
       <PopularCountiesInitializer counties={initialCounties || []} />
 
       <div className="lg:flex  hidden items-center gap-12 w-full px-12 bg-dark-slate">
