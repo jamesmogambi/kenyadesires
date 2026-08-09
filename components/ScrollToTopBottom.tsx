@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 export default function ScrollToTopBottom() {
+  const [show, setShow] = useState(false);
   const [atBottom, setAtBottom] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
-      const scrollPosition = window.scrollY + window.innerHeight;
-      const threshold = 40;
-      const bottom =
-        scrollPosition >=
-        document.documentElement.scrollHeight - threshold;
-      setAtBottom(bottom);
+      const scrollY = window.scrollY;
+      const scrollPosition = scrollY + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const nearBottom = scrollPosition >= documentHeight - 80;
+
+      setShow(scrollY > 400);
+      setAtBottom(nearBottom);
     };
 
     onScroll();
@@ -36,14 +38,22 @@ export default function ScrollToTopBottom() {
     }
   };
 
+  if (!show) return null;
+
   return (
     <button
       type="button"
       onClick={scrollToTarget}
       aria-label={atBottom ? "Scroll to top" : "Scroll to bottom"}
-      className="fixed bottom-6 right-6 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-pink-600 text-white shadow-lg transition hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 focus:ring-offset-black"
+      className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-pink-600 text-white shadow-xl transition-all duration-300 hover:bg-pink-700 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 focus:ring-offset-black animate-in fade-in slide-in-from-bottom-4"
     >
-      {atBottom ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+      <span className="transition-transform duration-300 ease-in-out">
+        {atBottom ? (
+          <ArrowUp size={22} className="-translate-y-0.5" />
+        ) : (
+          <ArrowDown size={22} className="translate-y-0.5" />
+        )}
+      </span>
     </button>
   );
 }

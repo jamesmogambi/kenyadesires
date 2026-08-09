@@ -24,7 +24,7 @@ const MobileNavMenu = ({ onClose }: Props) => {
         <li>
           <Link
             className="flex items-center gap-2"
-            href="/erection-support"
+            href="/blog/erectile-dysfunction-treatment"
             onClick={handleLinkClick}
           >
             <svg
