@@ -200,6 +200,7 @@ export async function purchaseAdPackage(packageId: string) {
 
     return {
       success: true,
+      transactionId,
       package: {
         id: newPackage.id,
         packageId: newPackage.packageId,

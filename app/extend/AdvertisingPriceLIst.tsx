@@ -152,7 +152,11 @@ const AdvertisingPriceLIst = ({
           setSelectedPackage(null);
           setStatus("idle");
           setMessage("");
-        }, 2000);
+        }, 1500);
+
+        if (result.transactionId) {
+          router.push(`/payment-status?checkoutRequestId=${encodeURIComponent(result.transactionId)}`);
+        }
       } else {
         setStatus("error");
         setMessage(result.error || "Failed to purchase package");
