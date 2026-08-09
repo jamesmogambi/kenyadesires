@@ -6,6 +6,7 @@ export function paymentConfirmationEmail(data: {
   transactionId: string;
   date: string;
   phoneNumber: string;
+  credits?: number;
 }) {
   const subject = `Payment Confirmed - ${data.packageName} | KenyaDesires`;
 
@@ -54,18 +55,30 @@ export function paymentConfirmationEmail(data: {
                           </tr>
                         </table>
                       </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:15px; border-bottom:1px solid #eeeeee;">
-                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td style="color:#888888; font-size:13px; padding:4px 0;">Amount Paid</td>
-                            <td style="color:#fe0032; font-size:16px; font-weight:bold; text-align:right;">KSH ${data.amount.toLocaleString()}</td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                    <tr>
+                     </tr>
+                     <tr>
+                       <td style="padding:15px; border-bottom:1px solid #eeeeee;">
+                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                           <tr>
+                             <td style="color:#888888; font-size:13px; padding:4px 0;">Amount Paid</td>
+                             <td style="color:#fe0032; font-size:16px; font-weight:bold; text-align:right;">KSH ${data.amount.toLocaleString()}</td>
+                           </tr>
+                         </table>
+                       </td>
+                     </tr>
+                     ${data.credits ? `
+                     <tr>
+                       <td style="padding:15px; border-bottom:1px solid #eeeeee;">
+                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                           <tr>
+                             <td style="color:#888888; font-size:13px; padding:4px 0;">Credits Added</td>
+                             <td style="color:#333333; font-size:14px; font-weight:bold; text-align:right;">${data.credits} credits <span style="color:#888;font-size:12px;">(KSH ${(data.credits * 10).toLocaleString()})</span></td>
+                           </tr>
+                         </table>
+                       </td>
+                     </tr>
+                     ` : ""}
+                     <tr>
                       <td style="padding:15px; border-bottom:1px solid #eeeeee;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                           <tr>
@@ -136,7 +149,7 @@ Your payment has been successfully processed.
 Invoice ID: ${data.transactionId}
 Package: ${data.packageName}
 Amount Paid: KSH ${data.amount.toLocaleString()}
-M-Pesa Receipt: ${data.receiptNumber || "N/A"}
+${data.credits ? `Credits Added: ${data.credits} credits (KSH ${(data.credits * 10).toLocaleString()})\n` : ""}M-Pesa Receipt: ${data.receiptNumber || "N/A"}
 Phone Number: ${data.phoneNumber}
 Date: ${data.date}
 

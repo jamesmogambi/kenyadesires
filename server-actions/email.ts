@@ -141,6 +141,7 @@ export async function sendPaymentConfirmationEmail(data: {
   transactionId: string;
   date: string;
   phoneNumber: string;
+  credits?: number;
 }): Promise<void> {
   try {
     const { subject, html, text } = paymentConfirmationEmail(data);

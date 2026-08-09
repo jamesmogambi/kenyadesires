@@ -195,6 +195,7 @@ export async function purchaseAdPackage(packageId: string) {
         transactionId,
         date: new Date().toLocaleString(),
         phoneNumber,
+        credits: adPackage.credits,
       }).catch((err) => console.error("Background email send failed:", err));
     }
 

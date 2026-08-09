@@ -262,6 +262,7 @@ export async function POST(req: Request) {
             transactionId: callback.checkoutRequestId,
             date: dateStr,
             phoneNumber: callback.phoneNumber || "",
+            credits: creditsToAdd,
           }).catch((err) => console.error("Background email send failed:", err));
         }
       }
@@ -366,6 +367,17 @@ export async function POST(req: Request) {
           : callback.transactionDate
             ? new Date(callback.transactionDate).toLocaleString()
             : new Date().toLocaleString();
+        
+        let emailCredits: number | undefined;
+        if (transactionType === "ad_purchase" && packageId) {
+          const adPackage = getAdPackageById(packageId);
+          const creditsFromPayment = Math.floor(amount / 10);
+          emailCredits = adPackage ? Math.max(0, creditsFromPayment - adPackage.credits) : undefined;
+        } else if (transactionType === "credit_purchase") {
+          const creditPackage = getCreditPackageById(packageId || "");
+          emailCredits = creditPackage?.credits || Math.floor(amount / 10);
+        }
+        
         sendPaymentConfirmationEmail({
           to: userInfo.email,
           name: userInfo.name,
@@ -375,6 +387,7 @@ export async function POST(req: Request) {
           transactionId: callback.checkoutRequestId,
           date: dateStr,
           phoneNumber: callback.phoneNumber || transactionData?.phoneNumber || "",
+          credits: emailCredits,
         }).catch((err) => console.error("Background email send failed:", err));
       }
     } else {
