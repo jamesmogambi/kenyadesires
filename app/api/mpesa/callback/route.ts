@@ -153,7 +153,7 @@ function toNumber(value: unknown): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-function parseMpesaTransactionDate(value: unknown): string | number | undefined {
+function parseMpesaTransactionDate(value: unknown): Timestamp | string | number | undefined {
   if (value === null || value === undefined) return undefined;
   const str = String(value);
   if (!/^\d{14}$/.test(str)) return str;
@@ -166,6 +166,10 @@ function parseMpesaTransactionDate(value: unknown): string | number | undefined 
   const date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
   if (Number.isNaN(date.getTime())) return str;
   return Timestamp.fromDate(date);
+}
+
+function isTimestamp(value: unknown): value is Timestamp {
+  return value instanceof Timestamp;
 }
 
 export async function POST(req: Request) {
@@ -192,6 +196,10 @@ export async function POST(req: Request) {
     const isSuccess = Number(callback.resultCode) === 0;
     const amount = toNumber(callback.amount || transactionDoc.data()?.amount || 0);
     const transactionDate = parseMpesaTransactionDate(callback.transactionDate);
+
+    const transactionData = transactionDoc.data();
+    const transactionType = transactionData?.type || "credit_purchase";
+    const packageId = transactionData?.packageId;
 
     if (!transactionDoc.exists) {
       console.error("Transaction not found:", callback.checkoutRequestId);
@@ -235,6 +243,11 @@ export async function POST(req: Request) {
         const userInfo = await getUserInfo(resolvedUserId);
         if (userInfo.email) {
           const pkg = packageId ? getCreditPackageById(packageId) || getAdPackageById(packageId) : null;
+          const dateStr = isTimestamp(transactionDate)
+            ? transactionDate.toDate().toLocaleString()
+            : callback.transactionDate
+              ? new Date(callback.transactionDate).toLocaleString()
+              : new Date().toLocaleString();
           sendPaymentConfirmationEmail({
             to: userInfo.email,
             name: userInfo.name,
@@ -242,11 +255,7 @@ export async function POST(req: Request) {
             receiptNumber: callback.receiptNumber || "",
             packageName: pkg?.name || "Payment",
             transactionId: callback.checkoutRequestId,
-            date: transactionDate instanceof Timestamp
-              ? transactionDate.toDate().toLocaleString()
-              : callback.transactionDate
-                ? new Date(callback.transactionDate).toLocaleString()
-                : new Date().toLocaleString(),
+            date: dateStr,
             phoneNumber: callback.phoneNumber || "",
           }).catch((err) => console.error("Background email send failed:", err));
         }
@@ -254,10 +263,6 @@ export async function POST(req: Request) {
 
       return NextResponse.json({ received: true });
     }
-
-    const transactionData = transactionDoc.data();
-    const transactionType = transactionData?.type || "credit_purchase";
-    const packageId = transactionData?.packageId;
 
     if (isSuccess) {
       const userId = transactionData?.userId;
@@ -356,6 +361,11 @@ export async function POST(req: Request) {
       const userInfo = await getUserInfo(userId || "");
       if (userInfo.email) {
         const pkg = packageId ? getCreditPackageById(packageId) || getAdPackageById(packageId) : null;
+        const dateStr = isTimestamp(transactionDate)
+          ? transactionDate.toDate().toLocaleString()
+          : callback.transactionDate
+            ? new Date(callback.transactionDate).toLocaleString()
+            : new Date().toLocaleString();
         sendPaymentConfirmationEmail({
           to: userInfo.email,
           name: userInfo.name,
@@ -363,11 +373,7 @@ export async function POST(req: Request) {
           receiptNumber: callback.receiptNumber || "",
           packageName: pkg?.name || transactionData?.transactionDesc || "Payment",
           transactionId: callback.checkoutRequestId,
-          date: transactionDate instanceof Timestamp
-            ? transactionDate.toDate().toLocaleString()
-            : callback.transactionDate
-              ? new Date(callback.transactionDate).toLocaleString()
-              : new Date().toLocaleString(),
+          date: dateStr,
           phoneNumber: callback.phoneNumber || transactionData?.phoneNumber || "",
         }).catch((err) => console.error("Background email send failed:", err));
       }

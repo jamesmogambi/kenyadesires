@@ -91,6 +91,15 @@
         {"fieldPath": "userId", "order": "ASCENDING"},
         {"fieldPath": "createdAt", "order": "DESCENDING"}
       ]
+    },
+    {
+      "collection": "transactions",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "phoneNumber", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
     }
   ],
   "fieldOverrides": []

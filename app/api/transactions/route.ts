@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/lib/firebase-admin";
+import { Timestamp } from "firebase-admin/firestore";
+
+function sortTransactions(docs: any[]) {
+  return docs
+    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || a.createdAt?._seconds * 1000 || 0;
+      const bTime = b.createdAt?.toMillis?.() || b.createdAt?._seconds * 1000 || 0;
+      return bTime - aTime;
+    })
+    .slice(0, 50);
+}
 
 export async function GET(req: Request) {
   try {
@@ -12,8 +24,6 @@ export async function GET(req: Request) {
     let snapshot = await adminDb
       .collection("transactions")
       .where("userId", "==", userId)
-      .orderBy("createdAt", "desc")
-      .limit(50)
       .get();
 
     if (snapshot.empty) {
@@ -27,13 +37,10 @@ export async function GET(req: Request) {
         const data = escortSnap.docs[0].data();
         const phone = data?.contact?.phone || data?.contact?.telephone || data?.whatsappPhone;
         if (phone) {
-          const phoneSnap = await adminDb
+          snapshot = await adminDb
             .collection("transactions")
             .where("phoneNumber", "==", phone.replace(/\D/g, ""))
-            .orderBy("createdAt", "desc")
-            .limit(50)
             .get();
-          snapshot = phoneSnap;
         }
       } else {
         const agencySnap = await adminDb
@@ -46,22 +53,16 @@ export async function GET(req: Request) {
           const data = agencySnap.docs[0].data();
           const phone = data?.contactPhone;
           if (phone) {
-            const phoneSnap = await adminDb
+            snapshot = await adminDb
               .collection("transactions")
               .where("phoneNumber", "==", phone.replace(/\D/g, ""))
-              .orderBy("createdAt", "desc")
-              .limit(50)
               .get();
-            snapshot = phoneSnap;
           }
         }
       }
     }
 
-    const transactions = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const transactions = sortTransactions(snapshot.docs);
 
     return NextResponse.json({ transactions });
   } catch (error: any) {

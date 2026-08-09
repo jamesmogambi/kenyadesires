@@ -31,7 +31,10 @@ export default function InvoicesPage() {
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        const res = await fetch("/api/transactions");
+        const res = await fetch("/api/transactions", {
+        credentials: "include",
+        cache: "no-store",
+      });
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           setError(data.error === "unauthorized" ? "Please log in to view invoices" : data.detail || data.error || "Failed to load invoices");
