@@ -134,6 +134,8 @@ export default function PaymentStatusPage() {
   }
 
   if (status === "completed") {
+    window.dispatchEvent(new Event("credits-updated"));
+    window.dispatchEvent(new Event("packages-updated"));
     return (
       <div className="relative min-h-screen bg-white flex items-center justify-center p-4 overflow-hidden">
         <FloatingFlowers />

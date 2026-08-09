@@ -147,6 +147,8 @@ const AdvertisingPriceLIst = ({
         setStatus("success");
         setMessage("Ad package purchased successfully with credits!");
         onPurchaseSuccess?.();
+        window.dispatchEvent(new Event("packages-updated"));
+        window.dispatchEvent(new Event("credits-updated"));
         setTimeout(() => {
           setOpen(false);
           setSelectedPackage(null);

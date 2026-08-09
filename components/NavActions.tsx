@@ -147,11 +147,17 @@ const NavActions = ({
       const result = await getUserActivePackages();
       if (result.success) {
         setActivePackages(result.packages || []);
-      } else {
-        setActivePackages([]);
       }
     } catch {
-      setActivePackages([]);
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const result = await getUserActivePackages();
+        if (result.success) {
+          setActivePackages(result.packages || []);
+        }
+      } catch {
+        // keep previous packages on transient error
+      }
     } finally {
       setPackageLoading(false);
     }
@@ -165,9 +171,18 @@ const NavActions = ({
   useEffect(() => {
     const handler = () => {
       fetchCredits();
+      fetchActivePackage();
     };
     window.addEventListener("credits-updated", handler);
     return () => window.removeEventListener("credits-updated", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      fetchActivePackage();
+    };
+    window.addEventListener("packages-updated", handler);
+    return () => window.removeEventListener("packages-updated", handler);
   }, []);
 
   return (
@@ -218,24 +233,22 @@ const NavActions = ({
           </DropdownMenuItem> */}
 
           {!packageLoading && activePackages.length > 0 && (
-            <>
-              {activePackages.map((pkg) => (
-                <DropdownMenuItem className="text-stone-700 group" key={pkg.id}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="size-6 text-stone-400 shrink-0"
-                  >
-                    <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h21V6.375C22.5 5.34 21.661 4.5 20.625 4.5H3.375ZM1.5 15.75v4.875c0 .621.504 1.125 1.125 1.125h20.25c.621 0 1.125-.504 1.125-1.125V15.75H1.5Z" />
-                  </svg>
-                  <span className="uppercase font-normal text-base group-hover:font-bold">
-                    Package:{" "}
-                    <span className="font-bold text-red-700">{pkg.name}</span>
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </>
+            <DropdownMenuItem className="text-stone-700 group">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-6 text-stone-400 shrink-0"
+              >
+                <path d="M3.375 4.5C2.339 4.5 1.5 5.34 1.5 6.375V13.5h21V6.375C22.5 5.34 21.661 4.5 20.625 4.5H3.375ZM1.5 15.75v4.875c0 .621.504 1.125 1.125 1.125h20.25c.621 0 1.125-.504 1.125-1.125V15.75H1.5Z" />
+              </svg>
+              <span className="uppercase font-normal text-base group-hover:font-bold">
+                Packages:{" "}
+                <span className="font-bold text-red-700">
+                  {activePackages.map((pkg) => pkg.name).join(", ")}
+                </span>
+              </span>
+            </DropdownMenuItem>
           )}
 
           <DropdownMenuItem className="text-stone-700 group">
