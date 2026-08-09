@@ -27,6 +27,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import axios from "axios";
 import { toast } from "sonner";
 import {
   Collapsible,
@@ -212,36 +213,25 @@ const AdvertisingPriceLIst = ({
       const amount = pkg.credits * 10;
       const cleanPhone = phoneNumber.replace(/\s/g, "").replace(/^\+/, "");
 
-      let response: Response;
-      try {
-        response = await fetch("/api/mpesa/stk-push", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phoneNumber: cleanPhone,
-            amount,
-            accountReference: `Ad-${pkg.name}-${Date.now()}`,
-            transactionDesc: `Buy ${pkg.name} ad package`,
-            packageId: selectedPackage,
-            type: "ad_purchase",
-          }),
-        });
-      } catch (networkError: any) {
-        console.error("M-Pesa network error:", networkError);
-        throw new Error(`Network error: ${networkError?.message || "Failed to reach payment server. Please check your connection and try again."}`);
-      }
-
       let data: any = {};
       try {
-        data = await response.json();
-      } catch {
-        data = { error: response.statusText || "Invalid server response" };
+        const response = await axios.post("/api/mpesa/stk-push", {
+          phoneNumber: cleanPhone,
+          amount,
+          accountReference: `Ad-${pkg.name}-${Date.now()}`,
+          transactionDesc: `Buy ${pkg.name} ad package`,
+          packageId: selectedPackage,
+          type: "ad_purchase",
+        });
+        data = response.data;
+      } catch (networkError: any) {
+        console.error("M-Pesa network error:", networkError);
+        const detail = networkError?.response?.data?.error || networkError?.response?.data?.detail || networkError?.message || "Failed to reach payment server. Please check your connection and try again.";
+        throw new Error(detail);
       }
 
-      if (!response.ok) {
-        throw new Error(data.error || data.detail || `HTTP ${response.status}: Failed to initiate payment`);
+      if (!data.success && data.error) {
+        throw new Error(data.error || data.detail || "HTTP error: Failed to initiate payment");
       }
 
       setStatus("success");

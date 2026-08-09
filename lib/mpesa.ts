@@ -70,7 +70,7 @@ export function validateMpesaConfig(): { valid: boolean; error?: string } {
 }
 
 export function getCallbackUrl(): string {
-  const callbackUrl = process.env.MPESA_CALLBACK_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  const callbackUrl = (process.env.MPESA_CALLBACK_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim();
 
   if (!callbackUrl) {
     throw new Error(
@@ -99,7 +99,7 @@ export function getCallbackUrl(): string {
     );
   }
 
-  const trimmed = callbackUrl.replace(/\/$/, "");
+  const trimmed = callbackUrl.trim().replace(/\/$/, "");
   console.log("[M-Pesa] Using callback URL:", `${trimmed}/api/mpesa/callback`);
   return trimmed;
 }
@@ -195,14 +195,29 @@ export async function initiateSTKPush(
   const url = `${getMpesaBaseUrl()}/mpesa/stkpush/v1/processrequest`;
   console.log("[M-Pesa] Request URL:", url);
   
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+  } catch (fetchError: any) {
+    clearTimeout(timeout);
+    if (fetchError.name === "AbortError") {
+      throw new Error("M-Pesa API request timed out. Please try again.");
+    }
+    throw new Error(`M-Pesa API error: ${fetchError.message}`);
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const responseText = await response.text();
   console.log("[M-Pesa] Response status:", response.status);
