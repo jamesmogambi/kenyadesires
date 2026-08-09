@@ -8,8 +8,17 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const callback = parseSTKCallback(body);
+    const body = await req.json().catch(() => ({}));
+    let callback;
+    try {
+      callback = parseSTKCallback(body as any);
+    } catch (parseError: any) {
+      console.error("Callback parse error:", parseError);
+      return NextResponse.json(
+        { error: "Invalid callback format", detail: parseError.message },
+        { status: 400 },
+      );
+    }
 
     const transactionRef = adminDb.collection("transactions").doc(callback.checkoutRequestId);
     const transactionDoc = await transactionRef.get();

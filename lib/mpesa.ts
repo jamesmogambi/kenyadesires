@@ -50,14 +50,14 @@ export function validateMpesaConfig(): { valid: boolean; error?: string } {
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
   const shortcode = process.env.MPESA_SHORTCODE;
   const passkey = process.env.MPESA_PASSKEY;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const callbackUrl = process.env.MPESA_CALLBACK_URL;
 
   const missing: string[] = [];
   if (!consumerKey) missing.push("MPESA_CONSUMER_KEY");
   if (!consumerSecret) missing.push("MPESA_CONSUMER_SECRET");
   if (!shortcode) missing.push("MPESA_SHORTCODE");
   if (!passkey) missing.push("MPESA_PASSKEY");
-  if (!siteUrl) missing.push("NEXT_PUBLIC_SITE_URL");
+  if (!callbackUrl) missing.push("MPESA_CALLBACK_URL");
 
   if (missing.length > 0) {
     return {
@@ -67,6 +67,41 @@ export function validateMpesaConfig(): { valid: boolean; error?: string } {
   }
 
   return { valid: true };
+}
+
+export function getCallbackUrl(): string {
+  const callbackUrl = process.env.MPESA_CALLBACK_URL || process.env.NEXT_PUBLIC_SITE_URL;
+
+  if (!callbackUrl) {
+    throw new Error(
+      "MPESA_CALLBACK_URL or NEXT_PUBLIC_SITE_URL is not defined in environment variables",
+    );
+  }
+
+  if (!callbackUrl.startsWith("https://")) {
+    throw new Error(
+      `Invalid CallbackURL: Must use HTTPS. Received: ${callbackUrl}`,
+    );
+  }
+
+  try {
+    new URL(callbackUrl);
+  } catch {
+    throw new Error(`Invalid CallbackURL format: ${callbackUrl}`);
+  }
+
+  if (
+    callbackUrl.includes("localhost") ||
+    callbackUrl.includes("127.0.0.1")
+  ) {
+    throw new Error(
+      "CallbackURL cannot be localhost. Use ngrok or a live URL instead.",
+    );
+  }
+
+  const trimmed = callbackUrl.replace(/\/$/, "");
+  console.log("[M-Pesa] Using callback URL:", `${trimmed}/api/mpesa/callback`);
+  return trimmed;
 }
 
 export async function getMpesaAccessToken(): Promise<string> {
@@ -126,6 +161,9 @@ export async function initiateSTKPush(
     throw new Error(validation.error);
   }
 
+  const callbackUrl = getCallbackUrl();
+  console.log("[M-Pesa] Callback URL:", `${callbackUrl}/api/mpesa/callback`);
+
   const token = await getMpesaAccessToken();
   const shortcode = getMpesaShortcode();
   const password = generatePassword();
@@ -144,12 +182,19 @@ export async function initiateSTKPush(
     PartyA: formatPhoneNumber(request.phoneNumber),
     PartyB: shortcode,
     PhoneNumber: formatPhoneNumber(request.phoneNumber),
-    CallbackURL: `${process.env.NEXT_PUBLIC_SITE_URL}/api/mpesa/callback`,
+    CallbackURL: `${callbackUrl}/api/mpesa/callback`,
     AccountReference: request.accountReference,
     TransactionDesc: request.transactionDesc,
   };
 
+  console.log("[M-Pesa] STK Push payload:", {
+    ...payload,
+    Password: "[REDACTED]",
+  });
+
   const url = `${getMpesaBaseUrl()}/mpesa/stkpush/v1/processrequest`;
+  console.log("[M-Pesa] Request URL:", url);
+  
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -159,12 +204,15 @@ export async function initiateSTKPush(
     body: JSON.stringify(payload),
   });
 
+  const responseText = await response.text();
+  console.log("[M-Pesa] Response status:", response.status);
+  console.log("[M-Pesa] Response body:", responseText);
+
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`STK Push failed: ${response.status} ${text}`);
+    throw new Error(`STK Push failed: ${response.status} ${responseText}`);
   }
 
-  const data = await response.json();
+  const data = JSON.parse(responseText);
   
   if (data.ResponseCode && data.ResponseCode !== "0") {
     throw new Error(data.ResponseDescription || "M-Pesa rejected the request");
@@ -185,6 +233,10 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 export function parseSTKCallback(data: STKCallbackResult) {
+  if (!data?.Body?.stkCallback) {
+    throw new Error("Invalid callback payload: missing Body.stkCallback");
+  }
+
   const callback = data.Body.stkCallback;
   const metadata: Record<string, string | number> = {};
 

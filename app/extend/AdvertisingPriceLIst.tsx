@@ -16,7 +16,6 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { initiateSTKPush } from "@/lib/mpesa";
 import { AD_PACKAGES } from "@/lib/constants/packages";
 import { purchaseAdPackage } from "@/server-actions/payment.action";
 import Link from "next/link";
@@ -211,15 +210,39 @@ const AdvertisingPriceLIst = ({
       if (!pkg) throw new Error("Package not found");
 
       const amount = pkg.credits * 10;
-
       const cleanPhone = phoneNumber.replace(/\s/g, "").replace(/^\+/, "");
 
-      const response = await initiateSTKPush({
-        phoneNumber: cleanPhone,
-        amount,
-        accountReference: `Ad-${pkg.name}-${Date.now()}`,
-        transactionDesc: `Buy ${pkg.name} ad package`,
-      });
+      let response: Response;
+      try {
+        response = await fetch("/api/mpesa/stk-push", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phoneNumber: cleanPhone,
+            amount,
+            accountReference: `Ad-${pkg.name}-${Date.now()}`,
+            transactionDesc: `Buy ${pkg.name} ad package`,
+            packageId: selectedPackage,
+            type: "ad_purchase",
+          }),
+        });
+      } catch (networkError: any) {
+        console.error("M-Pesa network error:", networkError);
+        throw new Error(`Network error: ${networkError?.message || "Failed to reach payment server. Please check your connection and try again."}`);
+      }
+
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch {
+        data = { error: response.statusText || "Invalid server response" };
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || data.detail || `HTTP ${response.status}: Failed to initiate payment`);
+      }
 
       setStatus("success");
       setMessage(
