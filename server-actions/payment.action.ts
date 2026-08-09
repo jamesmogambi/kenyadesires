@@ -17,18 +17,31 @@ export async function purchaseAdPackage(packageId: string) {
       return { success: false, error: "Invalid package" };
     }
 
-    const userRef = adminDb.collection("escorts").doc(userId);
-    const userDoc = await userRef.get();
+    const escortSnap = await adminDb
+      .collection("escorts")
+      .where("clerkUserId", "==", userId)
+      .limit(1)
+      .get();
 
-    let targetRef = userRef;
-    let targetDoc = userDoc;
+    let targetRef: FirebaseFirestore.DocumentReference;
+    let targetDoc: FirebaseFirestore.DocumentSnapshot;
 
-    if (!userDoc.exists) {
-      targetRef = adminDb.collection("agencies").doc(userId);
-      targetDoc = await targetRef.get();
-      if (!targetDoc.exists) {
+    if (!escortSnap.empty) {
+      targetRef = escortSnap.docs[0].ref;
+      targetDoc = escortSnap.docs[0];
+    } else {
+      const agencySnap = await adminDb
+        .collection("agencies")
+        .where("ownerId", "==", userId)
+        .limit(1)
+        .get();
+
+      if (agencySnap.empty) {
         return { success: false, error: "User profile not found" };
       }
+
+      targetRef = agencySnap.docs[0].ref;
+      targetDoc = agencySnap.docs[0];
     }
 
     const userData = targetDoc.data();
@@ -100,19 +113,29 @@ export async function getUserActivePackages() {
       return { success: false, error: "Unauthorized", packages: [] };
     }
 
-    const userRef = adminDb.collection("escorts").doc(userId);
-    const userDoc = await userRef.get();
+    const escortSnap = await adminDb
+      .collection("escorts")
+      .where("clerkUserId", "==", userId)
+      .limit(1)
+      .get();
 
-    let targetDoc = userDoc;
-    if (!userDoc.exists) {
-      const agencyRef = adminDb.collection("agencies").doc(userId);
-      const agencyDoc = await agencyRef.get();
-      if (agencyDoc.exists) {
-        targetDoc = agencyDoc;
+    let targetDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+
+    if (!escortSnap.empty) {
+      targetDoc = escortSnap.docs[0];
+    } else {
+      const agencySnap = await adminDb
+        .collection("agencies")
+        .where("ownerId", "==", userId)
+        .limit(1)
+        .get();
+
+      if (!agencySnap.empty) {
+        targetDoc = agencySnap.docs[0];
       }
     }
 
-    if (!targetDoc.exists) {
+    if (!targetDoc) {
       return { success: true, packages: [] };
     }
 
@@ -147,18 +170,26 @@ export async function getUserCredits() {
       return { success: false, error: "Unauthorized", credits: 0 };
     }
 
-    const userRef = adminDb.collection("escorts").doc(userId);
-    const userDoc = await userRef.get();
+    const escortSnap = await adminDb
+      .collection("escorts")
+      .where("clerkUserId", "==", userId)
+      .limit(1)
+      .get();
 
-    if (userDoc.exists) {
-      return { success: true, credits: userDoc.data()?.credits || 0 };
+    if (!escortSnap.empty) {
+      const data = escortSnap.docs[0].data();
+      return { success: true, credits: data?.credits || 0 };
     }
 
-    const agencyRef = adminDb.collection("agencies").doc(userId);
-    const agencyDoc = await agencyRef.get();
+    const agencySnap = await adminDb
+      .collection("agencies")
+      .where("ownerId", "==", userId)
+      .limit(1)
+      .get();
 
-    if (agencyDoc.exists) {
-      return { success: true, credits: agencyDoc.data()?.credits || 0 };
+    if (!agencySnap.empty) {
+      const data = agencySnap.docs[0].data();
+      return { success: true, credits: data?.credits || 0 };
     }
 
     return { success: true, credits: 0 };

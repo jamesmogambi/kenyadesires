@@ -82,6 +82,15 @@
         {"fieldPath": "isVerified", "order": "ASCENDING"},
         {"fieldPath": "rating", "order": "DESCENDING"}
       ]
+    },
+    {
+      "collection": "transactions",
+      "queryScope": "COLLECTION",
+      "indexScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
     }
   ],
   "fieldOverrides": []
