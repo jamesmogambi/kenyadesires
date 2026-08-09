@@ -4,6 +4,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { parseSTKCallback } from "@/lib/mpesa";
 import { getCreditPackageById, getAdPackageById, PLAN_DETAILS } from "@/lib/constants/packages";
 import { sendPaymentConfirmationEmail } from "@/server-actions/email";
+import { incrementUserCredits } from "@/server-actions/payment.action";
 
 export const dynamic = "force-dynamic";
 
@@ -239,13 +240,7 @@ export async function POST(req: Request) {
         const creditsToAdd = creditPackage?.credits || Math.floor(amount / 10);
 
         if (creditsToAdd > 0) {
-          const targetRef = await findUserRef(resolvedUserId);
-          if (targetRef) {
-            await targetRef.update({
-              credits: FieldValue.increment(creditsToAdd),
-              updatedAt: Timestamp.now(),
-            });
-          }
+          await incrementUserCredits(resolvedUserId, creditsToAdd);
         }
 
         await updateUserPlan(resolvedUserId, packageId);
@@ -341,13 +336,7 @@ export async function POST(req: Request) {
           const creditsToAdd = creditPackage?.credits || Math.floor(amount / 10);
 
           if (creditsToAdd > 0) {
-            const targetRef = await findUserRef(userId);
-            if (targetRef) {
-              await targetRef.update({
-                credits: FieldValue.increment(creditsToAdd),
-                updatedAt: Timestamp.now(),
-              });
-            }
+            await incrementUserCredits(userId, creditsToAdd);
           }
 
           await updateUserPlan(userId, packageId);

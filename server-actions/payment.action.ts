@@ -289,6 +289,18 @@ export async function getUserActivePackages() {
   }
 }
 
+export async function incrementUserCredits(userId: string, amount: number) {
+  if (!userId || amount <= 0) return;
+
+  const targetRef = await findUserRef(userId);
+  if (!targetRef) return;
+
+  await targetRef.update({
+    credits: FieldValue.increment(amount),
+    updatedAt: Timestamp.now(),
+  });
+}
+
 export async function getUserCredits() {
   try {
     const { userId } = await auth();

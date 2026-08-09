@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
-import { purchaseAdPackage } from "@/server-actions/payment.action";
+import { purchaseAdPackage, getUserActivePackages } from "@/server-actions/payment.action";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -193,6 +193,23 @@ const AdvertisingPriceLIst = ({
     setMessage("Initiating payment...");
 
     try {
+      const activeResult = await getUserActivePackages();
+      if (activeResult.success && activeResult.packages.length > 0) {
+        const pkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
+        const hasActiveSameType = activeResult.packages.some(
+          (p: any) => p.packageId === selectedPackage && p.status === "active",
+        );
+
+        if (hasActiveSameType) {
+          setStatus("error");
+          setMessage(
+            `You already have an active ${pkg?.name || "package"}. Please wait for it to expire before purchasing again.`,
+          );
+          setLoading(false);
+          return;
+        }
+      }
+
       const pkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
       if (!pkg) throw new Error("Package not found");
 
