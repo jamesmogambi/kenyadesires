@@ -34,6 +34,10 @@ export async function POST(req: Request) {
 
     const checkoutRequestId = stkResponse.CheckoutRequestID;
 
+    if (!checkoutRequestId) {
+      throw new Error("M-Pesa did not return a CheckoutRequestID");
+    }
+
     const transactionRef = adminDb.collection("transactions").doc(checkoutRequestId);
     await transactionRef.set({
       userId,

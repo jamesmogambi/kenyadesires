@@ -4,7 +4,7 @@ import { adminDb } from "@/lib/firebase-admin";
 
 export async function GET(
   req: Request,
-  { params }: { params: { checkoutRequestId: string } },
+  { params }: { params: Promise<{ checkoutRequestId: string }> },
 ) {
   try {
     const { userId } = await auth();
@@ -12,7 +12,7 @@ export async function GET(
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const { checkoutRequestId } = params;
+    const { checkoutRequestId } = await params;
     const doc = await adminDb.collection("transactions").doc(checkoutRequestId).get();
 
     if (!doc.exists) {
