@@ -45,6 +45,30 @@ export function getMpesaPasskey(): string {
   return process.env.MPESA_PASSKEY || "";
 }
 
+export function validateMpesaConfig(): { valid: boolean; error?: string } {
+  const consumerKey = process.env.MPESA_CONSUMER_KEY;
+  const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
+  const shortcode = process.env.MPESA_SHORTCODE;
+  const passkey = process.env.MPESA_PASSKEY;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  const missing: string[] = [];
+  if (!consumerKey) missing.push("MPESA_CONSUMER_KEY");
+  if (!consumerSecret) missing.push("MPESA_CONSUMER_SECRET");
+  if (!shortcode) missing.push("MPESA_SHORTCODE");
+  if (!passkey) missing.push("MPESA_PASSKEY");
+  if (!siteUrl) missing.push("NEXT_PUBLIC_SITE_URL");
+
+  if (missing.length > 0) {
+    return {
+      valid: false,
+      error: `M-Pesa configuration incomplete. Missing: ${missing.join(", ")}`,
+    };
+  }
+
+  return { valid: true };
+}
+
 export async function getMpesaAccessToken(): Promise<string> {
   const consumerKey = process.env.MPESA_CONSUMER_KEY;
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
@@ -63,10 +87,16 @@ export async function getMpesaAccessToken(): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get M-Pesa access token: ${response.statusText}`);
+    const text = await response.text();
+    throw new Error(`M-Pesa auth failed: ${response.status} ${text}`);
   }
 
   const data = await response.json();
+  
+  if (!data.access_token) {
+    throw new Error("M-Pesa did not return an access token. Check your credentials.");
+  }
+
   return data.access_token;
 }
 
@@ -91,10 +121,19 @@ export function generateTimestamp(): string {
 export async function initiateSTKPush(
   request: STKPushRequest,
 ): Promise<STKPushResponse> {
+  const validation = validateMpesaConfig();
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
   const token = await getMpesaAccessToken();
   const shortcode = getMpesaShortcode();
   const password = generatePassword();
   const timestamp = generateTimestamp();
+
+  if (!password || password.length === 0) {
+    throw new Error("Failed to generate M-Pesa password. Check MPESA_PASSKEY.");
+  }
 
   const payload = {
     BusinessShortCode: parseInt(shortcode),
@@ -125,7 +164,13 @@ export async function initiateSTKPush(
     throw new Error(`STK Push failed: ${response.status} ${text}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  
+  if (data.ResponseCode && data.ResponseCode !== "0") {
+    throw new Error(data.ResponseDescription || "M-Pesa rejected the request");
+  }
+
+  return data;
 }
 
 export function formatPhoneNumber(phone: string): string {
