@@ -275,60 +275,43 @@ export async function POST(req: Request) {
 
       try {
         if (transactionType === "ad_purchase" && userId && packageId) {
-          const creditsFromPayment = Math.floor(amount / 10);
-
-          if (creditsFromPayment > 0) {
-            const targetRef = await findUserRef(userId);
-            if (targetRef) {
-              await targetRef.update({
-                credits: FieldValue.increment(creditsFromPayment),
-                updatedAt: Timestamp.now(),
-              });
-            }
-          }
-
           const adPackage = getAdPackageById(packageId);
           if (adPackage && userId) {
             const targetRef = await findUserRef(userId);
             if (targetRef) {
               const targetDoc = await targetRef.get();
               const userData = targetDoc.data();
-              const currentCredits = userData?.credits || 0;
+              const existingPackages = (userData?.activePackages as any[]) || [];
+              const activeSameType = existingPackages.filter(
+                (p: any) => p.packageId === packageId && p.status === "active",
+              );
 
-              if (currentCredits >= adPackage.credits) {
-                const existingPackages = (userData?.activePackages as any[]) || [];
-                const activeSameType = existingPackages.filter(
-                  (p: any) => p.packageId === packageId && p.status === "active",
-                );
+              const now = new Date();
+              const hasActiveSameType = activeSameType.some((p: any) => {
+                const expiresAt = p.expiresAt?.toDate?.() || new Date(p.expiresAt);
+                return expiresAt > now;
+              });
 
-                const now = new Date();
-                const hasActiveSameType = activeSameType.some((p: any) => {
-                  const expiresAt = p.expiresAt?.toDate?.() || new Date(p.expiresAt);
-                  return expiresAt > now;
+              if (!hasActiveSameType) {
+                const newPackage = {
+                  id: `${packageId}_${Date.now()}`,
+                  packageId,
+                  name: adPackage.name,
+                  description: adPackage.description,
+                  purchasedAt: Timestamp.now(),
+                  activatedAt: Timestamp.now(),
+                  expiresAt: Timestamp.fromDate(
+                    new Date(Date.now() + adPackage.durationDays * 24 * 60 * 60 * 1000),
+                  ),
+                  status: "active",
+                  creditsUsed: adPackage.credits,
+                  type: adPackage.type,
+                };
+
+                await targetRef.update({
+                  activePackages: [...existingPackages, newPackage],
+                  updatedAt: Timestamp.now(),
                 });
-
-                if (!hasActiveSameType) {
-                  const newPackage = {
-                    id: `${packageId}_${Date.now()}`,
-                    packageId,
-                    name: adPackage.name,
-                    description: adPackage.description,
-                    purchasedAt: Timestamp.now(),
-                    activatedAt: Timestamp.now(),
-                    expiresAt: Timestamp.fromDate(
-                      new Date(Date.now() + adPackage.durationDays * 24 * 60 * 60 * 1000),
-                    ),
-                    status: "active",
-                    creditsUsed: adPackage.credits,
-                    type: adPackage.type,
-                  };
-
-                  await targetRef.update({
-                    credits: FieldValue.increment(-adPackage.credits),
-                    activePackages: [...existingPackages, newPackage],
-                    updatedAt: Timestamp.now(),
-                  });
-                }
               }
             }
           }
@@ -369,11 +352,7 @@ export async function POST(req: Request) {
             : new Date().toLocaleString();
         
         let emailCredits: number | undefined;
-        if (transactionType === "ad_purchase" && packageId) {
-          const adPackage = getAdPackageById(packageId);
-          const creditsFromPayment = Math.floor(amount / 10);
-          emailCredits = adPackage ? Math.max(0, creditsFromPayment - adPackage.credits) : undefined;
-        } else if (transactionType === "credit_purchase") {
+        if (transactionType === "credit_purchase") {
           const creditPackage = getCreditPackageById(packageId || "");
           emailCredits = creditPackage?.credits || Math.floor(amount / 10);
         }

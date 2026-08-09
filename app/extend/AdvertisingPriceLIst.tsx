@@ -475,20 +475,12 @@ const AdvertisingPriceLIst = ({
                 <div className="mt-6 md:mt-8">
                   <h5
                     className={cn(
-                      "text-4xl md:text-5xl mt-4 font-bold text-center",
+                      "text-3xl md:text-4xl mt-4 font-bold text-center",
                       (pkg as any).bestValue ? "text-white" : "text-red-700",
                     )}
                   >
-                    {pkg.credits}{" "}
+                    {pkg.name}
                   </h5>
-                  <span
-                    className={cn(
-                      "text-xl md:text-2xl font-extrabold",
-                      (pkg as any).bestValue ? "text-white" : "text-red-700",
-                    )}
-                  >
-                    Credits
-                  </span>
                 </div>
 
                 <div className="mt-6 md:mt-8 flex items-center justify-center flex-col gap-2 md:gap-3">
@@ -538,7 +530,7 @@ const AdvertisingPriceLIst = ({
                       setPhoneError(null);
                     }}
                   >
-                    Buy
+                    Buy {pkg.name}
                   </Button>
               </div>
             ))}
@@ -694,7 +686,7 @@ const AdvertisingPriceLIst = ({
                             Processing...
                           </>
                         ) : (
-                          `Buy ${selectedPkg?.credits} Credits + ${selectedPkg?.name} with M-Pesa`
+                          `Buy ${selectedPkg?.name} with M-Pesa`
                         )}
                       </Button>
                     </form>
@@ -752,8 +744,7 @@ const AdvertisingPriceLIst = ({
                         {pkg.name}
                       </span>
                       <span className="text-sm text-gray-600">
-                        {pkg.credits} credits / KSH{" "}
-                        {(pkg.credits * 10).toLocaleString()}
+                        KSH {(pkg.credits * 10).toLocaleString()}
                       </span>
                     </div>
                     <ChevronDown className="size-5 text-gray-500 collapsible-chevron" />
