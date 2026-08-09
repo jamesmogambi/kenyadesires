@@ -506,7 +506,7 @@ const AdvertisingPriceLIst = ({
                       (pkg as any).bestValue ? "text-white/90" : "text-black",
                     )}
                   >
-                    including VAT
+                    Active for {pkg.durationDays} {pkg.durationDays === 1 ? "day" : "days"}
                   </span>
                 </div>
 
