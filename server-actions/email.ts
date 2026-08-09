@@ -7,6 +7,7 @@ import {
   verificationNotificationEmail,
 } from "@/email-templates";
 import { verificationSubmittedEmail } from "@/email-templates/verification-submitted";
+import { paymentConfirmationEmail } from "@/email-templates/payment-confirmation";
 
 const ADMIN_EMAIL = "hello@kenyadesires.com";
 
@@ -128,5 +129,30 @@ export async function sendVerificationSubmittedEmail(
     });
   } catch (err: any) {
     console.error("Failed to send verification submitted email:", err?.message || err);
+  }
+}
+
+export async function sendPaymentConfirmationEmail(data: {
+  to: string;
+  name: string;
+  amount: number;
+  receiptNumber: string;
+  packageName: string;
+  transactionId: string;
+  date: string;
+  phoneNumber: string;
+}): Promise<void> {
+  try {
+    const { subject, html, text } = paymentConfirmationEmail(data);
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: `"KenyaDesires" <${process.env.EMAIL_USER}>`,
+      to: data.to,
+      subject,
+      html,
+      text,
+    });
+  } catch (err: any) {
+    console.error("Failed to send payment confirmation email:", err?.message || err);
   }
 }

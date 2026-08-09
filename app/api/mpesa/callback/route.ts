@@ -2,9 +2,79 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { parseSTKCallback } from "@/lib/mpesa";
-import { getCreditPackageById, getAdPackageById } from "@/lib/constants/packages";
+import { getCreditPackageById, getAdPackageById, PLAN_DETAILS } from "@/lib/constants/packages";
+import { sendPaymentConfirmationEmail } from "@/server-actions/email";
 
 export const dynamic = "force-dynamic";
+
+async function getUserInfo(userId: string) {
+  const escortRef = adminDb.collection("escorts").doc(userId);
+  const escortDoc = await escortRef.get();
+
+  if (escortDoc.exists) {
+    const data = escortDoc.data();
+    return {
+      name: data?.name || "Valued Customer",
+      email: data?.email || "",
+      ref: escortRef,
+    };
+  }
+
+  const agencyRef = adminDb.collection("agencies").doc(userId);
+  const agencyDoc = await agencyRef.get();
+
+  if (agencyDoc.exists) {
+    const data = agencyDoc.data();
+    return {
+      name: data?.name || "Valued Customer",
+      email: data?.contactEmail || "",
+      ref: agencyRef,
+    };
+  }
+
+  return { name: "Valued Customer", email: "", ref: null };
+}
+
+async function updateUserPlan(userId: string, packageId: string | null | undefined) {
+  if (!packageId) return;
+
+  const creditPackage = getCreditPackageById(packageId);
+  if (!creditPackage) return;
+
+  let planType: string | null = null;
+  if (packageId === "credits-50") planType = "basic";
+  else if (packageId === "credits-180") planType = "premium";
+
+  if (!planType) return;
+
+  const escortRef = adminDb.collection("escorts").doc(userId);
+  const escortDoc = await escortRef.get();
+
+  if (escortDoc.exists) {
+    await escortRef.update({
+      "plan.type": planType,
+      "plan.isActive": true,
+      "plan.activatedAt": Timestamp.now(),
+      "plan.expiresAt": Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
+      "plan.features": PLAN_DETAILS[planType as keyof typeof PLAN_DETAILS]?.features || [],
+      updatedAt: Timestamp.now(),
+    });
+    return;
+  }
+
+  const agencyRef = adminDb.collection("agencies").doc(userId);
+  const agencyDoc = await agencyRef.get();
+
+  if (agencyDoc.exists) {
+    await agencyRef.update({
+      "plan.type": planType,
+      "plan.isActive": true,
+      "plan.activatedAt": Timestamp.now(),
+      "plan.expiresAt": Timestamp.fromDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)),
+      updatedAt: Timestamp.now(),
+    });
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -135,6 +205,8 @@ export async function POST(req: Request) {
             });
           }
         }
+
+        await updateUserPlan(userId, packageId);
       }
 
       await transactionRef.update({
@@ -147,6 +219,23 @@ export async function POST(req: Request) {
         completedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
+
+      const userInfo = await getUserInfo(userId || "");
+      if (userInfo.email) {
+        const pkg = packageId ? getCreditPackageById(packageId) || getAdPackageById(packageId) : null;
+        sendPaymentConfirmationEmail({
+          to: userInfo.email,
+          name: userInfo.name,
+          amount: callback.amount || transactionData?.amount || 0,
+          receiptNumber: callback.receiptNumber || "",
+          packageName: pkg?.name || transactionData?.transactionDesc || "Payment",
+          transactionId: callback.checkoutRequestId,
+          date: callback.transactionDate
+            ? new Date(callback.transactionDate).toLocaleString()
+            : new Date().toLocaleString(),
+          phoneNumber: callback.phoneNumber || transactionData?.phoneNumber || "",
+        }).catch((err) => console.error("Background email send failed:", err));
+      }
     } else {
       await transactionRef.update({
         status: "failed",

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { AD_PACKAGES } from "@/lib/constants/packages";
+import { initiateSTKPush } from "@/lib/mpesa";
 import { purchaseAdPackage } from "@/server-actions/payment.action";
 import Link from "next/link";
 import {
@@ -27,8 +29,6 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
-import axios from "axios";
-import { toast } from "sonner";
 import {
   Collapsible,
   CollapsibleContent,
@@ -50,6 +50,7 @@ const AdvertisingPriceLIst = ({
   userCredits = 0,
   userPhone = "",
 }: Prop) => {
+  const router = useRouter();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -213,38 +214,37 @@ const AdvertisingPriceLIst = ({
       const amount = pkg.credits * 10;
       const cleanPhone = phoneNumber.replace(/\s/g, "").replace(/^\+/, "");
 
-      let data: any = {};
-      try {
-        const response = await axios.post("/api/mpesa/stk-push", {
-          phoneNumber: cleanPhone,
-          amount,
-          accountReference: `Ad-${pkg.name}-${Date.now()}`,
-          transactionDesc: `Buy ${pkg.name} ad package`,
-          packageId: selectedPackage,
-          type: "ad_purchase",
-        });
-        data = response.data;
-      } catch (networkError: any) {
-        console.error("M-Pesa network error:", networkError);
-        const detail = networkError?.response?.data?.error || networkError?.response?.data?.detail || networkError?.message || "Failed to reach payment server. Please check your connection and try again.";
-        throw new Error(detail);
-      }
+      const response = await initiateSTKPush({
+        phoneNumber: cleanPhone,
+        amount,
+        accountReference: `Ad-${pkg.name}-${Date.now()}`,
+        transactionDesc: `Buy ${pkg.name} ad package`,
+      });
 
-      if (!data.success && data.error) {
-        throw new Error(data.error || data.detail || "HTTP error: Failed to initiate payment");
+      if (response.ResponseCode === "0") {
+        setStatus("success");
+        setMessage(
+          `✅ Payment initiated! Check your phone (${phoneNumber}) and enter PIN. Redirecting...`,
+        );
+        onPurchaseSuccess?.();
+        setTimeout(() => {
+          setOpen(false);
+          setSelectedPackage(null);
+          setStatus("idle");
+          setMessage("");
+          router.push(
+            `/payment-status?checkoutRequestId=${encodeURIComponent(response.CheckoutRequestID)}`,
+          );
+        }, 1500);
+      } else {
+        setStatus("error");
+        setMessage(
+          `❌ ${response.ResponseDescription || "Failed to initiate payment"}`,
+        );
+        onPurchaseError?.(
+          response.ResponseDescription || "Failed to initiate payment",
+        );
       }
-
-      setStatus("success");
-      setMessage(
-        `Payment initiated! Check your phone (${phoneNumber}) and enter PIN. After payment, ${pkg.credits} credits will be added and your ${pkg.name} package will be activated automatically.`,
-      );
-      onPurchaseSuccess?.();
-      setTimeout(() => {
-        setOpen(false);
-        setSelectedPackage(null);
-        setStatus("idle");
-        setMessage("");
-      }, 5000);
     } catch (error: any) {
       const errorMessage = error?.message || "An error occurred";
       setStatus("error");
