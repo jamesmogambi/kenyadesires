@@ -2,8 +2,101 @@
 
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { getAdPackageById } from "@/lib/constants/packages";
+import { getAdPackageById, getCreditPackageById } from "@/lib/constants/packages";
 import { auth } from "@clerk/nextjs/server";
+import { sendPaymentConfirmationEmail } from "./email";
+
+async function findUserRef(userId: string) {
+  if (!userId) return null;
+
+  const escortDoc = await adminDb.collection("escorts").doc(userId).get();
+  if (escortDoc.exists) {
+    return escortDoc.ref;
+  }
+
+  const agencyDoc = await adminDb.collection("agencies").doc(userId).get();
+  if (agencyDoc.exists) {
+    return agencyDoc.ref;
+  }
+
+  const escortSnap = await adminDb
+    .collection("escorts")
+    .where("clerkUserId", "==", userId)
+    .limit(1)
+    .get();
+
+  if (!escortSnap.empty) {
+    return escortSnap.docs[0].ref;
+  }
+
+  const agencySnap = await adminDb
+    .collection("agencies")
+    .where("ownerId", "==", userId)
+    .limit(1)
+    .get();
+
+  if (!agencySnap.empty) {
+    return agencySnap.docs[0].ref;
+  }
+
+  return null;
+}
+
+async function getUserInfo(userId: string) {
+  if (!userId) return { name: "Valued Customer", email: "", ref: null };
+
+  const escortDoc = await adminDb.collection("escorts").doc(userId).get();
+  if (escortDoc.exists) {
+    const data = escortDoc.data();
+    return {
+      name: data?.name || "Valued Customer",
+      email: data?.email || "",
+      ref: escortDoc.ref,
+    };
+  }
+
+  const agencyDoc = await adminDb.collection("agencies").doc(userId).get();
+  if (agencyDoc.exists) {
+    const data = agencyDoc.data();
+    return {
+      name: data?.name || "Valued Customer",
+      email: data?.contactEmail || "",
+      ref: agencyDoc.ref,
+    };
+  }
+
+  const escortSnap = await adminDb
+    .collection("escorts")
+    .where("clerkUserId", "==", userId)
+    .limit(1)
+    .get();
+
+  if (!escortSnap.empty) {
+    const data = escortSnap.docs[0].data();
+    return {
+      name: data?.name || "Valued Customer",
+      email: data?.email || "",
+      ref: escortSnap.docs[0].ref,
+    };
+  }
+
+  const agencySnap = await adminDb
+    .collection("agencies")
+    .where("ownerId", "==", userId)
+    .limit(1)
+    .get();
+
+  if (!agencySnap.empty) {
+    const data = agencySnap.docs[0].data();
+    return {
+      name: data?.name || "Valued Customer",
+      email: data?.contactEmail || "",
+      ref: agencySnap.docs[0].ref,
+    };
+  }
+
+  return { name: "Valued Customer", email: "", ref: null };
+}
 
 export async function purchaseAdPackage(packageId: string) {
   try {
@@ -17,33 +110,12 @@ export async function purchaseAdPackage(packageId: string) {
       return { success: false, error: "Invalid package" };
     }
 
-    const escortSnap = await adminDb
-      .collection("escorts")
-      .where("clerkUserId", "==", userId)
-      .limit(1)
-      .get();
-
-    let targetRef: FirebaseFirestore.DocumentReference;
-    let targetDoc: FirebaseFirestore.DocumentSnapshot;
-
-    if (!escortSnap.empty) {
-      targetRef = escortSnap.docs[0].ref;
-      targetDoc = escortSnap.docs[0];
-    } else {
-      const agencySnap = await adminDb
-        .collection("agencies")
-        .where("ownerId", "==", userId)
-        .limit(1)
-        .get();
-
-      if (agencySnap.empty) {
-        return { success: false, error: "User profile not found" };
-      }
-
-      targetRef = agencySnap.docs[0].ref;
-      targetDoc = agencySnap.docs[0];
+    const targetRef = await findUserRef(userId);
+    if (!targetRef) {
+      return { success: false, error: "User profile not found" };
     }
 
+    const targetDoc = await targetRef.get();
     const userData = targetDoc.data();
     const currentCredits = userData?.credits || 0;
 
@@ -91,6 +163,41 @@ export async function purchaseAdPackage(packageId: string) {
       updatedAt: Timestamp.now(),
     });
 
+    const transactionRef = adminDb.collection("transactions").doc();
+    const transactionId = transactionRef.id;
+    const phoneNumber =
+      (userData?.contact?.phone || userData?.contact?.telephone || userData?.whatsappPhone || "").replace(/\D/g, "");
+
+    await transactionRef.set({
+      userId,
+      type: "ad_purchase",
+      packageId: packageId,
+      phoneNumber,
+      amount: adPackage.credits * 10,
+      accountReference: `Ad-${adPackage.name}-${Date.now()}`,
+      transactionDesc: `Buy ${adPackage.name} ad package`,
+      status: "completed",
+      checkoutRequestId: transactionId,
+      merchantRequestId: `credit-${Date.now()}`,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      completedAt: Timestamp.now(),
+    });
+
+    const userInfo = await getUserInfo(userId);
+    if (userInfo.email) {
+      sendPaymentConfirmationEmail({
+        to: userInfo.email,
+        name: userInfo.name,
+        amount: adPackage.credits * 10,
+        receiptNumber: `CREDIT-${Date.now()}`,
+        packageName: adPackage.name,
+        transactionId,
+        date: new Date().toLocaleString(),
+        phoneNumber,
+      }).catch((err) => console.error("Background email send failed:", err));
+    }
+
     return {
       success: true,
       package: {
@@ -120,25 +227,37 @@ export async function getUserActivePackages() {
       return { success: false, error: "Unauthorized", packages: [] };
     }
 
-    const escortSnap = await adminDb
-      .collection("escorts")
-      .where("clerkUserId", "==", userId)
-      .limit(1)
-      .get();
-
+    const escortDoc = await adminDb.collection("escorts").doc(userId).get();
     let targetDoc: FirebaseFirestore.DocumentSnapshot | null = null;
 
-    if (!escortSnap.empty) {
-      targetDoc = escortSnap.docs[0];
+    if (escortDoc.exists) {
+      targetDoc = escortDoc;
     } else {
-      const agencySnap = await adminDb
-        .collection("agencies")
-        .where("ownerId", "==", userId)
+      const agencyDoc = await adminDb.collection("agencies").doc(userId).get();
+      if (agencyDoc.exists) {
+        targetDoc = agencyDoc;
+      }
+    }
+
+    if (!targetDoc) {
+      const escortSnap = await adminDb
+        .collection("escorts")
+        .where("clerkUserId", "==", userId)
         .limit(1)
         .get();
 
-      if (!agencySnap.empty) {
-        targetDoc = agencySnap.docs[0];
+      if (!escortSnap.empty) {
+        targetDoc = escortSnap.docs[0];
+      } else {
+        const agencySnap = await adminDb
+          .collection("agencies")
+          .where("ownerId", "==", userId)
+          .limit(1)
+          .get();
+
+        if (!agencySnap.empty) {
+          targetDoc = agencySnap.docs[0];
+        }
       }
     }
 
@@ -175,6 +294,18 @@ export async function getUserCredits() {
     const { userId } = await auth();
     if (!userId) {
       return { success: false, error: "Unauthorized", credits: 0 };
+    }
+
+    const escortDoc = await adminDb.collection("escorts").doc(userId).get();
+    if (escortDoc.exists) {
+      const data = escortDoc.data();
+      return { success: true, credits: data?.credits || 0 };
+    }
+
+    const agencyDoc = await adminDb.collection("agencies").doc(userId).get();
+    if (agencyDoc.exists) {
+      const data = agencyDoc.data();
+      return { success: true, credits: data?.credits || 0 };
     }
 
     const escortSnap = await adminDb

@@ -46,6 +46,16 @@ async function getUserInfo(userId: string) {
 async function findUserRef(userId: string) {
   if (!userId) return null;
 
+  const escortDoc = await adminDb.collection("escorts").doc(userId).get();
+  if (escortDoc.exists) {
+    return escortDoc.ref;
+  }
+
+  const agencyDoc = await adminDb.collection("agencies").doc(userId).get();
+  if (agencyDoc.exists) {
+    return agencyDoc.ref;
+  }
+
   const escortSnap = await adminDb
     .collection("escorts")
     .where("clerkUserId", "==", userId)
@@ -358,7 +368,8 @@ export async function POST(req: Request) {
         updatedAt: Timestamp.now(),
       });
 
-      const userInfo = await getUserInfo(userId || "");
+      const resolvedUserId = userId || transactionData?.userId || (await findUserIdByPhone(callback.phoneNumber));
+      const userInfo = await getUserInfo(resolvedUserId || "");
       if (userInfo.email) {
         const pkg = packageId ? getCreditPackageById(packageId) || getAdPackageById(packageId) : null;
         const dateStr = isTimestamp(transactionDate)
