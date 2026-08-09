@@ -28,7 +28,7 @@ const ExtendPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <InfoAlert className="" text="|   Extend Membership" />
+      <InfoAlert className="" text="| Extend Membership" />
       <MessageAlert
         className="px-2"
         text="WARNING – if you encounter someone contacting you from various phone numbers, do not respond to anything. This is a scam. We will always inform you only from phone number 0743 129 621"
