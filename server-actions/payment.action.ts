@@ -94,9 +94,16 @@ export async function purchaseAdPackage(packageId: string) {
     return {
       success: true,
       package: {
-        ...newPackage,
+        id: newPackage.id,
+        packageId: newPackage.packageId,
+        name: newPackage.name,
+        description: newPackage.description,
+        purchasedAt: newPackage.purchasedAt.toDate().toISOString(),
         activatedAt: newPackage.activatedAt.toDate().toISOString(),
         expiresAt: newPackage.expiresAt.toDate().toISOString(),
+        status: newPackage.status,
+        creditsUsed: newPackage.creditsUsed,
+        type: newPackage.type,
       },
       remainingCredits: currentCredits - adPackage.credits,
     };

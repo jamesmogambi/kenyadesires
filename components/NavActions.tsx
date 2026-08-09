@@ -210,13 +210,13 @@ const NavActions = ({
         <DropdownMenuContent className="w-full max-w-64 space-y-2">
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem className="text-stone-700 group">
+          {/* <DropdownMenuItem className="text-stone-700 group">
             <Package className="size-6 text-stone-400 shrink-0" />
             <span className="uppercase font-normal text-base group-hover:font-bold">
               Plan:{" "}
               <span className="font-bold capitalize text-red-700">{plan}</span>
             </span>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
 
           {!packageLoading && activePackage && (
             <DropdownMenuItem className="text-stone-700 group">
@@ -262,7 +262,10 @@ const NavActions = ({
           </DropdownMenuItem>
 
           <DropdownMenuItem className="text-stone-800 group">
-            <Link href="/frequent-questions" className="flex items-center gap-2">
+            <Link
+              href="/frequent-questions"
+              className="flex items-center gap-2"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width={384}
@@ -336,14 +339,21 @@ const NavActions = ({
               {escortVerification.isStatus ? (
                 <span className="flex items-center gap-2">
                   {escortVerification.icon}
-                  <span className={`uppercase font-normal text-base group-hover:font-bold ${escortVerification.textColor}`}>
+                  <span
+                    className={`uppercase font-normal text-base group-hover:font-bold ${escortVerification.textColor}`}
+                  >
                     {escortVerification.label}
                   </span>
                 </span>
               ) : (
-                <Link href={escortVerification.href} className="flex items-center gap-2">
+                <Link
+                  href={escortVerification.href}
+                  className="flex items-center gap-2"
+                >
                   {escortVerification.icon}
-                  <span className={`uppercase font-semibold text-base group-hover:font-bold ${escortVerification.textColor}`}>
+                  <span
+                    className={`uppercase font-semibold text-base group-hover:font-bold ${escortVerification.textColor}`}
+                  >
                     {escortVerification.label}
                   </span>
                 </Link>

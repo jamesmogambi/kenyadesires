@@ -24,8 +24,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ transactions });
   } catch (error: any) {
     console.error("Error fetching transactions:", error);
+    const message = error.message || "Failed to fetch transactions";
+    const needsIndex = message.includes("index") || message.includes("Index");
     return NextResponse.json(
-      { error: "internal_error", detail: error.message },
+      {
+        error: "internal_error",
+        detail: needsIndex ? "Firestore index missing. Deploy firestore.indexes.json" : message,
+      },
       { status: 500 },
     );
   }

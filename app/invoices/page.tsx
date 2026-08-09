@@ -33,11 +33,8 @@ export default function InvoicesPage() {
       try {
         const res = await fetch("/api/transactions");
         if (!res.ok) {
-          if (res.status === 401) {
-            setError("Please log in to view invoices");
-          } else {
-            setError("Failed to load invoices");
-          }
+          const data = await res.json().catch(() => ({}));
+          setError(data.error === "unauthorized" ? "Please log in to view invoices" : data.detail || data.error || "Failed to load invoices");
           setLoading(false);
           return;
         }
