@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
-import { initiateSTKPush, STKPushRequest } from "@/lib/mpesa";
 import { purchaseAdPackage } from "@/server-actions/payment.action";
 import Link from "next/link";
 import {
@@ -215,14 +214,39 @@ const AdvertisingPriceLIst = ({
       const amount = pkg.credits * 10;
       const cleanPhone = phoneNumber.replace(/\s/g, "").replace(/^\+/, "");
 
-      const response = await initiateSTKPush({
-        phoneNumber: cleanPhone,
-        amount,
-        accountReference: `Ad-${pkg.name}-${Date.now()}`,
-        transactionDesc: `Buy ${pkg.name} ad package`,
+      const response = await fetch("/api/mpesa/stk-push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: cleanPhone,
+          amount,
+          accountReference: `Ad-${pkg.name}-${Date.now()}`,
+          transactionDesc: `Buy ${pkg.name} ad package`,
+          packageId: pkg.id,
+          type: "ad_purchase",
+        }),
+        credentials: "include",
+        cache: "no-store",
       });
 
-      if (response.ResponseCode === "0") {
+      const text = await response.text();
+      let data: any = {};
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { raw: text };
+      }
+
+      if (!response.ok || data.error) {
+        const detail = data.detail ? `: ${data.detail}` : "";
+        const raw = data.raw ? ` | raw: ${data.raw}` : "";
+        throw new Error(`${data.error || "Failed to initiate payment"}${detail}${raw}`);
+      }
+
+      if (data.success && data.checkoutRequestId) {
         setStatus("success");
         setMessage(
           `✅ Payment initiated! Check your phone (${phoneNumber}) and enter PIN. Redirecting...`,
@@ -234,17 +258,11 @@ const AdvertisingPriceLIst = ({
           setStatus("idle");
           setMessage("");
           router.push(
-            `/payment-status?checkoutRequestId=${encodeURIComponent(response.CheckoutRequestID)}`,
+            `/payment-status?checkoutRequestId=${encodeURIComponent(data.checkoutRequestId)}`,
           );
         }, 1500);
       } else {
-        setStatus("error");
-        setMessage(
-          `❌ ${response.ResponseDescription || "Failed to initiate payment"}`,
-        );
-        onPurchaseError?.(
-          response.ResponseDescription || "Failed to initiate payment",
-        );
+        throw new Error(data.error || "Failed to initiate payment");
       }
     } catch (error: any) {
       const errorMessage = error?.message || "An error occurred";

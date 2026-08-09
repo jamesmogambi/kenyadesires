@@ -116,26 +116,33 @@ export async function getMpesaAccessToken(): Promise<string> {
   );
   const url = `${getMpesaBaseUrl()}/oauth/v1/generate?grant_type=client_credentials`;
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Basic ${auth}`,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`M-Pesa auth failed: ${response.status} ${text}`);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`M-Pesa auth failed: ${response.status} ${text}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.access_token) {
+      throw new Error(
+        "M-Pesa did not return an access token. Check your credentials.",
+      );
+    }
+
+    return data.access_token;
+  } catch (error: any) {
+    if (error.message.includes("fetch failed")) {
+      throw new Error(`M-Pesa auth fetch failed: unable to reach ${url}. Check network/DNS.`);
+    }
+    throw error;
   }
-
-  const data = await response.json();
-
-  if (!data.access_token) {
-    throw new Error(
-      "M-Pesa did not return an access token. Check your credentials.",
-    );
-  }
-
-  return data.access_token;
 }
 
 export function generatePassword(): string {
@@ -217,7 +224,8 @@ export async function initiateSTKPush(
     if (fetchError.name === "AbortError") {
       throw new Error("M-Pesa API request timed out. Please try again.");
     }
-    throw new Error(`M-Pesa API error: ${fetchError.message}`);
+    const cause = fetchError.cause?.code || fetchError.code || fetchError.message;
+    throw new Error(`M-Pesa STK fetch failed: ${cause}. URL: ${url}`);
   } finally {
     clearTimeout(timeout);
   }
