@@ -64,7 +64,13 @@ export default function AgeVerificationModal() {
   const handleDeny = () => {
     setDenied(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ verified: false, timestamp: new Date().toISOString() }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          verified: false,
+          timestamp: new Date().toISOString(),
+        }),
+      );
     } catch {
       // ignore
     }
