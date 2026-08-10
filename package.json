@@ -14,7 +14,8 @@
     "process:batch": "node scripts/process-all.ts",
     "monitor:batch": "node scripts/monitor-batch.ts",
     "fix-tokens": "node scripts/fix-missing-tokens.ts",
-    "campaign": "node scripts/campaign.ts"
+    "campaign": "node scripts/campaign.ts",
+    "sms-campaign": "node scripts/sms-campaign.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
