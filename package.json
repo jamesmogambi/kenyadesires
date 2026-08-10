@@ -13,7 +13,8 @@
     "sitemap:validate": "node scripts/validate-sitemap.js",
     "process:batch": "node scripts/process-all.ts",
     "monitor:batch": "node scripts/monitor-batch.ts",
-    "fix-tokens": "node scripts/fix-missing-tokens.ts"
+    "fix-tokens": "node scripts/fix-missing-tokens.ts",
+    "campaign": "tsx scripts/campaign.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",

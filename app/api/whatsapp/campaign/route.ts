@@ -3,7 +3,9 @@ import { adminDb } from "@/lib/firebase-admin";
 
 const WASENDER_API_URL = "https://www.wasenderapi.com/api/send-message";
 const WASENDER_KEY = process.env.WASENDER_KEY;
-const CAMPAIGN_DELAY_MS = Number(process.env.WASENDER_CAMPAIGN_DELAY_MS || 5000);
+const DEFAULT_DELAY_MS = Number(process.env.WASENDER_CAMPAIGN_DELAY_MS || 30000);
+const BATCH_SIZE = Number(process.env.WASENDER_CAMPAIGN_BATCH_SIZE || 50);
+const BATCH_BREAK_MS = Number(process.env.WASENDER_CAMPAIGN_BATCH_BREAK_MS || 15 * 60 * 1000);
 
 function formatPhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, "");
@@ -14,6 +16,13 @@ function formatPhoneNumber(phone: string): string {
     cleaned = "254" + cleaned;
   }
   return cleaned;
+}
+
+function isValidKenyanPhone(phone: string): boolean {
+  if (!phone || phone.length < 10) return false;
+  if (phone.startsWith("254") && phone.length === 12) return true;
+  if (phone.startsWith("07") && phone.length === 10) return true;
+  return false;
 }
 
 async function sendWhatsAppMessage(
@@ -85,13 +94,7 @@ export async function POST(req: NextRequest) {
         ...escort,
         phone: (escort.whatsappPhone || escort.phoneNumber || "").replace(/\D/g, ""),
       }))
-      .filter((escort) => {
-        const phone = escort.phone;
-        if (!phone || phone.length < 10) return false;
-        if (phone.startsWith("254") && phone.length === 12) return true;
-        if (phone.startsWith("07") && phone.length === 10) return true;
-        return false;
-      });
+      .filter((escort) => isValidKenyanPhone(escort.phone));
 
     const results = {
       total: escorts.length,
@@ -102,7 +105,7 @@ export async function POST(req: NextRequest) {
     };
 
     console.log(`[WhatsApp Campaign] Starting campaign for ${escorts.length} contacts`);
-    console.log(`[WhatsApp Campaign] Delay between messages: ${CAMPAIGN_DELAY_MS}ms`);
+    console.log(`[WhatsApp Campaign] Delay: ${DEFAULT_DELAY_MS}ms | Batch size: ${BATCH_SIZE} | Batch break: ${BATCH_BREAK_MS}ms`);
 
     for (let i = 0; i < escorts.length; i++) {
       const escort = escorts[i];
@@ -130,8 +133,15 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      if (CAMPAIGN_DELAY_MS > 0 && i < escorts.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, CAMPAIGN_DELAY_MS));
+      if (DEFAULT_DELAY_MS > 0 && i < escorts.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, DEFAULT_DELAY_MS));
+      }
+
+      if ((i + 1) % BATCH_SIZE === 0 && i < escorts.length - 1) {
+        const batchNum = Math.floor((i + 1) / BATCH_SIZE);
+        const totalBatches = Math.ceil(escorts.length / BATCH_SIZE);
+        console.log(`[WhatsApp Campaign] Batch ${batchNum}/${totalBatches} complete. Taking a ${BATCH_BREAK_MS / 1000}s break...`);
+        await new Promise((resolve) => setTimeout(resolve, BATCH_BREAK_MS));
       }
     }
 
