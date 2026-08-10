@@ -63,6 +63,14 @@ export default function AgeVerificationModal() {
 
   const handleDeny = () => {
     setDenied(true);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ verified: false, timestamp: new Date().toISOString() }));
+    } catch {
+      // ignore
+    }
+    setTimeout(() => {
+      window.location.href = "https://www.google.com";
+    }, 3000);
   };
 
   // Don't render anything on server to avoid hydration mismatch
@@ -84,8 +92,8 @@ export default function AgeVerificationModal() {
             </div>
             <p className="mt-3 text-sm font-semibold text-white/70">
               Access to the site is only allowed for over 18 years of age. The
-              site contains pornographic material. By accessing the Site, you
-              agree to the terms of entry.
+              site contains adult material. By accessing the Site, you agree to
+              the terms of entry.
             </p>
             <div className="mt-6 flex flex-row gap-2">
               <button

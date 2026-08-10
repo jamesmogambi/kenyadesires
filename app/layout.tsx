@@ -149,6 +149,8 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
+          <AgeVerificationModal />
+
           {/* Fixed Grayscale Background */}
           <div
             style={{
@@ -214,8 +216,6 @@ export default async function RootLayout({
           <Toaster position="bottom-left" />
 
           <ScrollToTopBottom />
-
-          {/* <AgeVerificationModal /> */}
         </body>
       </html>
     </ClerkProvider>
