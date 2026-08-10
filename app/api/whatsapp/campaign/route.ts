@@ -73,16 +73,18 @@ export async function POST(req: NextRequest) {
     const snapshot = await adminDb
       .collection("escorts")
       .where("whatsappPhone", "!=", null)
-      .where("whatsappPhone", "!=", "")
       .get();
 
-    const escorts = snapshot.docs.map((doc) => {
-      const data = doc.data() as { whatsappPhone?: string | null; [key: string]: any };
-      return {
-        id: doc.id,
-        ...data,
-      };
-    });
+    const escorts = snapshot.docs
+      .map((doc) => {
+        const data = doc.data() as { whatsappPhone?: string | null; phoneNumber?: string | null; [key: string]: any };
+        return { id: doc.id, ...data };
+      })
+      .map((escort) => ({
+        ...escort,
+        phone: (escort.whatsappPhone || escort.phoneNumber || "").replace(/\D/g, ""),
+      }))
+      .filter((escort) => escort.phone.length >= 10);
 
     const results = {
       total: escorts.length,
@@ -92,25 +94,38 @@ export async function POST(req: NextRequest) {
       errors: [] as Array<{ id: string; phone: string; error: string }>,
     };
 
-    for (const escort of escorts) {
-      const phone = escort.whatsappPhone as string | undefined;
+    console.log(`[WhatsApp Campaign] Starting campaign for ${escorts.length} contacts`);
+
+    for (let i = 0; i < escorts.length; i++) {
+      const escort = escorts[i];
+      const phone = escort.phone;
       if (!phone) {
         results.skipped++;
+        console.log(`[WhatsApp Campaign] ${i + 1}/${escorts.length} SKIPPED - no phone (id: ${escort.id})`);
         continue;
       }
+
+      console.log(`[WhatsApp Campaign] ${i + 1}/${escorts.length} SENDING to ${phone} (id: ${escort.id || "unknown"})...`);
 
       const result = await sendWhatsAppMessage(phone, message);
 
       if (result.success) {
         results.sent++;
+        console.log(`[WhatsApp Campaign] ${i + 1}/${escorts.length} SENT to ${phone} msgId: ${result.msgId}`);
       } else {
         results.failed++;
+        console.log(`[WhatsApp Campaign] ${i + 1}/${escorts.length} FAILED to ${phone} - ${result.error}`);
         results.errors.push({
           id: escort.id,
           phone,
           error: result.error || "Unknown error",
         });
       }
+    }
+
+    console.log(`[WhatsApp Campaign] Completed. Total: ${results.total}, Sent: ${results.sent}, Failed: ${results.failed}, Skipped: ${results.skipped}`);
+    if (results.failed > 0) {
+      console.log(`[WhatsApp Campaign] Sample errors:`, results.errors.slice(0, 5));
     }
 
     return NextResponse.json({
