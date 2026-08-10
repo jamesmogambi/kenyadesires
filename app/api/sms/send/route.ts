@@ -16,28 +16,42 @@ async function sendSMS(to: string, text: string): Promise<{ success: boolean; ms
     formData.append("text", text);
     formData.append("return_msg_id", "true");
 
-    const response = await fetch(SMS_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "x-rapidapi-host": SMS_API_HOST,
-        "x-rapidapi-key": SMS_API_KEY,
-      },
-      body: formData.toString(),
-    });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
 
-    const data = await response.json();
+    try {
+      const response = await fetch(SMS_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "x-rapidapi-host": SMS_API_HOST,
+          "x-rapidapi-key": SMS_API_KEY,
+        },
+        body: formData.toString(),
+        signal: controller.signal,
+      });
 
-    if (!response.ok || data.error) {
-      return {
-        success: false,
-        error: data.error || `HTTP ${response.status}`,
-      };
+      clearTimeout(timeout);
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        return {
+          success: false,
+          error: data.error || `HTTP ${response.status}: ${response.statusText}`,
+        };
+      }
+
+      return { success: true, msgId: data.msg_id || data.messageId };
+    } catch (fetchError: any) {
+      clearTimeout(timeout);
+      if (fetchError.name === "AbortError") {
+        return { success: false, error: "SMS API request timed out after 15s" };
+      }
+      return { success: false, error: `Network error: ${fetchError.message}` };
     }
-
-    return { success: true, msgId: data.msg_id || data.messageId };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: false, error: `SMS send failed: ${error.message}` };
   }
 }
 
@@ -61,6 +75,7 @@ export async function POST(req: NextRequest) {
     const result = await sendSMS(phone, message);
 
     if (!result.success) {
+      console.error("[SMS] Send failed:", result.error);
       return NextResponse.json(
         { error: "Failed to send SMS", detail: result.error },
         { status: 500 },
@@ -73,7 +88,7 @@ export async function POST(req: NextRequest) {
       phone,
     });
   } catch (error: any) {
-    console.error("SMS send error:", error);
+    console.error("[SMS] Route error:", error);
     return NextResponse.json(
       { error: "Internal server error", detail: error.message },
       { status: 500 },
