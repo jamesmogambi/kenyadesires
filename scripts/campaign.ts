@@ -20,6 +20,22 @@ const DELAY_MS = Number(process.env.CAMPAIGN_DELAY_MS || 30000);
 const BATCH_SIZE = Number(process.env.CAMPAIGN_BATCH_SIZE || 50);
 const BATCH_BREAK_MS = Number(process.env.CAMPAIGN_BATCH_BREAK_MS || 15 * 60 * 1000);
 
+const MESSAGE = `Hi 👋
+
+Are you looking for a better way to get discovered by clients in Kenya?
+
+**KenyaDesires.com 🇰🇪** is now live — a platform where you can create your own profile and promote your listing.
+
+🎁 **Launch Offer:** Get **50 credits worth KSh 500** when you register and complete verification.
+
+✨ Use your credits to **boost your listing and increase its visibility**, or use them towards **promotional ads on KenyaDesires**.
+
+👉 **Register here:** https://kenyadesires.com
+
+Get your profile live and start getting more visibility today.
+
+*Terms and eligibility apply.*`;
+
 function formatPhoneNumber(phone: string): string {
   let cleaned = phone.replace(/\D/g, "");
   if (cleaned.startsWith("0")) cleaned = "254" + cleaned.slice(1);
@@ -73,12 +89,6 @@ async function sendWhatsAppMessage(
 }
 
 async function main() {
-  const message = process.argv[2];
-  if (!message) {
-    console.error("Usage: npm run campaign -- <message>");
-    process.exit(1);
-  }
-
   console.log("=".repeat(60));
   console.log("[WhatsApp Campaign] Starting bulk campaign");
   console.log(`[WhatsApp Campaign] Delay: ${DELAY_MS}ms | Batch: ${BATCH_SIZE} | Break: ${BATCH_BREAK_MS}ms`);
@@ -119,7 +129,7 @@ async function main() {
 
     process.stdout.write(`[WhatsApp Campaign] ${i + 1}/${escorts.length} SENDING to ${phone}... `);
 
-    const result = await sendWhatsAppMessage(phone, message);
+    const result = await sendWhatsAppMessage(phone, MESSAGE);
 
     if (result.success) {
       results.sent++;
