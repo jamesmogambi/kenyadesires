@@ -27,6 +27,8 @@ const COLLECTIONS = {
   IMAGES: "escort_images",
   PROCESSING_QUEUE: "processing_queue",
   PROCESSING_LOGS: "processing_logs",
+  WHATSAPP_CAMPAIGNS: "whatsappCampaigns",
+  WHATSAPP_CAMPAIGN_CONTACTS: "whatsappCampaignContacts",
 } as const;
 
 // Initialize Firestore
