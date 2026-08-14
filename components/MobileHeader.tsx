@@ -2,7 +2,14 @@
 "use client";
 
 import Link from "next/link";
-import React, { memo, useCallback, useState, lazy, Suspense, useEffect } from "react";
+import React, {
+  memo,
+  useCallback,
+  useState,
+  lazy,
+  Suspense,
+  useEffect,
+} from "react";
 import {
   Sheet,
   SheetContent,
@@ -111,7 +118,10 @@ const CreditsItem = memo(({ onClose }: { onClose: () => void }) => {
   }, []);
 
   return (
-    <DropdownMenuItem className="text-stone-700 group cursor-pointer" onClick={onClose}>
+    <DropdownMenuItem
+      className="text-stone-700 group cursor-pointer"
+      onClick={onClose}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width={384}
@@ -180,7 +190,10 @@ const PackagesItem = memo(({ onClose }: { onClose: () => void }) => {
   }
 
   return (
-    <DropdownMenuItem className="text-stone-700 group cursor-pointer" onClick={onClose}>
+    <DropdownMenuItem
+      className="text-stone-700 group cursor-pointer"
+      onClick={onClose}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -408,57 +421,81 @@ interface Prop {
   agencyVerificationStatus?: string;
 }
 
-const MobileHeader = memo(({ className, isEscort, escortIsVerified, escortVerificationStatus, agencyIsVerified, agencyVerificationStatus }: Prop) => {
-  const [open, setOpen] = useState<boolean>(false);
-  const { isLoaded: userLoaded, isSignedIn, user } = useUser();
-  const { signOut } = useAuth();
+const MobileHeader = memo(
+  ({
+    className,
+    isEscort,
+    escortIsVerified,
+    escortVerificationStatus,
+    agencyIsVerified,
+    agencyVerificationStatus,
+  }: Prop) => {
+    const [open, setOpen] = useState<boolean>(false);
+    const { isLoaded: userLoaded, isSignedIn, user } = useUser();
+    const { signOut } = useAuth();
 
-  const onClose = useCallback(() => {
-    setOpen(false);
-  }, []);
+    const onClose = useCallback(() => {
+      setOpen(false);
+    }, []);
 
-  const isBusiness = (user?.unsafeMetadata?.role as string) === "business";
-  const isEscortUser = isEscort && !isBusiness;
+    const isBusiness = (user?.unsafeMetadata?.role as string) === "business";
+    const isEscortUser = isEscort && !isBusiness;
 
-  const getEscortVerificationLink = () => {
-    if (escortIsVerified) {
+    const getEscortVerificationLink = () => {
+      if (escortIsVerified) {
+        return {
+          href: "#",
+          label: `Verified — ${escortVerificationStatus || "verified"}`,
+          textColor: "text-green-400",
+          isStatus: true,
+        };
+      }
+
+      const submittedStatuses = ["pending", "under_review", "rejected"];
+      if (submittedStatuses.includes(escortVerificationStatus || "")) {
+        return {
+          href: "/verify/done",
+          label:
+            escortVerificationStatus === "rejected"
+              ? "Re-submit verification"
+              : "Check verification status",
+          textColor: "text-orange-400",
+          isStatus: false,
+        };
+      }
+
       return {
-        href: "#",
-        label: `Verified — ${escortVerificationStatus || "verified"}`,
-        textColor: "text-green-400",
-        isStatus: true,
-      };
-    }
-
-    const submittedStatuses = ["pending", "under_review", "rejected"];
-    if (submittedStatuses.includes(escortVerificationStatus || "")) {
-      return {
-        href: "/verify/done",
-        label:
-          escortVerificationStatus === "rejected"
-            ? "Re-submit verification"
-            : "Check verification status",
-        textColor: "text-orange-400",
+        href: "/verify-girl",
+        label: "Verify identity",
+        textColor: "text-primary",
         isStatus: false,
       };
+    };
+
+    const escortVerification = getEscortVerificationLink();
+
+    const verificationInitiated =
+      agencyVerificationStatus === "under_review" ||
+      agencyVerificationStatus === "rejected";
+
+    // ✅ Show loading state instead of null
+    if (!userLoaded) {
+      return (
+        <div
+          className={cn(
+            "flex bg-dark-slate lg:hidden items-center w-full justify-between p-4 py-6",
+            className,
+          )}
+        >
+          <Logo />
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
+            <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
+          </div>
+        </div>
+      );
     }
 
-    return {
-      href: "/verify-girl",
-      label: "Verify identity",
-      textColor: "text-primary",
-      isStatus: false,
-    };
-  };
-
-  const escortVerification = getEscortVerificationLink();
-
-  const verificationInitiated =
-    agencyVerificationStatus === "under_review" ||
-    agencyVerificationStatus === "rejected";
-
-  // ✅ Show loading state instead of null
-  if (!userLoaded) {
     return (
       <div
         className={cn(
@@ -467,147 +504,176 @@ const MobileHeader = memo(({ className, isEscort, escortIsVerified, escortVerifi
         )}
       >
         <Logo />
+
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
-          <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
-        </div>
-      </div>
-    );
-  }
+          {/* ✅ Lazy loaded with Suspense for code splitting */}
+          <Suspense
+            fallback={
+              <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
+            }
+          >
+            <SearchSheet />
+          </Suspense>
 
-  return (
-    <div
-      className={cn(
-        "flex bg-dark-slate lg:hidden items-center w-full justify-between p-4 py-6",
-        className,
-      )}
-    >
-      <Logo />
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="text-white hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded p-1"
+                aria-label="Open menu"
+              >
+                <MenuIcon />
+              </button>
+            </SheetTrigger>
+            <SheetContent className="text-white border-none pl-2.5 bg-dark-slate">
+              <SheetHeader className="mt-8">
+                {!isSignedIn ? (
+                  <div className="w-full flex mt-6 justify-between items-center">
+                    <LoginFormSheet>
+                      <span className="text-white font-medium p-4 px-6 rounded-lg hover:text-primary bg-[#343434] cursor-pointer transition-colors">
+                        log in
+                      </span>
+                    </LoginFormSheet>
 
-      <div className="flex items-center gap-4">
-        {/* ✅ Lazy loaded with Suspense for code splitting */}
-        <Suspense
-          fallback={
-            <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse flex-shrink-0" />
-          }
-        >
-          <SearchSheet />
-        </Suspense>
-
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <button
-              className="text-white hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded p-1"
-              aria-label="Open menu"
-            >
-              <MenuIcon />
-            </button>
-          </SheetTrigger>
-          <SheetContent className="text-white border-none pl-2.5 bg-dark-slate">
-            <SheetHeader className="mt-8">
-              {!isSignedIn ? (
-                <div className="w-full flex mt-6 justify-between items-center">
-                  <LoginFormSheet>
-                    <span className="text-white font-medium p-2 px-4 rounded-md hover:text-primary bg-[#343434] cursor-pointer transition-colors">
-                      apply for
-                    </span>
-                  </LoginFormSheet>
-
-                  <Link
-                    className="text-white p-2 px-4 font-medium rounded-md bg-primary hover:bg-primary/80 transition-colors"
-                    href="/private-escort-record"
-                    onClick={onClose}
-                  >
-                    register escort
-                  </Link>
-                </div>
-              ) : (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="bg-primary mt-6 w-auto group text-white rounded-md flex items-center gap-2 p-3 px-2 hover:bg-primary/80 transition-colors">
-                    <UserIcon />
-                    <span className="text-sm text-nowrap group-hover:font-bold uppercase font-medium">
-                      account settings
-                    </span>
-                    <ChevronDownIcon />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-full max-w-[250px] space-y-2">
-                    <DropdownMenuSeparator />
-                    <PackagesItem onClose={onClose} />
-                    <CreditsItem onClose={onClose} />
-                    <AdviceItem onClose={onClose} />
-                    <BuyCreditsItem onClose={onClose} />
-                    <EditProfileItem onClose={onClose} label={isBusiness ? "edit agency profile" : "edit profile"} />
-                    {isEscortUser && (
-                      escortVerification?.isStatus ? (
-                        <DropdownMenuItem className="text-stone-700 group cursor-pointer">
-                          <span className="flex items-center gap-2">
-                            <BadgeCheck className={`size-5 ${escortVerification.textColor}`} />
-                            <span className={`uppercase text-base group-hover:font-bold ${escortVerification.textColor}`}>
-                              {escortVerification.label}
+                    <Link
+                      className="text-white p-4 px-4 font-medium rounded-lg bg-primary hover:bg-primary/80 transition-colors"
+                      href="/private-escort-record"
+                      onClick={onClose}
+                    >
+                      register escort
+                    </Link>
+                  </div>
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="bg-primary mt-6 w-auto group text-white rounded-md flex items-center gap-2 p-3 px-2 hover:bg-primary/80 transition-colors">
+                      <UserIcon />
+                      <span className="text-sm text-nowrap group-hover:font-bold uppercase font-medium">
+                        account settings
+                      </span>
+                      <ChevronDownIcon />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full max-w-[250px] space-y-2">
+                      <DropdownMenuSeparator />
+                      <PackagesItem onClose={onClose} />
+                      <CreditsItem onClose={onClose} />
+                      <AdviceItem onClose={onClose} />
+                      <BuyCreditsItem onClose={onClose} />
+                      <EditProfileItem
+                        onClose={onClose}
+                        label={
+                          isBusiness ? "edit agency profile" : "edit profile"
+                        }
+                      />
+                      {isEscortUser &&
+                        (escortVerification?.isStatus ? (
+                          <DropdownMenuItem className="text-stone-700 group cursor-pointer">
+                            <span className="flex items-center gap-2">
+                              <BadgeCheck
+                                className={`size-5 ${escortVerification.textColor}`}
+                              />
+                              <span
+                                className={`uppercase text-base group-hover:font-bold ${escortVerification.textColor}`}
+                              >
+                                {escortVerification.label}
+                              </span>
                             </span>
-                          </span>
-                        </DropdownMenuItem>
-                      ) : (
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem className="text-stone-800 group cursor-pointer">
+                            <Link
+                              href={escortVerification?.href || "/verify-girl"}
+                              className="flex items-center gap-2 w-full"
+                              onClick={onClose}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="text-stone-400 flex-shrink-0 size-6"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span className="uppercase text-base group-hover:font-bold">
+                                {escortVerification?.label || "Verify identity"}
+                              </span>
+                            </Link>
+                          </DropdownMenuItem>
+                        ))}
+                      {isBusiness && agencyIsVerified && (
                         <DropdownMenuItem className="text-stone-800 group cursor-pointer">
-                          <Link href={escortVerification?.href || "/verify-girl"} className="flex items-center gap-2 w-full" onClick={onClose}>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-stone-400 flex-shrink-0 size-6">
-                              <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
-                            </svg>
+                          <Link
+                            href="/agency-verification-status"
+                            className="flex items-center gap-2 w-full"
+                            onClick={onClose}
+                          >
+                            <BadgeCheck className="size-5 text-green-400" />
                             <span className="uppercase text-base group-hover:font-bold">
-                              {escortVerification?.label || "Verify identity"}
+                              View verification status
                             </span>
                           </Link>
                         </DropdownMenuItem>
-                      )
-                    )}
-                    {isBusiness && agencyIsVerified && (
-                      <DropdownMenuItem className="text-stone-800 group cursor-pointer">
-                        <Link href="/agency-verification-status" className="flex items-center gap-2 w-full" onClick={onClose}>
-                          <BadgeCheck className="size-5 text-green-400" />
-                          <span className="uppercase text-base group-hover:font-bold">
-                            View verification status
-                          </span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {isBusiness && verificationInitiated && (
-                      <DropdownMenuItem className="text-stone-800 group cursor-pointer">
-                        <Link href="/agency-verification-status" className="flex items-center gap-2 w-full" onClick={onClose}>
-                          <BadgeCheck className="size-5 text-orange-400" />
-                          <span className="uppercase text-base group-hover:font-bold">
-                            Check verification status
-                          </span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {isBusiness && !agencyIsVerified && !verificationInitiated && (
-                      <DropdownMenuItem className="text-stone-800 group cursor-pointer">
-                        <Link href="/verify-agency" className="flex items-center gap-2 w-full" onClick={onClose}>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="text-stone-400 flex-shrink-0 size-6">
-                            <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
-                          </svg>
-                          <span className="uppercase text-base group-hover:font-bold text-primary">
-                            Verify Agency Identity
-                          </span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                    {isBusiness && <AddGirlItem onClose={onClose} />}
-                    {isBusiness && <ViewAgencyGirlsItem onClose={onClose} />}
-                    <InvoicesItem onClose={onClose} />
-                    <SignOutItem onSignOut={signOut} />
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </SheetHeader>
+                      )}
+                      {isBusiness && verificationInitiated && (
+                        <DropdownMenuItem className="text-stone-800 group cursor-pointer">
+                          <Link
+                            href="/agency-verification-status"
+                            className="flex items-center gap-2 w-full"
+                            onClick={onClose}
+                          >
+                            <BadgeCheck className="size-5 text-orange-400" />
+                            <span className="uppercase text-base group-hover:font-bold">
+                              Check verification status
+                            </span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {isBusiness &&
+                        !agencyIsVerified &&
+                        !verificationInitiated && (
+                          <DropdownMenuItem className="text-stone-800 group cursor-pointer">
+                            <Link
+                              href="/verify-agency"
+                              className="flex items-center gap-2 w-full"
+                              onClick={onClose}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                className="text-stone-400 flex-shrink-0 size-6"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span className="uppercase text-base group-hover:font-bold text-primary">
+                                Verify Agency Identity
+                              </span>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                      {isBusiness && <AddGirlItem onClose={onClose} />}
+                      {isBusiness && <ViewAgencyGirlsItem onClose={onClose} />}
+                      <InvoicesItem onClose={onClose} />
+                      <SignOutItem onSignOut={signOut} />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </SheetHeader>
 
-            <MobileNavMenu onClose={onClose} />
-          </SheetContent>
-        </Sheet>
+              <MobileNavMenu onClose={onClose} />
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 MobileHeader.displayName = "MobileHeader";
 
