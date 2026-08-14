@@ -144,6 +144,13 @@ const RegisterForm = ({ className }: Prop) => {
           "Account created successfully! Redirecting to your profile...",
         );
 
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          (window as any).fbq("track", "CompleteRegistration", {
+            value: 500,
+            currency: "KES",
+          });
+        }
+
         // Delay redirect (2–3 seconds)
         setTimeout(() => {
           router.push("/administration");
@@ -163,7 +170,7 @@ const RegisterForm = ({ className }: Prop) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <h3 className="text-2xl font-semibold text-white mb-8">
-              Registration Escort - Enter your login details
+              Registration Girl - Enter your login details
             </h3>
             {/* section 1 */}
             <div className="flex flex-col lg:flex-row gap-6">

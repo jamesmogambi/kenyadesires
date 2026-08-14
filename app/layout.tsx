@@ -146,6 +146,17 @@ export default async function RootLayout({
           />
         </Head>
 
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              fbq('track', 'CompleteRegistration', {
+                value: 500,
+                currency: 'KES',
+              });
+            `,
+          }}
+        />
+
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
