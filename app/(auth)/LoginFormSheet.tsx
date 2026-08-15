@@ -125,7 +125,7 @@ const LoginFormSheet = ({ className, children }: Prop) => {
             </DialogTitle>
             <Form {...form}>
               <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="flex mt-4 mb-7 w-full items-center gap-3">
+                <div className="flex mt-4 mb-7 w-full flex-col md:flex-row items-center gap-3">
                   <FormField
                     control={form.control}
                     name="email"
@@ -223,7 +223,7 @@ const LoginFormSheet = ({ className, children }: Prop) => {
                 </div>
 
                 {error && (
-                  <p className="font-semibold my-3 text-primary text-center">
+                  <p className="font-semibold my-3 text-sm md:text-base text-primary text-center">
                     {error}
                   </p>
                 )}
@@ -253,7 +253,7 @@ const LoginFormSheet = ({ className, children }: Prop) => {
                       : "bg-primary hover:bg-primary/80 cursor-pointer text-white",
                   )}
                 >
-                  <span>{loading ? "Processing..." : "LOg"}</span>
+                  <span>{loading ? "Processing..." : "LOg in"}</span>
                   {!loading && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -270,7 +270,7 @@ const LoginFormSheet = ({ className, children }: Prop) => {
                     </svg>
                   )}
                 </Button>
-                <p className="my-5 text-center mx-5 font-semibold text-black ">
+                <p className="my-5 text-sm lg:text-base text-center mx-5 font-semibold text-black ">
                   Don't have an account? Click on{" "}
                   <span
                     onClick={onSignup}

@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import RegisterForm from "./RegisterForm";
 
 export const metadata: Metadata = {
-  title: "Private Room Registration for Girls - My Site",
+  title: "Private Room Registration for Girls - KenyaDesires",
   description: " Private room registration",
   robots: {
     index: false,

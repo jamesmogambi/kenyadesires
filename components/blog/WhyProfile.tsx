@@ -10,7 +10,7 @@ const WhyProfile = ({ className }: Prop) => {
   return (
     <article className={cn("", className)}>
       <SectionCard>
-        <h4 className="text-center text-3xl  mb-14 font-semibold  text-white">
+        <h4 className="text-center text-2xl lg:text-3xl  mb-14 font-semibold  text-white">
           Why have a profile on{" "}
           <span className="text-primary">kenyadesires.co.ke?</span>
         </h4>

@@ -15,14 +15,16 @@ const MenuSection = () => {
           </p>
         </div>
 
-        <div className="flex flex-col items-start  gap-6 lg:flex-row my-6">
+        <div className="flex flex-col items-start gap-8 lg:gap-6 lg:flex-row my-6">
           {/* section 1 */}
           <div className="basis-full border border-primary  lg:basis-1/2">
-            <h4 className="text-white bg-primary text-2xl py-4 font-bold text-center">
+            <h4 className="text-white bg-primary text-xl lg:text-2xl py-4 font-bold text-center">
               Girl Registration
             </h4>
             <div className="p-8 ">
-              <h4 className="text-white font-bold text-2xl">Contains :</h4>
+              <h4 className="text-white font-bold text-xl lg:text-2xl">
+                Contains :
+              </h4>
               <ul className="pl-4 mt-6">
                 <li className="flex items-center gap-3">
                   <Check className="text-primary" strokeWidth={4} />
@@ -35,7 +37,7 @@ const MenuSection = () => {
 
             <div className="bg-primary hover:bg-primary/70 cursor-pointer flex justify-center py-7">
               <Link
-                className="text-center flex items-center  text-white text-2xl font-bold"
+                className="text-center flex items-center  text-white text-xl lg:text-2xl font-bold"
                 href="/register-escort"
               >
                 <p>Register</p>
@@ -49,12 +51,14 @@ const MenuSection = () => {
           </div>
           {/* section 2 */}
           <div className="basis-full lg:basis-1/2 border border-black">
-            <h4 className="text-white bg-black text-2xl py-4 font-bold text-center">
+            <h4 className="text-white bg-black text-xl lg:text-2xl py-4 font-bold text-center">
               Business Registration
             </h4>
 
             <div className="p-8 ">
-              <h4 className="text-white font-bold text-2xl">Contains :</h4>
+              <h4 className="text-white font-bold text-xl lg:text-2xl">
+                Contains :
+              </h4>
               <ul className="pl-4 mt-6 space-y-4">
                 <li className="flex items-center gap-3">
                   <Check className="text-primary" strokeWidth={4} />
@@ -77,7 +81,7 @@ const MenuSection = () => {
             </p>
             <div className="bg-gray-800/80 hover:bg-gray-800/60 cursor-pointer  flex justify-center py-7">
               <Link
-                className="text-center flex items-center  text-white text-2xl font-bold"
+                className="text-center flex items-center  text-white text-xl lg:text-2xl font-bold"
                 href="/register-business"
               >
                 <p>Register</p>
