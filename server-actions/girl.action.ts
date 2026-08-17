@@ -62,6 +62,7 @@ function convertDocToEscortFast(
 
 // Helper to check if escort has cleaned images
 function hasCleanedImages(escort: Escort): boolean {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
     (metadata: any) => metadata.status === "completed" && metadata.cleanedUrl,
@@ -70,6 +71,10 @@ function hasCleanedImages(escort: Escort): boolean {
 
 // Helper to get cleaned image URLs from escort
 function getCleanedImageUrls(escort: Escort): string[] {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+    return escort.cleanedImages;
+  }
+
   if (!escort.imagesMetadata) return [];
 
   const cleanedUrls: string[] = [];
@@ -83,6 +88,11 @@ function getCleanedImageUrls(escort: Escort): string[] {
 
 // Helper to get cleaned preview photo
 function getCleanedPreviewPhoto(escort: Escort): string | undefined {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+    // Use the first cleaned image as preview if available
+    return escort.cleanedImages[0];
+  }
+
   if (!escort.imagesMetadata || !escort.previewPhoto)
     return escort.previewPhoto;
 
@@ -418,6 +428,10 @@ export async function getCleanedImagesForEscort(
     }
 
     const escort = convertDocToEscort(doc);
+
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      return escort.cleanedImages;
+    }
 
     if (!escort.imagesMetadata) {
       return [];

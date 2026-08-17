@@ -49,6 +49,10 @@ export async function generateMetadata(
 
     // Get cleaned images for metadata
     const getCleanedImages = () => {
+      if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+        return escort.cleanedImages;
+      }
+
       if (!escort.imagesMetadata) return [];
 
       const cleanedUrls: string[] = [];
@@ -64,6 +68,10 @@ export async function generateMetadata(
 
     // Use cleaned preview photo if available
     const getCleanedPreviewPhoto = () => {
+      if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+        return escort.cleanedImages[0];
+      }
+
       if (!escort.imagesMetadata || !escort.previewPhoto)
         return escort.previewPhoto;
 
@@ -227,6 +235,10 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
 
   // Helper to get cleaned images
   const getCleanedImages = () => {
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      return escort.cleanedImages;
+    }
+
     if (!escort.imagesMetadata) return [];
 
     const cleanedUrls: string[] = [];

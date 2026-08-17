@@ -81,6 +81,7 @@ export function convertDocToEscortFast(doc: any): Escort | null {
     lastProcessedAt:
       data.lastProcessedAt?.toDate?.() || data.lastProcessedAt || null,
     imagesMetadata: data.imagesMetadata || {},
+    cleanedImages: data.cleanedImages || [],
     totalImagesProcessed: data.totalImagesProcessed || 0,
     totalImagesFailed: data.totalImagesFailed || 0,
   };
@@ -90,6 +91,7 @@ export function convertDocToEscortFast(doc: any): Escort | null {
  * Check if an escort has cleaned images
  */
 export function hasCleanedImages(escort: any): boolean {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
     (img: any) => img.status === "completed" && img.cleanedUrl,

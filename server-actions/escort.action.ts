@@ -71,6 +71,7 @@ export interface Escort {
   rating: number;
   totalViews: number;
   credits?: number;
+  cleanedImages?: string[];
   createdAt: Date;
   updatedAt: Date;
 
@@ -412,6 +413,7 @@ async function getEscorts(
       "images",
       "videos",
       "imagesMetadata",
+      "cleanedImages",
       "age",
       "county",
       "regions",
@@ -431,6 +433,7 @@ async function getEscorts(
       "whatsappPhone",
       "createdAt",
       "hasCleanedImages",
+      "cleanedImages",
     );
 
     const batchSize = Math.max(validLimit * 5, 200);
@@ -828,6 +831,8 @@ function convertDocToEscortFast(doc: any): Escort {
     totalViews: data.totalViews || 0,
     cleaningHistory: data.cleaningHistory || [],
     hasCleanedImages: data.hasCleanedImages || false,
+    imagesMetadata: data.imagesMetadata || {},
+    cleanedImages: data.cleanedImages || [],
     createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
     updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
   };
@@ -1410,6 +1415,7 @@ const LISTING_SELECT_FIELDS = [
   "whatsappPhone",
   "createdAt",
   "hasCleanedImages",
+  "cleanedImages",
 ];
 
 async function fetchSpecializedEscorts(

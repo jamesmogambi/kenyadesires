@@ -6,15 +6,21 @@
 // vice versa.
 //
 // Usage:
-//   npm run map-cleaned-images                         # scan all
-//   npm run map-cleaned-images -- --escort-id=abc123   # single escort
-//   npm run map-cleaned-images -- --dry-run             # report only, no file output
+//   npm run map-cleaned-images                           # scan and write cleanedImages to Firestore
+//   npm run map-cleaned-images -- --dry-run               # report only, no writes
+//   npm run map-cleaned-images -- --escort-id=abc123     # single escort
+//   npm run map-cleaned-images -- --limit=100             # limit escorts to write
+//   npm run map-cleaned-images -- --no-write              # scan only, no Firestore writes, still saves JSON
 //
 // File path format in storage:
 //   cleaned_images/{sanitizedEscortId}/{timestamp}_{random}.jpg
 //
 // Firestore stores the cleaned URL in:
 //   imagesMetadata[originalImageUrl].cleanedUrl
+//
+// After mapping, the script writes a `cleanedImages` string array to each
+// escort document containing the GCS URLs of all cleaned images that belong
+// to that escort.
 //
 // Escort IDs are sanitized on write: id.replace(/[^a-zA-Z0-9-]/g, "_")
 
@@ -80,6 +86,11 @@ interface MappingReport {
     issue: string;
   }>;
   escortsWithCleanedImages: number;
+  escortCleanedImages: Array<{
+    escortId: string;
+    escortName: string;
+    cleanedImages: string[];
+  }>;
 }
 
 function sanitizeEscortId(id: string): string {
@@ -275,6 +286,7 @@ async function mapCleanedImages(escortIdFilter?: string): Promise<MappingReport>
       orphanedFiles: [],
       corruptedLinks: [],
       escortsWithCleanedImages: 0,
+      escortCleanedImages: [],
     };
   }
 
@@ -293,6 +305,7 @@ async function mapCleanedImages(escortIdFilter?: string): Promise<MappingReport>
     orphanedFiles: [],
     corruptedLinks: [],
     escortsWithCleanedImages: new Set(firestoreRefs.map((r) => r.escortId)).size,
+    escortCleanedImages: [],
   };
 
   const matchedFileNames = new Set<string>();
@@ -379,6 +392,25 @@ async function mapCleanedImages(escortIdFilter?: string): Promise<MappingReport>
     }
   }
 
+  // Build per-escort cleanedImages array from matched entries
+  const escortImagesMap = new Map<string, Set<string>>();
+  for (const m of report.matched) {
+    if (!escortImagesMap.has(m.escortId)) {
+      escortImagesMap.set(m.escortId, new Set());
+    }
+    escortImagesMap.get(m.escortId)!.add(m.cleanedUrl);
+  }
+
+  report.escortCleanedImages = [];
+  escortImagesMap.forEach((urls, escortId) => {
+    const match = report.matched.find((m) => m.escortId === escortId);
+    report.escortCleanedImages.push({
+      escortId,
+      escortName: match?.escortName || "",
+      cleanedImages: Array.from(urls),
+    });
+  });
+
   return report;
 }
 
@@ -394,6 +426,16 @@ function printReport(report: MappingReport): void {
   console.log(`  Matched:                ${report.matched.length}`);
   console.log(`  Orphaned (storage only): ${report.orphanedFiles.length}`);
   console.log(`  Corrupted links:        ${report.corruptedLinks.length}`);
+
+  if (report.escortCleanedImages.length > 0) {
+    console.log(`\n📝 Per-Escort cleanedImages Summary (${report.escortCleanedImages.length} escorts):`);
+    report.escortCleanedImages.slice(0, 20).forEach((e, i) => {
+      console.log(`  ${i + 1}. ${e.escortId} (${e.escortName}): ${e.cleanedImages.length} images`);
+    });
+    if (report.escortCleanedImages.length > 20) {
+      console.log(`  ... and ${report.escortCleanedImages.length - 20} more`);
+    }
+  }
 
   if (report.matched.length > 0) {
     console.log(`\n✅ Matched (${report.matched.length}):`);
@@ -437,6 +479,7 @@ function printReport(report: MappingReport): void {
 async function main(): Promise<void> {
   const rawArgs = process.argv.slice(2);
   const dryRun = rawArgs.includes("--dry-run");
+  const noWrite = rawArgs.includes("--no-write");
   const escortIdArg = rawArgs.find((a) => a.startsWith("--escort-id="));
   const escortId = escortIdArg ? escortIdArg.split("=")[1] : undefined;
 
@@ -444,6 +487,7 @@ async function main(): Promise<void> {
   console.log(`[Map Cleaned Images] ${dryRun ? "DRY RUN" : "LIVE SCAN"}`);
   console.log(`Bucket: ${bucket.name}`);
   console.log(`Prefix: ${STORAGE_PREFIX}`);
+  if (noWrite) console.log(`📝 Write mode: SKIP (Firestore will not be updated)`);
   console.log("=".repeat(70));
 
   let report: MappingReport;
@@ -476,6 +520,7 @@ async function main(): Promise<void> {
         orphanedFiles: report.orphanedFiles.length,
         corruptedLinks: report.corruptedLinks.length,
         escortsWithCleanedImages: report.escortsWithCleanedImages,
+        escortsUpdated: report.escortCleanedImages.length,
       },
       matched: report.matched,
       orphanedFiles: report.orphanedFiles,
@@ -484,6 +529,29 @@ async function main(): Promise<void> {
 
     fs.writeFileSync(outputPath, JSON.stringify(output, null, 2));
     console.log(`\n💾 Full report saved to: ${outputPath}`);
+  }
+
+  if (!dryRun && !noWrite && report.escortCleanedImages.length > 0) {
+    console.log(`\n📝 Writing cleanedImages to Firestore for ${report.escortCleanedImages.length} escorts...`);
+    let written = 0;
+    let failed = 0;
+
+    for (const entry of report.escortCleanedImages) {
+      try {
+        await adminDb.collection("escorts").doc(entry.escortId).update({
+          cleanedImages: entry.cleanedImages,
+          hasCleanedImages: true,
+        });
+        written++;
+      } catch (error: any) {
+        console.error(`  ❌ Failed to update escort ${entry.escortId}:`, error.message);
+        failed++;
+      }
+    }
+
+    console.log(`\n📊 Firestore write summary:`);
+    console.log(`  ✅ Updated: ${written} escorts`);
+    console.log(`  ❌ Failed:  ${failed} escorts`);
   }
 
   if (report.orphanedFiles.length > 0 || report.corruptedLinks.length > 0) {

@@ -29,6 +29,7 @@ function convertDocToEscortFast(doc: any): Escort {
 }
 
 function hasCleanedImages(escort: Escort): boolean {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
     (metadata: any) => metadata.status === "completed" && metadata.cleanedUrl,
@@ -61,6 +62,7 @@ const LISTING_FIELDS = [
   "whatsappPhone",
   "createdAt",
   "hasCleanedImages",
+  "cleanedImages",
 ];
 
 async function fetchSpecializedEscorts(

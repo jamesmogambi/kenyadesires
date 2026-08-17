@@ -54,6 +54,7 @@ const LISTING_FIELDS = [
   "isVerified",
   "isFeatured",
   "hasCleanedImages",
+  "cleanedImages",
   "createdAt",
   "updatedAt",
   "totalViews",
@@ -205,6 +206,10 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
 }
 
 function getCleanedImageUrls(escort: Escort): string[] {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+    return escort.cleanedImages;
+  }
+
   if (!escort.imagesMetadata) return [];
 
   const cleanedUrls: string[] = [];
@@ -217,6 +222,10 @@ function getCleanedImageUrls(escort: Escort): string[] {
 }
 
 function getCleanedPreviewPhoto(escort: Escort): string | undefined {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+    return escort.cleanedImages[0];
+  }
+
   if (!escort.imagesMetadata || !escort.previewPhoto)
     return escort.previewPhoto;
 
@@ -1231,6 +1240,10 @@ export async function getCleanedImagesForEscort(
 
     const escort = convertDocToEscortFast(doc);
 
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      return escort.cleanedImages;
+    }
+
     if (!escort.imagesMetadata) {
       return [];
     }
@@ -1264,6 +1277,7 @@ export async function getCleanedImagesStats() {
         .collection("escorts")
         .where("hasCleanedImages", "==", true)
         .select(
+          "cleanedImages",
           "imagesMetadata",
           "categories",
           "county",
@@ -1283,16 +1297,20 @@ export async function getCleanedImagesStats() {
 
       snapshot.docs.forEach((doc: any) => {
         const data = doc.data();
-        if (!data.imagesMetadata) return;
 
-        const cleanedImages = Object.values(data.imagesMetadata).filter(
-          (metadata: any) =>
-            metadata.status === "completed" && metadata.cleanedUrl,
-        );
+        const cleanedCount = data.cleanedImages?.length || 0;
+        const metadataCleanedCount = data.imagesMetadata
+          ? Object.values(data.imagesMetadata).filter(
+              (metadata: any) =>
+                metadata.status === "completed" && metadata.cleanedUrl,
+            ).length
+          : 0;
 
-        if (cleanedImages.length > 0) {
+        const totalCount = cleanedCount > 0 ? cleanedCount : metadataCleanedCount;
+
+        if (totalCount > 0) {
           stats.escortsWithCleanedImages++;
-          stats.totalCleanedImages += cleanedImages.length;
+          stats.totalCleanedImages += totalCount;
 
           data.categories?.forEach((category: string) => {
             stats.byCategory[category] =

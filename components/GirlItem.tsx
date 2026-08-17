@@ -43,31 +43,31 @@ const GirlItem = ({
     id, // ← Get the ID from the escort object
     isVerified,
     regions,
+    cleanedImages,
   } = girl;
 
   // ✅ Ensure we have a valid ID - use slug or username as fallback
   const getEscortIdentifier = (): string => {
-    // Try multiple sources for a valid identifier
     if (id) return id;
     if (slug) return slug;
     if (girl.username) return girl.username;
-    // Last resort: use a fallback
     console.warn("⚠️ Escort missing ID, slug, and username:", girl);
     return `escort-${Date.now()}`;
   };
 
   const escortIdentifier = getEscortIdentifier();
 
-  // ✅ Fix the path - use the identifier
   const profilePath = path || `/girl/${encodeURIComponent(escortIdentifier)}`;
-
-  // ✅ Also provide a fallback link using the ID if available
-  const fallbackPath = id ? `/girl/${id}` : null;
 
   const escortName = name || "Escort";
 
-  // Helper function to get cleaned images or fallback to original images
+  // Use cleanedImages field if available (populated by map-cleaned-images script),
+  // otherwise fall back to extracting from imagesMetadata, then original images
   const getDisplayImages = () => {
+    if (cleanedImages && cleanedImages.length > 0) {
+      return cleanedImages;
+    }
+
     if (imagesMetadata) {
       const cleanedUrls: string[] = [];
       for (const [originalUrl, info] of Object.entries(imagesMetadata)) {

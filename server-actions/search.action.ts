@@ -6,6 +6,7 @@ import { cache } from "react";
 import { convertQueryDocToEscort, Escort } from "./escort.action";
 
 function hasCleanedImages(escort: Escort): boolean {
+  if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
     (meta: any) => meta.status === "completed" && meta.cleanedUrl,
@@ -40,6 +41,7 @@ const SEARCH_FIELDS = [
   "whatsappPhone",
   "createdAt",
   "hasCleanedImages",
+  "cleanedImages",
 ];
 
 interface SearchEscortsOptions {
