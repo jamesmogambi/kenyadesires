@@ -15,7 +15,8 @@
     "monitor:batch": "node scripts/monitor-batch.ts",
     "fix-tokens": "node scripts/fix-missing-tokens.ts",
     "campaign": "node scripts/campaign.ts",
-    "sms-campaign": "node scripts/sms-campaign.ts"
+    "sms-campaign": "node scripts/sms-campaign.ts",
+    "backup": "tsx scripts/firestore-backup.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
@@ -97,6 +98,7 @@
     "@types/react-dom": "19.2.3",
     "@types/uuid": "^10.0.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"
   },
