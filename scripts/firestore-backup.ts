@@ -99,7 +99,7 @@ function initDestination(): Firestore {
           credential: cert({
             projectId: backupProjectId,
             clientEmail,
-            privateKey: privateKey.replace(/\\n/g, "\n"),
+            privateKey: privateKey.replace(/\\n/g, "\n").replace(/^"|"$/g, ""),
           }),
         },
         destAppName,
@@ -117,7 +117,7 @@ function initDestination(): Firestore {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-const BATCH_LIMIT = 450; // Firestore batch max is 500; leave headroom
+const BATCH_LIMIT = 50; // Reduce to avoid "Transaction too big" on large documents
 
 interface CopyStats {
   collections: number;
