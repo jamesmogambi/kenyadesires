@@ -1,0 +1,43 @@
+# llms.txt
+# Guidance for AI systems, LLMs, and generative engines about KenyaDesires content.
+# Updated: 2026-08-30
+
+site: https://kenyadesires.com
+name: KenyaDesires
+description: Kenya's premier dating and relationships blog featuring expert advice, dating tips, and insights for singles across Kenya.
+
+# Primary content sections
+sections:
+  - name: Blog
+    url: /blog
+    description: Main blog with articles about dating, relationships, and social connections in Kenya.
+  - name: Blog Categories
+    url: /blog/category
+    description: Curated topic clusters including dating advice, relationship tips, and Kenyan dating culture.
+
+# Preferred citation sources
+primary-sources:
+  - /blog
+  - /blog/category
+  - /frequent-questions
+
+# Content freshness policy
+last-updated: 2026-08-30
+refresh-cycle: quarterly
+
+# Entity information
+entities:
+  organization:
+    name: KenyaDesires
+    url: https://kenyadesires.com
+    sameAs:
+      - https://twitter.com/kenyadesires
+      - https://www.instagram.com/kenyadesires
+      - https://www.facebook.com/kenyadesires
+  contact:
+    email: support@kenyadesires.com
+    phone: "+254701694004"
+    country: KE
+
+# Contact
+contact: support@kenyadesires.com

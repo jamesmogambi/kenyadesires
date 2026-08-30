@@ -370,6 +370,45 @@ export async function getPostsByCategory(
   );
 }
 
+export const RELATED_POSTS_QUERY = (categoryId: string, currentPostId: string, limit: number = 3) =>
+  `*[_type == "post" && references($categoryId) && _id != $currentPostId] | order(_createdAt desc)[0...${limit}] {
+    _id,
+    title,
+    slug,
+    excerpt,
+    mainImage {
+      asset-> {
+        _id,
+        url
+      },
+      alt
+    },
+    _createdAt,
+    author-> {
+      name,
+      image {
+        asset-> {
+          _id,
+          url
+        }
+      }
+    },
+    categories[]-> {
+      _id,
+      name,
+      slug,
+      color,
+      icon
+    }
+  }`;
+
+export async function getRelatedPosts(categoryId: string, currentPostId: string, limit: number = 3): Promise<Post[]> {
+  return await client.fetch(RELATED_POSTS_QUERY(categoryId, currentPostId, limit), {
+    categoryId,
+    currentPostId,
+  });
+}
+
 // Get a single post by slug
 export const SINGLE_POST_QUERY = `*[_type == "post" && slug.current == $slug][0] {
   _id,

@@ -24,6 +24,8 @@ export interface Author {
     alt?: string
   }
   bio?: string
+  email?: string
+  socialLinks?: string[]
 }
 
 export interface Post {
@@ -47,6 +49,11 @@ export interface Post {
   author?: Author
   categories: Category[]
   featured?: boolean
+  faq?: Array<{
+    _key: string
+    question: string
+    answer: string
+  }>
 }
 
 export interface PostsResponse {

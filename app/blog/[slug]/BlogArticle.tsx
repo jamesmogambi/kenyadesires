@@ -8,7 +8,8 @@ import PortableText from "@/components/blog/PortableText";
 import SanityImage from "@/components/blog/SanityImage";
 import CommentList from "@/components/blog/CommentList";
 import CommentForm from "@/components/blog/CommentForm";
-import { getCachedCommentsByPostSlug } from "@/lib/cache";
+import FaqSection from "@/components/blog/FaqSection";
+import { getCachedCommentsByPostSlug, getCachedRelatedPosts } from "@/lib/cache";
 
 interface Prop {
   blog: Post;
@@ -21,7 +22,16 @@ const BlogArticle = async ({
   className,
   showBackButton = true,
 }: Prop) => {
-  const { _createdAt: createdAt, title, mainImage, body, author } = blog;
+  const {
+    _createdAt: createdAt,
+    _updatedAt: updatedAt,
+    title,
+    mainImage,
+    body,
+    author,
+    categories,
+    faq,
+  } = blog;
   const postSlug = blog.slug?.current || "";
   const comments = await getCachedCommentsByPostSlug(postSlug);
 
@@ -33,6 +43,14 @@ const BlogArticle = async ({
   });
 
   const formattedDate = formatter.format(new Date(createdAt));
+  const formattedUpdatedDate = updatedAt
+    ? formatter.format(new Date(updatedAt))
+    : null;
+
+  const relatedPosts =
+    categories.length > 0
+      ? await getCachedRelatedPosts(categories[0]._id, blog._id, 3)
+      : [];
 
   return (
     <article className={cn("", className)}>
@@ -41,6 +59,11 @@ const BlogArticle = async ({
         <p className="text-primary font-bold text-base uppercase">
           published : {formattedDate}
         </p>
+        {formattedUpdatedDate && formattedUpdatedDate !== formattedDate && (
+          <p className="text-white/60 font-bold text-sm uppercase mt-1">
+            last updated : {formattedUpdatedDate}
+          </p>
+        )}
         <h4 className="lg:text-2xl text-xl text-center mb-6 font-bold">
           {title}
         </h4>
@@ -58,7 +81,7 @@ const BlogArticle = async ({
 
       {/* Main Content Section */}
       <SectionCard className="md:p-12 p-6 my-8">
-        {/* ✅ Featured Image - Using SanityImage */}
+        {/* Featured Image */}
         <div className="relative w-full mb-5 h-48 md:h-[350px]">
           <SanityImage
             image={mainImage}
@@ -72,17 +95,52 @@ const BlogArticle = async ({
           />
         </div>
 
-        {/* ✅ Blog Content - Using PortableText */}
+        {/* Blog Content */}
         <PortableText content={blog.body} />
 
-        {/* ✅ Author Section */}
+        {/* FAQ Section */}
+        <FaqSection faq={faq || []} />
+
+        {/* Author Section */}
         {blog.author && <AuthorSection author={blog.author} />}
 
         {/* Divider */}
         <div className="border-b border-gray-1"></div>
         <div className="border-b border-gray-1 mt-14"></div>
 
-        {/* ✅ Back Button */}
+        {/* Related Posts */}
+        {relatedPosts.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-2xl font-bold text-primary mb-6">
+              Related Articles
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedPosts.map((post: any) => (
+                <Link
+                  key={post._id}
+                  href={`/blog/${post.slug?.current}`}
+                  className="group"
+                >
+                  <div className="relative w-full h-48 bg-transparent mb-3">
+                    <SanityImage
+                      image={post.mainImage}
+                      alt={post.mainImage?.alt || post.title || "Blog post image"}
+                      fill
+                      className="object-cover group-hover:opacity-80 transition-opacity"
+                      sizes="100vw"
+                      fallback="/og-default.jpg"
+                    />
+                  </div>
+                  <h4 className="text-lg text-center text-primary font-semibold group-hover:underline">
+                    {post.title}
+                  </h4>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Back Button */}
         {showBackButton && (
           <div className="flex my-8 justify-center items-center p-4">
             <Link
@@ -94,16 +152,14 @@ const BlogArticle = async ({
           </div>
         )}
 
-        {/* ✅ Comments Section */}
+        {/* Comments Section */}
         <div className=" border-gray-1 pt-10 mt-5">
           <h3 className="text-2xl font-bold text-white/20 mb-6">
             Comments ({comments.length})
           </h3>
 
-          {/* Comments List */}
           <CommentList comments={comments} className="mb-10" />
 
-          {/* Comment Form */}
           <div className=" border-gray-1 pt-8">
             <h4 className="text-xl font-bold text-primary mb-4">
               Leave a comment

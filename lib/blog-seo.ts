@@ -291,6 +291,26 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
   const imageUrl = post.mainImage?.asset?.url || DEFAULT_OG_IMAGE;
   const imageAlt = post.mainImage?.alt || post.title;
 
+  const authorName = post.author?.name || "KenyaDesires Editor";
+  const authorId = post.author?._id ? `${baseUrl}/blog/author/${post.author._id}` : `${baseUrl}/#author`;
+
+  const authorSchema = {
+    "@type": "Person",
+    "@id": authorId,
+    name: authorName,
+    url: authorId,
+    worksFor: {
+      "@id": `${baseUrl}/#organization`,
+    },
+    sameAs: post.author?.socialLinks?.length
+      ? post.author.socialLinks
+      : [
+          "https://twitter.com/kenyadesires",
+          "https://www.instagram.com/kenyadesires",
+        ],
+    knowsAbout: post.categories?.map((c) => c.name) || ["Dating", "Relationships", "Kenya"],
+  };
+
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -299,12 +319,10 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
     image: imageUrl,
     datePublished: post._createdAt,
     dateModified: post._updatedAt || post._createdAt,
-    author: {
-      "@type": "Person",
-      name: post.author?.name || "KenyaDesires Editor",
-    },
+    author: authorSchema,
     publisher: {
       "@type": "Organization",
+      "@id": `${baseUrl}/#organization`,
       name: BLOG_NAME,
       logo: {
         "@type": "ImageObject",
@@ -359,6 +377,7 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
   const websiteData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${baseUrl}/#website`,
     name: BLOG_NAME,
     description:
       "Kenya's premier dating and lifestyle blog featuring expert advice, relationship tips, and insights for singles across Kenya.",
@@ -372,11 +391,15 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
       "query-input": "required name=search_term_string",
     },
     inLanguage: "en-KE",
+    publisher: {
+      "@id": `${baseUrl}/#organization`,
+    },
   };
 
   const organizationData = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${baseUrl}/#organization`,
     name: SITE_NAME,
     alternateName: "Kenya Desires",
     url: baseUrl,
@@ -396,7 +419,29 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
     },
   };
 
-  const allData = [structuredData, breadcrumbData, websiteData, organizationData];
+  const faqData = post.faq && post.faq.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "@id": `${postUrl}/#faq`,
+        mainEntity: post.faq.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: item.answer,
+          },
+        })),
+      }
+    : null;
+
+  const allData = [
+    structuredData,
+    breadcrumbData,
+    websiteData,
+    organizationData,
+    ...(faqData ? [faqData] : []),
+  ];
 
   return `<script type="application/ld+json">${JSON.stringify(
     allData,

@@ -62,7 +62,7 @@ const BreadCrumbHeader = ({
           <BreadcrumbItem className="cursor-default flex-shrink-0">
             <Link
               className="text-primary cursor-pointer bg-transparent text-sm lg:text-lg font-bold"
-              href={`/blog/${category || "uncategorized"}`}
+              href={`/blog/category/${category || "uncategorized"}`}
             >
               {category}
             </Link>

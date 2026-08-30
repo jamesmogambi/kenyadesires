@@ -28,6 +28,46 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
       {
+        userAgent: "GPTBot",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "ChatGPT-User",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "OAI-SearchBot",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "PerplexityBot",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "Perplexity-User",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "ClaudeBot",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "Claude-User",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
+        userAgent: "Claude-SearchBot",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
+      },
+      {
         userAgent: "Googlebot",
         allow: "/",
         disallow: [
@@ -39,8 +79,7 @@ export default function robots(): MetadataRoute.Robots {
           "/profile/",
           "/*?*",
         ],
-        // Googlebot specific crawl delay (optional)
-        crawlDelay: 2, // 2 seconds between requests
+        crawlDelay: 2,
       },
       {
         userAgent: "Bingbot",
@@ -53,6 +92,11 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/admin/", "/dashboard/", "/api/", "/*?*"],
         crawlDelay: 2,
+      },
+      {
+        userAgent: "CCBot",
+        allow: "/",
+        disallow: ["/admin/", "/dashboard/", "/api/"],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

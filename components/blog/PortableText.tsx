@@ -127,6 +127,26 @@ const components = {
         </figure>
       );
     },
+    tldr: ({ value }: any) => (
+      <div className="my-6 p-6 border-l-4 border-primary bg-primary/10 rounded-r-lg">
+        <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-2">
+          TL;DR
+        </h4>
+        <p className="text-white/90 text-base leading-relaxed">
+          {value?.text || value?.summary || ""}
+        </p>
+      </div>
+    ),
+    summary: ({ value }: any) => (
+      <div className="my-6 p-6 border-l-4 border-primary bg-primary/10 rounded-r-lg">
+        <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-2">
+          Summary
+        </h4>
+        <p className="text-white/90 text-base leading-relaxed">
+          {value?.text || value?.summary || ""}
+        </p>
+      </div>
+    ),
   },
 
   block: {

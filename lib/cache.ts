@@ -13,6 +13,7 @@ import {
   getFeaturedPostsWithLimit,
   getPostsByCategory,
   getPostsWithPagination,
+  getRelatedPosts,
 } from "./sanity/queries";
 import { getAllRegions, getPopularCounties } from "@/server-actions/region.action";
 import { getAllLookupData } from "@/server-actions/lookup.action";
@@ -89,6 +90,11 @@ export async function getCachedCategoryBySlug(slug: string) {
 export async function getCachedPostsByCategory(slug: string) {
   console.log(`🔄 Fetching fresh posts for category: ${slug}...`);
   return await getPostsByCategory(slug);
+}
+
+export async function getCachedRelatedPosts(categoryId: string, currentPostId: string, limit: number = 3) {
+  console.log(`🔄 Fetching fresh related posts for category: ${categoryId}...`);
+  return await getRelatedPosts(categoryId, currentPostId, limit);
 }
 
 export async function getCachedCommentsByPostSlug(postSlug: string) {
