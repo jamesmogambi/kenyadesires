@@ -38,8 +38,15 @@ const page = async ({ searchParams }: PageProps) => {
   const currentPage = parseInt(params.page || "1");
   const POSTS_PER_PAGE = 20;
 
-  const featuredPosts = await getCachedFeaturedPosts();
-  const { featured, nonFeatured } = await getAllCategories();
+  let featuredPosts: any[] = [];
+  let categories = { featured: [], nonFeatured: [] };
+
+  try {
+    featuredPosts = await getCachedFeaturedPosts();
+    categories = await getAllCategories();
+  } catch (error) {
+    console.error("Failed to fetch blog data from Sanity:", error);
+  }
 
   const jsonLdScript = generateBlogListJsonLd();
 
@@ -53,8 +60,8 @@ const page = async ({ searchParams }: PageProps) => {
 
       <div className="flex w-full mx-auto flex-col-reverse lg:max-w-[80%] min-h-screen lg:flex-row gap-2">
         <aside className="basis-full space-y-7 lg:basis-1/3 p-6 border-green-600">
-          <CategorySection title="Kenyan Categories" categories={featured} />
-          <CategorySection title="Magazine" categories={nonFeatured} />
+          <CategorySection title="Kenyan Categories" categories={categories.featured} />
+          <CategorySection title="Magazine" categories={categories.nonFeatured} />
         </aside>
 
         <div className="basis-full p-8 border-amber-300 lg:flex-1">
