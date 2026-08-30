@@ -6,6 +6,7 @@ import {
   getFeaturedPostsWithLimit,
 } from "@/lib/sanity/queries";
 import Head from "next/head";
+import { getCachedBlogPost } from "@/lib/cache";
 
 interface Prop {
   children: React.ReactNode;
@@ -13,20 +14,22 @@ interface Prop {
 }
 
 const layout = async ({ children, params }: Prop) => {
-  // Await the params promise
   const { slug } = await params;
 
-  const [categories, featuredPosts] = await Promise.all([
+  const [categories, featuredPosts, post] = await Promise.all([
     getAllCategories(),
     getFeaturedPostsWithLimit(20),
-    // getPostsWithPagination(1, 6),
+    getCachedBlogPost(slug),
   ]);
 
   const { featured, nonFeatured } = categories;
 
   return (
     <>
-      <BreadCrumbHeader title={featuredPosts[0]?.title} />
+      <BreadCrumbHeader
+        title={post?.title || featuredPosts[0]?.title || "Blog"}
+        category={post?.categories?.[0]?.name}
+      />
       <div className="flex w-full mx-auto flex-col-reverse  lg:max-w-[80%] min-h-screen lg;flex-col lg:flex-row gap-2 ">
         {/* categories section*/}
         <aside className=" basis-full space-y-7 lg:basis-1/3 p-6  border-green-600">

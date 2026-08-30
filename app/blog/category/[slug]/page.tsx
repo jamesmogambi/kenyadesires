@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import BlogList from "../../BlogList";
+import EmptyState from "@/components/blog/EmptyState";
 import {
   getCachedCategoryBySlug,
   getCachedPostsByCategory,
@@ -70,10 +70,48 @@ export default async function CategoryPage({
   ]);
 
   if (!category) {
-    notFound();
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              name: "Category Not Found",
+              description: "The requested category could not be found.",
+              url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/blog/category/${slug}`,
+            }),
+          }}
+        />
+        <main className="">
+          <EmptyState
+            title="Category not found"
+            description="The category you are looking for does not exist or has been removed. Explore our latest posts below."
+          />
+        </main>
+      </>
+    );
   }
 
   const jsonLdScript = generateBlogCategoryJsonLd(category, slug);
+
+  if (posts.length === 0) {
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript }}
+        />
+        <main className="">
+          <EmptyState
+            title={`No posts in ${category.name} yet`}
+            description="This category doesn't have any articles right now. Check back soon or browse other topics on the blog."
+          />
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
