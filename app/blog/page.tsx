@@ -42,10 +42,17 @@ const page = async ({ searchParams }: PageProps) => {
   let categories = { featured: [], nonFeatured: [] };
 
   try {
+    console.log("[Blog Page] Fetching featured posts...");
+    const startFeatured = Date.now();
     featuredPosts = await getCachedFeaturedPosts();
+    console.log(`[Blog Page] Featured posts fetched in ${Date.now() - startFeatured}ms, count: ${featuredPosts.length}`);
+
+    console.log("[Blog Page] Fetching categories...");
+    const startCategories = Date.now();
     categories = await getAllCategories();
+    console.log(`[Blog Page] Categories fetched in ${Date.now() - startCategories}ms, featured: ${categories.featured.length}, nonFeatured: ${categories.nonFeatured.length}`);
   } catch (error) {
-    console.error("Failed to fetch blog data from Sanity:", error);
+    console.error("[Blog Page] Failed to fetch blog data from Sanity:", error);
   }
 
   const jsonLdScript = generateBlogListJsonLd();

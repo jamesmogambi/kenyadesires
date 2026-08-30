@@ -28,13 +28,14 @@ const CategorySection = ({ categories, title, className }: Prop) => {
       {/* loop through the categories */}
 
       {categories?.map((category, _) => (
-        <Link
-          className="p-5 text-base font-medium py-2.5"
-          href={`/blog/category/${slugify(category.name)}`}
-          key={category._id}
-        >
-          {category.name}
-        </Link>
+        <li key={category._id}>
+          <Link
+            className="block p-5 text-base font-medium py-2.5"
+            href={`/blog/category/${slugify(category.name)}`}
+          >
+            {category.name}
+          </Link>
+        </li>
       ))}
     </ul>
   );
