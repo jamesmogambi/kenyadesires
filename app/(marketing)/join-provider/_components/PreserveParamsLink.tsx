@@ -18,9 +18,11 @@ function PreserveParamsLink({
   href,
   children,
   trackEvent,
+  trackEventProperties,
   ...props
 }: React.ComponentProps<typeof Link> & {
   trackEvent?: string;
+  trackEventProperties?: Record<string, unknown>;
 }) {
   const searchParams = useSearchParams();
   const posthog = usePostHog();
@@ -41,7 +43,7 @@ function PreserveParamsLink({
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (trackEvent && posthog) {
-      posthog.capture(trackEvent);
+      posthog.capture(trackEvent, trackEventProperties);
     }
     if (props.onClick) {
       (props.onClick as (e: React.MouseEvent<HTMLAnchorElement>) => void)(e);

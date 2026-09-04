@@ -20,6 +20,8 @@ export const PROVIDER_EVENTS = {
   VIEW_HOW_IT_WORKS: "view_how_it_works",
   VIEW_SAFETY: "view_safety",
   WELCOME_OFFER_VIEW: "welcome_offer_view",
+  EARNING_SECTION_VIEW: "provider_earning_section_view",
+  EARNING_CTA_CLICK: "provider_earning_cta_click",
   START_PROVIDER_REGISTRATION: "start_provider_registration",
   CLICK_CREATE_PROFILE: "click_create_profile",
   CLICK_LOGIN: "click_login",

@@ -21,20 +21,22 @@ import {
   Share2,
   Globe,
   Star,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Create Your Profile on KenyaDesires | Join KenyaDesires",
+  title: "Join KenyaDesires as a Provider | Get Discovered & Grow Your Opportunities",
   description:
-    "Create a profile on KenyaDesires and build your presence on a Kenya-focused online marketplace.",
+    "Create your KenyaDesires provider profile, increase your visibility, reach more potential customers and create more opportunities to grow your earning potential.",
   robots: {
     index: true,
     follow: true,
   },
   openGraph: {
-    title: "Create Your Profile on KenyaDesires | Join KenyaDesires",
+    title: "Join KenyaDesires as a Provider | Get Discovered & Grow Your Opportunities",
     description:
-      "Create a profile on KenyaDesires and build your presence on a Kenya-focused online marketplace.",
+      "Create your KenyaDesires provider profile, increase your visibility, reach more potential customers and create more opportunities to grow your earning potential.",
     type: "website",
     locale: "en_KE",
     url: "https://kenyadesires.com/join-provider",
@@ -92,6 +94,11 @@ const page = () => {
       answer:
         "You can reach the KenyaDesires support team through the contact page on the website.",
     },
+    {
+      question: "Can KenyaDesires help me earn more?",
+      answer:
+        "KenyaDesires can help you build an online presence, increase your visibility and create opportunities to reach potential customers. Greater visibility may create more opportunities to earn, but earnings and customer activity are not guaranteed.",
+    },
   ];
 
   return (
@@ -103,13 +110,14 @@ const page = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="max-w-2xl">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Create Your Profile.{" "}
-                <span className="text-primary">Get Discovered</span> Across
-                Kenya.
+                Get Discovered.{" "}
+                <span className="text-primary">Grow Your Opportunities</span>.
+                Earn More.
               </h1>
               <p className="text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
-                Join KenyaDesires and create a professional profile that helps
-                you build your presence on a Kenya-focused marketplace.
+                Create your KenyaDesires profile, increase your visibility and
+                reach more potential customers. Build your online presence and
+                create more opportunities to increase your earning potential.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Button
@@ -306,20 +314,39 @@ const page = () => {
             {[
               {
                 icon: Globe,
-                title: "Professional Presence",
+                title: "Professional Online Presence",
                 description:
-                  "Create a dedicated profile instead of relying entirely on social media or messaging apps.",
+                  "Create a dedicated profile that represents you professionally.",
+              },
+              {
+                icon: Search,
+                title: "Local Discovery",
+                description:
+                  "Make your profile discoverable to people browsing KenyaDesires in Kenya.",
+              },
+              {
+                icon: Eye,
+                title: "Increased Visibility",
+                description:
+                  "Build a stronger online presence and improve your chances of being discovered.",
               },
               {
                 icon: Settings,
                 title: "Profile Management",
-                description: "Keep your information updated from your account.",
+                description:
+                  "Keep your information, photos and profile details up to date.",
               },
               {
-                icon: Eye,
-                title: "Marketplace Discovery",
+                icon: Users,
+                title: "More Opportunities",
                 description:
-                  "Give visitors a dedicated place to learn about your profile.",
+                  "Create additional opportunities to connect with potential customers.",
+              },
+              {
+                icon: TrendingUp,
+                title: "Increased Earning Potential",
+                description:
+                  "Use your visibility and online presence to create more opportunities to grow your earnings.",
               },
               {
                 icon: ShieldCheck,
@@ -345,6 +372,112 @@ const page = () => {
                 <p className="text-white/60 text-sm leading-relaxed">
                   {benefit.description}
                 </p>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      </section>
+
+      {/* Earning Potential */}
+      <TrackedSection
+        events={[PROVIDER_EVENTS.EARNING_SECTION_VIEW]}
+      >
+        <section className="bg-black/40">
+          <SectionCard className="py-16">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                More Visibility. More Opportunities. More Earning Potential.
+              </h2>
+              <p className="text-white/60 max-w-2xl mx-auto">
+                Your profile is your opportunity to be discovered. KenyaDesires
+                helps you build a professional online presence where potential
+                customers can find and learn more about you. The more effectively
+                you present and manage your profile, the more opportunities you
+                can create to grow your earnings.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: Search,
+                  title: "Get Discovered",
+                  description:
+                    "Create a profile that can be discovered by people browsing KenyaDesires.",
+                },
+                {
+                  icon: Eye,
+                  title: "Increase Your Visibility",
+                  description:
+                    "Build a stronger online presence and make it easier for potential customers to discover you.",
+                },
+                {
+                  icon: TrendingUp,
+                  title: "Create More Earning Opportunities",
+                  description:
+                    "Greater visibility can create more opportunities to connect with potential customers and increase your earning potential.",
+                },
+              ].map((card, index) => (
+                <div
+                  key={index}
+                  className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-primary/50 transition-colors duration-300"
+                >
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <card.icon className="size-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{card.title}</h3>
+                  <p className="text-white/60 text-sm leading-relaxed">
+                    {card.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-10">
+              <Button
+                asChild
+                size="lg"
+                className="h-14 px-10 text-lg font-semibold rounded-md"
+              >
+                <PreserveParamsLink
+                  href={PROVIDER_ROUTES.REGISTER}
+                  trackEvent={PROVIDER_EVENTS.EARNING_CTA_CLICK}
+                  trackEventProperties={{ cta_location: "earning_potential" }}
+                >
+                  Create My Profile
+                  <ArrowRight className="ml-2 size-5" />
+                </PreserveParamsLink>
+              </Button>
+            </div>
+          </SectionCard>
+        </section>
+      </TrackedSection>
+
+      {/* Provider Growth Journey */}
+      <section className="bg-dark-slate">
+        <SectionCard className="py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Turn Your Profile Into More Opportunities
+            </h2>
+            <p className="text-white/60 max-w-2xl mx-auto">
+              A complete and well-managed profile gives you a stronger foundation for being discovered. Build your presence on KenyaDesires and create more opportunities to grow your income.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {[
+              { step: "01", title: "Create Your Profile", description: "Register and set up your basic profile on KenyaDesires." },
+              { step: "02", title: "Complete Your Profile", description: "Add detailed information, photos and preferences to showcase what you offer." },
+              { step: "03", title: "Increase Your Visibility", description: "A complete profile helps you stand out and be discovered more easily." },
+              { step: "04", title: "Get Discovered", description: "People browsing KenyaDesires can find and learn about your profile." },
+              { step: "05", title: "Reach More Customers", description: "Greater visibility means more people can discover and connect with you." },
+              { step: "06", title: "Create More Opportunities", description: "More connections can lead to additional opportunities to engage with customers." },
+              { step: "07", title: "Increase Your Earning Potential", description: "More opportunities may help you grow your presence and earnings on the platform." },
+            ].map((item, index) => (
+              <div key={index} className="text-center">
+                <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center mx-auto mb-3">
+                  <span className="text-sm font-bold text-primary">{item.step}</span>
+                </div>
+                <h3 className="text-base font-semibold mb-1">{item.title}</h3>
+                <p className="text-white/60 text-xs leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
@@ -577,10 +710,10 @@ const page = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none" />
         <SectionCard className="py-20 text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
-            Ready to Create Your Profile?
+            Ready to Increase Your Visibility and Earning Potential?
           </h2>
           <p className="text-white/70 mb-8 max-w-xl mx-auto text-lg">
-            Join KenyaDesires and start building your profile today.
+            Create your KenyaDesires profile today and start building your online presence. Get discovered, reach more potential customers and create more opportunities to grow your earnings.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -591,6 +724,7 @@ const page = () => {
               <PreserveParamsLink
                 href={PROVIDER_ROUTES.REGISTER}
                 trackEvent={PROVIDER_EVENTS.CLICK_CREATE_PROFILE}
+                trackEventProperties={{ cta_location: "final_cta" }}
               >
                 Create My Profile
                 <ArrowRight className="ml-2 size-5" />
