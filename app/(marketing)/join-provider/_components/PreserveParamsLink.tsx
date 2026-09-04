@@ -14,16 +14,20 @@ const PRESERVED_PARAMS = [
   "ref",
 ];
 
+interface PreserveParamsLinkProps
+  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+  href: string;
+  trackEvent?: string;
+  trackEventProperties?: Record<string, unknown>;
+}
+
 function PreserveParamsLink({
   href,
   children,
   trackEvent,
   trackEventProperties,
   ...props
-}: React.ComponentProps<typeof Link> & {
-  trackEvent?: string;
-  trackEventProperties?: Record<string, unknown>;
-}) {
+}: PreserveParamsLinkProps) {
   const searchParams = useSearchParams();
   const posthog = usePostHog();
 
