@@ -2,8 +2,6 @@ import { Metadata } from "next";
 import PreserveParamsLink from "./_components/PreserveParamsLink";
 import SectionCard from "@/components/SectionCard";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import ProfileCardMockup from "./_components/ProfileCardMockup";
 import FaqAccordion from "./_components/FaqAccordion";
 import TrackedSection from "./_components/TrackedSection";
@@ -102,11 +100,7 @@ const page = () => {
 
   return (
     <TrackingWrapper>
-      <div className="min-h-screen bg-dark-slate text-white">
-        <Header />
-
-        <main className="flex-1">
-          {/* Hero */}
+      {/* Hero */}
           <section className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
             <SectionCard className="pt-16 pb-20 lg:pt-24 lg:pb-28">
@@ -621,11 +615,7 @@ const page = () => {
               </div>
             </SectionCard>
           </section>
-        </main>
-
-        <Footer />
-      </div>
-    </TrackingWrapper>
+        </TrackingWrapper>
   );
 };
 
