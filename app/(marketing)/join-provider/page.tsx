@@ -77,7 +77,7 @@ const page = () => {
     {
       question: "How do I receive the welcome credits?",
       answer:
-        "Create your profile and receive 50 credits. Complete verification and receive an additional 100 credits. Total: 150 credits. Eligibility, verification requirements, credit usage and promotional terms apply.",
+        "Create your account and receive 10 credits. Complete your profile and receive an additional 20 credits. Complete verification and receive 50 more credits. Total: up to 80 credits (KSh 800 in platform value), with a maximum welcome offer of 100 credits (KSh 1,000). Credits are awarded progressively — none are given all at once. Eligibility, verification requirements, credit usage and promotional terms apply.",
     },
     {
       question: "Can I edit my profile later?",
@@ -494,40 +494,48 @@ const page = () => {
                 <Star className="size-4" />
                 Limited Welcome Offer
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Start With 150 Credits
-              </h2>
-              <p className="text-white/70 mb-8 max-w-xl mx-auto">
-                Create your profile and receive 50 credits. Complete
-                verification and receive an additional 100 credits.
-              </p>
-              <div className="grid grid-cols-3 gap-4 mb-8 max-w-lg mx-auto">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <p className="text-2xl font-bold text-primary">50</p>
-                  <p className="text-xs text-white/60 mt-1">Profile creation</p>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <p className="text-2xl font-bold text-primary">+100</p>
-                  <p className="text-xs text-white/60 mt-1">
-                    After verification
-                  </p>
-                </div>
-                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-                  <p className="text-2xl font-bold text-primary">150</p>
-                  <p className="text-xs text-white/60 mt-1">Total credits</p>
-                </div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
-                <p className="text-white/80 text-sm mb-2">
-                  <span className="font-semibold text-white">
-                    Platform value:
-                  </span>{" "}
-                  KSh 1,500
-                </p>
-                <p className="text-white/50 text-xs">
-                  1 credit = KSh 10 in platform value
-                </p>
-              </div>
+               <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                 Earn Up To 80 Welcome Credits
+               </h2>
+               <p className="text-white/70 mb-8 max-w-xl mx-auto">
+                 Create your account for 10 credits. Complete your profile for an
+                 additional 20 credits. Get verified for 50 more credits.
+               </p>
+               <div className="grid grid-cols-4 gap-4 mb-8 max-w-lg mx-auto">
+                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                   <p className="text-2xl font-bold text-primary">10</p>
+                   <p className="text-xs text-white/60 mt-1">
+                     Create account
+                   </p>
+                 </div>
+                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                   <p className="text-2xl font-bold text-primary">+20</p>
+                   <p className="text-xs text-white/60 mt-1">
+                     Complete profile
+                   </p>
+                 </div>
+                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                   <p className="text-2xl font-bold text-primary">+50</p>
+                   <p className="text-xs text-white/60 mt-1">
+                     After verification
+                   </p>
+                 </div>
+                 <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
+                   <p className="text-2xl font-bold text-primary">80</p>
+                   <p className="text-xs text-white/60 mt-1">Total credits</p>
+                 </div>
+               </div>
+               <div className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+                 <p className="text-white/80 text-sm mb-2">
+                   <span className="font-semibold text-white">
+                     Platform value:
+                   </span>{" "}
+                   KSh 800
+                 </p>
+                 <p className="text-white/50 text-xs">
+                   1 credit = KSh 10 in platform value
+                 </p>
+               </div>
               <p className="text-white/40 text-xs mb-8 max-w-md mx-auto">
                 Eligibility, verification requirements, credit usage and
                 promotional terms apply. Credits are platform credits and are

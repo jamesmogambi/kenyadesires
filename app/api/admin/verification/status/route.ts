@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/lib/firebase-admin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { sendVerificationNotificationEmail } from "@/server-actions/email";
+import { awardVerificationCredits } from "@/server-actions/credit-rewards.action";
 
 export async function POST(req: Request) {
   try {
@@ -38,13 +39,11 @@ export async function POST(req: Request) {
       id,
       status,
       decision,
-      credits = 0,
     }: {
       type: "escort" | "agency";
       id: string;
       status: "verified" | "rejected";
       decision?: string;
-      credits?: number;
     } = body;
 
     if (!type || !id || !status) {
@@ -87,6 +86,28 @@ export async function POST(req: Request) {
 
     await docRef.update(updateData);
 
+    const clerkUserId = existingData.clerkUserId || existingData.ownerId;
+    const phone =
+      existingData.telephone ||
+      existingData.whatsappPhone ||
+      existingData.contactPhone ||
+      "";
+
+    let awardedCredits = 0;
+
+    if (status === "verified" && clerkUserId) {
+      const result = await awardVerificationCredits(
+        clerkUserId,
+        email || "",
+        phone,
+        type,
+        id,
+      );
+      if (result.awarded) {
+        awardedCredits = 50;
+      }
+    }
+
     if (email) {
       try {
         await sendVerificationNotificationEmail(
@@ -94,7 +115,7 @@ export async function POST(req: Request) {
           existingData.name || existingData.contactName || "User",
           status === "verified" ? "Approved" : "Declined",
           decision || null,
-          credits,
+          awardedCredits,
           type,
         );
       } catch (emailError) {

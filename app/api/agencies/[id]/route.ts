@@ -2,6 +2,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import AgencyService from "@/lib/services/agency.service";
 import {sendVerificationNotificationEmail} from "@/server-actions/email";
+import {awardVerificationCredits} from "@/server-actions/credit-rewards.action";
 
 // GET - Get agency by ID
 export async function GET(
@@ -56,18 +57,30 @@ export async function PUT(
         const wasVerified = existingAgency?.isVerified === true;
         const isNowVerified = body.isVerified === true;
 
+        let awardedCredits = 0;
+
         if (!wasVerified && isNowVerified && agency?.contactEmail) {
-            const verificationCredits = 200;
-            await sendVerificationNotificationEmail(
-                agency.contactEmail,
-                agency.name || "there",
-                "Approved",
-                null,
-                verificationCredits,
-                "agency",
-            ).catch((err) => {
-                console.error("Failed to send agency verification email:", err);
-            });
+          const result = await awardVerificationCredits(
+            agency.ownerId || "",
+            agency.contactEmail || "",
+            agency.contactPhone || agency.whatsappPhone || "",
+            "agency",
+            agency.id,
+          );
+          if (result.awarded) {
+            awardedCredits = 50;
+          }
+
+          await sendVerificationNotificationEmail(
+              agency.contactEmail,
+              agency.name || "there",
+              "Approved",
+              null,
+              awardedCredits,
+              "agency",
+          ).catch((err) => {
+              console.error("Failed to send agency verification email:", err);
+          });
         }
 
         return NextResponse.json({

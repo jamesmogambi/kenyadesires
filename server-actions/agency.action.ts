@@ -26,6 +26,11 @@ import {
   sendAdminNotificationEmail,
   sendVerificationSubmittedEmail,
 } from "./email";
+import {
+  awardAccountCreationCredits,
+  checkAndAwardProfileCompletion,
+  awardVerificationCredits,
+} from "./credit-rewards.action";
 
 // ============================================
 // CONVERT FIREBASE DOC TO AGENCY
@@ -1071,7 +1076,7 @@ export async function createAgency(
       totalReviews: 0,
       totalBookings: 0,
       totalViews: 0,
-      credits: 100,
+      credits: 0,
       featuredEmployeesCount: 0,
       isActive: true,
       isFeatured: false,
@@ -1088,12 +1093,35 @@ export async function createAgency(
       ...(data.establishmentYear ? {} : { establishmentYear: null }),
     });
 
+    // Award Milestone 1 — Create Account (10 credits)
+    await awardAccountCreationCredits(
+      data.ownerId,
+      data.contactEmail,
+      data.contactPhone || data.whatsappPhone || "",
+      "agency",
+      docRef.id,
+    );
+
+    // Award Milestone 2 — Complete Profile (20 credits) if threshold met
+    await checkAndAwardProfileCompletion(
+      data.ownerId,
+      {
+        name: data.name,
+        contactEmail: data.contactEmail,
+        county: data.county,
+        region: data.region,
+        businessType: data.businessType || "agency",
+      },
+      "agency",
+      docRef.id,
+    );
+
     revalidatePath("/agencies");
     revalidatePath(`/agencies/${slug}`);
 
     // Send welcome email to the new agency owner
     if (data.contactEmail) {
-      await sendWelcomeEmail(data.contactEmail, data.name, "business", 100);
+      await sendWelcomeEmail(data.contactEmail, data.name, "business", 10);
     }
 
     // Notify admin of new registration

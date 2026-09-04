@@ -6,11 +6,14 @@ export const PROVIDER_ROUTES = {
 
 export const PROVIDER_OFFER = {
   credits: {
-    profileCreation: 50,
-    verification: 100,
-    total: 150,
+    accountCreated: 10,
+    profileComplete: 20,
+    verified: 50,
+    total: 80,
     creditValueKsh: 10,
-    totalValueKsh: 1500,
+    totalValueKsh: 800,
+    maxWelcomeCredits: 100,
+    maxWelcomeValueKsh: 1000,
   },
 } as const;
 

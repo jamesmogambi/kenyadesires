@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
 import { sendVerificationNotificationEmail } from "@/server-actions/email";
+import { awardVerificationCredits } from "@/server-actions/credit-rewards.action";
 
 const DIDIT_WEBHOOK_SECRET = process.env.DIDIT_WEBHOOK_SECRET!;
 const TIMESTAMP_TOLERANCE = 300;
@@ -53,14 +53,17 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
 
   let escortRef: FirebaseFirestore.DocumentReference | null = null;
   let escortData: any = null;
+  let escortDocId: string | null = null;
   if (!escortsSnap.empty) {
     const escortDoc = escortsSnap.docs[0];
     escortRef = adminDb.collection("escorts").doc(escortDoc.id);
     escortData = escortDoc.data();
+    escortDocId = escortDoc.id;
   }
 
   let agencyRef: FirebaseFirestore.DocumentReference | null = null;
   let agencyData: any = null;
+  let agencyDocId: string | null = null;
   if (isBusiness) {
     const agenciesSnap = await adminDb
       .collection("agencies")
@@ -72,6 +75,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
       const agencyDoc = agenciesSnap.docs[0];
       agencyRef = adminDb.collection("agencies").doc(agencyDoc.id);
       agencyData = agencyDoc.data();
+      agencyDocId = agencyDoc.id;
     }
   }
 
@@ -96,9 +100,13 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
           processed_at: new Date(),
         });
 
-        await escortRef.update({
-          credits: FieldValue.increment(100),
-        });
+        await awardVerificationCredits(
+          clerkUserId,
+          escortData?.email || "",
+          escortData?.telephone || escortData?.whatsappPhone || "",
+          "escort",
+          escortDocId || "",
+        );
 
         if (escortData?.email) {
           await sendVerificationNotificationEmail(
@@ -106,7 +114,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
             escortData.name || "there",
             "Approved",
             decision ? JSON.stringify(decision) : null,
-            100,
+            50,
             "escort",
           );
         }
@@ -126,9 +134,13 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
           });
         }
 
-        await agencyRef.update({
-          credits: FieldValue.increment(200),
-        });
+        await awardVerificationCredits(
+          clerkUserId,
+          agencyData?.contactEmail || "",
+          agencyData?.contactPhone || agencyData?.whatsappPhone || "",
+          "agency",
+          agencyDocId || "",
+        );
 
         if (agencyData?.contactEmail) {
           await sendVerificationNotificationEmail(
@@ -136,7 +148,7 @@ async function processEvent(parsed: any, eventId: string): Promise<void> {
             agencyData.name || "there",
             "Approved",
             decision ? JSON.stringify(decision) : null,
-            200,
+            50,
             "agency",
           );
         }

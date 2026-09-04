@@ -52,7 +52,7 @@ async function page() {
 
             <InfoSection
               title="Verification reward"
-              description="When your agency identity verification is approved, you will receive 200 credits (equivalent to KSH 2000, assuming 1 credit = KSH 10) credited to your account. These credits can be used to boost your agency listing, promote your escorts, and extend your advertising on the platform."
+              description="When your agency identity verification is approved, you will receive 50 credits (equivalent to KSH 500) credited to your account. These credits can be used to boost your agency listing, promote your escorts, and extend your advertising on the platform."
             />
 
             <div className="flex justify-center items-center">

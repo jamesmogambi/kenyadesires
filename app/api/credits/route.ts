@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { adminDb } from "@/lib/firebase-admin";
+import { getCreditRewardRecord } from "@/server-actions/credit-rewards.action";
 
 export async function GET(req: Request) {
   try {
@@ -17,10 +18,15 @@ export async function GET(req: Request) {
 
     if (!escortSnap.empty) {
       const data = escortSnap.docs[0].data();
+      const rewardRecord = await getCreditRewardRecord(userId);
       return NextResponse.json({
         credits: data.credits ?? 0,
         plan: data.plan?.type || "free",
         role: "escort",
+        rewardMilestones: rewardRecord?.awardedMilestones || {},
+        totalCreditsAwarded: rewardRecord?.totalCreditsAwarded || 0,
+        maxWelcomeCredits: 100,
+        creditValueKsh: 10,
       });
     }
 
@@ -32,14 +38,27 @@ export async function GET(req: Request) {
 
     if (!agencySnap.empty) {
       const data = agencySnap.docs[0].data();
+      const rewardRecord = await getCreditRewardRecord(userId);
       return NextResponse.json({
         credits: data.credits ?? 0,
         plan: data.plan?.type || "free",
         role: "agency",
+        rewardMilestones: rewardRecord?.awardedMilestones || {},
+        totalCreditsAwarded: rewardRecord?.totalCreditsAwarded || 0,
+        maxWelcomeCredits: 100,
+        creditValueKsh: 10,
       });
     }
 
-    return NextResponse.json({ credits: 0, plan: "free", role: null });
+    return NextResponse.json({
+      credits: 0,
+      plan: "free",
+      role: null,
+      rewardMilestones: {},
+      totalCreditsAwarded: 0,
+      maxWelcomeCredits: 100,
+      creditValueKsh: 10,
+    });
   } catch (error: any) {
     console.error("Error fetching credits:", error);
     return NextResponse.json(
@@ -48,3 +67,4 @@ export async function GET(req: Request) {
     );
   }
 }
+

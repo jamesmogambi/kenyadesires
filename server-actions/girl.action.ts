@@ -12,6 +12,11 @@ import {
   sendVerificationNotificationEmail,
   sendVerificationSubmittedEmail,
 } from "./email";
+import {
+  awardAccountCreationCredits,
+  checkAndAwardProfileCompletion,
+  awardVerificationCredits,
+} from "./credit-rewards.action";
 
 // Helper to convert Firestore doc to plain serializable object
 function convertDocToEscort(
@@ -634,7 +639,7 @@ export async function saveNewEscortProfile(
       totalReviews: 0,
       rating: 0,
       totalViews: 0,
-      credits: 50,
+      credits: 10,
       createdAt: now,
       updatedAt: now,
       cleaningHistory: [],
@@ -644,9 +649,50 @@ export async function saveNewEscortProfile(
 
     await docRef.set(newEscort);
 
+    // Award Milestone 1 — Create Account (10 credits)
+    // Check first if already awarded to avoid double-counting from the
+    // inline credits: 10 above. The reward system is the source of truth.
+    if (data.clerkUserId) {
+      await awardAccountCreationCredits(
+        data.clerkUserId,
+        data.email,
+        data.telephone || data.whatsappNumber || "",
+        "escort",
+        docRef.id,
+      );
+    } else {
+      await awardAccountCreationCredits(
+        docRef.id,
+        data.email,
+        data.telephone || data.whatsappNumber || "",
+        "escort",
+        docRef.id,
+      );
+    }
+
+    // Award Milestone 2 — Complete Profile (20 credits) if threshold met
+    const escortClerkUserId = data.clerkUserId || docRef.id;
+    await checkAndAwardProfileCompletion(
+      escortClerkUserId,
+      {
+        name: newEscort.name,
+        email: newEscort.email,
+        previewPhoto: newEscort.previewPhoto,
+        about: newEscort.about,
+        county: newEscort.county,
+        primaryRegion: newEscort.primaryRegion,
+        age: newEscort.age,
+        images: newEscort.images,
+        categories: newEscort.categories,
+        languages: newEscort.languages,
+      },
+      "escort",
+      docRef.id,
+    );
+
     // Send welcome email to the new escort
     if (data.email) {
-      await sendWelcomeEmail(data.email, data.name, "user", 50);
+      await sendWelcomeEmail(data.email, data.name, "user", 10);
     }
 
     // Notify admin of new registration

@@ -32,8 +32,8 @@ function getStatusConfig(status: VerificationStatus) {
         message:
           "Your identity has been verified successfully. You now have access to all verified features.",
         showCredits: true,
-        creditsAmount: 100,
-        creditsValue: "1,000 KSH",
+        creditsAmount: 50,
+        creditsValue: "500 KSH",
       };
     case "declined":
       return {
@@ -133,7 +133,7 @@ export default function VerifyDonePage() {
             <div>
               <p className="font-semibold">Verification Approved</p>
               <p className="text-sm opacity-90">
-                +100 credits (1,000 KSH) credited to your account
+                +50 credits (500 KSH) credited to your account
               </p>
             </div>
           </div>
