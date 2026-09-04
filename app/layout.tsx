@@ -25,6 +25,7 @@ import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
+import { GoogleTagManager } from "@next/third-parties/google";
 
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";
@@ -80,6 +81,9 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en-KE">
+        {process.env.NEXT_PUBLIC_GTM_ID && (
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
+        )}
         <Head>
           {/* Structured Data */}
           <script
