@@ -47,6 +47,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
         changefreq: "monthly" as const,
       },
+      {
+        path: "/join-provider",
+        priority: 0.9,
+        changefreq: "weekly" as const,
+      },
     ];
 
     const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
