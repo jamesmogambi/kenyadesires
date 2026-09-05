@@ -97,6 +97,18 @@ export interface IAgency {
   isActive: boolean;
   isFeatured: boolean;
 
+  // Attribution
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  utm_id?: string;
+  utm_source_platform?: string;
+  landing_page?: string;
+  first_touch_at?: string;
+  registration_date?: string;
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -150,6 +162,16 @@ export interface UpdateAgencyDTO extends Partial<CreateAgencyDTO> {
     saturday?: string;
     sunday?: string;
   };
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  utm_id?: string;
+  utm_source_platform?: string;
+  landing_page?: string;
+  first_touch_at?: string;
+  registration_date?: string;
 }
 
 export interface GetAgenciesParams {

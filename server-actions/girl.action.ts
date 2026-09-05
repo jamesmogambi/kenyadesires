@@ -554,6 +554,16 @@ export interface NewEscortProfileInput {
   clerkUserId?: string;
   agencyId?: string;
   isAgencyOwned?: boolean;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  utm_id?: string;
+  utm_source_platform?: string;
+  landing_page?: string;
+  first_touch_at?: string;
+  registration_date?: string;
 }
 
 export async function saveNewEscortProfile(
@@ -645,6 +655,16 @@ export async function saveNewEscortProfile(
       cleaningHistory: [],
       hasCleanedImages: false,
       rates: [],
+      utm_source: data.utm_source,
+      utm_medium: data.utm_medium,
+      utm_campaign: data.utm_campaign,
+      utm_content: data.utm_content,
+      utm_term: data.utm_term,
+      utm_id: data.utm_id,
+      utm_source_platform: data.utm_source_platform,
+      landing_page: data.landing_page,
+      first_touch_at: data.first_touch_at,
+      registration_date: data.registration_date || now.toISOString(),
     };
 
     await docRef.set(newEscort);

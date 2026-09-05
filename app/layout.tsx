@@ -26,6 +26,7 @@ import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
 import { GoogleTagManager } from "@next/third-parties/google";
+import AttributionCapture from "@/components/AttributionCapture";
 
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";
@@ -176,6 +177,7 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
+          <AttributionCapture />
           <AgeVerificationModal />
 
           {/* Fixed Grayscale Background */}

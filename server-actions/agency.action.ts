@@ -128,6 +128,16 @@ function convertFirebaseDocToAgency(
     updatedAt: data.updatedAt?.toDate?.()
       ? data.updatedAt.toDate().toISOString()
       : data.updatedAt || new Date().toISOString(),
+    utm_source: data.utm_source,
+    utm_medium: data.utm_medium,
+    utm_campaign: data.utm_campaign,
+    utm_content: data.utm_content,
+    utm_term: data.utm_term,
+    utm_id: data.utm_id,
+    utm_source_platform: data.utm_source_platform,
+    landing_page: data.landing_page,
+    first_touch_at: data.first_touch_at,
+    registration_date: data.registration_date,
   };
 }
 
@@ -949,6 +959,16 @@ export interface CreateAgencyInput {
   gallery?: string[];
   videos?: string[];
   planType?: IAgency["plan"]["type"];
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_content?: string;
+  utm_term?: string;
+  utm_id?: string;
+  utm_source_platform?: string;
+  landing_page?: string;
+  first_touch_at?: string;
+  registration_date?: string;
 }
 
 const PLAN_LIMITS: Record<
@@ -1082,6 +1102,16 @@ export async function createAgency(
       isFeatured: false,
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
+      utm_source: data.utm_source,
+      utm_medium: data.utm_medium,
+      utm_campaign: data.utm_campaign,
+      utm_content: data.utm_content,
+      utm_term: data.utm_term,
+      utm_id: data.utm_id,
+      utm_source_platform: data.utm_source_platform,
+      landing_page: data.landing_page,
+      first_touch_at: data.first_touch_at,
+      registration_date: data.registration_date || now.toISOString(),
     };
 
     const docRef = adminDb.collection("agencies").doc(slug);
@@ -1176,6 +1206,25 @@ export async function updateAgency(
 
     const { ownerId, planType, openingHours, socialMedia, ...rest } = data;
     const payload: Record<string, any> = { ...rest, updatedAt: new Date() };
+
+    const utmFields = [
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "utm_content",
+      "utm_term",
+      "utm_id",
+      "utm_source_platform",
+      "landing_page",
+      "first_touch_at",
+      "registration_date",
+    ];
+
+    for (const field of utmFields) {
+      if (existing[field] && payload[field] === undefined) {
+        payload[field] = existing[field];
+      }
+    }
 
     if (data.county) {
       payload.countyCode =

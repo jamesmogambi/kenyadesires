@@ -25,6 +25,7 @@ import { cn, slugify } from "@/lib/utils";
 import countiesAndRegions from "@/data/development/countiesAndRegions.json";
 import { createAgency, updateAgency } from "@/server-actions/agency.action";
 import type { IAgency } from "@/types/agency.types";
+import { useAttribution } from "@/lib/attribution";
 import WorkHoursForm from "../new-profile/WorkHoursForm";
 import AgencySelectField from "./AgencySelectField";
 import AgencyMultiSelectField from "./AgencyMultiSelectField";
@@ -256,6 +257,8 @@ const AgencyProfileForm = ({
 
   const isEdit = !!agency?.id;
 
+  const attribution = useAttribution();
+
   const [loading, setLoader] = useState(false);
   const [formAlert, setFormAlert] = useState<{
     title: string;
@@ -450,6 +453,16 @@ const AgencyProfileForm = ({
         logo,
         coverImage,
         planType: values.planType,
+        utm_source: attribution?.utm_source,
+        utm_medium: attribution?.utm_medium,
+        utm_campaign: attribution?.utm_campaign,
+        utm_content: attribution?.utm_content,
+        utm_term: attribution?.utm_term,
+        utm_id: attribution?.utm_id,
+        utm_source_platform: attribution?.utm_source_platform,
+        landing_page: attribution?.landing_page,
+        first_touch_at: attribution?.first_touch_at,
+        registration_date: new Date().toISOString(),
       };
 
       const res = isEdit

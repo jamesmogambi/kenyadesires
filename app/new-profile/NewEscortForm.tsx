@@ -30,6 +30,7 @@ import SuccessToast from "@/components/Toasts/SuccessToast";
 import { saveNewEscortProfile } from "@/server-actions/girl.action";
 import { updateEscort } from "@/server-actions/escort.action";
 import type { NewEscortProfileInput } from "@/server-actions/girl.action";
+import { useAttribution } from "@/lib/attribution";
 
 // Define the RichTextEditorHandle type
 type RichTextEditorHandle = {
@@ -140,6 +141,8 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
   const [hydrated, setHydrated] = useState(false);
 
   const { user, isLoaded, isSignedIn } = useUser();
+
+  const attribution = useAttribution();
 
   const imageFiles = useFileStore((state) => state.files);
   const { videoFiles, clearVideoFiles } = useFileStore();
@@ -461,17 +464,17 @@ region,
           telephone: phone,
           whatsappPhone: whatsappNumber,
           images: galleryImageUrls,
-about: description,
-           availability,
-           nationality,
-bustSize: breast,
-            languages,
-            towns,
-            county,
-            region,
-            regions: Array.from(
-              new Set([region, ...(towns || [])]),
-            ).filter((r): r is string => Boolean(r)),
+          about: description,
+          availability,
+          nationality,
+          bustSize: breast,
+          languages,
+          towns,
+          county,
+          region,
+          regions: Array.from(
+            new Set([region, ...(towns || [])]),
+          ).filter((r): r is string => Boolean(r)),
           practices: selected,
           bdsm,
           massages,
@@ -500,6 +503,16 @@ bustSize: breast,
           street,
           agencyId: agencyId || initialData?.agencyId || "",
           isAgencyOwned: !!agencyId || initialData?.isAgencyOwned || false,
+          utm_source: attribution?.utm_source,
+          utm_medium: attribution?.utm_medium,
+          utm_campaign: attribution?.utm_campaign,
+          utm_content: attribution?.utm_content,
+          utm_term: attribution?.utm_term,
+          utm_id: attribution?.utm_id,
+          utm_source_platform: attribution?.utm_source_platform,
+          landing_page: attribution?.landing_page,
+          first_touch_at: attribution?.first_touch_at,
+          registration_date: new Date().toISOString(),
         };
 
         let escortId: string | undefined;
