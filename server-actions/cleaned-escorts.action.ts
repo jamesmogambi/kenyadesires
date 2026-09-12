@@ -19,6 +19,43 @@ function convertDocToEscortFast(doc: any): Escort {
     ...data,
   };
 
+  const normalizeArray = (val: any): string[] =>
+    Array.isArray(val) ? val : val ? [String(val)] : [];
+
+  if (!Array.isArray(result.regions)) {
+    result.regions = normalizeArray(result.regions);
+  }
+  if (!Array.isArray(result.practices)) {
+    result.practices = normalizeArray(result.practices);
+  }
+  if (!Array.isArray(result.bdsm)) {
+    result.bdsm = normalizeArray(result.bdsm);
+  }
+  if (!Array.isArray(result.massage)) {
+    result.massage = normalizeArray(result.massage);
+  }
+  if (!Array.isArray(result.extraServices)) {
+    result.extraServices = normalizeArray(result.extraServices);
+  }
+  if (!Array.isArray(result.categories)) {
+    result.categories = normalizeArray(result.categories);
+  }
+  if (!Array.isArray(result.images)) {
+    result.images = normalizeArray(result.images);
+  }
+  if (!Array.isArray(result.videos)) {
+    result.videos = normalizeArray(result.videos);
+  }
+  if (!Array.isArray(result.labels)) {
+    result.labels = normalizeArray(result.labels);
+  }
+  if (!Array.isArray(result.availability)) {
+    result.availability = normalizeArray(result.availability);
+  }
+  if (!Array.isArray(result.languages)) {
+    result.languages = normalizeArray(result.languages);
+  }
+
   for (const field of TIMESTAMP_FIELDS) {
     if (result[field] && typeof result[field]?.toDate === "function") {
       result[field] = result[field].toDate().toISOString();

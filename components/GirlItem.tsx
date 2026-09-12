@@ -89,7 +89,7 @@ const GirlItem = ({
   const allRegions = React.useMemo(() => {
     const unique = new Set<string>();
     if (primaryRegion) unique.add(primaryRegion);
-    (regions || []).forEach((r) => r && unique.add(r));
+    (Array.isArray(regions) ? regions : regions ? [regions] : []).forEach((r) => r && unique.add(r));
     return Array.from(unique);
   }, [regions, primaryRegion]);
 
