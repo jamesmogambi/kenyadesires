@@ -57,8 +57,8 @@ export async function generateMetadata(
 
       const cleanedUrls: string[] = [];
       Object.values(escort.imagesMetadata).forEach((metadata: any) => {
-        if (metadata.status === "completed" && metadata.cleanedUrl) {
-          cleanedUrls.push(metadata.cleanedUrl);
+        if (metadata.status === "completed") {
+          cleanedUrls.push(metadata.cleanedUrl || metadata.cloudinaryUrl);
         }
       });
       return cleanedUrls;
@@ -76,11 +76,12 @@ export async function generateMetadata(
         return escort.previewPhoto;
 
       const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
-      if (
-        previewMetadata?.status === "completed" &&
-        previewMetadata?.cleanedUrl
-      ) {
-        return previewMetadata.cleanedUrl;
+      if (previewMetadata?.status === "completed") {
+        return (
+          previewMetadata?.cleanedUrl ||
+          previewMetadata?.cloudinaryUrl ||
+          escort.previewPhoto
+        );
       }
       return escort.previewPhoto;
     };

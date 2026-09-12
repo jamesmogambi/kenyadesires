@@ -82,6 +82,7 @@ export interface Escort {
   imagesMetadata?: {
     [imageUrl: string]: {
       cleanedUrl?: string;
+      cloudinaryUrl?: string;
       status: "pending" | "processing" | "completed" | "failed";
       errorMessage?: string;
       processedAt?: Date;

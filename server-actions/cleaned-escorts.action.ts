@@ -19,8 +19,21 @@ function convertDocToEscortFast(doc: any): Escort {
     ...data,
   };
 
-  const normalizeArray = (val: any): string[] =>
-    Array.isArray(val) ? val : val ? [String(val)] : [];
+  const normalizeArray = (val: any): string[] => {
+    if (Array.isArray(val)) return val;
+    if (val == null) return [];
+    if (typeof val === "object") {
+      const keys = Object.keys(val).sort((a, b) => {
+        const an = parseInt(a), bn = parseInt(b);
+        if (isNaN(an) && isNaN(bn)) return 0;
+        if (isNaN(an)) return 1;
+        if (isNaN(bn)) return -1;
+        return an - bn;
+      });
+      return keys.map((k) => String(val[k]));
+    }
+    return [String(val)];
+  };
 
   if (!Array.isArray(result.regions)) {
     result.regions = normalizeArray(result.regions);
@@ -54,6 +67,9 @@ function convertDocToEscortFast(doc: any): Escort {
   }
   if (!Array.isArray(result.languages)) {
     result.languages = normalizeArray(result.languages);
+  }
+  if (!Array.isArray(result.cleanedImages)) {
+    result.cleanedImages = normalizeArray(result.cleanedImages);
   }
 
   for (const field of TIMESTAMP_FIELDS) {
@@ -243,19 +259,21 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
 }
 
 function getCleanedImageUrls(escort: Escort): string[] {
+  let result: string[] = [];
   if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-    return escort.cleanedImages;
+    result = escort.cleanedImages;
+  } else if (escort.imagesMetadata) {
+    const cleanedUrls: string[] = [];
+    Object.values(escort.imagesMetadata).forEach((metadata: any) => {
+      if (metadata.status === "completed") {
+        cleanedUrls.push(metadata.cleanedUrl || metadata.cloudinaryUrl);
+      }
+    });
+    result = cleanedUrls.length > 0 ? cleanedUrls : [];
   }
-
-  if (!escort.imagesMetadata) return [];
-
-  const cleanedUrls: string[] = [];
-  Object.values(escort.imagesMetadata).forEach((metadata: any) => {
-    if (metadata.status === "completed" && metadata.cleanedUrl) {
-      cleanedUrls.push(metadata.cleanedUrl);
-    }
-  });
-  return cleanedUrls;
+  return result.filter(
+    (img): img is string => typeof img === "string" && img.length > 0,
+  );
 }
 
 function getCleanedPreviewPhoto(escort: Escort): string | undefined {
@@ -267,8 +285,8 @@ function getCleanedPreviewPhoto(escort: Escort): string | undefined {
     return escort.previewPhoto;
 
   const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
-  if (previewMetadata?.status === "completed" && previewMetadata?.cleanedUrl) {
-    return previewMetadata.cleanedUrl;
+  if (previewMetadata?.status === "completed") {
+    return previewMetadata?.cleanedUrl || previewMetadata?.cloudinaryUrl || escort.previewPhoto;
   }
   return escort.previewPhoto;
 }
@@ -1288,9 +1306,9 @@ export async function getCleanedImagesForEscort(
     return Object.values(escort.imagesMetadata)
       .filter(
         (metadata: any) =>
-          metadata.status === "completed" && metadata.cleanedUrl,
+          metadata.status === "completed" && (metadata.cleanedUrl || metadata.cloudinaryUrl),
       )
-      .map((metadata: any) => metadata.cleanedUrl!);
+      .map((metadata: any) => metadata.cleanedUrl || metadata.cloudinaryUrl!);
   } catch (error) {
     console.error("Error fetching cleaned images:", error);
     return [];

@@ -9,7 +9,7 @@ function hasCleanedImages(escort: Escort): boolean {
   if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
-    (meta: any) => meta.status === "completed" && meta.cleanedUrl,
+    (meta: any) => meta.status === "completed" && (meta.cleanedUrl || meta.cloudinaryUrl),
   );
 }
 

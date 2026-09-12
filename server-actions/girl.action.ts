@@ -84,8 +84,8 @@ function getCleanedImageUrls(escort: Escort): string[] {
 
   const cleanedUrls: string[] = [];
   Object.values(escort.imagesMetadata).forEach((metadata: any) => {
-    if (metadata.status === "completed" && metadata.cleanedUrl) {
-      cleanedUrls.push(metadata.cleanedUrl);
+    if (metadata.status === "completed") {
+      cleanedUrls.push(metadata.cleanedUrl || metadata.cloudinaryUrl);
     }
   });
   return cleanedUrls;
@@ -102,8 +102,8 @@ function getCleanedPreviewPhoto(escort: Escort): string | undefined {
     return escort.previewPhoto;
 
   const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
-  if (previewMetadata?.status === "completed" && previewMetadata?.cleanedUrl) {
-    return previewMetadata.cleanedUrl;
+  if (previewMetadata?.status === "completed") {
+    return previewMetadata?.cleanedUrl || previewMetadata?.cloudinaryUrl || escort.previewPhoto;
   }
   return escort.previewPhoto;
 }
@@ -445,9 +445,9 @@ export async function getCleanedImagesForEscort(
     const cleanedImages = Object.values(escort.imagesMetadata)
       .filter(
         (metadata: any) =>
-          metadata.status === "completed" && metadata.cleanedUrl,
+          metadata.status === "completed" && (metadata.cleanedUrl || metadata.cloudinaryUrl),
       )
-      .map((metadata: any) => metadata.cleanedUrl!);
+      .map((metadata: any) => metadata.cleanedUrl || metadata.cloudinaryUrl!);
 
     return cleanedImages;
   } catch (error) {

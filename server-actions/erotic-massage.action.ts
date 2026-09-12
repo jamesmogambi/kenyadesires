@@ -19,6 +19,32 @@ function convertDocToEscortFast(doc: any): Escort {
     ...data,
   };
 
+  const normalizeArray = (val: any): string[] => {
+    if (Array.isArray(val)) return val;
+    if (val == null) return [];
+    if (typeof val === "object") {
+      const keys = Object.keys(val).sort((a, b) => {
+        const an = parseInt(a), bn = parseInt(b);
+        if (isNaN(an) && isNaN(bn)) return 0;
+        if (isNaN(an)) return 1;
+        if (isNaN(bn)) return -1;
+        return an - bn;
+      });
+      return keys.map((k) => String(val[k]));
+    }
+    return [String(val)];
+  };
+
+  for (const field of [
+    "regions", "practices", "bdsm", "massage", "extraServices",
+      "categories", "images", "videos", "labels", "availability", "languages",
+      "cleanedImages",
+  ]) {
+    if (!Array.isArray(result[field])) {
+      result[field] = normalizeArray(result[field]);
+    }
+  }
+
   for (const field of TIMESTAMP_FIELDS) {
     if (result[field] && typeof result[field]?.toDate === "function") {
       result[field] = result[field].toDate().toISOString();
@@ -32,7 +58,7 @@ function hasCleanedImages(escort: Escort): boolean {
   if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
   if (!escort.imagesMetadata) return false;
   return Object.values(escort.imagesMetadata).some(
-    (metadata: any) => metadata.status === "completed" && metadata.cleanedUrl,
+    (metadata: any) => metadata.status === "completed" && (metadata.cleanedUrl || metadata.cloudinaryUrl),
   );
 }
 

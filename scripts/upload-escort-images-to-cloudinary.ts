@@ -362,7 +362,11 @@ async function processEscort(
   if (hasChanges) {
     const updateData: Record<string, unknown> = {};
 
-    if (updatedImages.length !== images.images.length) {
+    const imagesChanged =
+      updatedImages.length !== images.images.length ||
+      updatedImages.some((url, i) => url !== images.images[i]);
+
+    if (imagesChanged) {
       updateData.images = updatedImages;
     }
     if (updatedPreview !== images.previewPhoto) {

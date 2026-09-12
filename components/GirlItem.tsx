@@ -63,24 +63,26 @@ const GirlItem = ({
 
   // Use cleanedImages field if available (populated by map-cleaned-images script),
   // otherwise fall back to extracting from imagesMetadata, then original images
-  const getDisplayImages = () => {
+  const getDisplayImages = (): string[] => {
+    let result: string[] = [];
     if (cleanedImages && cleanedImages.length > 0) {
-      return cleanedImages;
-    }
-
-    if (imagesMetadata) {
+      result = cleanedImages;
+    } else if (imagesMetadata) {
       const cleanedUrls: string[] = [];
-      for (const [originalUrl, info] of Object.entries(imagesMetadata)) {
+      for (const info of Object.values(imagesMetadata)) {
         const imageInfo = info as any;
-        if (imageInfo.status === "completed" && imageInfo.cleanedUrl) {
-          cleanedUrls.push(imageInfo.cleanedUrl);
+        if (imageInfo?.status === "completed") {
+          cleanedUrls.push(imageInfo.cleanedUrl || imageInfo.cloudinaryUrl);
         }
       }
-      if (cleanedUrls.length > 0) {
-        return cleanedUrls;
-      }
+      result = cleanedUrls.length > 0 ? cleanedUrls : [];
     }
-    return images || [];
+    if (result.length === 0) {
+      result = images || [];
+    }
+    return result.filter(
+      (img): img is string => typeof img === "string" && img.length > 0,
+    );
   };
 
   const displayImages = getDisplayImages();
