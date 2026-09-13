@@ -4,6 +4,7 @@ import PhonePicker from "./PhonePicker";
 import AboutTabs from "./AboutTabs";
 import Link from "next/link";
 import { formatSlugToTitle, normalizeArray } from "@/lib/utils";
+import { Escort } from "@/server-actions/escort.action";
 
 interface Prop {
   girl: Escort;

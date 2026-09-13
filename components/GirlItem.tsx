@@ -1,6 +1,6 @@
 "use client";
 // components/GirlItem.tsx
-import { cn, formatSlugToTitle } from "@/lib/utils";
+import { cn, formatSlugToTitle, normalizeArray } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 import GirlImageSwiper from "./GirlImageSwiper";
@@ -65,8 +65,8 @@ const GirlItem = ({
   // otherwise fall back to extracting from imagesMetadata, then original images
   const getDisplayImages = (): string[] => {
     let result: string[] = [];
-    if (cleanedImages && cleanedImages.length > 0) {
-      result = cleanedImages;
+    if (cleanedImages && normalizeArray(cleanedImages).length > 0) {
+      result = normalizeArray(cleanedImages);
     } else if (imagesMetadata) {
       const cleanedUrls: string[] = [];
       for (const info of Object.values(imagesMetadata)) {
@@ -78,7 +78,7 @@ const GirlItem = ({
       result = cleanedUrls.length > 0 ? cleanedUrls : [];
     }
     if (result.length === 0) {
-      result = images || [];
+      result = normalizeArray(images);
     }
     return result.filter(
       (img): img is string => typeof img === "string" && img.length > 0,
@@ -91,7 +91,7 @@ const GirlItem = ({
   const allRegions = React.useMemo(() => {
     const unique = new Set<string>();
     if (primaryRegion) unique.add(primaryRegion);
-    (Array.isArray(regions) ? regions : regions ? [regions] : []).forEach((r) => r && unique.add(r));
+    (normalizeArray(regions) as string[]).forEach((r) => r && unique.add(r));
     return Array.from(unique);
   }, [regions, primaryRegion]);
 

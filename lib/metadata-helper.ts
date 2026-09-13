@@ -88,6 +88,8 @@ const METADATA_FIELDS = [
 ];
 
 const BATCH_SIZE = 1000;
+const MAX_COUNT = 10000;
+const MAX_BATCHES = 10;
 
 type FilterType = "none" | "massage" | "bdsm";
 
@@ -188,14 +190,16 @@ async function countEscorts(
 
     let count = 0;
     let lastDoc: any = null;
+    let batchesRead = 0;
 
-    while (true) {
+    while (batchesRead < MAX_BATCHES) {
       let pageQuery = query;
       if (lastDoc) {
         pageQuery = pageQuery.startAfter(lastDoc);
       }
 
       const snapshot = await pageQuery.limit(BATCH_SIZE).get();
+      batchesRead++;
 
       if (snapshot.empty) break;
 
@@ -218,6 +222,11 @@ async function countEscorts(
         count += filtered.length;
       } else {
         count += docs.length;
+      }
+
+      if (count >= MAX_COUNT) {
+        count = MAX_COUNT;
+        break;
       }
 
       lastDoc = snapshot.docs[snapshot.docs.length - 1];
@@ -264,14 +273,16 @@ async function findFirstEscort(
     }
 
     let lastDoc: any = null;
+    let batchesRead = 0;
 
-    while (true) {
+    while (batchesRead < MAX_BATCHES) {
       let pageQuery = query;
       if (lastDoc) {
         pageQuery = pageQuery.startAfter(lastDoc);
       }
 
       const snapshot = await pageQuery.limit(BATCH_SIZE).get();
+      batchesRead++;
 
       if (snapshot.empty) break;
 
