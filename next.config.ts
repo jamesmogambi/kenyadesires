@@ -11,6 +11,7 @@ const nextConfig = {
   },
 
   images: {
+    qualities: [50, 75],
     remotePatterns: [
       // Adult content
       {

@@ -154,6 +154,14 @@ export function formatCategory(input: string): string {
         .join(" ");
 }
 
+export function normalizeArray(val: any): any[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === "object" && typeof val.map === "function") return val;
+  if (val && typeof val === "object") return Object.values(val);
+  return [];
+}
+
 export function splitIntoThreeColumns<T>(items: T[]): [T[], T[], T[]] {
     const columns: [T[], T[], T[]] = [[], [], []];
 

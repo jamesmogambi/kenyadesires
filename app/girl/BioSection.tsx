@@ -3,8 +3,7 @@ import RenderEditorContent from "./RenderEditorContent";
 import PhonePicker from "./PhonePicker";
 import AboutTabs from "./AboutTabs";
 import Link from "next/link";
-import { formatSlugToTitle } from "@/lib/utils";
-import { Escort } from "@/server-actions/escort.action";
+import { formatSlugToTitle, normalizeArray } from "@/lib/utils";
 
 interface Prop {
   girl: Escort;
@@ -28,7 +27,7 @@ const BioSection = ({ girl }: Prop) => {
       uniqueRegions.add(primaryRegion);
     }
 
-    (regions || []).forEach((r: string) => {
+    normalizeArray(regions).forEach((r: string) => {
       if (r && r.trim()) uniqueRegions.add(r);
     });
 
@@ -104,7 +103,7 @@ const BioSection = ({ girl }: Prop) => {
           Other Categories girls:
         </h5>
         <div>
-          {categories?.map((category: any, index: number) => (
+          {normalizeArray(categories).map((category: any, index: number) => (
             <Link
               href={`/girls?practice=${category}`}
               key={index}
@@ -113,7 +112,7 @@ const BioSection = ({ girl }: Prop) => {
               <span className="underline capitalize text-white/30">
                 {category}
               </span>
-              {index < categories.length - 1 && ", "}
+              {index < normalizeArray(categories).length - 1 && ", "}
             </Link>
           ))}
         </div>

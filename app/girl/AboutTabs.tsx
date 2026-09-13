@@ -1,4 +1,4 @@
-import { cn, slugify } from "@/lib/utils";
+import { cn, normalizeArray, slugify, splitIntoThreeColumns } from "@/lib/utils";
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import About from "./About";
@@ -30,17 +30,7 @@ const AboutTabs = ({ girl, className }: Prop) => {
 
   const [firstFive, lastTwo] = [days.slice(0, 5), days.slice(5)];
 
-  function splitIntoThreeColumns<T>(items: T[]): [T[], T[], T[]] {
-    const columns: [T[], T[], T[]] = [[], [], []];
-
-    items.forEach((item, index) => {
-      columns[index % 3].push(item);
-    });
-
-    return columns;
-  }
-
-  const [col1, col2, col3] = splitIntoThreeColumns(practices);
+  const [col1, col2, col3] = splitIntoThreeColumns(normalizeArray(practices));
 
   return (
     <div className={cn("", className)}>
