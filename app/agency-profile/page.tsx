@@ -7,7 +7,7 @@ import AgencyProfileForm from "./AgencyProfileForm";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 
 export const metadata: Metadata = {
-  title: "Agency Profile 💖 | kenyadesires.com",
+  title: "Agency Profile 💖 | kenyadesires.xyz",
 };
 
 const page = async () => {

@@ -6,7 +6,7 @@ import NewEscortForm from "@/app/new-profile/NewEscortForm";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 
 export const metadata: Metadata = {
-  title: "Add Girl 💖 | kenyadesires.com",
+  title: "Add Girl 💖 | kenyadesires.xyz",
   robots: {
     index: false,
     follow: true,

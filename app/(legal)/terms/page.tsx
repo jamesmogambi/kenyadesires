@@ -59,12 +59,12 @@ export default function TermsPage() {
               referred to as the &quot;Terms&quot;) apply to the use of the web
               interfaces{" "}
               <a
-                href="https://www.kenyadesires.com"
+                href="https://kenyadesires.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline font-medium"
               >
-                www.kenyadesires.com
+                kenyadesires.xyz
               </a>
               ,{" "}
               <a
@@ -77,12 +77,12 @@ export default function TermsPage() {
               </a>{" "}
               and{" "}
               <a
-                href="https://xxx.kenyadesires.com"
+                href="https://xxx.kenyadesires.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline font-medium"
               >
-                xxx.kenyadesires.com
+                xxx.kenyadesires.xyz
               </a>{" "}
               (hereinafter referred to collectively as the &quot;Web
               Interface&quot;). The operator of both of these web interfaces is

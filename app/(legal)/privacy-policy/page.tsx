@@ -54,12 +54,12 @@ export default function PrivacyPage() {
               further handling of personal data obtained through the web
               interface{" "}
               <a
-                href="https://www.kenyadesires.com"
+                href="https://kenyadesires.xyz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline font-medium"
               >
-                www.kenyadesires.com
+                kenyadesires.xyz
               </a>{" "}
               (hereinafter referred to as the &quot;Web Interface&quot;).
             </p>

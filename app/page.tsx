@@ -13,9 +13,9 @@ export const dynamic = "force-dynamic";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
 export const metadata: Metadata = {
-  title: "KenyaDesires.com | Female Escorts & Companions in Kenya",
+  title: "KenyaDesires.xyz | Female Escorts & Companions in Kenya",
   description:
-    "Browse verified female escort and companion profiles across Kenya. Explore photos, videos, locations and contact details on KenyaDesires.com.",
+    "Browse verified female escort and companion profiles across Kenya. Explore photos, videos, locations and contact details on KenyaDesires.xyz.",
   alternates: {
     canonical: SITE_URL,
   },

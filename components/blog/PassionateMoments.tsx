@@ -65,7 +65,7 @@ const PassionateMoments = ({ className }: Prop) => {
                 rel="noopener noreferrer"
                 href={"https://kenyadesires.xyz/"}
               >
-                kenyadesires.com
+                kenyadesires.xyz
               </Link>
             </span>
             .

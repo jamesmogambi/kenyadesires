@@ -7,7 +7,7 @@ import { getEscortByIdOriginal } from "@/server-actions/girl.action";
 import type { NewEscortProfileInput } from "@/server-actions/girl.action";
 
 export const metadata: Metadata = {
-  title: "Edit Girl 💖 | kenyadesires.com",
+  title: "Edit Girl 💖 | kenyadesires.xyz",
   robots: {
     index: false,
     follow: true,

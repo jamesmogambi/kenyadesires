@@ -18,7 +18,7 @@ import { CreditCard, Package, Check } from "lucide-react";
 import { PLAN_DETAILS } from "@/lib/constants/packages";
 
 export const metadata: Metadata = {
-  title: "Update Profile 💖 | kenyadesires.com",
+  title: "Update Profile 💖 | kenyadesires.xyz",
   robots: {
     index: false,
     follow: true,
