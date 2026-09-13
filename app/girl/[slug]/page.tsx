@@ -13,6 +13,14 @@ import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
 import { getEscortByIdentifier } from "@/server-actions/girl.action";
+
+function normalizeArray(val: any): string[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === "object" && typeof val.map === "function") return val;
+  if (val && typeof val === "object") return Object.values(val).map(String);
+  return [];
+}
 // import { getEscortByIdentifier } from "@/server-actions/get-escorts";
 
 export const dynamic = "force-dynamic";
@@ -103,7 +111,7 @@ export async function generateMetadata(
     const generateDescription = () => {
       const age = escort.age ? `${escort.age} year old` : "";
       const categories =
-        escort.categories?.slice(0, 3).join(", ") || "Sexy Call girl";
+        normalizeArray(escort.categories).slice(0, 3).join(", ") || "Sexy Call girl";
 
       if (escort.about) {
         return `${escort.about.substring(0, 160)}... Book ${displayName} for an unforgettable experience in ${location}.`;
@@ -124,8 +132,8 @@ export async function generateMetadata(
         "Kenya escorts",
         "premium companions",
         "verified escorts",
-        ...(escort.categories || []),
-        ...(escort.labels || []),
+        ...(normalizeArray(escort.categories)),
+        ...(normalizeArray(escort.labels)),
         escort.ethnicity,
         escort.age,
         location,
@@ -314,8 +322,8 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         name: `What services does ${displayName} offer?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: escort.categories?.length
-            ? `${displayName} offers: ${escort.categories.join(", ")}. Contact directly for specific services and availability.`
+          text: normalizeArray(escort.categories).length
+            ? `${displayName} offers: ${normalizeArray(escort.categories).join(", ")}. Contact directly for specific services and availability.`
             : `Contact ${displayName} directly for available services and packages.`,
         },
       },

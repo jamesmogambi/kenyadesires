@@ -4,13 +4,21 @@ import { adminDb } from "@/lib/firebase-admin";
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
 
+function normalizeArray(val: any): any[] {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (val && typeof val === "object" && typeof val.map === "function") return val;
+  if (val && typeof val === "object") return Object.values(val);
+  return [];
+}
+
 const SERVICE_ARRAYS = ["practices", "bdsm", "massage", "extraServices"] as const;
 
 function docMatchesRegion(d: any, region?: string): boolean {
   if (!region || region === "all") return true;
   const regionLower = normalize(region);
   return (
-    (d.regions || []).some((r: string) => normalize(r) === regionLower) ||
+    normalizeArray(d.regions).some((r: string) => normalize(r) === regionLower) ||
     normalize(d.primaryRegion) === regionLower
   );
 }
@@ -18,8 +26,8 @@ function docMatchesRegion(d: any, region?: string): boolean {
 function docHasPractice(d: any, practice: string): boolean {
   const practiceLower = normalize(practice);
   return SERVICE_ARRAYS.some((field) => {
-    const arr = d[field];
-    return arr && arr.some((p: string) => normalize(p) === practiceLower);
+    const arr = normalizeArray(d[field]);
+    return arr.some((p: string) => normalize(p) === practiceLower);
   });
 }
 
@@ -39,16 +47,16 @@ function isMassageTerm(value: string): boolean {
 
 function docIsMassageEscort(d: any): boolean {
   return SERVICE_ARRAYS.some((field) => {
-    const arr = d[field];
-    return arr && arr.some((p: string) => p && isMassageTerm(p));
+    const arr = normalizeArray(d[field]);
+    return arr.some((p: string) => p && isMassageTerm(p));
   });
 }
 
 function docMatchesMassageType(d: any, massageType: string): boolean {
   const keyword = normalizeSlug(massageType);
   return SERVICE_ARRAYS.some((field) => {
-    const arr = d[field];
-    return arr && arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
+    const arr = normalizeArray(d[field]);
+    return arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
   });
 }
 
@@ -61,16 +69,16 @@ const BDSM_TERMS = [
 
 function docIsBDSMescort(d: any): boolean {
   return SERVICE_ARRAYS.some((field) => {
-    const arr = d[field];
-    return arr && arr.some((p: string) => p && BDSM_TERMS.some((term) => p.toLowerCase().includes(term)));
+    const arr = normalizeArray(d[field]);
+    return arr.some((p: string) => p && BDSM_TERMS.some((term) => p.toLowerCase().includes(term)));
   });
 }
 
 function docMatchesBDSMPractice(d: any, practice: string): boolean {
   const keyword = normalizeSlug(practice);
   return SERVICE_ARRAYS.some((field) => {
-    const arr = d[field];
-    return arr && arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
+    const arr = normalizeArray(d[field]);
+    return arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
   });
 }
 

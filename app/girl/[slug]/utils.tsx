@@ -15,6 +15,14 @@ export function formatSlugToTitle(slug: string): string {
         .join(" ");
 }
 
+function normalizeArray(val: any): string[] {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === "object" && typeof val.map === "function") return val;
+    if (val && typeof val === "object") return Object.values(val).map(String);
+    return [];
+}
+
 // Generate structured data for escort profile
 export function generateEscortStructuredData(escort: any) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
@@ -64,7 +72,7 @@ export function generateEscortStructuredData(escort: any) {
             itemOffered: {
                 "@type": "Service",
                 name: "Escort Services",
-                description: escort.categories?.join(", ") || "Premium companionship",
+                description: normalizeArray(escort.categories).join(", ") || "Premium companionship",
                 provider: {
                     "@type": "Person",
                     name: displayName,
