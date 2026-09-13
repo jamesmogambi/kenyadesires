@@ -277,13 +277,13 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}`,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Escorts",
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/girls`,
       },
       ...(escort.primaryRegion
         ? [
@@ -291,7 +291,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
               "@type": "ListItem",
               position: 3,
               name: `${escort.county || escort.primaryRegion} Escorts`,
-              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls?region=${encodeURIComponent(escort.primaryRegion)}`,
+              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/girls?region=${encodeURIComponent(escort.primaryRegion)}`,
             },
           ]
         : []),
@@ -299,7 +299,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
         "@type": "ListItem",
         position: escort.primaryRegion ? 4 : 3,
         name: displayName,
-        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girl/${escort.id || slug}`,
+        item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/girl/${escort.id || slug}`,
       },
     ],
   };

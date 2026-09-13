@@ -3,7 +3,7 @@ import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
   return {
     rules: [

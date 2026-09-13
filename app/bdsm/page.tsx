@@ -130,7 +130,7 @@ export async function generateMetadata(
   // Build canonical URL
   const buildCanonicalUrl = () => {
     const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
     const params = new URLSearchParams();
     if (county && county !== "all") params.append("county", county);
     if (region && region !== "all") params.append("region", region);
@@ -154,7 +154,7 @@ export async function generateMetadata(
   }
 
   ogImages.push({
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/og-bdsm.jpg`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/og-bdsm.jpg`,
     width: 1200,
     height: 630,
     alt: "KenyaDesires BDSM - Professional BDSM Services in Kenya",
@@ -162,7 +162,7 @@ export async function generateMetadata(
 
   const totalPages = Math.ceil(totalBDSM / ITEMS_PER_PAGE);
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();

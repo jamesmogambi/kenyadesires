@@ -46,7 +46,7 @@ export const metadata: Metadata = {
       "Create a KenyaDesires agency account, manage multiple provider profiles, increase visibility and create more opportunities to grow your agency and earning potential.",
     type: "website",
     locale: "en_KE",
-    url: "https://kenyadesires.com/join-agency",
+    url: "https://kenyadesires.xyz/join-agency",
     siteName: "KenyaDesires",
     images: [
       {

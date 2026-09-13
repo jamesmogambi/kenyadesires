@@ -62,7 +62,7 @@ export function verificationNotificationEmail(
             </div>
             ` : ""}
             <div style="text-align:center;margin:30px 0;">
-              <a href="https://kenyadesires.com" style="display:inline-block;background:#c62828;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Go to Dashboard</a>
+              <a href="https://kenyadesires.xyz" style="display:inline-block;background:#c62828;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Go to Dashboard</a>
             </div>
             <p style="color:#999;font-size:13px;text-align:center;margin:0;">If you have any questions, contact our support team.</p>
           </div>
@@ -81,7 +81,7 @@ ${nextSteps}
 ${decision ? `\n${decisionTitle}:\n${decision}` : ""}
  ${isApproved && credits > 0 ? `\n${credits} bonus credits (KSH ${(credits * 10).toLocaleString()}) have been added to your account for completing verification.` : ""}
 
-Go to https://kenyadesires.com to access your dashboard.
+Go to https://kenyadesires.xyz to access your dashboard.
 
 If you have any questions, contact our support team.
 

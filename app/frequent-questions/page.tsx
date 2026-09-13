@@ -4,7 +4,7 @@ import FaqCard from "@/components/FaqCard";
 const faqs = [
   {
     question: "Question No. 1: How do I pay for advertising?",
-    answer: `Visit this page: https://kenyadesires.com/extend and select the number of credits you want to top up. Then click the "ORDER" button.
+    answer: `Visit this page: https://kenyadesires.xyz/extend and select the number of credits you want to top up. Then click the "ORDER" button.
 Immediately after clicking the "ORDER" button, a page with payment details will be displayed. You will also receive these details via SMS and email. If you go back, the page will disappear and you will have the payment details only in your email or SMS.
 The variable symbol is DIFFERENT for every order! It is important to enter the correct variable symbol so the system recognizes the payment and automatically credits your account and extends the listing.
 You can top up more credits and the system will automatically deduct them each month to extend your listing. You can disable this auto-renewal in your account settings.`,

@@ -1,5 +1,5 @@
 // app/config/structured-data.ts
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 const SITE_NAME = "KenyaDesires";
 
 export const structuredData = {

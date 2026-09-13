@@ -1,7 +1,7 @@
 // app/config/metadata.ts
 import type { Metadata } from "next";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

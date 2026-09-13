@@ -13,7 +13,7 @@ export function generateBreadcrumbList(items: BreadcrumbItem[]) {
             "@type": "ListItem",
             position: index + 1,
             name: item.name,
-            item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}${item.url}`,
+            item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}${item.url}`,
         })),
     };
 }
@@ -41,7 +41,7 @@ export function generateListStructuredData({
                                                filters,
                                                items,
                                            }: ListStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
     return {
         "@context": "https://schema.org",
@@ -148,7 +148,7 @@ export function generateListStructuredData({
 }
 
 export function generateFilterStructuredData(filters: any) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
     return {
         "@context": "https://schema.org",

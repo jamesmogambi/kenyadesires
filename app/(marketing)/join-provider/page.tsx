@@ -39,7 +39,7 @@ export const metadata: Metadata = {
       "Create your KenyaDesires provider profile, increase your visibility, reach more potential customers and create more opportunities to grow your earning potential.",
     type: "website",
     locale: "en_KE",
-    url: "https://kenyadesires.com/join-provider",
+    url: "https://kenyadesires.xyz/join-provider",
     siteName: "KenyaDesires",
     images: [
       {

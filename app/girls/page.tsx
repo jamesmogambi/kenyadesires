@@ -100,7 +100,7 @@ export async function generateMetadata(
 
   const title = buildTitle();
   const description = buildDescription();
-  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/girls`;
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/girls`;
 
   return {
     title,

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Post, Category } from "@/types/sanity";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 const SITE_NAME = "KenyaDesires";
 const BLOG_NAME = "Kenyan Dating Blog";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;

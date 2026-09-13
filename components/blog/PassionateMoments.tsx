@@ -63,7 +63,7 @@ const PassionateMoments = ({ className }: Prop) => {
               <Link
                 passHref
                 rel="noopener noreferrer"
-                href={"https://kenyadesires.com/"}
+                href={"https://kenyadesires.xyz/"}
               >
                 kenyadesires.com
               </Link>

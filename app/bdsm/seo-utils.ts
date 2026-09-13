@@ -25,7 +25,7 @@ export function generateBDSMStructuredData({
                                                filters,
                                                items,
                                            }: BDSMStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
     const practice = filters.practice?.toLowerCase() || "bdsm";
 
     return {

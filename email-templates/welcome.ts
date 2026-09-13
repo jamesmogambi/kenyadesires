@@ -62,7 +62,7 @@ export function welcomeEmail(name: string, role: string, credits = 0): { subject
               You can now complete your profile, add photos, and start exploring. If you have any questions, feel free to reach out to our support team.
             </p>
             <div style="text-align:center;margin:30px 0;">
-              <a href="https://kenyadesires.com" style="display:inline-block;background:#c62828;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Go to Dashboard</a>
+              <a href="https://kenyadesires.xyz" style="display:inline-block;background:#c62828;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Go to Dashboard</a>
             </div>
             <p style="color:#999;font-size:13px;text-align:center;margin:0;">If you did not create this account, please ignore this email.</p>
           </div>
@@ -78,7 +78,7 @@ Your ${roleLabel} account has been created successfully.${creditsText}
 
 You can now complete your profile, add photos, and start exploring.
 
-Go to https://kenyadesires.com to get started.
+Go to https://kenyadesires.xyz to get started.
 
 If you did not create this account, please ignore this email.
 

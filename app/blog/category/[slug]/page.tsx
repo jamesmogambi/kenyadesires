@@ -80,7 +80,7 @@ export default async function CategoryPage({
               "@type": "CollectionPage",
               name: "Category Not Found",
               description: "The requested category could not be found.",
-              url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/blog/category/${slug}`,
+              url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/blog/category/${slug}`,
             }),
           }}
         />

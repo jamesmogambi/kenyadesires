@@ -45,7 +45,7 @@ export async function generateMetadata(
       agency.coverImage ||
       agency.logo ||
       agency.coverImage ||
-      `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/og-agency.jpg`;
+      `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/og-agency.jpg`;
 
     const buildDescription = () => {
       if (agency.description) {
@@ -55,7 +55,7 @@ export async function generateMetadata(
     };
 
     const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
     return {
       title: `${displayName} - Premium Adult Entertainment in ${location} | KenyaDesires`,

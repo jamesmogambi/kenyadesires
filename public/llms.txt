@@ -2,7 +2,7 @@
 # Guidance for AI systems, LLMs, and generative engines about KenyaDesires content.
 # Updated: 2026-08-30
 
-site: https://kenyadesires.com
+site: https://kenyadesires.xyz
 name: KenyaDesires
 description: Kenya's premier dating and relationships blog featuring expert advice, dating tips, and insights for singles across Kenya.
 
@@ -29,7 +29,7 @@ refresh-cycle: quarterly
 entities:
   organization:
     name: KenyaDesires
-    url: https://kenyadesires.com
+    url: https://kenyadesires.xyz
     sameAs:
       - https://twitter.com/kenyadesires
       - https://www.instagram.com/kenyadesires

@@ -188,7 +188,7 @@ export async function generateMetadata(
   // Build canonical URL
   const buildCanonicalUrl = () => {
     const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+      process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
     const params = new URLSearchParams();
 
     if (county && county !== "all") params.append("county", county);
@@ -219,7 +219,7 @@ export async function generateMetadata(
   }
 
   ogImages.push({
-    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com"}/og-massage.jpg`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/og-massage.jpg`,
     width: 1200,
     height: 630,
     alt: "KenyaDesires Massage - Professional Massage Therapists in Kenya",
@@ -227,7 +227,7 @@ export async function generateMetadata(
 
   const totalPages = Math.ceil(totalMasseuses / ITEMS_PER_PAGE);
   const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
   const buildPageUrl = (pageNum: number) => {
     const params = new URLSearchParams();

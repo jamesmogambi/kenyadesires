@@ -25,7 +25,7 @@ export function generateMassageStructuredData({
                                                   filters,
                                                   items,
                                               }: MassageStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
     const massageType = filters.massageType?.toLowerCase() || "erotic";
 
     return {

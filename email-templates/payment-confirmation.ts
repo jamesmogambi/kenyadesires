@@ -115,7 +115,7 @@ export function paymentConfirmationEmail(data: {
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:30px 0 0;">
                     <tr>
                       <td align="center">
-                        <a href="https://kenyadesires.com/extend" style="background-color:#fe0032; color:#ffffff; padding:12px 30px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:14px; display:inline-block;">View Invoices</a>
+                        <a href="https://kenyadesires.xyz/extend" style="background-color:#fe0032; color:#ffffff; padding:12px 30px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:14px; display:inline-block;">View Invoices</a>
                       </td>
                     </tr>
                   </table>

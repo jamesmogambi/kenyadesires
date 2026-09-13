@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;
 const SITE_NAME = "KenyaDesires";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
 // ============ TYPES ============
 type Props = {

@@ -24,7 +24,7 @@ export function adminNotificationEmail(
               A new ${roleLabel.toLowerCase()} has registered on KenyaDesires. Please review their profile and verify their identity.
             </p>
             <div style="text-align:center;margin:30px 0;">
-              <a href="https://kenyadesires.com/admin" style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">View in Admin Panel</a>
+              <a href="https://kenyadesires.xyz/admin" style="display:inline-block;background:#1a1a2e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">View in Admin Panel</a>
             </div>
           </div>
           <div style="background:#f5f5f5;padding:20px 30px;text-align:center;border-top:1px solid #eee;">
@@ -42,7 +42,7 @@ User ID: ${clerkUserId}
 
 A new ${roleLabel.toLowerCase()} has registered on KenyaDesires. Please review their profile and verify their identity.
 
-Admin Panel: https://kenyadesires.com/admin
+Admin Panel: https://kenyadesires.xyz/admin
 
 &copy; ${new Date().getFullYear()} KenyaDesires. All rights reserved.`,
   };
