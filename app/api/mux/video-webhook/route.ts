@@ -3,7 +3,6 @@ import crypto from "crypto";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-export const dynamic = "force-dynamic";
 
 const muxSigningSecret = process.env.MUX_SIGNING_SECRET!;
 

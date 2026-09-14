@@ -14,7 +14,6 @@ import {
   getFeaturedBlogPostsForSitemap,
 } from "@/lib/sanity/queries";
 
-export const dynamic = "force-dynamic";
 
 // Optional: Use edge runtime for better performance
 // export const runtime = 'edge';

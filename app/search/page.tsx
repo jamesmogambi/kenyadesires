@@ -4,6 +4,10 @@ import GirlList from "@/components/GirlList";
 import Link from "next/link";
 import {ClientPaginationWrapper} from "@/components/ClientPaginationWrapper";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 interface SearchPageProps {
     searchParams: Promise<{
         q?: string;

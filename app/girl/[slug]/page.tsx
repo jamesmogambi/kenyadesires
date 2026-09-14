@@ -14,6 +14,10 @@ import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
 import { getEscortByIdentifier } from "@/server-actions/girl.action";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 function normalizeArray(val: any): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val;
@@ -23,7 +27,6 @@ function normalizeArray(val: any): string[] {
 }
 // import { getEscortByIdentifier } from "@/server-actions/get-escorts";
 
-export const dynamic = "force-dynamic";
 
 // Generate metadata for the escort profile page
 export async function generateMetadata(

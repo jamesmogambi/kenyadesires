@@ -3,7 +3,6 @@ import { Mux } from "@mux/mux-node";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-export const dynamic = "force-dynamic";
 
 const muxClient = new Mux({
   tokenId: process.env.MUX_TOKEN_ID!,

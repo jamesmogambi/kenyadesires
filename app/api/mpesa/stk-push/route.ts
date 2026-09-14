@@ -4,7 +4,6 @@ import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { initiateSTKPush, STKPushRequest } from "@/lib/mpesa";
 
-export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {

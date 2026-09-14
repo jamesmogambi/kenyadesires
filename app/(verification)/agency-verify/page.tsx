@@ -6,6 +6,10 @@ import SectionCard from "@/components/SectionCard";
 import AgencyVerificationForm from "@/app/agency-profile/AgencyVerificationForm";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export const metadata: Metadata = {
   robots: {
     index: false,

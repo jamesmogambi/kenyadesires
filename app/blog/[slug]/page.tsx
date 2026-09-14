@@ -8,12 +8,15 @@ import {
   generateBlogPostJsonLd,
 } from "@/lib/blog-seo";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export const dynamic = "force-dynamic";
 
 // ============================================
 // GENERATE METADATA FOR SEO & GEO

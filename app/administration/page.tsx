@@ -1,5 +1,3 @@
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
 
 import SectionCard from "@/components/SectionCard";
 import React from "react";
@@ -16,6 +14,10 @@ import { getUserActivePackages, getUserCredits } from "@/server-actions/payment.
 import { Button } from "@/components/ui/button";
 import { CreditCard, Package, Check } from "lucide-react";
 import { PLAN_DETAILS } from "@/lib/constants/packages";
+
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
 
 export const metadata: Metadata = {
   title: "Update Profile 💖 | kenyadesires.xyz",

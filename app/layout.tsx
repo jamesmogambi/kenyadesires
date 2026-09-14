@@ -34,10 +34,13 @@ import { structuredData, organizationSchema } from "./config/structured-data";
 import { getAllLookupData } from "@/server-actions/lookup.action";
 import YouTargetsAd from "@/components/YouTargetsAd";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 // ✅ Export metadata so Next.js picks it up
 export { metadata };
 
-export const dynamic = "force-dynamic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

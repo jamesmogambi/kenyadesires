@@ -21,8 +21,11 @@ import {
   getFirstAgencyOptimized,
 } from "@/server-actions/agency.action";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 // ✅ Force dynamic - no caching
-export const dynamic = "force-dynamic";
 
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;

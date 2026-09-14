@@ -6,7 +6,6 @@ import { getCreditPackageById, getAdPackageById, PLAN_DETAILS } from "@/lib/cons
 import { sendPaymentConfirmationEmail } from "@/server-actions/email";
 import { incrementUserCredits } from "@/server-actions/payment.action";
 
-export const dynamic = "force-dynamic";
 
 async function getUserInfo(userId: string) {
   if (!userId) return { name: "Valued Customer", email: "", ref: null };
