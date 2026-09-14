@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import {
   getBDSMEscortsOptimized,
   getEroticMassageEscortsOptimized,
@@ -19,9 +20,100 @@ import { getAllRegions, getPopularCounties } from "@/server-actions/region.actio
 import { getAllLookupData } from "@/server-actions/lookup.action";
 import { getCommentsByPostSlug } from "@/server-actions/blog-comments.action";
 
+type CacheEntry<T> = { value: T; expires: number };
+
+class TTLCache<T> {
+  private store = new Map<string, CacheEntry<T>>();
+  private readonly ttl: number;
+
+  constructor(ttlSeconds: number) {
+    this.ttl = ttlSeconds * 1000;
+  }
+
+  get(key: string): T | undefined {
+    const entry = this.store.get(key);
+    if (!entry) return undefined;
+    if (Date.now() > entry.expires) {
+      this.store.delete(key);
+      return undefined;
+    }
+    return entry.value;
+  }
+
+  set(key: string, value: T): void {
+    this.store.set(key, { value, expires: Date.now() + this.ttl });
+  }
+
+  delete(key: string): void {
+    this.store.delete(key);
+  }
+
+  clear(): void {
+    this.store.clear();
+  }
+}
+
+// In-memory TTL cache (60 seconds) for within-request dedup
+const escortCache = new TTLCache<any>(60);
+
+function cacheKey(params: any): string {
+  return JSON.stringify(params || {});
+}
+
+// Primary cache: Next.js built-in 24-hour cache via unstable_cache
+// This survives across requests (within the same instance) and supports
+// tag-based invalidation via revalidateTag("escorts-daily").
+const getEscortsDaily = unstable_cache(
+  async (params: any) => {
+    return getEscorts(params);
+  },
+  ["escorts"],
+  {
+    revalidate: 86400, // 24 hours — 1 day
+    tags: ["escorts-daily"],
+  },
+);
+
+const getMassageEscortsDaily = unstable_cache(
+  async (params: any) => {
+    return getEroticMassageEscortsOptimized(params);
+  },
+  ["massage-escorts"],
+  {
+    revalidate: 86400,
+    tags: ["escorts-daily"],
+  },
+);
+
+const getBDSMEscortsDaily = unstable_cache(
+  async (params: any) => {
+    return getBDSMEscortsOptimized(params);
+  },
+  ["bdsm-escorts"],
+  {
+    revalidate: 86400,
+    tags: ["escorts-daily"],
+  },
+);
+
+// Fallback TTL cache for immediate within-request dedup
+const getEscortsTTL = async (params: any) => {
+  const key = `escorts:${cacheKey(params)}`;
+  const cached = escortCache.get(key);
+  if (cached) return cached;
+  const result = await getEscorts(params);
+  escortCache.set(key, result);
+  return result;
+};
+
 export async function getCachedEscorts(params: any) {
-  console.log("🔄 Fetching fresh escort data...");
-  return await getEscorts(params);
+  // Try primary cache first (Next.js unstable_cache, 24h TTL)
+  try {
+    return await getEscortsDaily(params);
+  } catch {
+    // Fallback to in-memory TTL cache if unstable_cache fails
+    return getEscortsTTL(params);
+  }
 }
 
 export async function getCachedEscortById(id: string) {
@@ -30,13 +122,19 @@ export async function getCachedEscortById(id: string) {
 }
 
 export async function getCachedMassageEscorts(params: any) {
-  console.log("🔄 Fetching fresh massage escort data (optimized)...");
-  return await getEroticMassageEscortsOptimized(params);
+  try {
+    return await getMassageEscortsDaily(params);
+  } catch {
+    return getEroticMassageEscortsOptimized(params);
+  }
 }
 
 export async function getCachedBDSMEscorts(params: any) {
-  console.log("🔄 Fetching fresh BDSM escort data...");
-  return await getBDSMEscortsOptimized(params);
+  try {
+    return await getBDSMEscortsDaily(params);
+  } catch {
+    return getBDSMEscortsOptimized(params);
+  }
 }
 
 export async function getCachedBlogCategories() {

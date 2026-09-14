@@ -134,6 +134,24 @@ const nextConfig = {
 
   // Enable compression
   compress: true,
+
+  /**
+   * Cache Components (Next.js 16.3+)
+   * Uncomment `cacheComponents: true` to enable the new caching model:
+   * 'use cache' directives + cacheLife() profiles. Requires migrating all
+   * route files away from `export const dynamic = "force-dynamic"` — replace
+   * with `<Suspense>` boundaries or cached data functions instead.
+   *
+   * cacheLife profiles are defined here regardless — they take effect
+   * when cacheComponents is enabled.
+   */
+  cacheLife: {
+    daily: {
+      stale: 3600, // 1 hour — client cache duration
+      revalidate: 3600, // 1 hour — server refresh interval
+      expire: 86400, // 1 day — max cache lifetime
+    },
+  },
 };
 
 module.exports = nextConfig;

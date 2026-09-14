@@ -392,6 +392,67 @@ async function logInvalidRegion(
   }
 }
 
+const MAX_FETCH_ITERATIONS = 50;
+
+const normalize = (val?: string) => (val || "").toLowerCase().trim();
+
+async function runEscortBatch(
+  query: FirebaseFirestore.Query,
+  params: GetEscortsParams,
+  validLimit: number,
+): Promise<{ docs: Escort[]; hasMore: boolean }> {
+  const batchSize = Math.max(validLimit * 5, 200);
+  let lastDoc: any = null;
+  const allFiltered: Escort[] = [];
+  let hasMore = false;
+
+  let iterations = 0;
+
+  while (allFiltered.length < validLimit && iterations < MAX_FETCH_ITERATIONS) {
+    iterations++;
+    let pageQuery = query;
+    if (lastDoc) {
+      pageQuery = pageQuery.startAfter(lastDoc);
+    }
+
+    const snapshot = await pageQuery.limit(batchSize).get();
+
+    if (snapshot.empty) {
+      break;
+    }
+
+    const docs = snapshot.docs.map(convertDocToEscortFast);
+
+    let filtered = docs;
+    if (params.region && params.region !== "all") {
+      const regionLower = normalize(params.region);
+      filtered = filtered.filter((e) =>
+        e.regions?.some((r) => normalize(r) === regionLower) ||
+        normalize(e.primaryRegion) === regionLower
+      );
+    }
+    if (params.practice && params.practice !== "all") {
+      const practiceLower = normalize(params.practice);
+      filtered = filtered.filter((e) =>
+        (e.practices || []).some((p) => normalize(p) === practiceLower) ||
+        (e.bdsm || []).some((p) => normalize(p) === practiceLower) ||
+        (e.massage || []).some((p) => normalize(p) === practiceLower) ||
+        (e.extraServices || []).some((p) => normalize(p) === practiceLower)
+      );
+    }
+
+    allFiltered.push(...filtered);
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    hasMore = snapshot.size === batchSize;
+
+    if (!hasMore || iterations >= MAX_FETCH_ITERATIONS) {
+      break;
+    }
+  }
+
+  return { docs: allFiltered, hasMore };
+}
+
 // ✅ Optimized version - uses server-side filtering + batch fetching
 async function getEscorts(
   params: GetEscortsParams = {},
@@ -402,7 +463,6 @@ async function getEscorts(
       limit = 20,
       county,
       region,
-      practice,
       isActive = true,
       isVerified,
       isFeatured,
@@ -413,21 +473,6 @@ async function getEscorts(
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limit));
 
-    let query: FirebaseFirestore.Query = adminDb.collection("escorts");
-
-    if (isActive !== undefined) {
-      query = query.where("isActive", "==", isActive);
-    }
-    if (isVerified !== undefined) {
-      query = query.where("isVerified", "==", isVerified);
-    }
-    if (isFeatured !== undefined) {
-      query = query.where("isFeatured", "==", isFeatured);
-    }
-    if (county && county !== "all") {
-      query = query.where("county", "==", county);
-    }
-
     const validSortFields = [
       "createdAt",
       "updatedAt",
@@ -436,84 +481,48 @@ async function getEscorts(
       "totalBookings",
     ];
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-    query = query.orderBy(sortField, sortOrder);
 
-    query = query.select(
-      "name",
-      "username",
-      "previewPhoto",
-      "images",
-      "videos",
-      "imagesMetadata",
-      "cleanedImages",
-      "age",
-      "county",
-      "regions",
-      "primaryRegion",
-      "locations",
-      "practices",
-      "categories",
-      "nationality",
-      "rating",
-      "totalViews",
-      "totalBookings",
-      "isActive",
-      "isVerified",
-      "isFeatured",
-      "slug",
-      "telephone",
-      "whatsappPhone",
-      "createdAt",
-      "hasCleanedImages",
-      "cleanedImages",
-    );
+    const selectFields = LISTING_SELECT_FIELDS;
 
-    const batchSize = Math.max(validLimit * 5, 200);
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-    let hasMore = false;
+    function buildQuery(useRegionArrayContains: boolean) {
+      let query: FirebaseFirestore.Query = adminDb.collection("escorts");
 
-    while (allFiltered.length < validLimit) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
+      if (isActive !== undefined) {
+        query = query.where("isActive", "==", isActive);
+      }
+      if (isVerified !== undefined) {
+        query = query.where("isVerified", "==", isVerified);
+      }
+      if (isFeatured !== undefined) {
+        query = query.where("isFeatured", "==", isFeatured);
+      }
+      if (county && county !== "all") {
+        query = query.where("county", "==", county);
       }
 
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
+      if (useRegionArrayContains && region && region !== "all") {
+        query = query.where("regions", "array-contains", region);
       }
 
-      const docs = snapshot.docs.map(convertDocToEscortFast);
+      query = query.orderBy(sortField, sortOrder);
+      query = query.select(...selectFields);
 
-      const normalize = (val?: string) => (val || "").toLowerCase().trim();
+      return query;
+    }
 
-      let filtered = docs;
-      if (region && region !== "all") {
-        const regionLower = normalize(region);
-        filtered = filtered.filter((e) =>
-          e.regions?.some((r) => normalize(r) === regionLower) ||
-          normalize(e.primaryRegion) === regionLower
-        );
-      }
-      if (practice && practice !== "all") {
-        const practiceLower = normalize(practice);
-        filtered = filtered.filter((e) =>
-          (e.practices || []).some((p) => normalize(p) === practiceLower) ||
-          (e.bdsm || []).some((p) => normalize(p) === practiceLower) ||
-          (e.massage || []).some((p) => normalize(p) === practiceLower) ||
-          (e.extraServices || []).some((p) => normalize(p) === practiceLower)
-        );
-      }
+    // Phase 1: Try with server-side array-contains for region (fast, exact match)
+    const hasRegionFilter = !!(region && region !== "all");
 
-      allFiltered.push(...filtered);
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-      hasMore = snapshot.size === batchSize;
+    let query = buildQuery(hasRegionFilter);
+    let { docs: allFiltered, hasMore } = await runEscortBatch(query, params, validLimit);
 
-      if (!hasMore) {
-        break;
-      }
+    // Phase 2: Fallback to client-side filtering only if region filter
+    // yielded 0 results (handles case mismatches in stored data)
+    if (allFiltered.length === 0 && hasRegionFilter) {
+      query = buildQuery(false);
+      const fallback = await runEscortBatch(query, params, validLimit);
+      allFiltered = fallback.docs;
+      hasMore = fallback.hasMore;
     }
 
     const total = allFiltered.length;
@@ -1486,6 +1495,10 @@ async function fetchSpecializedEscorts(
     query = query.where("county", "==", county);
   }
 
+  if (region && region !== "all") {
+    query = query.where("regions", "array-contains", region);
+  }
+
   const validSortFields = [
     "createdAt",
     "updatedAt",
@@ -1497,59 +1510,61 @@ async function fetchSpecializedEscorts(
   query = query.orderBy(sortField, sortOrder);
   query = query.select(...LISTING_SELECT_FIELDS);
 
-  const batchSize = Math.max(validLimit * 5, 200);
-  let lastDoc: any = null;
-  const allFiltered: Escort[] = [];
-  let hasMore = false;
+    const batchSize = Math.max(validLimit * 5, 200);
+    let lastDoc: any = null;
+    const allFiltered: Escort[] = [];
+    let hasMore = false;
 
-  while (allFiltered.length < validLimit) {
-    let pageQuery = query;
-    if (lastDoc) {
-      pageQuery = pageQuery.startAfter(lastDoc);
-    }
+    let iterations = 0;
+    while (allFiltered.length < validLimit && iterations < MAX_FETCH_ITERATIONS) {
+      iterations++;
+      let pageQuery = query;
+      if (lastDoc) {
+        pageQuery = pageQuery.startAfter(lastDoc);
+      }
 
-    const snapshot = await pageQuery.limit(batchSize).get();
+      const snapshot = await pageQuery.limit(batchSize).get();
 
-    if (snapshot.empty) {
-      break;
-    }
+      if (snapshot.empty) {
+        break;
+      }
 
-    const docs = snapshot.docs.map(convertDocToEscortFast);
-    let filtered = docs;
+      const docs = snapshot.docs.map(convertDocToEscortFast);
+      let filtered = docs;
 
-    if (region && region !== "all") {
-      filtered = filtered.filter((e: Escort) => e.regions?.includes(region));
-    }
+      if (region && region !== "all") {
+        filtered = filtered.filter((e: Escort) => e.regions?.includes(region));
+      }
 
-    filtered = filtered.filter((doc: Escort) => {
-      if (!doc.practices || doc.practices.length === 0) return false;
-      return doc.practices.some((practice: string) => {
-        const lowerPractice = practice.toLowerCase();
-        return terms.some((term) =>
-          lowerPractice.includes(term.toLowerCase()),
-        );
+      filtered = filtered.filter((doc: Escort) => {
+        if (!doc.practices || doc.practices.length === 0) return false;
+        return doc.practices.some((practice: string) => {
+          const lowerPractice = practice.toLowerCase();
+          return terms.some((term) =>
+            lowerPractice.includes(term.toLowerCase()),
+          );
+        });
       });
-    });
 
-    if (minAge) {
-      filtered = filtered.filter(
-        (e: Escort) => parseInt(e.age || "0") >= minAge,
-      );
-    }
-    if (maxAge) {
-      filtered = filtered.filter(
-        (e: Escort) => parseInt(e.age || "0") <= maxAge,
-      );
-    }
+      if (minAge) {
+        filtered = filtered.filter(
+          (e: Escort) => parseInt(e.age || "0") >= minAge,
+        );
+      }
+      if (maxAge) {
+        filtered = filtered.filter(
+          (e: Escort) => parseInt(e.age || "0") <= maxAge,
+        );
+      }
 
-    allFiltered.push(...filtered);
-    lastDoc = snapshot.docs[snapshot.docs.length - 1];
-    hasMore = snapshot.size === batchSize;
+      allFiltered.push(...filtered);
+      lastDoc = snapshot.docs[snapshot.docs.length - 1];
+      hasMore = snapshot.size === batchSize;
 
-    if (!hasMore) {
-      break;
+      if (!hasMore || iterations >= MAX_FETCH_ITERATIONS) {
+        break;
+      }
     }
-  }
 
   const total = allFiltered.length;
   const startIndex = (validPage - 1) * validLimit;
