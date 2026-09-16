@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife } from "next/cache";
 import {
   getBDSMEscortsOptimized,
   getEroticMassageEscortsOptimized,
@@ -53,88 +53,50 @@ class TTLCache<T> {
   }
 }
 
-// In-memory TTL cache (60 seconds) for within-request dedup
+// In-memory TTL cache (60 seconds) for fallback / within-request dedup
 const escortCache = new TTLCache<any>(60);
 
 function cacheKey(params: any): string {
   return JSON.stringify(params || {});
 }
 
-// Primary cache: Next.js built-in 24-hour cache via unstable_cache
-// This survives across requests (within the same instance) and supports
-// tag-based invalidation via revalidateTag("escorts-daily").
-const getEscortsDaily = unstable_cache(
-  async (params: any) => {
-    return getEscorts(params);
-  },
-  ["escorts"],
-  {
-    revalidate: 86400, // 24 hours — 1 day
-    tags: ["escorts-daily"],
-  },
-);
+export async function getCachedEscorts(params: any) {
+  "use cache";
+  cacheLife("daily");
 
-const getMassageEscortsDaily = unstable_cache(
-  async (params: any) => {
-    return getEroticMassageEscortsOptimized(params);
-  },
-  ["massage-escorts"],
-  {
-    revalidate: 86400,
-    tags: ["escorts-daily"],
-  },
-);
-
-const getBDSMEscortsDaily = unstable_cache(
-  async (params: any) => {
-    return getBDSMEscortsOptimized(params);
-  },
-  ["bdsm-escorts"],
-  {
-    revalidate: 86400,
-    tags: ["escorts-daily"],
-  },
-);
-
-// Fallback TTL cache for immediate within-request dedup
-const getEscortsTTL = async (params: any) => {
+  // Fallback TTL cache layer (used on cache miss)
   const key = `escorts:${cacheKey(params)}`;
   const cached = escortCache.get(key);
   if (cached) return cached;
+
   const result = await getEscorts(params);
   escortCache.set(key, result);
   return result;
-};
-
-export async function getCachedEscorts(params: any) {
-  // Try primary cache first (Next.js unstable_cache, 24h TTL)
-  try {
-    return await getEscortsDaily(params);
-  } catch {
-    // Fallback to in-memory TTL cache if unstable_cache fails
-    return getEscortsTTL(params);
-  }
 }
 
 export async function getCachedEscortById(id: string) {
-  console.log(`🔄 Fetching fresh escort data for ID: ${id}...`);
-  return await getEscortById(id);
+  "use cache";
+  cacheLife("daily");
+
+  const key = `escort-by-id:${id}`;
+  const cached = escortCache.get(key);
+  if (cached) return cached;
+
+  const result = await getEscortById(id);
+  escortCache.set(key, result);
+  return result;
 }
 
 export async function getCachedMassageEscorts(params: any) {
-  try {
-    return await getMassageEscortsDaily(params);
-  } catch {
-    return getEroticMassageEscortsOptimized(params);
-  }
+  "use cache";
+  cacheLife("daily");
+  return getEroticMassageEscortsOptimized(params);
 }
 
 export async function getCachedBDSMEscorts(params: any) {
-  try {
-    return await getBDSMEscortsDaily(params);
-  } catch {
-    return getBDSMEscortsOptimized(params);
-  }
+  "use cache";
+  cacheLife("daily");
+  return getBDSMEscortsOptimized(params);
 }
 
 export async function getCachedBlogCategories() {

@@ -1,6 +1,7 @@
 // app/withdrawal/page.tsx (Print-Friendly Version)
 import React from "react";
 import { Metadata } from "next";
+import { connection } from "next/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
     "Fill out the withdrawal form for distance contracts. Submit your withdrawal request for services purchased through our platform.",
 };
 
-export default function WithdrawalPage() {
+export default async function WithdrawalPage() {
+  await connection();
   const currentYear = new Date().getFullYear();
 
   return (

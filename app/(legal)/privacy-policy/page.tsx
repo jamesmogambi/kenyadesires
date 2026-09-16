@@ -2,6 +2,7 @@
 import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  await connection();
   const currentYear = new Date().getFullYear();
 
   return (

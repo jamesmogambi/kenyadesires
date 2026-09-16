@@ -17,10 +17,11 @@ import {
   generateBlogListJsonLd,
 } from "@/lib/blog-seo";
 
+import { connection } from "next/server";
+
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
-
 
 export async function generateMetadata({
   searchParams,
@@ -37,6 +38,7 @@ interface PageProps {
 }
 
 const page = async ({ searchParams }: PageProps) => {
+  await connection();
   const params = await searchParams;
   const currentPage = parseInt(params.page || "1");
   const POSTS_PER_PAGE = 20;
