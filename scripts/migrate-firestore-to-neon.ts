@@ -329,13 +329,13 @@ async function main() {
   }), 200);
 
   const lookupCollections = [
-    { src: 'age', dest: 'lookup_ages', transform: (data, id) => ({ id, name: data.name, value: data.value }) },
-    { src: 'breast', dest: 'lookup_breast_sizes', transform: (data, id) => ({ id, name: data.name, value: data.value }) },
-    { src: 'practices', dest: 'lookup_practices', transform: (data, id) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
-    { src: 'bdsm', dest: 'lookup_bdsm', transform: (data, id) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
-    { src: 'massage', dest: 'lookup_massage', transform: (data, id) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
-    { src: 'exotic', dest: 'lookup_extra_services', transform: (data, id) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
-    { src: 'categories', dest: 'lookup_categories', transform: (data, id) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
+    { src: 'age', dest: 'lookup_ages', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, value: data.value }) },
+    { src: 'breast', dest: 'lookup_breast_sizes', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, value: data.value }) },
+    { src: 'practices', dest: 'lookup_practices', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
+    { src: 'bdsm', dest: 'lookup_bdsm', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
+    { src: 'massage', dest: 'lookup_massage', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
+    { src: 'exotic', dest: 'lookup_extra_services', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
+    { src: 'categories', dest: 'lookup_categories', transform: (data: Record<string, any>, id: string) => ({ id, name: data.name, slug: data.slug || data.name?.toLowerCase().replace(/\s+/g, '-') }) },
   ];
   for (const col of lookupCollections) {
     await migrateCollection(pgTable(col.dest), col.src, col.transform, 200);
