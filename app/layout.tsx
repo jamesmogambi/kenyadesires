@@ -19,7 +19,7 @@ import AgeVerificationModal from "@/components/AgeVerificationModal";
 import ScrollToTopBottom from "@/components/ScrollToTopBottom";
 // import YouTargetsAd from "@/components/YouTargetsAd";
 import Head from "next/head";
-import { getAllCounties } from "@/server-actions/county.action";
+import { getAllCounties } from "@/server-actions/region.action";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";

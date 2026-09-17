@@ -217,7 +217,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     let countyEntries: MetadataRoute.Sitemap = [];
 
     try {
-      const { getAllCounties } = await import("@/server-actions/county.action");
+      const { getAllCounties } = await import("@/server-actions/region.action");
       const res = await getAllCounties();
       const counties = res?.data || [];
 
