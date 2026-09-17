@@ -1,0 +1,65 @@
+[
+  {
+    "id": "546NJFmvzXSYcRM7loVb",
+    "data": {
+      "name": "Large (D)",
+      "flag": "large",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "AN7d2eM1K4JTRLxIhF5d",
+    "data": {
+      "name": "Natural",
+      "flag": "natural",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "E4j55K1P1CHMX1GOCMMw",
+    "data": {
+      "name": "Small (A)",
+      "flag": "small",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "WumH6zEszA0F9GsnATyy",
+    "data": {
+      "name": "Large (DD+)",
+      "flag": "xlarge",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "XqwtTKCja4vAdgzWBiOa",
+    "data": {
+      "name": "Medium (C)",
+      "flag": "medium",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "g34BLPdkd8Tm0UnLcqGA",
+    "data": {
+      "name": "Enhanced",
+      "flag": "enhanced",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "kXgjBYprl37kU0sZ7dQM",
+    "data": {
+      "name": "Medium (B)",
+      "flag": "medium",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  }
+]

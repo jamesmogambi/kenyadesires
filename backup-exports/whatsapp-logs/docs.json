@@ -1,0 +1,2512 @@
+[
+  {
+    "id": "0GO5vhklbwHhkEYgWLa1",
+    "data": {
+      "escortId": "984w3v8eRQGQTTjcJ3yN",
+      "phone": "+254769186442",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:39.974Z"
+    }
+  },
+  {
+    "id": "0IQxkaJIPXSJDi6N3lcV",
+    "data": {
+      "escortId": "xXmyZxJyvF9zZnAE4KPv",
+      "phone": "+254714974487",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:53.012Z"
+    }
+  },
+  {
+    "id": "0qNsPMGvl9CMQQfyV4WJ",
+    "data": {
+      "escortId": "ZZ3cfbgUuQhiRyN0LV5r",
+      "phone": "+254722914812",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:08.184Z"
+    }
+  },
+  {
+    "id": "1KWe2DYTIOaJBdUCYu3k",
+    "data": {
+      "escortId": "o92Y8nldWDxpspozx8VZ",
+      "phone": "+254799256803",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:56.179Z"
+    }
+  },
+  {
+    "id": "1pw8uqsMmeT9zBwkjw2i",
+    "data": {
+      "escortId": "qIyiacv2bZXpl3yC7P1E",
+      "phone": "+254707003056",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:56.129Z"
+    }
+  },
+  {
+    "id": "1s8qXx9md9XX1nqOLFDb",
+    "data": {
+      "escortId": "e0lc1GPmBgPZkCfWbqBq",
+      "phone": "+254704214839",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:47.651Z"
+    }
+  },
+  {
+    "id": "1xMOi6eGcMJh0wvnUdRH",
+    "data": {
+      "escortId": "fnvb20X6Ee3VLH2af0Kv",
+      "phone": "+254724596931",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:28.448Z"
+    }
+  },
+  {
+    "id": "26KWWn11SVPwrnBwUfqZ",
+    "data": {
+      "escortId": "ukLHe9Iw1lHOYJxKEHzg",
+      "phone": "+254140773612",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:37.329Z"
+    }
+  },
+  {
+    "id": "2lNxnUaposYPLXnusSes",
+    "data": {
+      "escortId": "M4AWtkvK6XYT19vzVanE",
+      "phone": "+254798814474",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:56.773Z"
+    }
+  },
+  {
+    "id": "3KbONQgcUOGIToMsxtw1",
+    "data": {
+      "escortId": "JPsp83b615q9t1NNa8XL",
+      "phone": "+254718932687",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:07.446Z"
+    }
+  },
+  {
+    "id": "3NBYFkFahGB5AzQFD3SX",
+    "data": {
+      "escortId": "gN2VAAEvFDwWooupwTzF",
+      "phone": "+254748222132",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:02.012Z"
+    }
+  },
+  {
+    "id": "3n2Y0xTshGxHdvKIcJuN",
+    "data": {
+      "escortId": "gneY0tG6mpE1oU4EjGpX",
+      "phone": "+254712928977",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:10.435Z"
+    }
+  },
+  {
+    "id": "3rIX2EFK1T2yDaJFA2DJ",
+    "data": {
+      "escortId": "i9Uh9zlloMMdnqurjWRe",
+      "phone": "+254712928977",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:00.825Z"
+    }
+  },
+  {
+    "id": "3rWJMFZSWNT9sYIGNeIF",
+    "data": {
+      "escortId": "GuQCve4win1VgVQCVWGk",
+      "phone": "+254723508599",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:35.214Z"
+    }
+  },
+  {
+    "id": "41gdzJIw2lysu8d5WjPB",
+    "data": {
+      "escortId": "c0em0beCDhRYcSE1hSTt",
+      "phone": "+254703419162",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:48.883Z"
+    }
+  },
+  {
+    "id": "44O5GN78ejY8WQ0Y0BEf",
+    "data": {
+      "escortId": "70HkzwpNSdPaQOwqoBqS",
+      "phone": "+2540792217129",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:07.883Z"
+    }
+  },
+  {
+    "id": "4nHRGXYEDjz8RXCM8KNm",
+    "data": {
+      "escortId": "wapeuOmoXKcKnMTJqSu9",
+      "phone": "+254769093595",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:36.166Z"
+    }
+  },
+  {
+    "id": "52MBXiwL4TJQLWds86M0",
+    "data": {
+      "escortId": "EV5jS3TIGV7Rdqd3ZKJx",
+      "phone": "+254713921690",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:54.528Z"
+    }
+  },
+  {
+    "id": "5Q0Te9Q0iLNgoF8PeX3G",
+    "data": {
+      "escortId": "1bZve3VaNkH5JvdZOMFX",
+      "phone": "+254700143608",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:28.175Z"
+    }
+  },
+  {
+    "id": "5jvmtbw1ZedNuKxE5VGz",
+    "data": {
+      "escortId": "JkFZe1zIRkouYGPT6fqH",
+      "phone": "+254792448356",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:15.798Z"
+    }
+  },
+  {
+    "id": "5v4seUbm0A4EnX8n8Eqd",
+    "data": {
+      "escortId": "Y782StR14jOPXtEt6P5b",
+      "phone": "+254756994095",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:26.291Z"
+    }
+  },
+  {
+    "id": "60dHx9yLfTi3yi3cL4OH",
+    "data": {
+      "escortId": "9M34a88Z7wTZnHkfMB4b",
+      "phone": "+254717754232",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:56.747Z"
+    }
+  },
+  {
+    "id": "6Ke91Lc8PWv6UeUAHwT4",
+    "data": {
+      "escortId": "X2dDFzE9aTBn9Mv9nB1a",
+      "phone": "+254726290888",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:52.673Z"
+    }
+  },
+  {
+    "id": "6fqK6dnjdQXMKo2E5wPe",
+    "data": {
+      "escortId": "aXPdkqQ1EB25d9xJEN2z",
+      "phone": "+254118238849",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:50.113Z"
+    }
+  },
+  {
+    "id": "6h6Z26Opk9Wqp6GUGJLs",
+    "data": {
+      "escortId": "sO71I5izO6gWLdxmQztT",
+      "phone": "+254140426143",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:46.888Z"
+    }
+  },
+  {
+    "id": "6zGie2V3pf0yKWcGlokk",
+    "data": {
+      "escortId": "I7filnGmh3wA7MF3ZFVG",
+      "phone": "+254748900804",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:25.481Z"
+    }
+  },
+  {
+    "id": "78ntBV1Ogc5olHl1ZPrE",
+    "data": {
+      "escortId": "KLQ0yQktmzOCycsgvjB3",
+      "phone": "+254105676373",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:57.784Z"
+    }
+  },
+  {
+    "id": "7BZODq7vESPyPov4rMNi",
+    "data": {
+      "escortId": "cCxIXGktEQZhZu8EYvrJ",
+      "phone": "+254718614631",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:05.673Z"
+    }
+  },
+  {
+    "id": "7FB3VT0feLIsbeLHOcLp",
+    "data": {
+      "escortId": "ICD6q3SrslMDd2L9Q4nc",
+      "phone": "+254745896103",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:33.829Z"
+    }
+  },
+  {
+    "id": "7PRm6QEYgU90KiyQUO5D",
+    "data": {
+      "escortId": "28j6fn2ASvR2ZKJau04f",
+      "phone": "+254700598724",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:01.845Z"
+    }
+  },
+  {
+    "id": "7brWPZJresg5je75E5ev",
+    "data": {
+      "escortId": "Pa1Y1OU38XXhB9YuhSEL",
+      "phone": "+254790901990",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:46:37.363Z"
+    }
+  },
+  {
+    "id": "7hew1vPUcFbAxtd0CNau",
+    "data": {
+      "escortId": "fYtSLdOyoZEGyUeZ99U0",
+      "phone": "+254726246775",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:03.313Z"
+    }
+  },
+  {
+    "id": "7yphc91K4NGwlOeczIUv",
+    "data": {
+      "escortId": "8OOp5tybYpaVoTb9dxKh",
+      "phone": "+254713921690",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:49.804Z"
+    }
+  },
+  {
+    "id": "85Su5hakYT3GQXFhmSSg",
+    "data": {
+      "escortId": "PTfFmnzQw9vvmqtRIPib",
+      "phone": "+254759867631",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:46:28.983Z"
+    }
+  },
+  {
+    "id": "8OGGASwo9WgHfNvSMB10",
+    "data": {
+      "escortId": "TOmxUpDaZYKpFTRXZjFl",
+      "phone": "+254788389512",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:54.273Z"
+    }
+  },
+  {
+    "id": "8P8S2vRE1YqzOb8F1JNz",
+    "data": {
+      "escortId": "d2Iy6aHFPTydVE6x4tGT",
+      "phone": "+254706223170",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:22.402Z"
+    }
+  },
+  {
+    "id": "8ii3yC7sVcthuSRDhjfC",
+    "data": {
+      "escortId": "UoZ4coIPpU5ZP8CzeFfc",
+      "phone": "+254727112771",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:37.134Z"
+    }
+  },
+  {
+    "id": "8qQH3uKmBikH0n9mMa7g",
+    "data": {
+      "escortId": "grd36dcf4KTKUhsHtI0U",
+      "phone": "+254750809249",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:18.782Z"
+    }
+  },
+  {
+    "id": "97odrl3qLWQ83GIfafVQ",
+    "data": {
+      "escortId": "5jMHUC3kdpjsuob6ZXFC",
+      "phone": "+254706233777",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:42.729Z"
+    }
+  },
+  {
+    "id": "9JBjtPZTBnIUn111uezi",
+    "data": {
+      "escortId": "kmzm6iUVTGQXhCrAA3JK",
+      "phone": "+254757077521",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:42.016Z"
+    }
+  },
+  {
+    "id": "9PKydGAPgPHb4R97jNt3",
+    "data": {
+      "escortId": "kzbzsukYpPGpinCJ5XYX",
+      "phone": "+254719492855",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:58.862Z"
+    }
+  },
+  {
+    "id": "9R1jEdnAAZ3dgllndOqq",
+    "data": {
+      "escortId": "EmjZKv6H1NfB6DNb1Pcv",
+      "phone": "+254758565409",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:19.768Z"
+    }
+  },
+  {
+    "id": "A4Hl0CnsTgwf1koZpJeR",
+    "data": {
+      "escortId": "iY4UBTxshTl2JYHLCnux",
+      "phone": "+254795369063",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:17.581Z"
+    }
+  },
+  {
+    "id": "AEmX5wC2qRh6qCcrjCar",
+    "data": {
+      "escortId": "WHKK3ebqE5kyPpjw0OAM",
+      "phone": "+254742573210",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:27.544Z"
+    }
+  },
+  {
+    "id": "AW7hoHHrhvtO1xzepKXb",
+    "data": {
+      "escortId": "nnefLVXekzur8BOH7zYG",
+      "phone": "+254781423198",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:39.456Z"
+    }
+  },
+  {
+    "id": "AcT2A3Ahz0htoNORhAgv",
+    "data": {
+      "escortId": "mOZ128muv2Z3KQjkvPNQ",
+      "phone": "+254101955353",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:01:31.776Z"
+    }
+  },
+  {
+    "id": "B0Lk0ASFwe2yArmqZF9w",
+    "data": {
+      "escortId": "dkilfYnEaOfOqTpd75vG",
+      "phone": "+254781322473",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:39.133Z"
+    }
+  },
+  {
+    "id": "BFa8dRSdCXcDN2II8XOC",
+    "data": {
+      "escortId": "b7EVHHkYOZ1H9vm4vFnZ",
+      "phone": "+254735177506",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:15.270Z"
+    }
+  },
+  {
+    "id": "BGeo6DK5OUPrE5kBWmjt",
+    "data": {
+      "escortId": "mwOODZTeiTBL4aF3flXi",
+      "phone": "+254757283701",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:14.660Z"
+    }
+  },
+  {
+    "id": "C8KxlOjr39Ya5AGWTP6V",
+    "data": {
+      "escortId": "BSVBKbHpXW0Mgh9qLyuA",
+      "phone": "+254755161615",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:04.312Z"
+    }
+  },
+  {
+    "id": "CKEOIJxIDdqUhV5nAH4B",
+    "data": {
+      "escortId": "8akj1oPN72azzGa4sg97",
+      "phone": "+254729786464",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:23.301Z"
+    }
+  },
+  {
+    "id": "CKvZliYIkscF5eiQdwcq",
+    "data": {
+      "escortId": "1M4WZj4vkC09nbqvHKev",
+      "phone": "+254113948348",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:19.765Z"
+    }
+  },
+  {
+    "id": "CkOMMNTXviiqoanNBlAT",
+    "data": {
+      "escortId": "AEYwkf2l6GfPqAQBYFnD",
+      "phone": "+254769781112",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:22.376Z"
+    }
+  },
+  {
+    "id": "DWXB8Hwu44grhZ3jWgMi",
+    "data": {
+      "escortId": "NN77eHPKCkLXj00PCTxU",
+      "phone": "+254746955454",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:13.524Z"
+    }
+  },
+  {
+    "id": "DuatzCdzRlXCtX7Xs3n7",
+    "data": {
+      "escortId": "id28w0kJCcMe6wHE4YAT",
+      "phone": "+254718932687",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:25.949Z"
+    }
+  },
+  {
+    "id": "E0TW4XVDJQVlcxfU12uU",
+    "data": {
+      "escortId": "jkf8oAeQsL8QYM6dmhOq",
+      "phone": "+254787829426",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:16.922Z"
+    }
+  },
+  {
+    "id": "EAsn9Aauw7TQJS0iNxV5",
+    "data": {
+      "escortId": "nBjMNrRSKPYHtZyXyiUj",
+      "phone": "+254725714532",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:56.508Z"
+    }
+  },
+  {
+    "id": "EGqHDhYmXX4lDwG180Po",
+    "data": {
+      "escortId": "FeEZLFstLOyJmTuNxqYC",
+      "phone": "+254119649128",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:44.902Z"
+    }
+  },
+  {
+    "id": "EHnbExx9adneG4NjsyYx",
+    "data": {
+      "escortId": "I1cit9Hr47cwIv16jUkn",
+      "phone": "+254725714532",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:17.113Z"
+    }
+  },
+  {
+    "id": "EL5doavoEqIEAKb5Iu9c",
+    "data": {
+      "escortId": "t3UI9SE87ZLLNbfqzjeo",
+      "phone": "+254141553201",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:03.641Z"
+    }
+  },
+  {
+    "id": "EQyr9D2xeyMsLsfz6Yzt",
+    "data": {
+      "escortId": "hpjbiRl4gWYtfKebEL7y",
+      "phone": "+254781423198",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:52.440Z"
+    }
+  },
+  {
+    "id": "ElQIYEJbwTvIboYMzTik",
+    "data": {
+      "escortId": "ejE0RLddSfwY8Ne0Lvyr",
+      "phone": "+254741015966",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:12.851Z"
+    }
+  },
+  {
+    "id": "F0Ut1ImQwouo4c5LFjJb",
+    "data": {
+      "escortId": "lcZKBCYXjAGyHL1fOhnc",
+      "phone": "+254143099021",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:49.532Z"
+    }
+  },
+  {
+    "id": "F4j3sar9dKj0a4w4h8fM",
+    "data": {
+      "escortId": "VwRGxjNXD3d9QtnEi0Mm",
+      "phone": "+254706276117",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:02.446Z"
+    }
+  },
+  {
+    "id": "F9Mtf5pVcqo1mPThp8Ig",
+    "data": {
+      "escortId": "Xz8PezWqzq6b12eMeijj",
+      "phone": "+254787829426",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:09.504Z"
+    }
+  },
+  {
+    "id": "FjYMPXMyaE235BcbquQi",
+    "data": {
+      "escortId": "tiYyMrC45HianWWsKhog",
+      "phone": "+254721245391",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:28.801Z"
+    }
+  },
+  {
+    "id": "FuvzgQlY99loOED68IHD",
+    "data": {
+      "escortId": "5MKfFNHjcyNBh1w3a9ro",
+      "phone": "+254792448356",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:34.351Z"
+    }
+  },
+  {
+    "id": "G86SmHPmejZk286yFFo0",
+    "data": {
+      "escortId": "CJRG2OdtLLAywcZ0a4aE",
+      "phone": "+254725754867",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:37.780Z"
+    }
+  },
+  {
+    "id": "GGQlOA05Zn6m01mh6v31",
+    "data": {
+      "escortId": "9NooQOAdRMbEYxMvltKR",
+      "phone": "+254703434809",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:05.255Z"
+    }
+  },
+  {
+    "id": "GIgC0dgxwGTM1WPXO42o",
+    "data": {
+      "escortId": "jHa8BEP6L5smAT61lCkA",
+      "phone": "+254721391457",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:00.194Z"
+    }
+  },
+  {
+    "id": "GY5S9JhKnTXvoptynlfr",
+    "data": {
+      "escortId": "OWH8xFF82aG5QHb07rgM",
+      "phone": "+254118453949",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:55.540Z"
+    }
+  },
+  {
+    "id": "HJHSCLuLg4waS2GniMvL",
+    "data": {
+      "escortId": "pVsI0qgM6nCKZFgWRBIs",
+      "phone": "+254726210961",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:30.614Z"
+    }
+  },
+  {
+    "id": "HZvadEOSYgjBEMOFT5Dz",
+    "data": {
+      "escortId": "bdFd2pQ8zefryYmoDaUw",
+      "phone": "+254794062068",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:32.085Z"
+    }
+  },
+  {
+    "id": "Hg35MdTDFJCojYV2bLC6",
+    "data": {
+      "escortId": "egOu5R4MtK1HghimnsyO",
+      "phone": "+254724502410",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:04.411Z"
+    }
+  },
+  {
+    "id": "IBbeDYP77GALggkUKyXR",
+    "data": {
+      "escortId": "6erZZJvhuWmmMXlr1SKd",
+      "phone": "+254112523100",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:51.129Z"
+    }
+  },
+  {
+    "id": "IjYhlBOdJOgGhGaYKYfe",
+    "data": {
+      "escortId": "aKvsqfm55t5x6KqCXWTQ",
+      "phone": "+254790901990",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:41.672Z"
+    }
+  },
+  {
+    "id": "JGQjOlsyxJY3MOZnbSUe",
+    "data": {
+      "escortId": "FbbmH7jsOiUa3BEM1O9r",
+      "phone": "+254769089030",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:36.523Z"
+    }
+  },
+  {
+    "id": "JHkCa8fexCnE6s00u16f",
+    "data": {
+      "escortId": "RmnvrpeZLdpOdAAE3KtI",
+      "phone": "+254791811008",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:29.099Z"
+    }
+  },
+  {
+    "id": "JMgnhyMvG4HdehOKQTL9",
+    "data": {
+      "escortId": "es3low24SdKPRBGraPXN",
+      "phone": "+254780585080",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:29.689Z"
+    }
+  },
+  {
+    "id": "JkyTYF7a651jXpfZ1IHT",
+    "data": {
+      "escortId": "KNmIbKjeCjkg2EMgsXIZ",
+      "phone": "+254785545541",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:06.147Z"
+    }
+  },
+  {
+    "id": "JlL2BP3jcNryfpLjqSLg",
+    "data": {
+      "escortId": "AOjlvPHshjha0TTG5VKp",
+      "phone": "+254714352771",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:30.735Z"
+    }
+  },
+  {
+    "id": "JwmZRcnTyjrOo4FaT3W9",
+    "data": {
+      "escortId": "YbwDbXjYwFxayNqbu09m",
+      "phone": "+254103789814",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:51.444Z"
+    }
+  },
+  {
+    "id": "K0xHZEuK0hqNjF3Z1Rew",
+    "data": {
+      "escortId": "VssXJucbf8Pqx6pyIfbs",
+      "phone": "+254725603897",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:53.924Z"
+    }
+  },
+  {
+    "id": "KADQrkOJHDZnVgQ6qDQg",
+    "data": {
+      "escortId": "TXnW0lyBFfDwiZ1Amn2A",
+      "phone": "+254117542677",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:02.622Z"
+    }
+  },
+  {
+    "id": "KCJ8wRFUWBqpQTiLWeUJ",
+    "data": {
+      "escortId": "llWf2IpRBjgCxtUwsov2",
+      "phone": "+254719666913",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:57.912Z"
+    }
+  },
+  {
+    "id": "KETuJTj8zN70lvkTq1Sr",
+    "data": {
+      "escortId": "l50xGuOp0cTb554es3Hk",
+      "phone": "+254728673193",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:07.253Z"
+    }
+  },
+  {
+    "id": "KHseOsyp12zNO9Ovb2rt",
+    "data": {
+      "escortId": "1nWoAWLW7gEI5AlHIcko",
+      "phone": "+254706233777",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:36.595Z"
+    }
+  },
+  {
+    "id": "KLChLfUitZRHatOvYJuL",
+    "data": {
+      "escortId": "rx3xpNY3v80Tb6d2Yhnk",
+      "phone": "+254118582592",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:21.732Z"
+    }
+  },
+  {
+    "id": "KXMkpIbjW8nPP9k9wa9a",
+    "data": {
+      "escortId": "8FEHyHRNVraYVy6rwWf7",
+      "phone": "+2540793745332",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:41.416Z"
+    }
+  },
+  {
+    "id": "Kev6JUl9mTd1VZr772eK",
+    "data": {
+      "escortId": "ZnYFF7nzpIE9QttGyjmW",
+      "phone": "+254755773688",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:16.558Z"
+    }
+  },
+  {
+    "id": "L0tWktB26PvOkt5zljZA",
+    "data": {
+      "escortId": "UXrUTCoVN5t95h3qf4Se",
+      "phone": "+254710401049",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:28.326Z"
+    }
+  },
+  {
+    "id": "LBRpfniUoRppzhS6paQm",
+    "data": {
+      "escortId": "WWU4plgZuRrcjWPz7ADP",
+      "phone": "+254114295431",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:35.897Z"
+    }
+  },
+  {
+    "id": "Lh8kp6pVFnKQBmMIuNoc",
+    "data": {
+      "escortId": "NakIZHSGKDroEi5wU3La",
+      "phone": "+254705020817",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:30.382Z"
+    }
+  },
+  {
+    "id": "LuwGsVOvj88JVGPa4LdK",
+    "data": {
+      "escortId": "Urw3lPC6DQji744oyexD",
+      "phone": "+254116521517",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:45.531Z"
+    }
+  },
+  {
+    "id": "M9ZZ7fwjge2M4yxDKk7j",
+    "data": {
+      "escortId": "8RQ6V0kUDNYDI2PzO6Ht",
+      "phone": "+254748300394",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:58.205Z"
+    }
+  },
+  {
+    "id": "MucaHHUnSTil5NJnN1dA",
+    "data": {
+      "escortId": "R6ka32dBV8lxd7JivR9g",
+      "phone": "+254795743889",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:12.294Z"
+    }
+  },
+  {
+    "id": "N3HSEQayjgvtZbnudUFS",
+    "data": {
+      "escortId": "8kzupMSWs8cvGxJqtrr7",
+      "phone": "+254722885096",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:31.631Z"
+    }
+  },
+  {
+    "id": "NCBe2d1XAgthRHkqHAet",
+    "data": {
+      "escortId": "mbdrOhCjXOMce7FqnmiW",
+      "phone": "+254719492855",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:01:40.185Z"
+    }
+  },
+  {
+    "id": "NHIR1JTjmJlOvYa9uic1",
+    "data": {
+      "escortId": "GerGvPXPr7NtBagN68nV",
+      "phone": "+254780291136",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:01.725Z"
+    }
+  },
+  {
+    "id": "NIVDmEl5VYjoxOuhZs5J",
+    "data": {
+      "escortId": "Bc0Jww59Kr3bDrAXbdPT",
+      "phone": "+254758565409",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:12.680Z"
+    }
+  },
+  {
+    "id": "NSkis07qqjG209SkSQ5s",
+    "data": {
+      "escortId": "HPUz15sdGEHP9RNffqHy",
+      "phone": "+254727062112",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:43.582Z"
+    }
+  },
+  {
+    "id": "O7GJOECx5h1dkFqQGhPa",
+    "data": {
+      "escortId": "eSwsgatXM55uYEldM18T",
+      "phone": "+254116443155",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:56.036Z"
+    }
+  },
+  {
+    "id": "OLOJwslia0GFCMNRy0TU",
+    "data": {
+      "escortId": "2qgmV5CvFTdM9pYXyqZA",
+      "phone": "+254798673836",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:27.159Z"
+    }
+  },
+  {
+    "id": "OTSzRK0YR0A8iAOX159b",
+    "data": {
+      "escortId": "3f0i5gxm5z9FNqqMUhM4",
+      "phone": "+254706816186",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:09.245Z"
+    }
+  },
+  {
+    "id": "OXhFiLgyYyAixb5CRC5F",
+    "data": {
+      "escortId": "Hl89YCCiuPODvRPX8NYD",
+      "phone": "+254108558511",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:00.416Z"
+    }
+  },
+  {
+    "id": "PT4OVuPp4WqHBIsmDdK2",
+    "data": {
+      "escortId": "KOGtQmxmg4rKEDSAuvw7",
+      "phone": "+254711261772",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:14.521Z"
+    }
+  },
+  {
+    "id": "PUtCwL0Xeu3Ds8kWkbbm",
+    "data": {
+      "escortId": "8a3k3o66w0OghViYpLvL",
+      "phone": "+254102102890",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:14.959Z"
+    }
+  },
+  {
+    "id": "PcsMpCGvp9cYnSS7iFh5",
+    "data": {
+      "escortId": "LzGj8JgcQwv6W1mU5277",
+      "phone": "+254721898808",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:48.419Z"
+    }
+  },
+  {
+    "id": "Pyzab9uddUblZimpKD4f",
+    "data": {
+      "escortId": "OkmxulEXfiG00Lflf7oj",
+      "phone": "+254742452224",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:46:12.266Z"
+    }
+  },
+  {
+    "id": "Q1oIRmqQpjenyRykvc4R",
+    "data": {
+      "escortId": "6naC7rCkq0AFBH4Dc7Zs",
+      "phone": "+254798669800",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:59.521Z"
+    }
+  },
+  {
+    "id": "QNqZEsyhu6IxNmivGhpv",
+    "data": {
+      "escortId": "sMDms0JM9Ro5NuGJOumH",
+      "phone": "+254725911573",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:38.543Z"
+    }
+  },
+  {
+    "id": "QSAfL774yR2S7dawyX5r",
+    "data": {
+      "escortId": "UHGyFgmbQukadCv6xhZb",
+      "phone": "+254104745036",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:11.021Z"
+    }
+  },
+  {
+    "id": "Qtsb1F55riQegoPZtXlD",
+    "data": {
+      "escortId": "ynW5mdw1KDKK7kJcDXXz",
+      "phone": "+254743971910",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:09:18.415Z"
+    }
+  },
+  {
+    "id": "R0wm6oGoVhzXXsShCyHS",
+    "data": {
+      "escortId": "ovUvS6DKRmYTkLbbGFIr",
+      "phone": "+254717754232",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:13.496Z"
+    }
+  },
+  {
+    "id": "R6yGTBjL4xxikOYF38YS",
+    "data": {
+      "escortId": "Ad05Wohom57eW91FjrCb",
+      "phone": "+254118238849",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:55.942Z"
+    }
+  },
+  {
+    "id": "RKiKPTsAps7IZIhem4YH",
+    "data": {
+      "escortId": "hKPSb55qa81tDj8nrsI1",
+      "phone": "+254719788532",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:35.610Z"
+    }
+  },
+  {
+    "id": "RZ5zdGn9bWB5xnQnxK3B",
+    "data": {
+      "escortId": "mLzKsHRoVm3I0usFctvw",
+      "phone": "+254757269467",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:01:23.413Z"
+    }
+  },
+  {
+    "id": "S6xxzCZq1YoS3apziAGI",
+    "data": {
+      "escortId": "lUmann7PHBUh2cMrxZUI",
+      "phone": "+254717447461",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:41.130Z"
+    }
+  },
+  {
+    "id": "SECxGA3ReGdmBQI2v5Sn",
+    "data": {
+      "escortId": "a1wLgHn1SPmqNsOwMvuf",
+      "phone": "+254716019501",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:24.937Z"
+    }
+  },
+  {
+    "id": "SJWahfVL9Vwengweb5qY",
+    "data": {
+      "escortId": "pteDFbrcWSqkeK53P4Qk",
+      "phone": "+254734656625",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:39.345Z"
+    }
+  },
+  {
+    "id": "SU0unebczHNo0c88cQHk",
+    "data": {
+      "escortId": "iFLzTDVRnfnPYuzsZ3KL",
+      "phone": "+254114422181",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:09.206Z"
+    }
+  },
+  {
+    "id": "Sf6CXsuNSfn1hpmwf5Rg",
+    "data": {
+      "escortId": "YHF8deaCzh7bTrpri6xo",
+      "phone": "+254714309170",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:43.023Z"
+    }
+  },
+  {
+    "id": "Suh68q2nCaQAQvJSVj89",
+    "data": {
+      "escortId": "kOJqDfMvDO3T3OWhOCPQ",
+      "phone": "+254702619487",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:33.651Z"
+    }
+  },
+  {
+    "id": "TRcClAzwitnb0CjUtwNh",
+    "data": {
+      "escortId": "pHlCBs8BwljWanBMgG6j",
+      "phone": "+254725098412",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:21.998Z"
+    }
+  },
+  {
+    "id": "U2mzE8CsNcqPIjuanTZC",
+    "data": {
+      "escortId": "2s8CErWvwJpKgjAbyGJu",
+      "phone": "+254769069630",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:35.542Z"
+    }
+  },
+  {
+    "id": "U41BfkhFDLrG4aN91wbL",
+    "data": {
+      "escortId": "nit4YCyvHtfye4DjZhqK",
+      "phone": "+254721830076",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:30.632Z"
+    }
+  },
+  {
+    "id": "UBNeCqhGiGKnyNZb69CZ",
+    "data": {
+      "escortId": "lA8l4apI11xc4CTz2oLG",
+      "phone": "+254768377567",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:24.224Z"
+    }
+  },
+  {
+    "id": "UOijtamx4gFRVkwZt60F",
+    "data": {
+      "escortId": "c4MmzPqmahhVKyPJ3w17",
+      "phone": "+254714507262",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:57.306Z"
+    }
+  },
+  {
+    "id": "UmBDXLdVb9B8REDphDtf",
+    "data": {
+      "escortId": "KiASqdiBzDC62cJEiwPx",
+      "phone": "+254726290888",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:23.213Z"
+    }
+  },
+  {
+    "id": "Un56pzWvK2hHfb3mDwCM",
+    "data": {
+      "escortId": "T13GgMj5Xq7U9Yb0Gesd",
+      "phone": "+254117355285",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:37.482Z"
+    }
+  },
+  {
+    "id": "VJbOrz7td7ozrm0I6f9n",
+    "data": {
+      "escortId": "gBwcGAmYly3sA1Z9qJjY",
+      "phone": "+254736396954",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:53.665Z"
+    }
+  },
+  {
+    "id": "VUkNrfenqX5oKaYXxy35",
+    "data": {
+      "escortId": "CCvi4eHH9zSiEuAg4nBt",
+      "phone": "+254702857161",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:29.398Z"
+    }
+  },
+  {
+    "id": "VzGtuR2oicI4kSfrx9jy",
+    "data": {
+      "escortId": "wHVTvKPodJabotO0WUHW",
+      "phone": "+254710350894",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:19.252Z"
+    }
+  },
+  {
+    "id": "WK5u0g4Pnumu7uYcNIxE",
+    "data": {
+      "escortId": "78FhsAIU37puj2UG7bNa",
+      "phone": "+254142453022",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:16.267Z"
+    }
+  },
+  {
+    "id": "Wg9J4Zn6gwDwcwnIW7Ol",
+    "data": {
+      "escortId": "NyLRQi7eftyz4OgQgQ4S",
+      "phone": "+254140753336",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:38.733Z"
+    }
+  },
+  {
+    "id": "X95ZcSmk2OPWJDS7jxrL",
+    "data": {
+      "escortId": "f9RPCnXiUnRC0Vlq3kRS",
+      "phone": "+2540793745332",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:38.146Z"
+    }
+  },
+  {
+    "id": "XBu06wnhIRksnBplIuAi",
+    "data": {
+      "escortId": "ci9vGSXXUCM8uIjPDCIc",
+      "phone": "+254714637166",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:14.026Z"
+    }
+  },
+  {
+    "id": "XJbeIxKFo4SkheliY5dO",
+    "data": {
+      "escortId": "HuTOPFQTXa1dPiHGcIDb",
+      "phone": "+254140318010",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:08.777Z"
+    }
+  },
+  {
+    "id": "XoEBonfTEj07aTq4qLFz",
+    "data": {
+      "escortId": "0kmgMuKfaEnYtXyLzHMK",
+      "phone": "+254734656625",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:02.975Z"
+    }
+  },
+  {
+    "id": "XuR8bdKItKSXyYXFvviT",
+    "data": {
+      "escortId": "99YzuNcQNDgb6oeffUaS",
+      "phone": "+254703419162",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:48.376Z"
+    }
+  },
+  {
+    "id": "YeZEop9FL59EnkHu7lFH",
+    "data": {
+      "escortId": "NZRSoIzA7DETlj9amXlk",
+      "phone": "+254781339261",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:22.032Z"
+    }
+  },
+  {
+    "id": "ZBNYwzc0nCoy98CwRZhc",
+    "data": {
+      "escortId": "3MYwXEPL4YL0jCG8LDQI",
+      "phone": "+254114339202",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:52.453Z"
+    }
+  },
+  {
+    "id": "ZsoZHwEbfHTRokAuhGqI",
+    "data": {
+      "escortId": "OjDvSmKYSHktQYOS9SYf",
+      "phone": "+254141114502",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:46:03.904Z"
+    }
+  },
+  {
+    "id": "a2Ye234Gc48SajZDsgg7",
+    "data": {
+      "escortId": "1xSBzMk5N0ysU899bf8s",
+      "phone": "+254740501583",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:45.061Z"
+    }
+  },
+  {
+    "id": "aC5afQqqabIXS8ZIkKSo",
+    "data": {
+      "escortId": "zdarFOTC2aal6ZXBK8FK",
+      "phone": "+254782938124",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:09:35.574Z"
+    }
+  },
+  {
+    "id": "aIKI8zhgNlqTorTM38IT",
+    "data": {
+      "escortId": "GsmSgrvtm1LgWihHBE5I",
+      "phone": "+254769093595",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:26.842Z"
+    }
+  },
+  {
+    "id": "bBMa6NrYzMoucBSfnoyk",
+    "data": {
+      "escortId": "YC6hnsVF5BVWRWuVH8LX",
+      "phone": "+254743055267",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:34.648Z"
+    }
+  },
+  {
+    "id": "bLB5PQnmd6A4kPSmvI39",
+    "data": {
+      "escortId": "lyyAzVBnahnjK3ZfkhVd",
+      "phone": "+254715342869",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:01:06.297Z"
+    }
+  },
+  {
+    "id": "bPlCMYTYETK0M3zluOl7",
+    "data": {
+      "escortId": "nI55wJ9Neac9wdn18Y0P",
+      "phone": "+254726639323",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:05.000Z"
+    }
+  },
+  {
+    "id": "bRI9vK9Y3Rl8wChNHthF",
+    "data": {
+      "escortId": "bEg6NuiWeiQk8U5ja8ez",
+      "phone": "+254786591447",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:23.697Z"
+    }
+  },
+  {
+    "id": "bfUEjiSCH5lqkNDXwczf",
+    "data": {
+      "escortId": "WGeJxSvMdDB3iY5HBaUZ",
+      "phone": "+254100409291",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:10.813Z"
+    }
+  },
+  {
+    "id": "bn3FSfzVhthnfgvSgsVK",
+    "data": {
+      "escortId": "PaRnVrOG0ecEyAcpLUh2",
+      "phone": "+254715233757",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:46:45.705Z"
+    }
+  },
+  {
+    "id": "bnP77Hjh1Fgac3c95r6y",
+    "data": {
+      "escortId": "jPwuMRi5yQFYKSRn70mS",
+      "phone": "+254785196602",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:08.555Z"
+    }
+  },
+  {
+    "id": "c7NzBhkztZ0YhtAm81or",
+    "data": {
+      "escortId": "mLiC7XaaqPZumPERIpSP",
+      "phone": "+254716829133",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:01:14.921Z"
+    }
+  },
+  {
+    "id": "cHc4Ujw01Y39WO8doLBS",
+    "data": {
+      "escortId": "2dzo4eUlGr13yHb8wOLK",
+      "phone": "+254746445907",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:18.667Z"
+    }
+  },
+  {
+    "id": "cWswpZU817U9YBfsu6vw",
+    "data": {
+      "escortId": "fcCI1dr9bHOVjYHG3POr",
+      "phone": "+254788638371",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:11.694Z"
+    }
+  },
+  {
+    "id": "cajX8jEhNX12MjdKd4y1",
+    "data": {
+      "escortId": "XNkaFQiANoxH6K6inIUm",
+      "phone": "+254140426143",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:01.069Z"
+    }
+  },
+  {
+    "id": "cvMhTmI2hLAO5sNm7HGy",
+    "data": {
+      "escortId": "kwMo8vodmkn1hAuQM5VT",
+      "phone": "+254795743889",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:50.383Z"
+    }
+  },
+  {
+    "id": "cw1t8tZilsPfwCUIfxff",
+    "data": {
+      "escortId": "We9cNqfBfT0X8StBDyPe",
+      "phone": "+254718614143",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:44.269Z"
+    }
+  },
+  {
+    "id": "d8RmZVozg2Q4vSb39vRw",
+    "data": {
+      "escortId": "2wHtTXMZF3ucRZ9KxzAa",
+      "phone": "+254799210413",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:43.906Z"
+    }
+  },
+  {
+    "id": "dBHGxtTLymtfMpqMKlf8",
+    "data": {
+      "escortId": "dUilHPHz1OvQZ9IwtneL",
+      "phone": "+254748900804",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:54:30.753Z"
+    }
+  },
+  {
+    "id": "dWixAni5s4sKZZlmteeN",
+    "data": {
+      "escortId": "JHpA4dIrtbntMr9D210g",
+      "phone": "+254718219903",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:59.054Z"
+    }
+  },
+  {
+    "id": "dqc0nfD2zhyPPK3sAacL",
+    "data": {
+      "escortId": "n2fzeIeFDYPUYhv1uUo7",
+      "phone": "+254799594579",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:39.770Z"
+    }
+  },
+  {
+    "id": "eA2wgISSkzcbor0lZz8r",
+    "data": {
+      "escortId": "IUFFcFn3cKm7gVSfBjUH",
+      "phone": "+254796200126",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:42.159Z"
+    }
+  },
+  {
+    "id": "enbZtA6KXGZ3C9Y8p447",
+    "data": {
+      "escortId": "yma8wSfscNTGMhpEXXFq",
+      "phone": "+254717963564",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:09:10.045Z"
+    }
+  },
+  {
+    "id": "es3k9vrwG1rpzNgpHrmx",
+    "data": {
+      "escortId": "tKUEISpTxgsNp52risup",
+      "phone": "+254142453022",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:20.422Z"
+    }
+  },
+  {
+    "id": "f6Uj2HkUfWksCnxRrx6z",
+    "data": {
+      "escortId": "0A5zZu9ujXaPGFNWWvyF",
+      "phone": "+254714507262",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:32:54.557Z"
+    }
+  },
+  {
+    "id": "fSE0kRcLY4Cb5uVs67sj",
+    "data": {
+      "escortId": "L8CJqRDbla7bIZBS85hB",
+      "phone": "+254796463239",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:39.962Z"
+    }
+  },
+  {
+    "id": "fTRUQnGgtIC0VcCnYRgS",
+    "data": {
+      "escortId": "q2EkK0hSIW0TS8weJa2t",
+      "phone": "+254753647529",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:47.777Z"
+    }
+  },
+  {
+    "id": "fqBlrbucM4QSTw9z1ovV",
+    "data": {
+      "escortId": "ep3rRdsMxusqB2SLXWfo",
+      "phone": "+254116521517",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:21.321Z"
+    }
+  },
+  {
+    "id": "g8mMSUEORwmevTEUOuzC",
+    "data": {
+      "escortId": "ipNW5AlkYlfNt3lEWd5Q",
+      "phone": "+254722885096",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:42.695Z"
+    }
+  },
+  {
+    "id": "gAmQ8H1xqRAwcDRQ05PF",
+    "data": {
+      "escortId": "Y25AP9K5rOrAMLKXf2SH",
+      "phone": "+254721391457",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:17.926Z"
+    }
+  },
+  {
+    "id": "gQcDDyOFimaT7nj0MIFt",
+    "data": {
+      "escortId": "43wpg3qUDvRa9tQcoNsv",
+      "phone": "+254795749363",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:25.990Z"
+    }
+  },
+  {
+    "id": "gwRu3ec66uhI7yQxa7GQ",
+    "data": {
+      "escortId": "j66rC4cVzVviRlITYrj4",
+      "phone": "+254712239333",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:51.814Z"
+    }
+  },
+  {
+    "id": "h2TEdhs9svcueX2mtlTh",
+    "data": {
+      "escortId": "JlhZm3AoEIIHrIz0JVwn",
+      "phone": "+254750545889",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:24.172Z"
+    }
+  },
+  {
+    "id": "h5PsQ85O598NEfbp6XMB",
+    "data": {
+      "escortId": "sm1cTD8dw56c9ZDnXNDO",
+      "phone": "+254741072765",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:55.276Z"
+    }
+  },
+  {
+    "id": "hcmkXl7jPrUVKPituOO5",
+    "data": {
+      "escortId": "ne3T7Ar56SjTp49LNGJ6",
+      "phone": "+254781519041",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:22.259Z"
+    }
+  },
+  {
+    "id": "hscbwypdULpv4V453EDf",
+    "data": {
+      "escortId": "0zKdZ2e0aHXDhf9NCbfm",
+      "phone": "+254716304703",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:11.356Z"
+    }
+  },
+  {
+    "id": "htBwpp2jWOJcYsoENYqS",
+    "data": {
+      "escortId": "nUMWfNeuwVvAerOjvL7E",
+      "phone": "+254728673193",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:13.890Z"
+    }
+  },
+  {
+    "id": "iKiSRw7538MyY8qiY8Cm",
+    "data": {
+      "escortId": "Em3CdbMNT0xLeub5k1Ui",
+      "phone": "+254701160302",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:11.368Z"
+    }
+  },
+  {
+    "id": "j8YLPUjFoVEjOgcIJYt7",
+    "data": {
+      "escortId": "GsOrak4dXEX3xOfRtrba",
+      "phone": "+254717963564",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:18.479Z"
+    }
+  },
+  {
+    "id": "jCnLcF2gJB6DOAdmkqrM",
+    "data": {
+      "escortId": "lS5zUr2uGJ2ynOHD9WvS",
+      "phone": "+254104745036",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:32.659Z"
+    }
+  },
+  {
+    "id": "jOENG2g1vB95WsAKPpuT",
+    "data": {
+      "escortId": "1yxf6XvknZy5dSKcLlpF",
+      "phone": "+254716019501",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:33:53.453Z"
+    }
+  },
+  {
+    "id": "jW3OJgwsfH9IntUFV84r",
+    "data": {
+      "escortId": "ffgCV3VauRgU02prATgW",
+      "phone": "+254789419332",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:20.051Z"
+    }
+  },
+  {
+    "id": "jpWQ5Eseajm5w0zlyCnv",
+    "data": {
+      "escortId": "sISjc5N9dU3gyop8ZhVx",
+      "phone": "+254118179151",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:30.134Z"
+    }
+  },
+  {
+    "id": "jzcUMQKilXBqVdQgw9En",
+    "data": {
+      "escortId": "C4O1fvloSymlVDGQEyqu",
+      "phone": "+254786433078",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:21.043Z"
+    }
+  },
+  {
+    "id": "kCaqcON5zgtnebjDtDzK",
+    "data": {
+      "escortId": "JGXWsJwDDTf6n0HhCKRY",
+      "phone": "+254739416470",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:42:50.601Z"
+    }
+  },
+  {
+    "id": "kIakJEhmA9D5bJkqEmo1",
+    "data": {
+      "escortId": "8WAjRXzqr0lQUWmWTECz",
+      "phone": "+254796463239",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:37:06.586Z"
+    }
+  },
+  {
+    "id": "kTKh5SGjtPq93FSx3gWR",
+    "data": {
+      "escortId": "n21fZVP9vxqC0G79pn9S",
+      "phone": "+254791950117",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:31.391Z"
+    }
+  },
+  {
+    "id": "kkSmgrud9zmuvGbOKLXO",
+    "data": {
+      "escortId": "fXAn7lweaYsqZPCbuAhX",
+      "phone": "+254769445562",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:54.925Z"
+    }
+  },
+  {
+    "id": "kxykMRVoHQ5qTuIm81qj",
+    "data": {
+      "escortId": "WHBjqyHl4kd9TRn2mStK",
+      "phone": "+254700823225",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:50:19.176Z"
+    }
+  },
+  {
+    "id": "kys5VUhFkZEG4T60sjEY",
+    "data": {
+      "escortId": "AZ9qPgwRja09LsdnTtIy",
+      "phone": "+254105014600",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:47.587Z"
+    }
+  },
+  {
+    "id": "l1JMPJAs67phcsXF8I4Z",
+    "data": {
+      "escortId": "zoGpFsnmNRYnTqNt6FYP",
+      "phone": "+254750696271",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:09:44.001Z"
+    }
+  },
+  {
+    "id": "lCPzIBQI4GirsevbB3XI",
+    "data": {
+      "escortId": "AYi4K0LADq3pqFETUFXX",
+      "phone": "+254114339202",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:39.161Z"
+    }
+  },
+  {
+    "id": "lk4ZAZ3AlFCRLPiKRdCi",
+    "data": {
+      "escortId": "mwmrbQ9vLgIXkujmf4LT",
+      "phone": "+254716304703",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:23.030Z"
+    }
+  },
+  {
+    "id": "lo0a9CdShPEylh76Omy0",
+    "data": {
+      "escortId": "mnmwDW7de7w26GeRZ6L9",
+      "phone": "+254799263344",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:06.219Z"
+    }
+  },
+  {
+    "id": "lsno5ox6JcAnmdd2I6Ht",
+    "data": {
+      "escortId": "AEV0zX14PAk9JSaXAQu2",
+      "phone": "+254792720987",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:38:13.873Z"
+    }
+  },
+  {
+    "id": "lxgc5qeHEr6MYOScHmkf",
+    "data": {
+      "escortId": "t7FStSQGwKxNCBiHdRuC",
+      "phone": "+254142069768",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:12.013Z"
+    }
+  },
+  {
+    "id": "mXY28CZfrYWEj82ZlxMo",
+    "data": {
+      "escortId": "zGvCgXnSyeUO4Bhsd2bl",
+      "phone": "+2540751007129",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:09:27.123Z"
+    }
+  },
+  {
+    "id": "mgb7iUPSMHBoY5CRhzlV",
+    "data": {
+      "escortId": "bwD29kXbtEIghVDVAziw",
+      "phone": "+254715342869",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:40.451Z"
+    }
+  },
+  {
+    "id": "mt6miGpaJOIgXwj9Ne8M",
+    "data": {
+      "escortId": "T57HBtY6r6ZIz9hSklLa",
+      "phone": "+254769022791",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:45.861Z"
+    }
+  },
+  {
+    "id": "nmljOc7BJgsv31qt848n",
+    "data": {
+      "escortId": "3u5Vq5taAo04aSHIL2Ey",
+      "phone": "+254707905904",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:17.626Z"
+    }
+  },
+  {
+    "id": "o90t6DhMyXtfRaUyfTBG",
+    "data": {
+      "escortId": "GlPI7H3A1q93bw7s4QxW",
+      "phone": "+254798673836",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:10.124Z"
+    }
+  },
+  {
+    "id": "oareODl5wKRw1Qztfkuu",
+    "data": {
+      "escortId": "mgm3ZRgdx2Sm0oFA2MWz",
+      "phone": "+254119676932",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:02:57.858Z"
+    }
+  },
+  {
+    "id": "ouVCVyCBYzFuMRZE4TVK",
+    "data": {
+      "escortId": "hHLhWPyqFGDHHTsxy07H",
+      "phone": "+254103789814",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:27.145Z"
+    }
+  },
+  {
+    "id": "pI879kJ8AMIjxsilBcO9",
+    "data": {
+      "escortId": "g6JrSz5uDw0qOOHGo5fh",
+      "phone": "+254725450406",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:45.275Z"
+    }
+  },
+  {
+    "id": "pxkXCV4QOA43PUJf1hgR",
+    "data": {
+      "escortId": "FeOiLZ8HdGpDXVTZ4m2L",
+      "phone": "+254141274740",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:53.307Z"
+    }
+  },
+  {
+    "id": "pySiTKQXToNi52Zgz37S",
+    "data": {
+      "escortId": "n9BiODUOfLbA8uxY8rMK",
+      "phone": "+254725714532",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:03:48.160Z"
+    }
+  },
+  {
+    "id": "qA8aAJO3GZrsPrxgRzrW",
+    "data": {
+      "escortId": "Co6OvQUd4aI4YokBkjqc",
+      "phone": "+254740174213",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:39:46.160Z"
+    }
+  },
+  {
+    "id": "qCoLMqyo3hKWCXBSY0Ok",
+    "data": {
+      "escortId": "ihIcAJQIJdQBHEpbfcs8",
+      "phone": "+254728055258",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:58:34.322Z"
+    }
+  },
+  {
+    "id": "qa1kkOcpdXSYs9HbNedv",
+    "data": {
+      "escortId": "Jy50yjkg9tlXMaDV7lUB",
+      "phone": "+254700492933",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:41.039Z"
+    }
+  },
+  {
+    "id": "qvnuflFPy0NdT500fRWQ",
+    "data": {
+      "escortId": "Km4eC9MXHHfA7UBZwhLM",
+      "phone": "+254791975825",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:44:31.589Z"
+    }
+  },
+  {
+    "id": "rTCqcXoTuV3chzMXiBya",
+    "data": {
+      "escortId": "UN5heYConL2anCNZ5Cbe",
+      "phone": "+254768566408",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:49:19.687Z"
+    }
+  },
+  {
+    "id": "rUZnMS1MkicOXWKmw8e8",
+    "data": {
+      "escortId": "NLbA5fMKla4aB8lxQgYU",
+      "phone": "+254705020817",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:05.118Z"
+    }
+  },
+  {
+    "id": "rWgWvpWRRmfNq9dI1TdV",
+    "data": {
+      "escortId": "l7UdwXJsnvNIz0CFkBDQ",
+      "phone": "+254140753336",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:00:15.866Z"
+    }
+  },
+  {
+    "id": "rdEAvbR983MlYeifCXd2",
+    "data": {
+      "escortId": "PfGilElBLknib8jKoJhO",
+      "phone": "+254794582133",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:47:55.157Z"
+    }
+  },
+  {
+    "id": "s11RyJ1XiZ66FcZdNafH",
+    "data": {
+      "escortId": "0kmgMuKfaEnYtXyLzHMK",
+      "phone": "+254734656625",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:30:35.070Z"
+    }
+  },
+  {
+    "id": "sBQIYGa1JQgaMRyAojdP",
+    "data": {
+      "escortId": "RRNodSCrYn7i62JWc9tR",
+      "phone": "+254703779950",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:20.707Z"
+    }
+  },
+  {
+    "id": "sKH46plpHfNcHwSoj6ng",
+    "data": {
+      "escortId": "EaseVjmK33ya2o5dR8RN",
+      "phone": "+254739103356",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:02.892Z"
+    }
+  },
+  {
+    "id": "sRU93oMbfW45uHL30Nle",
+    "data": {
+      "escortId": "OJXmcojWx5zpLXLGHU7U",
+      "phone": "+254768492030",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:45:47.133Z"
+    }
+  },
+  {
+    "id": "sbd2wpwpy9v4U4ShXeyH",
+    "data": {
+      "escortId": "oaxnL44QBvx3jjEXkbXX",
+      "phone": "+254794582133",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:05:04.532Z"
+    }
+  },
+  {
+    "id": "srD5hf0GbOLpYZ1Lgt00",
+    "data": {
+      "escortId": "hXDd2haaDbfgre5BFmQk",
+      "phone": "+254740504380",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:57:44.065Z"
+    }
+  },
+  {
+    "id": "t02qVKKfVSBuAcuiNio6",
+    "data": {
+      "escortId": "2KKXg4zwhAka59o8dmFo",
+      "phone": "+254784398272",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:34:10.254Z"
+    }
+  },
+  {
+    "id": "t6pJGdH9DI3EJzX056Ys",
+    "data": {
+      "escortId": "JsqCfeHbNKVnySiX9lf6",
+      "phone": "+254786459971",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:32.560Z"
+    }
+  },
+  {
+    "id": "tDU9lj75o5reiIahgv8H",
+    "data": {
+      "escortId": "yaAd51Z4QD5FpuqUlz3s",
+      "phone": "+254788638371",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:09:01.684Z"
+    }
+  },
+  {
+    "id": "tEM2Jm6rl0VSZrg0pAfd",
+    "data": {
+      "escortId": "wDPbCyTQ1LO1RJuio1Rs",
+      "phone": "+254793599566",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:10.889Z"
+    }
+  },
+  {
+    "id": "tGEACKoAeryCAuQ2t6y7",
+    "data": {
+      "escortId": "rg0gVzJUYyXVlDmK69Pw",
+      "phone": "+254700823225",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:13.153Z"
+    }
+  },
+  {
+    "id": "tIviKuQL1lk36EuK2zoD",
+    "data": {
+      "escortId": "YduojZdCk2HrdtdqDf0m",
+      "phone": "+254703332165",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:51:59.811Z"
+    }
+  },
+  {
+    "id": "tTrWQUB8pP8bJZnVCtbb",
+    "data": {
+      "escortId": "79nH5hdw5Qj98w1j1NJF",
+      "phone": "+254113103372",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:33.016Z"
+    }
+  },
+  {
+    "id": "tj4a2AzmgQAUVJHqYQfU",
+    "data": {
+      "escortId": "fWBXAfxZyuNUQgJvaLZx",
+      "phone": "+254108558511",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:55:46.535Z"
+    }
+  },
+  {
+    "id": "tjuWTlGB7f4FzBGTfNpq",
+    "data": {
+      "escortId": "fwFcEHLZxCAQeUzf6IAX",
+      "phone": "+254757077521",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:56:36.917Z"
+    }
+  },
+  {
+    "id": "tpbIXUHXfLV2446wbx2X",
+    "data": {
+      "escortId": "wIPzCD8xm7I9SDVs6mZx",
+      "phone": "+254789479058",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:27.708Z"
+    }
+  },
+  {
+    "id": "uRT0wiEZOtIOPeYEITfb",
+    "data": {
+      "escortId": "anaqimIhRl9A6pDbOx64",
+      "phone": "+254785487128",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:58.514Z"
+    }
+  },
+  {
+    "id": "uXLlBCpstvlnRIWz4FUV",
+    "data": {
+      "escortId": "qLVdcs1M1XW8i7ovibIH",
+      "phone": "+254142529335",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:06:04.761Z"
+    }
+  },
+  {
+    "id": "ucPiZxIoCdhwZttkz9jn",
+    "data": {
+      "escortId": "wlxiWn3Htc34eVbgB3Uc",
+      "phone": "+254700923334",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:44.545Z"
+    }
+  },
+  {
+    "id": "uq2dcglR9cdnLdhCGZvF",
+    "data": {
+      "escortId": "o094pO7lHF81PpvJbpzL",
+      "phone": "+254142069768",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:04:47.818Z"
+    }
+  },
+  {
+    "id": "vW4NydoDJJvRfDviEhkl",
+    "data": {
+      "escortId": "PQONmzY58RYg0xAjZFHR",
+      "phone": "+254725754867",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:46:20.635Z"
+    }
+  },
+  {
+    "id": "viMi6pTE5RfY84nz1bkt",
+    "data": {
+      "escortId": "mfzVYzqESsB9nzSBqd7h",
+      "phone": "+254700854589",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:01:48.551Z"
+    }
+  },
+  {
+    "id": "wDL0VepUB9aGXq0K7m1W",
+    "data": {
+      "escortId": "78tpZl66g9G9B1BV8oo9",
+      "phone": "+254782938124",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:36:24.606Z"
+    }
+  },
+  {
+    "id": "wJmaUAEEWXTyM51cSf1d",
+    "data": {
+      "escortId": "QyZTch8gKlKc5EjdEddo",
+      "phone": "+25479798673",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:48:03.605Z"
+    }
+  },
+  {
+    "id": "wNRAld5dDtHAvlOUHvEx",
+    "data": {
+      "escortId": "um5iMChMWRvIk18knKSG",
+      "phone": "+254795604708",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:45.696Z"
+    }
+  },
+  {
+    "id": "wi19KI5wjtj7P6NYWEcH",
+    "data": {
+      "escortId": "vCWU9johPlEmNuNeLgHd",
+      "phone": "+254715451642",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:07:54.056Z"
+    }
+  },
+  {
+    "id": "xGCaBGjW0l6BQo2I6Bat",
+    "data": {
+      "escortId": "0A5zZu9ujXaPGFNWWvyF",
+      "phone": "+254714507262",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:30:26.608Z"
+    }
+  },
+  {
+    "id": "y1AD3LprsQLSQANA3tu0",
+    "data": {
+      "escortId": "KHJDuAg2UZoHVNNlpKyI",
+      "phone": "+254733541213",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:43:49.409Z"
+    }
+  },
+  {
+    "id": "yDc0D7aydhX7Hz2nj9uD",
+    "data": {
+      "escortId": "vHtyWJTCYf38eOMGZuG4",
+      "phone": "+254733541213",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T15:08:02.527Z"
+    }
+  },
+  {
+    "id": "ymqcyrnhY5vQKRsjRpX0",
+    "data": {
+      "escortId": "F8s3xwyLeEBLxxH8N4Ux",
+      "phone": "+254793504043",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:40:28.148Z"
+    }
+  },
+  {
+    "id": "zDgitvbnjmCHvS4A09HE",
+    "data": {
+      "escortId": "HRu09zagSG2RgL5qvD49",
+      "phone": "+254718614631",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:41:51.980Z"
+    }
+  },
+  {
+    "id": "zZ8aZ6zbmnepOlyNANUF",
+    "data": {
+      "escortId": "aK1R9UlEfokhqJ8t9ipT",
+      "phone": "+254759030711",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:52:33.314Z"
+    }
+  },
+  {
+    "id": "zgHsjcMdD1E85dkZVi6d",
+    "data": {
+      "escortId": "axn8zvzgozRm1gBOSbag",
+      "phone": "+254724076137",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:53:06.864Z"
+    }
+  },
+  {
+    "id": "zpmm6BctBEWnhO2CRQdM",
+    "data": {
+      "escortId": "jqVU0n4AEaI5n34XvOq3",
+      "phone": "+254728673193",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:59:25.296Z"
+    }
+  },
+  {
+    "id": "zxSHnHxFceWHRREMiwdX",
+    "data": {
+      "escortId": "3bvyelPuqLIb18bylzeH",
+      "phone": "+254794998257",
+      "success": false,
+      "error": "WASENDER_KEY not configured",
+      "sentAt": "2026-08-17T14:35:00.826Z"
+    }
+  }
+]

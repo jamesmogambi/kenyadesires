@@ -1,0 +1,98 @@
+[
+  {
+    "id": "4M3KgMeFUEZzaKHXJEA5",
+    "data": {
+      "name": "Travel Companion",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "73k0Jvw9FPqIblkhkkQ0",
+    "data": {
+      "name": "Outcall Only",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "7sFQtsAL2liCv22TAdg8",
+    "data": {
+      "name": "Same Day Booking",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "BnIkiwbAJzIPqDs0aGs7",
+    "data": {
+      "name": "Available Now",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "KM1lpGyxl8UIhLuZMVIy",
+    "data": {
+      "name": "Incalls Only",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "TlLII7QJBXHvuZBGy0Z5",
+    "data": {
+      "name": "Evenings Only",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "Wp4G1wD51LI498DFB5BF",
+    "data": {
+      "name": "Weekends Only",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "aMPOzKP3uX2KBJI7GZqE",
+    "data": {
+      "name": "Flexible Schedule",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "msobPYkDmaJEdOX54r1F",
+    "data": {
+      "name": "Advance Booking Only",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "prVJp6fV6HyYYvvqOI7q",
+    "data": {
+      "name": "Overnight Stays",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "t2FWQksytYu8CaCLql3X",
+    "data": {
+      "name": "Weekdays Only",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "yeaAqsOTkObJMIfsIp2G",
+    "data": {
+      "name": "24/7 Available",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  }
+]

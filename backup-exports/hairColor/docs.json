@@ -1,0 +1,65 @@
+[
+  {
+    "id": "0qqf3mUy9ugl5puJC5vd",
+    "data": {
+      "name": "Auburn",
+      "flag": "auburn",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "5kX40pYgtI6Mw2KeBEbP",
+    "data": {
+      "name": "Blonde",
+      "flag": "blonde",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "BX0dT4vRu3bEcGN5rCKy",
+    "data": {
+      "name": "Black",
+      "flag": "black",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "E3MuoO7sVERknZTo23Af",
+    "data": {
+      "name": "Red",
+      "flag": "red",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "WVWHQ3qyggSBVgkZHL1Q",
+    "data": {
+      "name": "Brunette",
+      "flag": "brunette",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "bc3PklfcuuAn7G13OC9B",
+    "data": {
+      "name": "Colorful/Unusual",
+      "flag": "colorful",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "z8wkUGKCmX18kcdJTUVX",
+    "data": {
+      "name": "Mixed Colors",
+      "flag": "mixed",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  }
+]

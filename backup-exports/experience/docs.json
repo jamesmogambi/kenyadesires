@@ -1,0 +1,56 @@
+[
+  {
+    "id": "2VKyUs0py5MwdbiNjMML",
+    "data": {
+      "name": "Expert",
+      "flag": "expert",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "btvG4qRiuTBIipwNhV81",
+    "data": {
+      "name": "Beginner",
+      "flag": "beginner",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "hGQFPZSZjAlu8jRnFSSh",
+    "data": {
+      "name": "Experienced",
+      "flag": "experienced",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "kS7kOISFfD9J0KVamFqb",
+    "data": {
+      "name": "Veteran",
+      "flag": "veteran",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "s3hAvv4qbZD2Q8XYahnE",
+    "data": {
+      "name": "Professional",
+      "flag": "professional",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "xd6UX209Vkof5vGfeMxn",
+    "data": {
+      "name": "New & Fresh",
+      "flag": "new",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  }
+]

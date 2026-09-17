@@ -55,7 +55,9 @@ const sourceApp = !getApps().length
         projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
         clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY
-          ? process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, "\n")
+          ? process.env.FIREBASE_ADMIN_PRIVATE_KEY
+              .replace(/^"|"$/g, "")  // strip surrounding quotes
+              .replace(/\\n/g, "\n")
           : undefined,
       }),
       storageBucket: process.env.FIREBASE_STORAGE_BUCKET,

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "3PZ4nXW7rwaJZP5WEHlC",
+    "data": {
+      "name": "Chinese",
+      "flag": "🇨🇳",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "4WGSqeUc20tc6bjZAZLT",
+    "data": {
+      "name": "Korean",
+      "flag": "🇰🇷",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "D79jj3k7QtkitwPQ64LO",
+    "data": {
+      "name": "German",
+      "flag": "🇩🇪",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "NBZRFJyEQ0Y79jdxSgPc",
+    "data": {
+      "name": "Russian",
+      "flag": "🇷🇺",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "NszEiaYiK87ws7HWL94Y",
+    "data": {
+      "name": "French",
+      "flag": "🇫🇷",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "SxAak77jYscaw9MscCnS",
+    "data": {
+      "name": "English",
+      "flag": "🇬🇧",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "e4falVy0Ig7OAJsbthDo",
+    "data": {
+      "name": "Arabic",
+      "flag": "🇸🇦",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "iUTU3z3fFd4FRzpvW1Eq",
+    "data": {
+      "name": "Swahili",
+      "flag": "🇰🇪",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "olge6f1FBeljrL98nhhm",
+    "data": {
+      "name": "Italian",
+      "flag": "🇮🇹",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "riXqkaToJ2rMRs1G3Cvw",
+    "data": {
+      "name": "Japanese",
+      "flag": "🇯🇵",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "tIKz6EhBMRPKNhUublJ1",
+    "data": {
+      "name": "Spanish",
+      "flag": "🇪🇸",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "tK1DVGmqCKXRBZTRSocP",
+    "data": {
+      "name": "Portuguese",
+      "flag": "🇵🇹",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  }
+]

@@ -1,0 +1,567 @@
+[
+  {
+    "id": "bungoma-spa",
+    "data": {
+      "name": "Bungoma SPA",
+      "slug": "bungoma-spa",
+      "description": "Premium escort agency in Nairobi",
+      "contactEmail": "info@eliteescorts.com",
+      "contactPhone": "+254712345678",
+      "ownerId": "test_owner_123",
+      "country": "Kenya",
+      "county": "Nairobi",
+      "countyCode": "nairobi",
+      "region": "Westlands",
+      "town": "Westlands",
+      "businessType": "agency",
+      "categories": {
+        "0": "VIP",
+        "1": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Services",
+        "1": "Massage"
+      },
+      "specialties": {
+        "0": "High-end escorts"
+      },
+      "isVerified": false,
+      "verificationStatus": "pending",
+      "logo": "",
+      "gallery": {},
+      "videos": {},
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": {},
+      "whatsappPhone": "+254712345678",
+      "website": "https://www.eliteescorts.com",
+      "estate": "Westlands Business Park",
+      "address": "3rd Floor, Westlands Business Park",
+      "establishmentYear": 2020,
+      "socialMedia": {
+        "instagram": "eliteescorts_ke"
+      },
+      "coverImage": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Fbungoma-spa%2Fcover%2Fcover_1780828797212.jpg?alt=media&token=62b67612-9b98-4637-8a9f-6488bb127586",
+      "featuredEmployeesCount": 5,
+      "totalViews": 100,
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "eden",
+    "data": {
+      "name": "EDEN",
+      "slug": "eden",
+      "description": "Best SPA Kilimani.",
+      "contactEmail": "support@gmail.com",
+      "contactPhone": "+254790965956",
+      "ownerId": "test_owner_123",
+      "country": "Kenya",
+      "county": "Nairobi",
+      "countyCode": "nairobi",
+      "region": "Kilimani",
+      "town": "kilimani",
+      "businessType": "agency",
+      "categories": {
+        "0": "VIP",
+        "1": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Massage",
+        "1": "Massage",
+        "2": "Incalls",
+        "3": "Handjob",
+        "4": "Blowjob",
+        "5": "Outcalls",
+        "6": "GFE",
+        "7": "Swedish massage",
+        "8": "Rimming",
+        "9": "Sextoys",
+        "10": "Lap Dancing",
+        "11": "Anal"
+      },
+      "specialties": {
+        "0": "High-end escorts"
+      },
+      "isVerified": false,
+      "verificationStatus": "pending",
+      "logo": "",
+      "gallery": {},
+      "videos": {},
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": {},
+      "whatsappPhone": "+254790965956",
+      "establishmentYear": 2024,
+      "socialMedia": {
+        "instagram": ""
+      },
+      "coverImage": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Feden%2Fcover%2Fcover_1780848393496.png?alt=media&token=a69f1de7-b637-4273-9f93-9d53d9262f7b",
+      "featuredEmployeesCount": 3,
+      "totalViews": 6,
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "elgon-view-spa",
+    "data": {
+      "id": "elgon-view-spa",
+      "name": "Elgon View SPA",
+      "slug": "elgon-view-spa",
+      "description": "located in Uasin Gishu an very good espcort agency",
+      "contactEmail": "mugambijames96@gmail.com",
+      "contactPhone": "+254701694004",
+      "whatsappPhone": "",
+      "website": "",
+      "ownerId": "user_3HQE8TExkQQ5sD5phMQvpyXpeCd",
+      "country": "Kenya",
+      "county": "Uasin Gishu",
+      "countyCode": "uasin-gishu",
+      "region": "Turbo",
+      "town": "",
+      "regions": {
+        "0": "Turbo",
+        "1": "Ainabkoi"
+      },
+      "primaryRegion": "Turbo",
+      "estate": "Westlands Business Park",
+      "address": "Zion Mall",
+      "street": "",
+      "postalCode": "",
+      "businessType": "agency",
+      "categories": {
+        "0": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Services"
+      },
+      "specialties": {},
+      "isVerified": false,
+      "logo": "",
+      "coverImage": "",
+      "gallery": {},
+      "videos": {},
+      "establishmentYear": 2024,
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "activatedAt": "2026-08-08T17:06:22.034Z",
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "totalViews": 0,
+      "credits": 100,
+      "featuredEmployeesCount": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": "2026-08-08T17:06:22.034Z",
+      "verificationDocuments": {
+        "businessLicense": "https://res.cloudinary.com/dz58xxg6l/image/upload/v1786209428/nextjs-uploads/z1oaigt1tsp7a1i0iijz.png",
+        "idProof": "https://res.cloudinary.com/dz58xxg6l/image/upload/v1786209430/nextjs-uploads/v4rop9xgcflkggdmcgzm.png",
+        "kraPin": "lskowkdiwmdwkmdow",
+        "otherDocuments": {
+          "0": "https://res.cloudinary.com/dz58xxg6l/image/upload/v1786209431/nextjs-uploads/oqmpesxoonxkue0ky6x1.png"
+        }
+      },
+      "verificationStatus": "under_review",
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "elite-escorts-agency",
+    "data": {
+      "name": "Elite Escorts Agency",
+      "slug": "elite-escorts-agency",
+      "description": "Premium escort agency in Nairobi",
+      "contactEmail": "info@eliteescorts.com",
+      "contactPhone": "+254712345678",
+      "ownerId": "test_owner_123",
+      "country": "Kenya",
+      "county": "Nairobi",
+      "countyCode": "nairobi",
+      "region": "Westlands",
+      "town": "Westlands",
+      "businessType": "agency",
+      "categories": {
+        "0": "VIP",
+        "1": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Services",
+        "1": "Massage"
+      },
+      "specialties": {
+        "0": "High-end escorts"
+      },
+      "isVerified": false,
+      "verificationStatus": "pending",
+      "videos": {},
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": {},
+      "whatsappPhone": "+254712345678",
+      "website": "https://www.eliteescorts.com",
+      "estate": "Westlands Business Park",
+      "address": "3rd Floor, Westlands Business Park",
+      "establishmentYear": 2020,
+      "socialMedia": {
+        "instagram": "eliteescorts_ke"
+      },
+      "featuredEmployeesCount": 10,
+      "coverImage": "",
+      "logo": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Flogo%2Flogo_1780830480865.jpg?alt=media&token=6f91bfc3-1ebf-4313-a9b6-19871575dcc3",
+      "gallery": {
+        "0": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777217006592_hmymy467r.png?alt=media&token=8f04155e-9734-4d67-8d45-c1a2977b10ce",
+        "1": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777217008741_fv49vul7m.png?alt=media&token=48a7f92d-c33a-451c-a56f-d5e270251230",
+        "2": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777217087386_k9q4z937c.png?alt=media&token=87dd4b5a-37dd-4d22-aebb-b08fb27fccbd",
+        "3": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777217089840_vz0z7ir0z.png?alt=media&token=178dd85e-4aff-4d13-be56-42fb23f02848",
+        "4": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777217091990_2i0tyme92.png?alt=media&token=ff35a08a-4cd9-4782-ae19-2cb0b0741fa6",
+        "5": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777218668699_kkrmjkdmd.png?alt=media&token=a0863ddb-ea87-43c1-b0c0-686418196bdf",
+        "6": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777218670680_etc7gymy3.png?alt=media&token=9da714f0-3922-4329-8d94-1163667916e6",
+        "7": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1777218672931_zrsl75fzu.png?alt=media&token=9396e9e5-6467-4be5-9c10-73d965890f0f",
+        "8": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1780830731188_tlui3i6xd.webp?alt=media&token=77c6baf3-8197-4bde-97f5-9608f1b1b040",
+        "9": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1780830736269_tsrtf08wn.JPG?alt=media&token=68036312-3e0f-4a1a-8c96-f300514ffaf6",
+        "10": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Felite-escorts-agency%2Fgallery%2Fgallery_1780830744746_7oga5asu2.jpg?alt=media&token=7310b765-48d6-4472-9f76-410263a0c25d"
+      },
+      "totalViews": 114,
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "hamida-spa",
+    "data": {
+      "name": "Hamida Spa",
+      "slug": "hamida-spa",
+      "description": "Hamida SPA for Best Massage in Westlands",
+      "contactEmail": "support@gmail.com",
+      "contactPhone": "+254720512746",
+      "ownerId": "test_owner_123",
+      "country": "Kenya",
+      "county": "Nairobi",
+      "countyCode": "nairobi",
+      "region": "Westlands",
+      "town": "Westlands",
+      "businessType": "agency",
+      "categories": {
+        "0": "VIP",
+        "1": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Massage",
+        "1": "Massage",
+        "2": "Incalls",
+        "3": "Handjob",
+        "4": "Blowjob",
+        "5": "Outcalls"
+      },
+      "specialties": {
+        "0": "High-end escorts"
+      },
+      "isVerified": false,
+      "verificationStatus": "pending",
+      "logo": "",
+      "gallery": {},
+      "videos": {},
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": {},
+      "whatsappPhone": "+254720512746",
+      "establishmentYear": 2020,
+      "socialMedia": {
+        "instagram": ""
+      },
+      "coverImage": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Fhamida-spa%2Fcover%2Fcover_1780844376199.jpeg?alt=media&token=e7587178-e2cf-4118-a011-e58f40657da7",
+      "featuredEmployeesCount": 2,
+      "totalViews": 4,
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "kiambu-escorts-spa",
+    "data": {
+      "name": "Kiambu Escorts & SPA",
+      "slug": "kiambu-escorts-spa",
+      "description": "Premium escort agency in Nairobi",
+      "contactEmail": "info@eliteescorts.com",
+      "contactPhone": "+254712345678",
+      "ownerId": "test_owner_123",
+      "country": "Kenya",
+      "county": "Nairobi",
+      "countyCode": "nairobi",
+      "region": "Westlands",
+      "town": "Westlands",
+      "businessType": "agency",
+      "categories": {
+        "0": "VIP",
+        "1": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Services",
+        "1": "Massage"
+      },
+      "specialties": {
+        "0": "High-end escorts"
+      },
+      "isVerified": false,
+      "verificationStatus": "pending",
+      "logo": "",
+      "coverImage": "",
+      "gallery": {},
+      "videos": {},
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "featuredEmployeesCount": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": {},
+      "whatsappPhone": "+254712345678",
+      "website": "https://www.eliteescorts.com",
+      "estate": "Westlands Business Park",
+      "address": "3rd Floor, Westlands Business Park",
+      "establishmentYear": 2020,
+      "socialMedia": {
+        "instagram": "eliteescorts_ke"
+      },
+      "totalViews": 90,
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "zainab-spa",
+    "data": {
+      "name": "ZAINAB SPA",
+      "slug": "zainab-spa",
+      "description": "Professional therapeutic massage focused on results. Swedish for relaxation, deep tissue for chronic pain, sports massage for athletic recovery. Fully licensed, private studio, flexible hours. Book online or call today.",
+      "contactEmail": "support@gmail.com",
+      "contactPhone": "+254790965956",
+      "ownerId": "test_owner_123",
+      "country": "Kenya",
+      "county": "Nairobi",
+      "countyCode": "nairobi",
+      "region": "LAvington",
+      "town": "Westlands",
+      "businessType": "agency",
+      "categories": {
+        "0": "VIP",
+        "1": "Premium"
+      },
+      "openingHours": {
+        "monday": "09:00-18:00",
+        "tuesday": "09:00-18:00",
+        "wednesday": "09:00-18:00",
+        "thursday": "09:00-18:00",
+        "friday": "09:00-18:00",
+        "saturday": "09:00-18:00",
+        "sunday": "09:00-18:00"
+      },
+      "services": {
+        "0": "Escort Massage",
+        "1": "Massage",
+        "2": "Incalls",
+        "3": "Handjob",
+        "4": "Blowjob",
+        "5": "Outcalls",
+        "6": "GFE",
+        "7": "Swedish massage",
+        "8": "Rimming",
+        "9": "Sextoys"
+      },
+      "specialties": {
+        "0": "High-end escorts"
+      },
+      "isVerified": false,
+      "verificationStatus": "pending",
+      "logo": "",
+      "videos": {},
+      "languages": {
+        "0": "English",
+        "1": "Swahili"
+      },
+      "paymentMethods": {
+        "0": "Cash",
+        "1": "M-Pesa"
+      },
+      "plan": {
+        "type": "basic",
+        "isActive": true,
+        "features": {},
+        "maxEmployees": 10,
+        "maxGalleryImages": 20
+      },
+      "rating": 0,
+      "totalReviews": 0,
+      "totalBookings": 0,
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": {},
+      "whatsappPhone": "+254790965956",
+      "address": "Lavington Valley Arcade",
+      "establishmentYear": 2024,
+      "socialMedia": {
+        "instagram": ""
+      },
+      "coverImage": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Fzainab-spa%2Fcover%2Fcover_1780846278017.jpg?alt=media&token=ebc695cb-580b-4b3a-a34e-bd34c44694e9",
+      "gallery": {
+        "0": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Fzainab-spa%2Fgallery%2Fgallery_1780846308687_h8cbroyrp.webp?alt=media&token=63b8e53d-9a61-4a51-b390-88e04d0a3862",
+        "1": "https://firebasestorage.googleapis.com/v0/b/kenyadivas-ffc51.firebasestorage.app/o/agencies%2Fzainab-spa%2Fgallery%2Fgallery_1780846311788_011helqvw.jpg?alt=media&token=fac3d817-5c91-4318-b3eb-a6ff1c94ef50"
+      },
+      "featuredEmployeesCount": 2,
+      "totalViews": 2,
+      "updatedAt": {}
+    }
+  }
+]

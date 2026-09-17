@@ -1,0 +1,92 @@
+[
+  {
+    "id": "8f4zLKdTE8YRAiOsv6ig",
+    "data": {
+      "name": "Arab",
+      "flag": "🇸🇦",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "A9o02fWlJy28aS6aO21l",
+    "data": {
+      "name": "Ugandan",
+      "flag": "🇺🇬",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "JIOaQkkBZEaTz6YbujjR",
+    "data": {
+      "name": "Asian",
+      "flag": "🌏",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "KF4EWe9owM07Qmoc7QD3",
+    "data": {
+      "name": "European",
+      "flag": "🇪🇺",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "KN9g2uVmxgIfNfsAXGvB",
+    "data": {
+      "name": "Tanzanian",
+      "flag": "🇹🇿",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "LYdbkTj3DEEUnSOU0xY5",
+    "data": {
+      "name": "Rwandan",
+      "flag": "🇷🇼",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "OOunSeXV5okczFVhn8yj",
+    "data": {
+      "name": "Mixed Heritage",
+      "flag": "🌍",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "VPbdJvyPiJGtihl9MvqP",
+    "data": {
+      "name": "Kenyan",
+      "flag": "🇰🇪",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "loZisUfC8FhjhetIq70W",
+    "data": {
+      "name": "Ethiopian",
+      "flag": "🇪🇹",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  },
+  {
+    "id": "v8r9EtMT96V23PztgvwI",
+    "data": {
+      "name": "Somali",
+      "flag": "🇸🇴",
+      "createdAt": {},
+      "updatedAt": {}
+    }
+  }
+]
