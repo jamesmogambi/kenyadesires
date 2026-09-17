@@ -13,7 +13,9 @@ function getPool(): Pool {
       ssl: { rejectUnauthorized: false },
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 30000,
+      statement_timeout: 60000,
+      query_timeout: 60000,
     });
   }
   return pool;
@@ -85,4 +87,53 @@ export function escapeLiteral(value: any): string {
   if (Array.isArray(value)) return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
   if (typeof value === 'object') return `'${JSON.stringify(value).replace(/'/g, "''")}'`;
   return `'${String(value).replace(/'/g, "''")}'`;
+}
+
+// Query builder helpers
+export function buildWhereClause(filters: Record<string, any>, paramStart: number = 1): { clause: string; params: any[]; nextParam: number } {
+  const conditions: string[] = [];
+  const params: any[] = [];
+  let paramIndex = paramStart;
+
+  for (const [key, value] of Object.entries(filters)) {
+    if (value === undefined || value === null || value === '') continue;
+    
+    const columnName = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+    
+    if (Array.isArray(value)) {
+      if (value.length > 0) {
+        conditions.push(`${columnName} && $${paramIndex}`);
+        params.push(value);
+        paramIndex++;
+      }
+    } else if (typeof value === 'object' && value.operator) {
+      // Support for operators like { operator: '>', value: 10 }
+      conditions.push(`${columnName} ${value.operator} $${paramIndex}`);
+      params.push(value.value);
+      paramIndex++;
+    } else {
+      conditions.push(`${columnName} = $${paramIndex}`);
+      params.push(value);
+      paramIndex++;
+    }
+  }
+
+  return {
+    clause: conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '',
+    params,
+    nextParam: paramIndex,
+  };
+}
+
+export function buildOrderByClause(sortBy: string, sortOrder: 'asc' | 'desc' = 'desc'): string {
+  const columnName = sortBy.replace(/([A-Z])/g, '_$1').toLowerCase();
+  return `ORDER BY ${columnName} ${sortOrder.toUpperCase()}`;
+}
+
+export function buildPaginationClause(page: number, limit: number, paramStart: number): { clause: string; params: any[] } {
+  const offset = (page - 1) * limit;
+  return {
+    clause: `LIMIT $${paramStart} OFFSET $${paramStart + 1}`,
+    params: [limit, offset],
+  };
 }
