@@ -1,16 +1,20 @@
-// app/actions/get-escorts.ts
 "use server";
 
-import { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
-import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
 import { slugify } from "@/lib/utils";
+import { executeQuery } from "@/lib/neon";
+import { sql } from "@/app/lib/db";
+import {
+  Escort,
+  GetEscortsParams,
+  GetEscortsResponse,
+  convertQueryDocToEscort,
+} from "./escort.action";
 import {
   sendWelcomeEmail,
   sendAdminNotificationEmail,
-  sendVerificationNotificationEmail,
   sendVerificationSubmittedEmail,
+  sendVerificationNotificationEmail,
 } from "./email";
 import {
   awardAccountCreationCredits,
@@ -18,365 +22,214 @@ import {
   awardVerificationCredits,
 } from "./credit-rewards.action";
 
-// Helper to convert Firestore doc to plain serializable object
-function convertDocToEscort(
-  doc:
-    | FirebaseFirestore.DocumentSnapshot
-    | FirebaseFirestore.QueryDocumentSnapshot,
-): any {
-  const data = (doc.data() || {}) as { [key: string]: any };
-
-  const convertTimestamp = (value: any): any => {
-    if (!value) return value;
-    if (value.toDate && typeof value.toDate === "function") {
-      return value.toDate().toISOString();
-    }
-    if (Array.isArray(value)) {
-      return value.map(convertTimestamp);
-    }
-    if (value && typeof value === "object") {
-      const result: any = {};
-      for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-          result[key] = convertTimestamp(value[key]);
-        }
-      }
-      return result;
-    }
-    return value;
-  };
-
-  const convertedData = convertTimestamp(data);
-
-  return {
-    id: doc.id,
-    ...convertedData,
-  } as Escort;
-}
-
-// Fast conversion for single documents (without deep timestamp conversion)
-function convertDocToEscortFast(
-  doc: FirebaseFirestore.DocumentSnapshot,
-): Escort {
-  const data = doc.data() || {};
-  return {
-    id: doc.id,
-    ...data,
-  } as Escort;
-}
-
-// Helper to check if escort has cleaned images
-function hasCleanedImages(escort: Escort): boolean {
-  if (escort.cleanedImages && escort.cleanedImages.length > 0) return true;
-  if (!escort.imagesMetadata) return false;
-  return Object.values(escort.imagesMetadata).some(
-    (metadata: any) => metadata.status === "completed" && metadata.cleanedUrl,
-  );
-}
-
-// Helper to get cleaned image URLs from escort
-function getCleanedImageUrls(escort: Escort): string[] {
-  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-    return escort.cleanedImages;
-  }
-
-  if (!escort.imagesMetadata) return [];
-
-  const cleanedUrls: string[] = [];
-  Object.values(escort.imagesMetadata).forEach((metadata: any) => {
-    if (metadata.status === "completed") {
-      cleanedUrls.push(metadata.cleanedUrl || metadata.cloudinaryUrl);
-    }
-  });
-  return cleanedUrls;
-}
-
-// Helper to get cleaned preview photo
-function getCleanedPreviewPhoto(escort: Escort): string | undefined {
-  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-    // Use the first cleaned image as preview if available
-    return escort.cleanedImages[0];
-  }
-
-  if (!escort.imagesMetadata || !escort.previewPhoto)
-    return escort.previewPhoto;
-
-  const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
-  if (previewMetadata?.status === "completed") {
-    return previewMetadata?.cleanedUrl || previewMetadata?.cloudinaryUrl || escort.previewPhoto;
-  }
-  return escort.previewPhoto;
-}
-
-/**
- * Internal function that fetches escort by ID with cleaned images
- */
-async function fetchEscortById(id: string): Promise<Escort | null> {
+async function fetchEscortByIdInternal(id: string): Promise<Escort | null> {
   try {
-    if (!id || id.trim() === "") {
-      return null;
+    if (!id || id.trim() === "") return null;
+
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE id = ${id}
+    `;
+    if (!rows || rows.length === 0) return null;
+
+    let escort = await convertQueryDocToEscort(rows[0]);
+
+    await executeQuery(
+      "UPDATE escorts SET total_views = total_views + 1 WHERE id = $1",
+      [id],
+    ).catch(() => {});
+
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      return escort;
     }
 
-    const doc = await adminDb.collection("escorts").doc(id).get();
-
-    if (!doc.exists) {
-      return null;
+    if (!escort.imagesMetadata) {
+      return escort;
     }
 
-    const escort = convertDocToEscort(doc);
+    const metadata = escort.imagesMetadata;
+    for (const key of Object.keys(metadata)) {
+      const m = metadata[key];
+      if (m?.status === "completed" && (m.cleanedUrl || m.cloudinaryUrl)) {
+        escort = {
+          ...escort,
+          images: [m.cleanedUrl || m.cloudinaryUrl],
+          previewPhoto: m.cleanedUrl || m.cloudinaryUrl || escort.previewPhoto,
+        };
+        break;
+      }
+    }
 
-    // Fire and forget - increment view count
-    adminDb
-      .collection("escorts")
-      .doc(id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch(() => {});
-
-    const cleanedImages = getCleanedImageUrls(escort);
-    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
-
-    return {
-      ...escort,
-      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
-      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
-      imagesMetadata: escort.imagesMetadata,
-    };
+    return escort;
   } catch (error) {
     console.error("Error fetching escort with cleaned images:", error);
     return null;
   }
 }
 
-/**
- * Internal function that fetches escort by Slug
- */
-async function fetchEscortBySlug(slug: string): Promise<Escort | null> {
+async function fetchEscortBySlugInternal(
+  slug: string,
+): Promise<Escort | null> {
   try {
-    if (!slug || slug.trim() === "") {
-      return null;
+    if (!slug || slug.trim() === "") return null;
+
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE slug = ${slug} LIMIT 1
+    `;
+    if (!rows || rows.length === 0) return null;
+
+    const doc = rows[0];
+    let escort = await convertQueryDocToEscort(doc);
+
+    await executeQuery(
+      "UPDATE escorts SET total_views = total_views + 1 WHERE id = $1",
+      [doc.id],
+    ).catch(() => {});
+
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      return escort;
+    }
+    if (!escort.imagesMetadata) return escort;
+
+    const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
+    if (previewMetadata?.status === "completed") {
+      escort = {
+        ...escort,
+        previewPhoto:
+          previewMetadata.cleanedUrl ||
+          previewMetadata.cloudinaryUrl ||
+          escort.previewPhoto,
+      };
     }
 
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("slug", "==", slug)
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-const doc = snapshot.docs[0];
-    const escort = convertDocToEscort(doc);
-
-    // Fire and forget - increment view count
-    adminDb
-      .collection("escorts")
-      .doc(doc.id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch(() => {});
-
-    const cleanedImages = getCleanedImageUrls(escort);
-    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
-
-    return {
-      ...escort,
-      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
-      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
-      imagesMetadata: escort.imagesMetadata,
-    };
+    return escort;
   } catch (error) {
     console.error("Error fetching escort by slug:", error);
     return null;
   }
-};
+}
 
-/**
- * Internal function that fetches escort by Username
- */
-async function fetchEscortByUsername(username: string): Promise<Escort | null> {
+async function fetchEscortByUsernameInternal(
+  username: string,
+): Promise<Escort | null> {
   try {
-    if (!username || username.trim() === "") {
-      return null;
+    if (!username || username.trim() === "") return null;
+
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE username = ${username} LIMIT 1
+    `;
+    if (!rows || rows.length === 0) return null;
+
+    const doc = rows[0];
+    let escort = await convertQueryDocToEscort(doc);
+
+    await executeQuery(
+      "UPDATE escorts SET total_views = total_views + 1 WHERE id = $1",
+      [doc.id],
+    ).catch(() => {});
+
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      return escort;
+    }
+    if (!escort.imagesMetadata) return escort;
+
+    const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
+    if (previewMetadata?.status === "completed") {
+      escort = {
+        ...escort,
+        previewPhoto:
+          previewMetadata.cleanedUrl ||
+          previewMetadata.cloudinaryUrl ||
+          escort.previewPhoto,
+      };
     }
 
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("username", "==", username)
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-const doc = snapshot.docs[0];
-    const escort = convertDocToEscort(doc);
-
-    // Fire and forget - increment view count
-    adminDb
-      .collection("escorts")
-      .doc(doc.id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch(() => {});
-
-    const cleanedImages = getCleanedImageUrls(escort);
-    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
-
-    return {
-      ...escort,
-      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
-      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
-      imagesMetadata: escort.imagesMetadata,
-    };
+    return escort;
   } catch (error) {
     console.error("Error fetching escort by username:", error);
     return null;
   }
-};
+}
 
-/**
- * Get a single escort by any identifier (ID, Slug, or Username)
- * Tries ID first, then Slug, then Username
- */
 export async function getEscortByIdentifier(
   identifier: string,
 ): Promise<Escort | null> {
-  if (!identifier || identifier.trim() === "") {
-    return null;
-  }
-
-  // Try by ID first
+  if (!identifier || identifier.trim() === "") return null;
   let escort = await getEscortById(identifier);
   if (escort) return escort;
-
-  // Try by Slug
   escort = await getEscortBySlug(identifier);
   if (escort) return escort;
-
-  // Try by Username
   escort = await getEscortByUsername(identifier);
   if (escort) return escort;
-
   return null;
 }
 
-/**
- * Get escort by Clerk user ID
- */
 export async function getEscortByClerkUserId(
   clerkUserId: string,
 ): Promise<Escort | null> {
   try {
-    if (!clerkUserId || clerkUserId.trim() === "") {
-      return null;
-    }
+    if (!clerkUserId || clerkUserId.trim() === "") return null;
 
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("clerkUserId", "==", clerkUserId)
-      .limit(1)
-      .get();
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE clerk_user_id = ${clerkUserId} LIMIT 1
+    `;
+    if (!rows || rows.length === 0) return null;
 
-    if (snapshot.empty) {
-      return null;
-    }
-
-    return convertDocToEscort(snapshot.docs[0]);
+    return await convertQueryDocToEscort(rows[0]);
   } catch (error) {
     console.error("Error fetching escort by clerkUserId:", error);
     return null;
   }
 }
 
-/**
- * Get escort by email address
- */
 export async function getEscortByEmail(
   email: string,
 ): Promise<Escort | null> {
   try {
-    if (!email || email.trim() === "") {
-      return null;
-    }
+    if (!email || email.trim() === "") return null;
 
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("email", "==", email)
-      .limit(1)
-      .get();
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE email = ${email} LIMIT 1
+    `;
+    if (!rows || rows.length === 0) return null;
 
-    if (snapshot.empty) {
-      return null;
-    }
-
-    return convertDocToEscort(snapshot.docs[0]);
+    return await convertQueryDocToEscort(rows[0]);
   } catch (error) {
     console.error("Error fetching escort by email:", error);
     return null;
   }
 }
 
-export const getEscortById = fetchEscortById;
+export const getEscortById = fetchEscortByIdInternal;
 
-/**
- * Get a single escort by Slug with only cleaned images
- */
-export const getEscortBySlug = fetchEscortBySlug;
+export const getEscortBySlug = fetchEscortBySlugInternal;
 
-/**
- * Get a single escort by Username with only cleaned images
- */
-export const getEscortByUsername = fetchEscortByUsername;
+export const getEscortByUsername = fetchEscortByUsernameInternal;
 
-/**
- * Get a single escort by ID with cleaned images (returns null if no cleaned images)
- * Alias for getEscortById for clarity
- */
-export const getEscortByIdWithCleanedImages = getEscortById;
+export const getEscortByIdWithCleanedImages = fetchEscortByIdInternal;
 
-/**
- * Get a single escort by ID (returns original images, not cleaned)
- * Not cached - always fresh
- */
 export async function getEscortByIdOriginal(
   id: string,
 ): Promise<Escort | null> {
   try {
-    if (!id || id.trim() === "") {
-      return null;
-    }
+    if (!id || id.trim() === "") return null;
 
-    const doc = await adminDb.collection("escorts").doc(id).get();
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE id = ${id}
+    `;
+    if (!rows || rows.length === 0) return null;
 
-    if (!doc.exists) {
-      return null;
-    }
+    await executeQuery(
+      "UPDATE escorts SET total_views = total_views + 1 WHERE id = $1",
+      [id],
+    ).catch(() => {});
 
-    adminDb
-      .collection("escorts")
-      .doc(id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch(() => {});
-
-    return convertDocToEscortFast(doc);
+    return await convertQueryDocToEscort(rows[0]);
   } catch (error) {
     console.error("Error fetching escort:", error);
     return null;
   }
 }
 
-/**
- * Get a single escort by ID and also get cleaned images separately
- */
 export async function getEscortByIdWithSeparateCleanedImages(
   id: string,
 ): Promise<{ escort: Escort | null; cleanedImages: string[] }> {
@@ -385,30 +238,38 @@ export async function getEscortByIdWithSeparateCleanedImages(
       return { escort: null, cleanedImages: [] };
     }
 
-    const doc = await adminDb.collection("escorts").doc(id).get();
-
-    if (!doc.exists) {
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE id = ${id}
+    `;
+    if (!rows || rows.length === 0) {
       return { escort: null, cleanedImages: [] };
     }
 
-    const escort = convertDocToEscort(doc);
+    const escort = await convertQueryDocToEscort(rows[0]);
 
-    adminDb
-      .collection("escorts")
-      .doc(id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch(() => {});
+    await executeQuery(
+      "UPDATE escorts SET total_views = total_views + 1 WHERE id = $1",
+      [id],
+    ).catch(() => {});
 
-    const cleanedImages = getCleanedImageUrls(escort);
-    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
+    const cleanedImages: string[] = [];
+    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
+      cleanedImages.push(...escort.cleanedImages);
+    } else if (escort.imagesMetadata) {
+      for (const key of Object.keys(escort.imagesMetadata)) {
+        const m = escort.imagesMetadata[key];
+        if (m?.status === "completed" && (m.cleanedUrl || m.cloudinaryUrl)) {
+          cleanedImages.push(m.cleanedUrl || m.cloudinaryUrl);
+        }
+      }
+    }
 
     return {
       escort: {
         ...escort,
-        images: cleanedImages,
-        previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
+        images: cleanedImages.length > 0 ? cleanedImages : escort.images,
+        previewPhoto:
+          cleanedImages[0] || escort.previewPhoto,
       },
       cleanedImages,
     };
@@ -418,85 +279,49 @@ export async function getEscortByIdWithSeparateCleanedImages(
   }
 }
 
-/**
- * Get cleaned images for a specific escort
- * Not cached - always fresh
- */
 export async function getCleanedImagesForEscort(
   escortId: string,
 ): Promise<string[]> {
   try {
-    const doc = await adminDb.collection("escorts").doc(escortId).get();
+    const rows: any[] = await sql`
+      SELECT cleaned_images, images_metadata FROM escorts WHERE id = ${escortId}
+    `;
+    if (!rows || rows.length === 0) return [];
 
-    if (!doc.exists) {
-      return [];
+    const row = rows[0];
+    const cleanedImages: string[] = row.cleaned_images || [];
+    if (cleanedImages.length > 0) return cleanedImages;
+
+    const metadata: Record<string, any> = row.images_metadata || {};
+    const urls: string[] = [];
+    for (const key of Object.keys(metadata)) {
+      const m = metadata[key];
+      if (m?.status === "completed" && (m.cleanedUrl || m.cloudinaryUrl)) {
+        urls.push(m.cleanedUrl || m.cloudinaryUrl);
+      }
     }
-
-    const escort = convertDocToEscort(doc);
-
-    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-      return escort.cleanedImages;
-    }
-
-    if (!escort.imagesMetadata) {
-      return [];
-    }
-
-    const cleanedImages = Object.values(escort.imagesMetadata)
-      .filter(
-        (metadata: any) =>
-          metadata.status === "completed" && (metadata.cleanedUrl || metadata.cloudinaryUrl),
-      )
-      .map((metadata: any) => metadata.cleanedUrl || metadata.cloudinaryUrl!);
-
-    return cleanedImages;
+    return urls;
   } catch (error) {
     console.error("Error fetching cleaned images:", error);
     return [];
   }
 }
 
-/**
- * Get count of cleaned images for a specific escort
- * Not cached - always fresh
- */
 export async function getCleanedImagesCountForEscort(
   escortId: string,
 ): Promise<number> {
-  try {
-    const images = await getCleanedImagesForEscort(escortId);
-    return images.length;
-  } catch (error) {
-    console.error("Error fetching cleaned images count:", error);
-    return 0;
-  }
+  const images = await getCleanedImagesForEscort(escortId);
+  return images.length;
 }
 
-/**
- * Check if an escort has cleaned images
- * Not cached - always fresh
- */
 export async function hasEscortCleanedImages(
   escortId: string,
 ): Promise<boolean> {
-  try {
-    const count = await getCleanedImagesCountForEscort(escortId);
-    return count > 0;
-  } catch (error) {
-    console.error("Error checking cleaned images:", error);
-    return false;
-  }
+  const count = await getCleanedImagesCountForEscort(escortId);
+  return count > 0;
 }
 
-/**
- * Manually revalidate escort cache
- */
 export async function revalidateEscortCache(id: string) {
-  "use server";
-
-  const { revalidateTag } = await import("next/cache");
-  // revalidateTag requires two arguments in this Next.js version: tag and options.
-  // Provide an empty options object to satisfy the type.
   revalidateTag("escorts", {});
   revalidateTag("cleaned-images", {});
   revalidateTag("escort-detail", {});
@@ -575,147 +400,139 @@ export async function saveNewEscortProfile(
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "_")
       .substring(0, 20);
-
     const timestamp = Date.now().toString().slice(-6);
     const username = `${baseUsername}_${timestamp}`;
-
     const phoneSuffix = (data.phone || data.whatsappNumber || "")
       .replace(/\D/g, "")
       .slice(-6);
     const slug = `${slugify(data.name)}-${phoneSuffix}`;
 
-    const docRef = adminDb.collection("escorts").doc();
+    const id = data.id || crypto.randomUUID();
 
-    const newEscort: Escort = {
-      id: docRef.id,
-      name: data.name,
-      username,
-      slug,
-      email: data.email,
-      previewPhoto: data.previewPhoto || "",
-      telephone: data.telephone || data.phone || "",
-      whatsappPhone: data.whatsappPhone || data.whatsappNumber || "",
-      about: data.about || "",
-      availability: data.availability || [],
-      nationality: data.nationality || "",
-      bustSize: data.bustSize || data.breasts || "",
-      breastSize: data.bustSize || data.breasts || "",
-      languages: data.languages || [],
-      regions: (data.regions && data.regions.length > 0)
-        ? data.regions
-        : (data.region ? [data.region] : []),
-      practices: data.practices || [],
-      bdsm: data.bdsm || [],
-      massage: data.massages || [],
-      extraServices: data.extraServices || [],
-      categories: data.categories || [],
-      role: "escort",
-      openingHours: data.openingHours || {},
-      ageCategory: data.ageCategory || "",
-      character: data.character || "",
-      hairColor: data.hairColor || "",
-      experience: data.experience || "",
-      age: data.age || "",
-      weight: data.weight || "",
-      street: data.street || "",
-      images: data.images || [],
-      videos: [],
-      labels: [],
-      ethnicity: "",
-      zodiacSign: "",
-      sexualOrientation: "",
-      gender: "girl",
-      country: "Kenya",
-      county: data.county || "",
-      countyCode: "",
-      primaryRegion: data.region || "",
-      locations: [],
-      source: "admin",
-      workType: data.isAgencyOwned ? "agency" : "independent",
-      agencyId: data.agencyId || "",
-      isAgencyOwned: data.isAgencyOwned || false,
-      clerkUserId: data.clerkUserId || "",
-      isAgencyFeatured: false,
-      isActive: true,
-      isVerified: false,
-      isFeatured: false,
-      plan: {
-        type: "basic",
-        isActive: true,
-        features: [],
-      },
-      
-      totalBookings: 0,
-      totalReviews: 0,
-      rating: 0,
-      totalViews: 0,
-      credits: 10,
-      createdAt: now,
-      updatedAt: now,
-      cleaningHistory: [],
-      hasCleanedImages: false,
-      rates: [],
-      utm_source: data.utm_source,
-      utm_medium: data.utm_medium,
-      utm_campaign: data.utm_campaign,
-      utm_content: data.utm_content,
-      utm_term: data.utm_term,
-      utm_id: data.utm_id,
-      utm_source_platform: data.utm_source_platform,
-      landing_page: data.landing_page,
-      first_touch_at: data.first_touch_at,
-      registration_date: data.registration_date || now.toISOString(),
+    const columns: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    const addField = (column: string, value: any) => {
+      if (value === undefined) return;
+      columns.push(column);
+      values.push(value);
+      paramIndex++;
     };
 
-    await docRef.set(newEscort);
+    addField("id", id);
+    addField("clerk_user_id", data.clerkUserId || "");
+    addField("name", data.name);
+    addField("username", username);
+    addField("slug", slug);
+    addField("email", data.email);
+    addField("preview_photo", data.previewPhoto || "");
+    addField("telephone", data.telephone || data.phone || "");
+    addField("whatsapp_phone", data.whatsappPhone || data.whatsappNumber || "");
+    addField("about", data.about || "");
+    addField("availability", data.availability || []);
+    addField("nationality", data.nationality || "");
+    addField("bust_size", data.bustSize || data.breasts || "");
+    addField("weight", data.weight || "");
+    addField("gender", "girl");
+    addField("languages", data.languages || []);
+    addField("regions", data.regions && data.regions.length > 0 ? data.regions : data.region ? [data.region] : []);
+    addField("practices", data.practices || []);
+    addField("bdsm", data.bdsm || []);
+    addField("massage", data.massages || []);
+    addField("extra_services", data.extraServices || []);
+    addField("categories", data.categories || []);
+    addField("role", "escort");
+    addField("opening_hours", data.openingHours || {});
+    addField("age_category", data.ageCategory || "");
+    addField("character", data.character || "");
+    addField("hair_color", data.hairColor || "");
+    addField("experience", data.experience || "");
+    addField("age", data.age || "");
+    addField("street", data.street || "");
+    addField("images", data.images || []);
+    addField("videos", []);
+    addField("country", "Kenya");
+    addField("county", data.county || "");
+    addField("county_code", "");
+    addField("primary_region", data.region || "");
+    addField("locations", []);
+    addField("source", "admin");
+    addField("work_type", data.isAgencyOwned ? "agency" : "independent");
+    addField("agency_id", data.agencyId || "");
+    addField("is_agency_owned", data.isAgencyOwned || false);
+    addField("is_agency_featured", false);
+    addField("is_active", true);
+    addField("is_verified", false);
+    addField("is_featured", false);
+    addField("plan_type", "basic");
+    addField("plan_is_active", true);
+    addField("plan_features", []);
+    addField("total_bookings", 0);
+    addField("total_reviews", 0);
+    addField("rating", 0);
+    addField("total_views", 0);
+    addField("credits", 10);
+    addField("created_at", now);
+    addField("updated_at", now);
+    addField("has_cleaned_images", false);
+    addField("utm_source", data.utm_source);
+    addField("utm_medium", data.utm_medium);
+    addField("utm_campaign", data.utm_campaign);
+    addField("utm_content", data.utm_content);
+    addField("utm_term", data.utm_term);
+    addField("utm_id", data.utm_id);
+    addField("utm_source_platform", data.utm_source_platform);
+    addField("landing_page", data.landing_page);
+    addField("first_touch_at", data.first_touch_at);
+    addField("registration_date", data.registration_date || now.toISOString());
 
-    // Award Milestone 1 — Create Account (10 credits)
-    // Check first if already awarded to avoid double-counting from the
-    // inline credits: 10 above. The reward system is the source of truth.
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
+    const query = `INSERT INTO escorts (${columns.join(", ")}) VALUES (${placeholders})`;
+
+    await executeQuery(query, values);
+
     if (data.clerkUserId) {
       await awardAccountCreationCredits(
         data.clerkUserId,
         data.email,
         data.telephone || data.whatsappNumber || "",
         "escort",
-        docRef.id,
+        id,
       );
     } else {
       await awardAccountCreationCredits(
-        docRef.id,
+        id,
         data.email,
         data.telephone || data.whatsappNumber || "",
         "escort",
-        docRef.id,
+        id,
       );
     }
 
-    // Award Milestone 2 — Complete Profile (20 credits) if threshold met
-    const escortClerkUserId = data.clerkUserId || docRef.id;
+    const escortClerkUserId = data.clerkUserId || id;
     await checkAndAwardProfileCompletion(
       escortClerkUserId,
       {
-        name: newEscort.name,
-        email: newEscort.email,
-        previewPhoto: newEscort.previewPhoto,
-        about: newEscort.about,
-        county: newEscort.county,
-        primaryRegion: newEscort.primaryRegion,
-        age: newEscort.age,
-        images: newEscort.images,
-        categories: newEscort.categories,
-        languages: newEscort.languages,
+        name: data.name,
+        email: data.email,
+        previewPhoto: data.previewPhoto,
+        about: data.about,
+        county: data.county,
+        primaryRegion: data.region,
+        age: data.age,
+        images: data.images,
+        categories: data.categories,
+        languages: data.languages,
       },
       "escort",
-      docRef.id,
+      id,
     );
 
-    // Send welcome email to the new escort
     if (data.email) {
       await sendWelcomeEmail(data.email, data.name, "user", 10);
     }
 
-    // Notify admin of new registration
     await sendAdminNotificationEmail(
       data.name,
       data.email || "",
@@ -723,10 +540,7 @@ export async function saveNewEscortProfile(
       data.clerkUserId || "",
     );
 
-    return {
-      success: true,
-      id: docRef.id,
-    };
+    return { success: true, id };
   } catch (error) {
     console.error("Error saving escort profile:", error);
     return {
@@ -736,9 +550,6 @@ export async function saveNewEscortProfile(
   }
 }
 
-// ============================================
-// ESCORT IDENTITY VERIFICATION DOCUMENTS
-// ============================================
 export interface EscortVerificationInput {
   escortId: string;
   fullName: string;
@@ -751,38 +562,46 @@ export async function submitEscortVerification(
   data: EscortVerificationInput,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const docRef = adminDb.collection("escorts").doc(data.escortId);
-    const snapshot = await docRef.get();
-
-    if (!snapshot.exists) {
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE id = ${data.escortId}
+    `;
+    if (!rows || rows.length === 0) {
       return { success: false, error: "Profile not found" };
     }
 
-    const existing = snapshot.data() || {};
-    const currentDocs = existing.verificationDocuments || {};
+    const existing = rows[0];
+    const currentDocs = existing.verification_documents || {};
 
     const verificationDocuments = {
       ...currentDocs,
-      idProof: data.idFront || currentDocs.idProof || "",
-      idBack: data.idBack || currentDocs.idBack || "",
-      selfieWithId: data.selfie || currentDocs.selfieWithId || "",
+      id_proof: data.idFront || currentDocs.id_proof || "",
+      id_back: data.idBack || currentDocs.id_back || "",
+      selfie_with_id: data.selfie || currentDocs.selfie_with_id || "",
     };
 
     const hasAnyDoc =
-      verificationDocuments.idProof ||
-      verificationDocuments.idBack ||
-      verificationDocuments.selfieWithId;
+      verificationDocuments.id_proof ||
+      verificationDocuments.id_back ||
+      verificationDocuments.selfie_with_id;
 
     if (!hasAnyDoc) {
       return { success: false, error: "Please upload at least one document" };
     }
 
-    await docRef.update({
-      verificationDocuments,
-      verificationStatus: "pending",
-      isVerified: false,
-      updatedAt: new Date(),
-    });
+    await executeQuery(
+      `UPDATE escorts SET
+        verification_documents = $${1},
+        verification_status = $${2},
+        is_verified = $${3},
+        updated_at = NOW()
+      WHERE id = $${4}`,
+      [
+        verificationDocuments,
+        "pending",
+        false,
+        data.escortId,
+      ],
+    );
 
     const email = existing.email;
     if (email) {
@@ -797,7 +616,7 @@ export async function submitEscortVerification(
       data.fullName || existing.name || "Escort",
       email || "",
       "escort",
-      existing.clerkUserId || data.escortId,
+      existing.clerk_user_id || data.escortId,
     );
 
     revalidatePath(`/girl/${existing.slug}`);

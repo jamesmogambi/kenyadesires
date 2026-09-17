@@ -168,7 +168,7 @@ function normalizeArray(val: any): string[] {
   return [String(val)];
 }
 
-function convertRowToEscort(row: any): Escort {
+export function convertRowToEscort(row: any): Escort {
   return {
     id: row.id,
     name: row.name,

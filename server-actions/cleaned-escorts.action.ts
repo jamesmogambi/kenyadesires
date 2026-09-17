@@ -1,168 +1,126 @@
-// app/actions/get-escorts.ts
 "use server";
 
-import { adminDb } from "@/lib/firebase-admin";
-import { cache } from "react";
-import { Escort, GetEscortsParams, GetEscortsResponse } from "./escort.action";
-
-const TIMESTAMP_FIELDS = [
-  "createdAt",
-  "updatedAt",
-  "joinedDate",
-  "lastProcessedAt",
-];
-
-function convertDocToEscortFast(doc: any): Escort {
-  const data = doc.data();
-  const result: any = {
-    id: doc.id,
-    ...data,
-  };
-
-  const normalizeArray = (val: any): string[] => {
-    if (Array.isArray(val)) return val;
-    if (val == null) return [];
-    if (typeof val === "object") {
-      const keys = Object.keys(val).sort((a, b) => {
-        const an = parseInt(a), bn = parseInt(b);
-        if (isNaN(an) && isNaN(bn)) return 0;
-        if (isNaN(an)) return 1;
-        if (isNaN(bn)) return -1;
-        return an - bn;
-      });
-      return keys.map((k) => String(val[k]));
-    }
-    return [String(val)];
-  };
-
-  if (!Array.isArray(result.regions)) {
-    result.regions = normalizeArray(result.regions);
-  }
-  if (!Array.isArray(result.practices)) {
-    result.practices = normalizeArray(result.practices);
-  }
-  if (!Array.isArray(result.bdsm)) {
-    result.bdsm = normalizeArray(result.bdsm);
-  }
-  if (!Array.isArray(result.massage)) {
-    result.massage = normalizeArray(result.massage);
-  }
-  if (!Array.isArray(result.extraServices)) {
-    result.extraServices = normalizeArray(result.extraServices);
-  }
-  if (!Array.isArray(result.categories)) {
-    result.categories = normalizeArray(result.categories);
-  }
-  if (!Array.isArray(result.images)) {
-    result.images = normalizeArray(result.images);
-  }
-  if (!Array.isArray(result.videos)) {
-    result.videos = normalizeArray(result.videos);
-  }
-  if (!Array.isArray(result.labels)) {
-    result.labels = normalizeArray(result.labels);
-  }
-  if (!Array.isArray(result.availability)) {
-    result.availability = normalizeArray(result.availability);
-  }
-  if (!Array.isArray(result.languages)) {
-    result.languages = normalizeArray(result.languages);
-  }
-  if (!Array.isArray(result.cleanedImages)) {
-    result.cleanedImages = normalizeArray(result.cleanedImages);
-  }
-
-  for (const field of TIMESTAMP_FIELDS) {
-    if (result[field] && typeof result[field]?.toDate === "function") {
-      result[field] = result[field].toDate().toISOString();
-    }
-  }
-
-  return result as Escort;
-}
+import { executeQuery } from "@/lib/neon";
+import { sql } from "@/app/lib/db";
+import { Escort, GetEscortsParams, GetEscortsResponse, convertRowToEscort } from "./escort.action";
 
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
 
 const LISTING_FIELDS = [
-  "name",
-  "username",
-  "previewPhoto",
-  "images",
-  "videos",
-  "imagesMetadata",
-  "age",
-  "county",
-  "regions",
-  "primaryRegion",
-  "practices",
-  "bdsm",
-  "massage",
-  "extraServices",
-  "categories",
-  "slug",
-  "telephone",
-  "whatsappPhone",
-  "isActive",
-  "isVerified",
-  "isFeatured",
-  "hasCleanedImages",
-  "cleanedImages",
-  "createdAt",
-  "updatedAt",
-  "totalViews",
-  "rating",
-  "totalBookings",
+  "id", "name", "username", "preview_photo", "images", "videos",
+  "images_metadata", "age", "county", "county_code", "regions",
+  "primary_region", "locations", "practices", "categories", "slug",
+  "telephone", "whatsapp_phone", "is_active", "is_verified",
+  "is_featured", "has_cleaned_images", "cleaned_images",
+  "created_at", "updated_at", "total_views", "rating", "total_bookings",
+  "bdsm", "massage", "extra_services",
 ];
 
-function buildBaseQuery() {
-  let query: any = adminDb.collection("escorts");
-  query = query.where("hasCleanedImages", "==", true);
-  query = query.select(...LISTING_FIELDS);
-  return query;
-}
-
-function applyServerSideFilters(
-  query: any,
+async function getCleanedEscortsBase(
   params: GetEscortsParams,
-  useArrayContains: boolean = false,
-): any {
+): Promise<{ rows: any[]; total: number }> {
+  const { page = 1, limit = 20 } = params;
+  const validPage = Math.max(1, page);
+  const validLimit = Math.min(100, Math.max(1, limit));
+
+  const conditions: string[] = ["has_cleaned_images = TRUE"];
+  const params_arr: any[] = [];
+  let paramIndex = 1;
+
   if (params.isActive !== undefined) {
-    query = query.where("isActive", "==", params.isActive);
+    conditions.push(`is_active = $${paramIndex}`);
+    params_arr.push(params.isActive);
+    paramIndex++;
   }
   if (params.isVerified !== undefined) {
-    query = query.where("isVerified", "==", params.isVerified);
+    conditions.push(`is_verified = $${paramIndex}`);
+    params_arr.push(params.isVerified);
+    paramIndex++;
   }
   if (params.isFeatured !== undefined) {
-    query = query.where("isFeatured", "==", params.isFeatured);
+    conditions.push(`is_featured = $${paramIndex}`);
+    params_arr.push(params.isFeatured);
+    paramIndex++;
   }
   if (params.county && params.county !== "all") {
-    query = query.where("county", "==", params.county);
+    conditions.push(`county = $${paramIndex}`);
+    params_arr.push(params.county);
+    paramIndex++;
+  }
+  if (params.countyCode && params.countyCode !== "all") {
+    conditions.push(`county_code = $${paramIndex}`);
+    params_arr.push(params.countyCode);
+    paramIndex++;
   }
   if (params.nationality && params.nationality !== "all") {
-    query = query.where("nationality", "==", params.nationality);
+    conditions.push(`nationality = $${paramIndex}`);
+    params_arr.push(params.nationality);
+    paramIndex++;
   }
-  if (
-    useArrayContains &&
-    params.region &&
-    params.region !== "all"
-  ) {
-    query = query.where("regions", "array-contains", params.region);
+  if (params.minAge && params.minAge > 0) {
+    conditions.push(`CAST(age AS INTEGER) >= $${paramIndex}`);
+    params_arr.push(params.minAge);
+    paramIndex++;
   }
-  return query;
-}
+  if (params.maxAge && params.maxAge > 0) {
+    conditions.push(`CAST(age AS INTEGER) <= $${paramIndex}`);
+    params_arr.push(params.maxAge);
+    paramIndex++;
+  }
+  if (params.minRating && params.minRating > 0) {
+    conditions.push(`rating >= $${paramIndex}`);
+    params_arr.push(params.minRating);
+    paramIndex++;
+  }
+  if (params.practice && params.practice !== "all") {
+    conditions.push(`$${paramIndex} = ANY(practices)`);
+    params_arr.push(params.practice);
+    paramIndex++;
+  }
+  if (params.practices && params.practices.length > 0) {
+    conditions.push(`practices && $${paramIndex}::text[]`);
+    params_arr.push(params.practices);
+    paramIndex++;
+  }
+  if (params.categories && params.categories.length > 0) {
+    conditions.push(`categories && $${paramIndex}::text[]`);
+    params_arr.push(params.categories);
+    paramIndex++;
+  }
+  if (params.region && params.region !== "all") {
+    conditions.push(`$${paramIndex} = ANY(regions)`);
+    params_arr.push(params.region);
+    paramIndex++;
+  }
+  if (params.search) {
+    const searchTerm = `%${params.search.toLowerCase()}%`;
+    conditions.push(
+      `(LOWER(name) LIKE $${paramIndex} OR LOWER(username) LIKE $${paramIndex} OR LOWER(about) LIKE $${paramIndex})`,
+    );
+    params_arr.push(searchTerm, searchTerm, searchTerm);
+    paramIndex++;
+  }
 
-function applySorting(query: any, sortBy: string, sortOrder: string): any {
-  const validSortFields = [
-    "createdAt",
-    "updatedAt",
-    "age",
-    "totalViews",
-    "rating",
-    "totalBookings",
-  ];
-  const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-  return query.orderBy(sortField, sortOrder);
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const totalQuery = `SELECT COUNT(*) as count FROM escorts ${where}`;
+  const totalResult: any[] = await executeQuery(totalQuery, params_arr);
+  const total = parseInt(totalResult[0]?.count || "0", 10);
+
+  const sortField = params.sortBy
+    ? params.sortBy.replace(/([A-Z])/g, "_$1").toLowerCase()
+    : "created_at";
+  const sortOrder = params.sortOrder === "asc" ? "ASC" : "DESC";
+  const validSortFields = ["created_at", "updated_at", "age", "total_views", "rating", "total_bookings"];
+  const safeSort = validSortFields.includes(sortField) ? sortField : "created_at";
+
+  const offset = (validPage - 1) * validLimit;
+  const dataQuery = `SELECT * FROM escorts ${where} ORDER BY ${safeSort} ${sortOrder}, created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  const dataParams = [...params_arr, validLimit, offset];
+  const rows: any[] = await executeQuery(dataQuery, dataParams);
+
+  return { rows, total };
 }
 
 function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort[] {
@@ -177,7 +135,7 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
     const regionLower = normalize(params.region);
     filtered = filtered.filter((e) =>
       (e.regions || []).some((r) => normalize(r) === regionLower) ||
-      normalize(e.primaryRegion) === regionLower
+      normalize(e.primaryRegion) === regionLower,
     );
   }
 
@@ -230,15 +188,11 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
   }
 
   if (params.minAge) {
-    filtered = filtered.filter(
-      (e) => parseInt(e.age || "0") >= params.minAge!,
-    );
+    filtered = filtered.filter((e) => parseInt(e.age || "0") >= params.minAge!);
   }
 
   if (params.maxAge) {
-    filtered = filtered.filter(
-      (e) => parseInt(e.age || "0") <= params.maxAge!,
-    );
+    filtered = filtered.filter((e) => parseInt(e.age || "0") <= params.maxAge!);
   }
 
   if (params.minRating) {
@@ -258,730 +212,206 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
   return filtered;
 }
 
-function getCleanedImageUrls(escort: Escort): string[] {
-  let result: string[] = [];
-  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-    result = escort.cleanedImages;
-  } else if (escort.imagesMetadata) {
-    const cleanedUrls: string[] = [];
-    Object.values(escort.imagesMetadata).forEach((metadata: any) => {
-      if (metadata.status === "completed") {
-        cleanedUrls.push(metadata.cleanedUrl || metadata.cloudinaryUrl);
-      }
-    });
-    result = cleanedUrls.length > 0 ? cleanedUrls : [];
-  }
-  return result.filter(
-    (img): img is string => typeof img === "string" && img.length > 0,
-  );
-}
-
-function getCleanedPreviewPhoto(escort: Escort): string | undefined {
-  if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-    return escort.cleanedImages[0];
-  }
-
-  if (!escort.imagesMetadata || !escort.previewPhoto)
-    return escort.previewPhoto;
-
-  const previewMetadata = escort.imagesMetadata[escort.previewPhoto];
-  if (previewMetadata?.status === "completed") {
-    return previewMetadata?.cleanedUrl || previewMetadata?.cloudinaryUrl || escort.previewPhoto;
-  }
-  return escort.previewPhoto;
-}
-
-function applyCleanedImages(escorts: Escort[]): Escort[] {
-  return escorts.map((escort) => {
-    const cleanedImages = getCleanedImageUrls(escort);
-    const cleanedPreviewPhoto = getCleanedPreviewPhoto(escort);
-
-    return {
-      ...escort,
-      images: cleanedImages.length > 0 ? cleanedImages : escort.images,
-      previewPhoto: cleanedPreviewPhoto || escort.previewPhoto,
-    };
-  });
-}
-
-function applyCleanedImagesWrapper(
-  result: GetEscortsResponse,
+function applyPagination(
+  escorts: Escort[],
   validPage: number,
   validLimit: number,
-): GetEscortsResponse {
-  const total = result.total;
+): Escort[] {
   const startIndex = (validPage - 1) * validLimit;
-  const endIndex = Math.min(startIndex + validLimit, total);
-  const paginatedEscorts = result.escorts.slice(startIndex, endIndex);
-  return {
-    escorts: applyCleanedImages(paginatedEscorts),
-    total,
-    page: validPage,
-    totalPages: Math.max(1, Math.ceil(total / validLimit)),
-    hasMore: endIndex < total || result.hasMore,
-  };
+  return escorts.slice(startIndex, startIndex + validLimit);
 }
 
-async function runQueryWithFilters(
-  params: GetEscortsParams,
-  validPage: number,
-  validLimit: number,
-  sortBy: string,
-  sortOrder: string,
-  useArrayContains: boolean,
-  serverSideParams?: GetEscortsParams,
-): Promise<GetEscortsResponse> {
-  const batchSize = Math.max(validLimit * 5, 200);
-  const effectiveServerParams = serverSideParams || params;
-
-  let query = buildBaseQuery();
-  query = applyServerSideFilters(query, effectiveServerParams, useArrayContains);
-  query = applySorting(query, sortBy, sortOrder);
-
-  let lastDoc: any = null;
-  const allResults: Escort[] = [];
-  let hasMore = false;
-
-  let iterations = 0;
-  const maxIterations = 50;
-
-  while (iterations < maxIterations) {
-    iterations++;
-    let pageQuery = query;
-    if (lastDoc) {
-      pageQuery = pageQuery.startAfter(lastDoc);
-    }
-
-    const snapshot = await pageQuery.limit(batchSize).get();
-
-    if (snapshot.empty) {
-      break;
-    }
-
-    const docs = snapshot.docs.map(convertDocToEscortFast);
-    const filtered = applyClientFilters(docs, params);
-    allResults.push(...filtered);
-
-    lastDoc = snapshot.docs[snapshot.docs.length - 1];
-    hasMore = snapshot.size === batchSize;
-
-    if (!hasMore) {
-      break;
-    }
-  }
-
-  return {
-    escorts: allResults,
-    total: allResults.length,
-    page: validPage,
-    totalPages: Math.max(1, Math.ceil(allResults.length / validLimit)),
-    hasMore: allResults.length > validPage * validLimit || hasMore,
-  };
-}
-
-async function fetchEscortsWithCleanedImagesInternal(
+export async function getEscortsWithCleanedImages(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   try {
-    const {
-      page = 1,
-      limit: limitParam = 20,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = params;
-
+    const { page = 1, limit = 20 } = params;
     const validPage = Math.max(1, page);
-    const validLimit = Math.min(100, Math.max(1, limitParam));
+    const validLimit = Math.min(100, Math.max(1, limit));
 
-    // Phase 1: Try with server-side array-contains for region (fast, exact match)
-    const hasRegionFilter = !!(params.region && params.region !== "all");
-    const hasPracticeFilter = !!(params.practice && params.practice !== "all");
-    const hasCountyFilter = !!(params.county && params.county !== "all");
+    const { rows, total } = await getCleanedEscortsBase(params);
+    const escorts = rows.map(convertRowToEscort);
+    const paginated = applyPagination(escorts, validPage, validLimit);
 
-    let result: GetEscortsResponse;
-
-    try {
-      result = await runQueryWithFilters(
-        params,
-        validPage,
-        validLimit,
-        sortBy,
-        sortOrder,
-        hasRegionFilter,
-      );
-    } catch (queryError: any) {
-      console.warn(
-        "Server-side array-contains query failed, falling back to client-side filtering:",
-        queryError?.message || queryError,
-      );
-      result = {
-        escorts: [],
-        total: 0,
-        page: validPage,
-        totalPages: 0,
-        hasMore: false,
-      };
-    }
-
-    // Phase 2: Fallback to case-insensitive client-side filtering if 0 results
-    // and there is any filter (handles case mismatches in data
-    // or missing composite indexes)
-    if (
-      result.total === 0 &&
-      (hasRegionFilter || hasPracticeFilter || hasCountyFilter)
-    ) {
-      try {
-        const fallback = await runQueryWithFilters(
-          params,
-          validPage,
-          validLimit,
-          sortBy,
-          sortOrder,
-          false,
-        );
-        return applyCleanedImagesWrapper(fallback, validPage, validLimit);
-      } catch (fallbackError: any) {
-        console.warn(
-          "Phase 2 fallback failed:",
-          fallbackError?.message || fallbackError,
-        );
-      }
-    }
-
-    // Phase 3: If still 0 results and any filter exists, retry with
-    // county filter stripped from server-side (handles case mismatches like
-    // "Mombasa" vs "mombasa")
-    if (
-      result.total === 0 &&
-      (hasRegionFilter || hasPracticeFilter || hasCountyFilter) &&
-      params.county &&
-      params.county !== "all"
-    ) {
-      try {
-        const countyStrippedParams = { ...params, county: undefined };
-        const fallback = await runQueryWithFilters(
-          params,
-          validPage,
-          validLimit,
-          sortBy,
-          sortOrder,
-          false,
-          countyStrippedParams,
-        );
-        return applyCleanedImagesWrapper(fallback, validPage, validLimit);
-      } catch (fallbackError: any) {
-        console.warn(
-          "Phase 3 county-stripped fallback failed:",
-          fallbackError?.message || fallbackError,
-        );
-      }
-    }
-
-    return applyCleanedImagesWrapper(result, validPage, validLimit);
+    return {
+      escorts: paginated,
+      total,
+      page: validPage,
+      totalPages: Math.max(1, Math.ceil(total / validLimit)),
+      hasMore: total > validPage * validLimit,
+    };
   } catch (error) {
     console.error("Error fetching escorts with cleaned images:", error);
-    return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
-    };
+    return { escorts: [], total: 0, page: params.page || 1, totalPages: 0, hasMore: false };
   }
 }
 
-export const getEscortsWithCleanedImages = cache(
-  fetchEscortsWithCleanedImagesInternal,
-);
-
-interface GetMassageEscortsParams
-  extends Omit<GetEscortsParams, "practice" | "practices"> {
+interface GetMassageEscortsParams extends Omit<GetEscortsParams, "practice" | "practices"> {
   massageType?: string;
 }
 
-async function fetchMassageEscortsWithCleanedImagesInternal(
+const MASSAGE_TYPE_TERMS = [
+  "massage", "tantric", "nuru", "lingam", "yoni", "body to body",
+  "body-to-body", "b2b", "sensual", "erotic", "four hands", "4 hands",
+  "couples", "therapeutic", "relaxation", "wellness", "deep tissue",
+  "swedish", "hot stone", "aromatherapy", "sports massage",
+];
+
+function isMassageType(value: string): boolean {
+  if (!value) return false;
+  const lower = value.toLowerCase();
+  return MASSAGE_TYPE_TERMS.some((term) => lower.includes(term));
+}
+
+function filterForMassage(escorts: Escort[], massageType?: string): Escort[] {
+  return escorts.filter((escort) => {
+    const practices = escort.practices || [];
+    const bdsm = (escort as any).bdsm || [];
+    const massages = (escort as any).massage || [];
+    const extraServices = (escort as any).extraServices || [];
+    const allServices: string[] = [...practices, ...bdsm, ...massages, ...extraServices];
+
+    const hasMassage = allServices.some((p: string) => p && isMassageType(p));
+    if (!hasMassage) return false;
+
+    if (massageType && massageType !== "all") {
+      const lowerType = normalizeSlug(massageType);
+      const matches = allServices.some(
+        (p: string) => p && normalizeSlug(p).includes(lowerType),
+      );
+      if (!matches) return false;
+    }
+
+    return true;
+  });
+}
+
+export async function getMassageEscortsFromCleanedImages(
   params: GetMassageEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   try {
-    const {
-      page = 1,
-      limit: limitParam = 20,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-      massageType,
-    } = params;
-
+    const { page = 1, limit: limitParam = 20, sortBy = "createdAt", sortOrder = "desc", massageType } = params;
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    function filterForMassage(escorts: Escort[]): Escort[] {
-      return escorts.filter((escort) => {
-        const practices = escort.practices || [];
-        const bdsm = (escort as any).bdsm || [];
-        const massages = (escort as any).massage || [];
-        const extraServices = (escort as any).extraServices || [];
-        const allServices: string[] = [...practices, ...bdsm, ...massages, ...extraServices];
-
-        // Escort must offer at least one massage-related service
-        const hasMassage = allServices.some((p: string) => p && isMassageType(p));
-        if (!hasMassage) return false;
-
-        // If a specific massage type is selected, further filter
-        if (massageType && massageType !== "all") {
-          const lowerType = normalizeSlug(massageType);
-          const matches = allServices.some(
-            (p: string) => p && normalizeSlug(p).includes(lowerType),
-          );
-          if (!matches) return false;
-        }
-
-        return true;
-      });
-    }
-
-    // Phase 1: Try with server-side array-contains for region
-    const hasRegionFilter = !!(params.region && params.region !== "all");
-    const hasCountyFilter = !!(params.county && params.county !== "all");
-
-    let result: GetEscortsResponse;
-
-    try {
-      result = await runQueryWithFilters(
-        params,
-        validPage,
-        validLimit,
-        sortBy,
-        sortOrder,
-        hasRegionFilter,
-      );
-    } catch (queryError: any) {
-      console.warn(
-        "Massage escorts: Server-side array-contains query failed, falling back to client-side filtering:",
-        queryError?.message || queryError,
-      );
-      result = {
-        escorts: [],
-        total: 0,
-        page: validPage,
-        totalPages: 0,
-        hasMore: false,
-      };
-    }
-
-    const massageFiltered = filterForMassage(result.escorts);
-
-    // Phase 2: Fallback to case-insensitive client-side filtering if 0 results
-    // and there is any filter (handles case mismatches in data
-    // or missing composite indexes)
-    if (
-      massageFiltered.length === 0 &&
-      (hasRegionFilter || hasCountyFilter)
-    ) {
-      try {
-        const fallback = await runQueryWithFilters(
-          params,
-          validPage,
-          validLimit,
-          sortBy,
-          sortOrder,
-          false,
-        );
-
-        const fallbackFiltered = filterForMassage(fallback.escorts);
-        return {
-          escorts: applyCleanedImages(
-            fallbackFiltered.slice(
-              (validPage - 1) * validLimit,
-              Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
-            ),
-          ),
-          total: fallbackFiltered.length,
-          page: validPage,
-          totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
-          hasMore:
-            fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
-        };
-      } catch (fallbackError: any) {
-        console.warn(
-          "Massage escorts: Phase 2 fallback failed:",
-          fallbackError?.message || fallbackError,
-        );
-      }
-    }
-
-    // Phase 3: If still 0 results and any filter exists, retry with
-    // county filter stripped from server-side (handles case mismatches)
-    if (
-      massageFiltered.length === 0 &&
-      (hasRegionFilter || hasCountyFilter) &&
-      params.county &&
-      params.county !== "all"
-    ) {
-      try {
-        const countyStrippedParams = { ...params, county: undefined };
-        const fallback = await runQueryWithFilters(
-          params,
-          validPage,
-          validLimit,
-          sortBy,
-          sortOrder,
-          false,
-          countyStrippedParams,
-        );
-
-        const fallbackFiltered = filterForMassage(fallback.escorts);
-        return {
-          escorts: applyCleanedImages(
-            fallbackFiltered.slice(
-              (validPage - 1) * validLimit,
-              Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
-            ),
-          ),
-          total: fallbackFiltered.length,
-          page: validPage,
-          totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
-          hasMore:
-            fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
-        };
-      } catch (fallbackError: any) {
-        console.warn(
-          "Massage escorts: Phase 3 county-stripped fallback failed:",
-          fallbackError?.message || fallbackError,
-        );
-      }
-    }
-
-    const allResults = massageFiltered;
-    const startIndex = (validPage - 1) * validLimit;
-    const endIndex = Math.min(startIndex + validLimit, allResults.length);
+    const { rows, total } = await getCleanedEscortsBase(params);
+    let escorts = rows.map(convertRowToEscort);
+    escorts = filterForMassage(escorts, massageType);
+    const paginated = applyPagination(escorts, validPage, validLimit);
 
     return {
-      escorts: applyCleanedImages(allResults.slice(startIndex, endIndex)),
-      total: allResults.length,
+      escorts: paginated,
+      total: escorts.length,
       page: validPage,
-      totalPages: Math.max(1, Math.ceil(allResults.length / validLimit)),
-      hasMore: endIndex < allResults.length || result.hasMore,
+      totalPages: Math.max(1, Math.ceil(escorts.length / validLimit)),
+      hasMore: paginated.length < escorts.length,
     };
   } catch (error) {
     console.error("Error fetching massage escorts with cleaned images:", error);
-    return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
-    };
+    return { escorts: [], total: 0, page: params.page || 1, totalPages: 0, hasMore: false };
   }
 }
 
-export const getMassageEscortsFromCleanedImages = cache(
-  fetchMassageEscortsWithCleanedImagesInternal,
-);
-
-const BDSM_TYPE_TERMS = [
-  "bdsm",
-  "domination",
-  "submission",
-  "bondage",
-  "discipline",
-  "sadomasochism",
-  "dominatrix",
-  "mistress",
-  "slave",
-  "master",
-  "kinky",
-  "fetish",
-  "spanking",
-  "whipping",
-  "role play",
-  "roleplay",
-  "leather",
-  "latex",
-  "pegging",
-  "strap-on",
-];
-
-function isBDSMPractice(value: string): boolean {
-  if (!value) return false;
-  const lower = value.toLowerCase();
-  return BDSM_TYPE_TERMS.some((term) => lower.includes(term));
-}
-
-interface GetBDSMEscortsParams
-  extends Omit<GetEscortsParams, "practice" | "practices"> {
-  practice?: string;
-}
-
-async function fetchBDSMEscortsWithCleanedImagesInternal(
-  params: GetBDSMEscortsParams = {},
+export async function getBDSMEscortsWithCleanedImages(
+  params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   try {
-    const {
-      page = 1,
-      limit: limitParam = 20,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-      practice,
-    } = params;
-
+    const { page = 1, limit: limitParam = 20, sortBy = "createdAt", sortOrder = "desc" } = params;
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    // Phase 1: Try with server-side array-contains for region (fast, exact match)
-    const hasRegionFilter = !!(params.region && params.region !== "all");
-    const hasPracticeFilter = !!(practice && practice !== "all");
-    const hasCountyFilter = !!(params.county && params.county !== "all");
+    const { rows, total } = await getCleanedEscortsBase(params);
+    let escorts = rows.map(convertRowToEscort);
 
-    let result: GetEscortsResponse;
+    const BDSM_TYPE_TERMS = [
+      "bdsm", "domination", "submission", "bondage", "discipline",
+      "sadomasochism", "dominatrix", "mistress", "slave", "master",
+      "kinky", "fetish", "spanking", "whipping", "role play", "roleplay",
+      "leather", "latex", "pegging", "strap-on",
+    ];
 
-    try {
-      result = await runQueryWithFilters(
-        params,
-        validPage,
-        validLimit,
-        sortBy,
-        sortOrder,
-        hasRegionFilter,
-      );
-    } catch (queryError: any) {
-      console.warn(
-        "BDSM escorts: Server-side array-contains query failed, falling back to client-side filtering:",
-        queryError?.message || queryError,
-      );
-      result = {
-        escorts: [],
-        total: 0,
-        page: validPage,
-        totalPages: 0,
-        hasMore: false,
-      };
-    }
-
-    const bdsmFiltered = result.escorts.filter((escort) => {
+    escorts = escorts.filter((escort) => {
       const allServices: string[] = [
         ...(escort.practices || []),
         ...((escort as any).bdsm || []),
         ...((escort as any).massage || []),
         ...((escort as any).extraServices || []),
       ];
-
       const hasBDSMPractice = allServices.some(
-        (p: string) => p && isBDSMPractice(p),
+        (p: string) => p && BDSM_TYPE_TERMS.some((term) => p.toLowerCase().includes(term)),
       );
       if (!hasBDSMPractice) return false;
-
-      if (practice && practice !== "all") {
-        const lowerPractice = normalizeSlug(practice);
-        const matches = allServices.some(
-          (p: string) => p && normalizeSlug(p).includes(lowerPractice),
-        );
-        if (!matches) return false;
-      }
-
       return true;
     });
 
-    // Phase 2: Fallback to case-insensitive client-side filtering if 0 results
-    // and there is any filter (handles case mismatches in data
-    // or missing composite indexes)
-    if (
-      bdsmFiltered.length === 0 &&
-      (hasRegionFilter || hasPracticeFilter || hasCountyFilter)
-    ) {
-      try {
-        const fallback = await runQueryWithFilters(
-          params,
-          validPage,
-          validLimit,
-          sortBy,
-          sortOrder,
-          false,
-        );
-
-        const fallbackFiltered = fallback.escorts.filter((escort) => {
-          const allServices: string[] = [
-            ...(escort.practices || []),
-            ...((escort as any).bdsm || []),
-            ...((escort as any).massage || []),
-            ...((escort as any).extraServices || []),
-          ];
-
-          const hasBDSMPractice = allServices.some(
-            (p: string) => p && isBDSMPractice(p),
-          );
-          if (!hasBDSMPractice) return false;
-
-          if (practice && practice !== "all") {
-            const lowerPractice = normalizeSlug(practice);
-            const matches = allServices.some(
-              (p: string) => p && normalizeSlug(p).includes(lowerPractice),
-            );
-            if (!matches) return false;
-          }
-
-          return true;
-        });
-
-        return {
-          escorts: applyCleanedImages(
-            fallbackFiltered.slice(
-              (validPage - 1) * validLimit,
-              Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
-            ),
-          ),
-          total: fallbackFiltered.length,
-          page: validPage,
-          totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
-          hasMore:
-            fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
-        };
-      } catch (fallbackError: any) {
-        console.warn(
-          "BDSM escorts: Phase 2 fallback failed:",
-          fallbackError?.message || fallbackError,
-        );
-      }
-    }
-
-    // Phase 3: If still 0 results and any filter exists, retry with
-    // county filter stripped from server-side (handles case mismatches)
-    if (
-      bdsmFiltered.length === 0 &&
-      (hasRegionFilter || hasPracticeFilter || hasCountyFilter) &&
-      params.county &&
-      params.county !== "all"
-    ) {
-      try {
-        const countyStrippedParams = { ...params, county: undefined };
-        const fallback = await runQueryWithFilters(
-          params,
-          validPage,
-          validLimit,
-          sortBy,
-          sortOrder,
-          false,
-          countyStrippedParams,
-        );
-
-        const fallbackFiltered = fallback.escorts.filter((escort) => {
-          const allServices: string[] = [
-            ...(escort.practices || []),
-            ...((escort as any).bdsm || []),
-            ...((escort as any).massage || []),
-            ...((escort as any).extraServices || []),
-          ];
-
-          const hasBDSMPractice = allServices.some(
-            (p: string) => p && isBDSMPractice(p),
-          );
-          if (!hasBDSMPractice) return false;
-
-          if (practice && practice !== "all") {
-            const lowerPractice = normalizeSlug(practice);
-            const matches = allServices.some(
-              (p: string) => p && normalizeSlug(p).includes(lowerPractice),
-            );
-            if (!matches) return false;
-          }
-
-          return true;
-        });
-
-        return {
-          escorts: applyCleanedImages(
-            fallbackFiltered.slice(
-              (validPage - 1) * validLimit,
-              Math.min((validPage - 1) * validLimit + validLimit, fallbackFiltered.length),
-            ),
-          ),
-          total: fallbackFiltered.length,
-          page: validPage,
-          totalPages: Math.max(1, Math.ceil(fallbackFiltered.length / validLimit)),
-          hasMore:
-            fallbackFiltered.length > validPage * validLimit || fallback.hasMore,
-        };
-      } catch (fallbackError: any) {
-        console.warn(
-          "BDSM escorts: Phase 3 county-stripped fallback failed:",
-          fallbackError?.message || fallbackError,
-        );
-      }
-    }
-
-    const allResults = bdsmFiltered;
-    const startIndex = (validPage - 1) * validLimit;
-    const endIndex = Math.min(startIndex + validLimit, allResults.length);
+    const paginated = applyPagination(escorts, validPage, validLimit);
 
     return {
-      escorts: applyCleanedImages(allResults.slice(startIndex, endIndex)),
-      total: allResults.length,
+      escorts: paginated,
+      total: escorts.length,
       page: validPage,
-      totalPages: Math.max(1, Math.ceil(allResults.length / validLimit)),
-      hasMore: endIndex < allResults.length || result.hasMore,
+      totalPages: Math.max(1, Math.ceil(escorts.length / validLimit)),
+      hasMore: paginated.length < escorts.length,
     };
   } catch (error) {
     console.error("Error fetching BDSM escorts with cleaned images:", error);
-    return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
-    };
+    return { escorts: [], total: 0, page: params.page || 1, totalPages: 0, hasMore: false };
   }
 }
 
-export const getBDSMEscortsWithCleanedImages = cache(
-  fetchBDSMEscortsWithCleanedImagesInternal,
-);
+async function fetchEscortsWithCleanedRows(params: Omit<GetEscortsParams, "practice" | "practices" | "page" | "limit"> = {}): Promise<Escort[]> {
+  const conditions: string[] = ["has_cleaned_images = TRUE"];
+  const params_arr: any[] = [];
+  let paramIndex = 1;
 
-/**
- * Get all unique BDSM practices from cleaned escorts.
- *
- * BDSM practices are extracted from BOTH the `practices` and `bdsm` array
- * fields on escorts with cleaned images. Only values that match known BDSM
- * terms are included.
- */
-async function fetchBDSMsFromCleanedEscortsInternal(
-  params: Omit<
-    GetEscortsParams,
-    "practice" | "practices" | "page" | "limit"
-  > = {},
+  if (params.isActive !== undefined) {
+    conditions.push(`is_active = $${paramIndex}`);
+    params_arr.push(params.isActive);
+    paramIndex++;
+  }
+  if (params.isVerified !== undefined) {
+    conditions.push(`is_verified = $${paramIndex}`);
+    params_arr.push(params.isVerified);
+    paramIndex++;
+  }
+  if (params.isFeatured !== undefined) {
+    conditions.push(`is_featured = $${paramIndex}`);
+    params_arr.push(params.isFeatured);
+    paramIndex++;
+  }
+  if (params.county && params.county !== "all") {
+    conditions.push(`county = $${paramIndex}`);
+    params_arr.push(params.county);
+    paramIndex++;
+  }
+  if (params.region && params.region !== "all") {
+    conditions.push(`$${paramIndex} = ANY(regions)`);
+    params_arr.push(params.region);
+    paramIndex++;
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const query = `SELECT * FROM escorts ${where}`;
+  const rows: any[] = await executeQuery(query, params_arr);
+  return rows.map(convertRowToEscort);
+}
+
+export async function getBDSMsFromCleanedEscorts(
+  params: Omit<GetEscortsParams, "practice" | "practices" | "page" | "limit"> = {},
 ): Promise<{ value: string; count: number }[]> {
   try {
-    let query = buildBaseQuery();
-    query = applyServerSideFilters(query, params);
+    const escorts = await fetchEscortsWithCleanedRows(params);
 
-    const batchSize = 1000;
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-
-    while (true) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      const docs = snapshot.docs.map(convertDocToEscortFast);
-      const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < batchSize) {
-        break;
-      }
-    }
+    const BDSM_TYPE_TERMS = [
+      "bdsm", "domination", "submission", "bondage", "discipline",
+      "sadomasochism", "dominatrix", "mistress", "slave", "master",
+      "kinky", "fetish", "spanking", "whipping", "role play", "roleplay",
+      "leather", "latex", "pegging", "strap-on",
+    ];
 
     const valueCounts: Record<string, number> = {};
 
-    allFiltered.forEach((escort) => {
+    escorts.forEach((escort) => {
       const serviceArrays = [
         escort.practices,
         (escort as any).bdsm,
@@ -991,7 +421,7 @@ async function fetchBDSMsFromCleanedEscortsInternal(
 
       serviceArrays.forEach((arr: any[]) => {
         arr.forEach((item: string) => {
-          if (item && isBDSMPractice(item) && !valueCounts[item]) {
+          if (item && BDSM_TYPE_TERMS.some((term) => item.toLowerCase().includes(term)) && !valueCounts[item]) {
             valueCounts[item] = (valueCounts[item] || 0) + 1;
           }
         });
@@ -1001,9 +431,7 @@ async function fetchBDSMsFromCleanedEscortsInternal(
     return Object.entries(valueCounts)
       .map(([value, count]) => ({ value, count }))
       .sort((a, b) => {
-        if (b.count !== a.count) {
-          return b.count - a.count;
-        }
+        if (b.count !== a.count) return b.count - a.count;
         return a.value.localeCompare(b.value);
       });
   } catch (error) {
@@ -1012,50 +440,15 @@ async function fetchBDSMsFromCleanedEscortsInternal(
   }
 }
 
-export const getBDSMsFromCleanedEscorts = cache(
-  fetchBDSMsFromCleanedEscortsInternal,
-);
-
-async function fetchPracticesFromCleanedEscortsInternal(
-  params: Omit<
-    GetEscortsParams,
-    "practice" | "practices" | "page" | "limit"
-  > = {},
+export async function getPracticesFromCleanedEscorts(
+  params: Omit<GetEscortsParams, "practice" | "practices" | "page" | "limit"> = {},
 ): Promise<{ practice: string; count: number }[]> {
   try {
-    let query = buildBaseQuery();
-    query = applyServerSideFilters(query, params);
-
-    const batchSize = 1000;
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-
-    while (true) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      const docs = snapshot.docs.map(convertDocToEscortFast);
-      const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < batchSize) {
-        break;
-      }
-    }
+    const escorts = await fetchEscortsWithCleanedRows(params);
 
     const practiceCounts: Record<string, number> = {};
 
-    allFiltered.forEach((escort) => {
+    escorts.forEach((escort) => {
       const serviceArrays = [
         escort.practices,
         (escort as any).bdsm,
@@ -1075,9 +468,7 @@ async function fetchPracticesFromCleanedEscortsInternal(
     return Object.entries(practiceCounts)
       .map(([practice, count]) => ({ practice, count }))
       .sort((a, b) => {
-        if (b.count !== a.count) {
-          return b.count - a.count;
-        }
+        if (b.count !== a.count) return b.count - a.count;
         return a.practice.localeCompare(b.practice);
       });
   } catch (error) {
@@ -1086,55 +477,16 @@ async function fetchPracticesFromCleanedEscortsInternal(
   }
 }
 
-export const getPracticesFromCleanedEscorts = cache(
-  fetchPracticesFromCleanedEscortsInternal,
-);
-
-/**
- * Generic internal function to extract unique string values from a given
- * array field on escorts with cleaned images (mirrors the practices logic).
- */
-async function fetchUniqueFieldFromCleanedEscortsInternal(
-  params: Omit<
-    GetEscortsParams,
-    "practice" | "practices" | "page" | "limit"
-  > = {},
+async function fetchUniqueFieldFromCleanedEscorts(
+  params: Omit<GetEscortsParams, "practice" | "practices" | "page" | "limit"> = {},
   field: "practices" | "massage" | "categories" | "bdsm",
 ): Promise<{ value: string; count: number }[]> {
   try {
-    let query = buildBaseQuery();
-    query = applyServerSideFilters(query, params);
-
-    const batchSize = 500;
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-
-    while (true) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      const docs = snapshot.docs.map(convertDocToEscortFast);
-      const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < batchSize) {
-        break;
-      }
-    }
+    const escorts = await fetchEscortsWithCleanedRows(params);
 
     const valueCounts: Record<string, number> = {};
 
-    allFiltered.forEach((escort) => {
+    escorts.forEach((escort) => {
       const values = (escort as any)[field];
       if (values && Array.isArray(values)) {
         values.forEach((value: string) => {
@@ -1148,102 +500,24 @@ async function fetchUniqueFieldFromCleanedEscortsInternal(
     return Object.entries(valueCounts)
       .map(([value, count]) => ({ value, count }))
       .sort((a, b) => {
-        if (b.count !== a.count) {
-          return b.count - a.count;
-        }
+        if (b.count !== a.count) return b.count - a.count;
         return a.value.localeCompare(b.value);
       });
   } catch (error) {
-    console.error(
-      `Error fetching ${field} from cleaned escorts:`,
-      error,
-    );
+    console.error(`Error fetching ${field} from cleaned escorts:`, error);
     return [];
   }
 }
 
-/**
- * Terms that identify a practice/value as a massage type.
- * Used to extract massage types from escort `practices` and `massage` arrays.
- */
-const MASSAGE_TYPE_TERMS = [
-  "massage",
-  "tantric",
-  "nuru",
-  "lingam",
-  "yoni",
-  "body to body",
-  "body-to-body",
-  "b2b",
-  "sensual",
-  "erotic",
-  "four hands",
-  "4 hands",
-  "couples",
-  "therapeutic",
-  "relaxation",
-  "wellness",
-  "deep tissue",
-  "swedish",
-  "hot stone",
-  "aromatherapy",
-  "sports massage",
-];
-
-function isMassageType(value: string): boolean {
-  if (!value) return false;
-  const lower = value.toLowerCase();
-  return MASSAGE_TYPE_TERMS.some((term) => lower.includes(term));
-}
-
-/**
- * Get all unique massage types from cleaned escorts.
- *
- * Massage types are extracted from BOTH the `practices` and `massage` array
- * fields on escorts with cleaned images. Only values that match known massage
- * type terms (e.g. "massage", "tantric", "nuru", "lingam", "yoni",
- * "body to body", "b2b", "sensual", etc.) are included.
- */
-async function fetchMassagesFromCleanedEscortsInternal(
-  params: Omit<
-    GetEscortsParams,
-    "practice" | "practices" | "page" | "limit"
-  > = {},
+export async function getMassagesFromCleanedEscorts(
+  params: Omit<GetEscortsParams, "practice" | "practices" | "page" | "limit"> = {},
 ): Promise<{ value: string; count: number }[]> {
   try {
-    let query = buildBaseQuery();
-    query = applyServerSideFilters(query, params);
-
-    const batchSize = 1000;
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-
-    while (true) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      const docs = snapshot.docs.map(convertDocToEscortFast);
-      const filtered = applyClientFilters(docs, params);
-      allFiltered.push(...filtered);
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < batchSize) {
-        break;
-      }
-    }
+    const escorts = await fetchEscortsWithCleanedRows(params);
 
     const valueCounts: Record<string, number> = {};
 
-    allFiltered.forEach((escort) => {
+    escorts.forEach((escort) => {
       const serviceArrays = [
         escort.practices,
         (escort as any).bdsm,
@@ -1263,9 +537,7 @@ async function fetchMassagesFromCleanedEscortsInternal(
     return Object.entries(valueCounts)
       .map(([value, count]) => ({ value, count }))
       .sort((a, b) => {
-        if (b.count !== a.count) {
-          return b.count - a.count;
-        }
+        if (b.count !== a.count) return b.count - a.count;
         return a.value.localeCompare(b.value);
       });
   } catch (error) {
@@ -1274,41 +546,28 @@ async function fetchMassagesFromCleanedEscortsInternal(
   }
 }
 
-/**
- * Get all unique massage types from cleaned escorts.
- * Extracts from both the `practices` and `massage` array fields,
- * filtering for values that match known massage type terms.
- */
-export const getMassagesFromCleanedEscorts = cache(
-  fetchMassagesFromCleanedEscortsInternal,
-);
-
 export async function getCleanedImagesForEscort(
   escortId: string,
 ): Promise<string[]> {
   try {
-    const doc = await adminDb.collection("escorts").doc(escortId).get();
+    const rows: any[] = await sql`
+      SELECT cleaned_images, images_metadata FROM escorts WHERE id = ${escortId}
+    `;
+    if (!rows || rows.length === 0) return [];
 
-    if (!doc.exists) {
-      return [];
+    const row = rows[0];
+    const cleanedImages: string[] = row.cleaned_images || [];
+    if (cleanedImages.length > 0) return cleanedImages;
+
+    const metadata: Record<string, any> = row.images_metadata || {};
+    const urls: string[] = [];
+    for (const key of Object.keys(metadata)) {
+      const m = metadata[key];
+      if (m?.status === "completed" && (m.cleanedUrl || m.cloudinaryUrl)) {
+        urls.push(m.cleanedUrl || m.cloudinaryUrl);
+      }
     }
-
-    const escort = convertDocToEscortFast(doc);
-
-    if (escort.cleanedImages && escort.cleanedImages.length > 0) {
-      return escort.cleanedImages;
-    }
-
-    if (!escort.imagesMetadata) {
-      return [];
-    }
-
-    return Object.values(escort.imagesMetadata)
-      .filter(
-        (metadata: any) =>
-          metadata.status === "completed" && (metadata.cleanedUrl || metadata.cloudinaryUrl),
-      )
-      .map((metadata: any) => metadata.cleanedUrl || metadata.cloudinaryUrl!);
+    return urls;
   } catch (error) {
     console.error("Error fetching cleaned images:", error);
     return [];
@@ -1317,8 +576,12 @@ export async function getCleanedImagesForEscort(
 
 export async function getCleanedImagesStats() {
   try {
-    const batchSize = 500;
-    let lastDoc: any = null;
+    const rows: any[] = await sql`
+      SELECT cleaned_images, images_metadata, categories, county
+      FROM escorts
+      WHERE has_cleaned_images = TRUE
+    `;
+
     const stats = {
       totalEscorts: 0,
       escortsWithCleanedImages: 0,
@@ -1327,64 +590,34 @@ export async function getCleanedImagesStats() {
       byCounty: {} as Record<string, number>,
     };
 
-    while (true) {
-      let query = adminDb
-        .collection("escorts")
-        .where("hasCleanedImages", "==", true)
-        .select(
-          "cleanedImages",
-          "imagesMetadata",
-          "categories",
-          "county",
-        );
+    stats.totalEscorts = rows.length;
 
-      if (lastDoc) {
-        query = query.startAfter(lastDoc);
-      }
-
-      const snapshot = await query.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      stats.totalEscorts += snapshot.size;
-
-      snapshot.docs.forEach((doc: any) => {
-        const data = doc.data();
-
-        const cleanedCount = data.cleanedImages?.length || 0;
-        const metadataCleanedCount = data.imagesMetadata
-          ? Object.values(data.imagesMetadata).filter(
-              (metadata: any) =>
-                metadata.status === "completed" && metadata.cleanedUrl,
-            ).length
-          : 0;
-
-        const totalCount = cleanedCount > 0 ? cleanedCount : metadataCleanedCount;
-
-        if (totalCount > 0) {
-          stats.escortsWithCleanedImages++;
-          stats.totalCleanedImages += totalCount;
-
-          data.categories?.forEach((category: string) => {
-            stats.byCategory[category] =
-              (stats.byCategory[category] || 0) + 1;
-          });
-
-          if (data.county) {
-            stats.byCounty[data.county] =
-              (stats.byCounty[data.county] || 0) + 1;
-          }
+    rows.forEach((row) => {
+      const cleanedCount = row.cleaned_images?.length || 0;
+      const metadata = row.images_metadata || {};
+      let metadataCleanedCount = 0;
+      for (const key of Object.keys(metadata)) {
+        const m = metadata[key];
+        if (m?.status === "completed" && m?.cleanedUrl) {
+          metadataCleanedCount++;
         }
-      });
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < batchSize) {
-        break;
       }
-    }
+
+      const totalCount = cleanedCount > 0 ? cleanedCount : metadataCleanedCount;
+
+      if (totalCount > 0) {
+        stats.escortsWithCleanedImages++;
+        stats.totalCleanedImages += totalCount;
+
+        (row.categories || []).forEach((category: string) => {
+          stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+        });
+
+        if (row.county) {
+          stats.byCounty[row.county] = (stats.byCounty[row.county] || 0) + 1;
+        }
+      }
+    });
 
     return stats;
   } catch (error) {
