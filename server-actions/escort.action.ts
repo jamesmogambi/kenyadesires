@@ -1,112 +1,7 @@
 "use server";
 
-import { adminDb } from "@/lib/firebase-admin";
-import { cacheLife, revalidatePath, revalidateTag } from "next/cache";
-import { cache } from "react";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
-
-// Types
-export interface Escort {
-  cleaningHistory: never[];
-  id: string;
-  name: string;
-  username: string;
-  previewPhoto: string;
-  labels: string[];
-  email: string;
-  age: string;
-  telephone: string;
-  whatsappPhone: string;
-  images: string[];
-  videos: string[];
-  about: string;
-  availability: string[];
-  ethnicity: string;
-  nationality: string;
-  bustSize: string;
-  weight: string;
-  zodiacSign: string;
-  sexualOrientation: string;
-  gender: string;
-  languages: string[];
-  categories: string[];
-  country: string;
-  county: string;
-  countyCode: string;
-  regions: string[];
-  primaryRegion: string;
-  locations: Location[];
-  source: string;
-  practices: string[];
-  bdsm: string[];
-  massage: string[];
-  extraServices: string[];
-  slug: string;
-  role: string;
-  openingHours: OpeningHours;
-  rates: Rate[];
-  breastSize: string;
-  ageCategory: string;
-  character: string;
-  hairColor: string;
-  experience: string;
-  workType: string;
-  agencyId?: string;
-  isAgencyOwned?: boolean;
-  clerkUserId?: string;
-  isAgencyFeatured: boolean;
-  isActive: boolean;
-  isVerified: boolean;
-  verificationStatus?: "pending" | "verified" | "rejected";
-  verificationDocuments?: {
-    idProof?: string;
-    idBack?: string;
-    selfieWithId?: string;
-    policeClearance?: string;
-  };
-  isFeatured: boolean;
-  plan: Plan;
-  totalBookings: number;
-  totalReviews: number;
-  rating: number;
-  totalViews: number;
-  credits?: number;
-  cleanedImages?: string[];
-  createdAt: Date;
-  updatedAt: Date;
-
-  // Watermark tracking fields
-  watermarkStatus?: "pending" | "processing" | "completed" | "failed";
-  watermarkError?: string;
-  lastProcessedAt?: Date;
-  imagesMetadata?: {
-    [imageUrl: string]: {
-      cleanedUrl?: string;
-      cloudinaryUrl?: string;
-      status: "pending" | "processing" | "completed" | "failed";
-      errorMessage?: string;
-      processedAt?: Date;
-      fileSize?: number;
-      mimeType?: string;
-    };
-  };
-  totalImagesProcessed?: number;
-  totalImagesFailed?: number;
-  hasCleanedImages?: boolean;
-
-  street?: string;
-
-  utm_source?: string;
-  utm_medium?: string;
-  utm_campaign?: string;
-  utm_content?: string;
-  utm_term?: string;
-  utm_id?: string;
-  utm_source_platform?: string;
-  landing_page?: string;
-  first_touch_at?: string;
-  registration_date?: string;
-}
+import { sql } from "@/app/lib/db";
+import { executeQuery } from "@/lib/neon";
 
 export interface Location {
   region: string;
@@ -143,6 +38,82 @@ export interface Plan {
   features: string[];
 }
 
+export interface Escort {
+  id: string;
+  name: string;
+  username: string;
+  slug: string;
+  previewPhoto: string;
+  labels: string[];
+  email: string;
+  age: string;
+  telephone: string;
+  whatsappPhone: string;
+  images: string[];
+  videos: string[];
+  about: string;
+  availability: string[];
+  ethnicity: string;
+  nationality: string;
+  bustSize: string;
+  weight: string;
+  zodiacSign: string;
+  sexualOrientation: string;
+  gender: string;
+  languages: string[];
+  categories: string[];
+  country: string;
+  county: string;
+  countyCode: string;
+  regions: string[];
+  primaryRegion: string;
+  locations: Location[];
+  source: string;
+  practices: string[];
+  bdsm: string[];
+  massage: string[];
+  extraServices: string[];
+  agencyId?: string;
+  isAgencyOwned?: boolean;
+  clerkUserId?: string;
+  isAgencyFeatured: boolean;
+  isActive: boolean;
+  isVerified: boolean;
+  verificationStatus?: "pending" | "verified" | "rejected";
+  verificationDocuments?: {
+    idProof?: string;
+    idBack?: string;
+    selfieWithId?: string;
+    policeClearance?: string;
+  };
+  isFeatured: boolean;
+  plan: Plan;
+  totalBookings: number;
+  totalReviews: number;
+  rating: number;
+  totalViews: number;
+  credits?: number;
+  cleanedImages?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  watermarkStatus?: "pending" | "processing" | "completed" | "failed";
+  watermarkError?: string;
+  lastProcessedAt?: Date;
+  imagesMetadata?: Record<string, any>;
+  totalImagesProcessed?: number;
+  totalImagesFailed?: number;
+  hasCleanedImages?: boolean;
+  street?: string;
+  workType: string;
+  breastSize?: string;
+  ageCategory?: string;
+  character?: string;
+  hairColor?: string;
+  experience?: string;
+  openingHours?: OpeningHours;
+  role?: string;
+}
+
 export interface GetEscortsParams {
   page?: number;
   limit?: number;
@@ -155,6 +126,7 @@ export interface GetEscortsParams {
   category?: string;
   categories?: string[];
   nationality?: string;
+  countyCode?: string;
   minAge?: number;
   maxAge?: number;
   isActive?: boolean;
@@ -180,486 +152,266 @@ export interface GetEscortsResponse {
   hasMore: boolean;
 }
 
-// Helper function to convert Firestore DocumentSnapshot to Escort type (for single documents)
-export const convertDocSnapshotToEscort = async (
-  doc: FirebaseFirestore.DocumentSnapshot,
-): Promise<Escort | null> => {
-  if (!doc.exists) return null;
-
-  const data = doc.data();
-  if (!data) return null;
-
-  return {
-    cleaningHistory: data.cleaningHistory || [],
-    id: doc.id,
-    name: data.name,
-    username: data.username,
-    previewPhoto: data.previewPhoto,
-    labels: data.labels || [],
-    email: data.email,
-    age: data.age,
-    telephone: data.telephone,
-    whatsappPhone: data.whatsappPhone,
-    images: data.images || [],
-    videos: data.videos || [],
-    about: data.about,
-    availability: data.availability || [],
-    ethnicity: data.ethnicity,
-    nationality: data.nationality,
-    bustSize: data.bustSize,
-    weight: data.weight,
-    zodiacSign: data.zodiacSign,
-    sexualOrientation: data.sexualOrientation,
-    gender: data.gender,
-    languages: data.languages || [],
-    categories: data.categories || [],
-    country: data.country,
-    county: data.county, // This is now a string (county name), not an ObjectId
-    countyCode: data.countyCode,
-    regions: data.regions || [],
-    primaryRegion: data.primaryRegion,
-    locations: data.locations || [],
-    source: data.source,
-    practices: data.practices || [],
-    bdsm: data.bdsm || [],
-    massage: data.massage || [],
-    extraServices: data.extraServices || [],
-    slug: data.slug,
-    role: data.role,
-    openingHours: data.openingHours || {
-      monday: "Not Specified",
-      tuesday: "Not Specified",
-      wednesday: "Not Specified",
-      thursday: "Not Specified",
-      friday: "Not Specified",
-      saturday: "Not Specified",
-      sunday: "Not Specified",
-    },
-    rates: data.rates || [],
-    breastSize: data.breastSize,
-    ageCategory: data.ageCategory,
-    character: data.character,
-    hairColor: data.hairColor,
-    experience: data.experience,
-    workType: data.workType,
-    agencyId: data.agencyId,
-    isAgencyOwned: data.isAgencyOwned,
-    clerkUserId: data.clerkUserId,
-    isAgencyFeatured: data.isAgencyFeatured,
-    isActive: data.isActive,
-    isVerified: data.isVerified,
-    isFeatured: data.isFeatured,
-    plan: data.plan,
-    totalBookings: data.totalBookings || 0,
-    totalReviews: data.totalReviews || 0,
-    rating: data.rating || 0,
-    totalViews: data.totalViews || 0,
-    createdAt: data.createdAt?.toDate?.() || data.createdAt,
-    updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
-    utm_source: data.utm_source,
-    utm_medium: data.utm_medium,
-    utm_campaign: data.utm_campaign,
-    utm_content: data.utm_content,
-    utm_term: data.utm_term,
-    utm_id: data.utm_id,
-    utm_source_platform: data.utm_source_platform,
-    landing_page: data.landing_page,
-    first_touch_at: data.first_touch_at,
-    registration_date: data.registration_date,
-  };
-};
-// Helper function to convert Firestore QueryDocumentSnapshot to Escort type (for collections)
-export const convertQueryDocToEscort = async (
-  doc: FirebaseFirestore.QueryDocumentSnapshot,
-): Promise<Escort> => {
-  const data = doc.data();
-  return {
-    cleaningHistory: data.cleaningHistory || [],
-    id: doc.id,
-    name: data.name,
-    username: data.username,
-    previewPhoto: data.previewPhoto,
-    labels: data.labels || [],
-    email: data.email,
-    age: data.age,
-    telephone: data.telephone,
-    whatsappPhone: data.whatsappPhone,
-    images: data.images || [],
-    videos: data.videos || [],
-    about: data.about,
-    availability: data.availability || [],
-    ethnicity: data.ethnicity,
-    nationality: data.nationality,
-    bustSize: data.bustSize,
-    weight: data.weight,
-    zodiacSign: data.zodiacSign,
-    sexualOrientation: data.sexualOrientation,
-    gender: data.gender,
-    languages: data.languages || [],
-    categories: data.categories || [],
-    country: data.country,
-    county: data.county,
-    countyCode: data.countyCode,
-    regions: data.regions || [],
-    primaryRegion: data.primaryRegion,
-    locations: data.locations || [],
-    source: data.source,
-    practices: data.practices || [],
-    bdsm: data.bdsm || [],
-    massage: data.massage || [],
-    extraServices: data.extraServices || [],
-    slug: data.slug,
-    role: data.role,
-    openingHours: data.openingHours || {
-      monday: "Not Specified",
-      tuesday: "Not Specified",
-      wednesday: "Not Specified",
-      thursday: "Not Specified",
-      friday: "Not Specified",
-      saturday: "Not Specified",
-      sunday: "Not Specified",
-    },
-    rates: data.rates || [],
-    breastSize: data.breastSize,
-    ageCategory: data.ageCategory,
-    character: data.character,
-    hairColor: data.hairColor,
-    experience: data.experience,
-    workType: data.workType,
-    agencyId: data.agencyId,
-    isAgencyOwned: data.isAgencyOwned,
-    clerkUserId: data.clerkUserId,
-    isAgencyFeatured: data.isAgencyFeatured,
-    isActive: data.isActive,
-    isVerified: data.isVerified,
-    isFeatured: data.isFeatured,
-    plan: data.plan,
-    totalBookings: data.totalBookings || 0,
-    totalReviews: data.totalReviews || 0,
-    rating: data.rating || 0,
-    totalViews: data.totalViews || 0,
-    createdAt: data.createdAt?.toDate?.() || data.createdAt,
-    updatedAt: data.updatedAt?.toDate?.() || data.updatedAt,
-    utm_source: data.utm_source,
-    utm_medium: data.utm_medium,
-    utm_campaign: data.utm_campaign,
-    utm_content: data.utm_content,
-    utm_term: data.utm_term,
-    utm_id: data.utm_id,
-    utm_source_platform: data.utm_source_platform,
-    landing_page: data.landing_page,
-    first_touch_at: data.first_touch_at,
-    registration_date: data.registration_date,
-  };
-};
-
-// Validation functions (optional - for logging only, won't throw errors)
-async function logInvalidCounty(county: string): Promise<void> {
-  try {
-    const countiesRef = adminDb.collection("counties");
-    const snapshot = await countiesRef
-      .where("name", "==", county)
-      .limit(1)
-      .get();
-    if (snapshot.empty) {
-      console.warn(`County not found in database: ${county}`);
-    }
-  } catch (error) {
-    console.error("Error checking county:", error);
+function normalizeArray(val: any): string[] {
+  if (Array.isArray(val)) return val;
+  if (val == null) return [];
+  if (typeof val === "object") {
+    const keys = Object.keys(val).sort((a, b) => {
+      const an = parseInt(a), bn = parseInt(b);
+      if (isNaN(an) && isNaN(bn)) return 0;
+      if (isNaN(an)) return 1;
+      if (isNaN(bn)) return -1;
+      return an - bn;
+    });
+    return keys.map((k) => String(val[k]));
   }
+  return [String(val)];
 }
 
-async function logInvalidRegion(
-  region: string,
-  county?: string,
-): Promise<void> {
-  try {
-    const regionsRef = adminDb.collection("regions");
-    let query = regionsRef.where("name", "==", region);
-
-    if (county) {
-      query = query.where("county", "==", county);
-    }
-
-    const snapshot = await query.limit(1).get();
-    if (snapshot.empty) {
-      console.warn(
-        `Region not found in database: ${region}${county ? ` in ${county}` : ""}`,
-      );
-    }
-  } catch (error) {
-    console.error("Error checking region:", error);
-  }
+function convertRowToEscort(row: any): Escort {
+  return {
+    id: row.id,
+    name: row.name,
+    username: row.username,
+    slug: row.slug,
+    previewPhoto: row.preview_photo,
+    labels: normalizeArray(row.labels),
+    email: row.email,
+    age: row.age,
+    telephone: row.telephone,
+    whatsappPhone: row.whatsapp_phone,
+    images: normalizeArray(row.images),
+    videos: normalizeArray(row.videos),
+    about: row.about,
+    availability: normalizeArray(row.availability),
+    ethnicity: row.ethnicity,
+    nationality: row.nationality,
+    bustSize: row.bust_size,
+    breastSize: row.bust_size,
+    weight: row.weight,
+    zodiacSign: row.zodiac_sign,
+    sexualOrientation: row.sexual_orientation,
+    gender: row.gender,
+    languages: normalizeArray(row.languages),
+    categories: normalizeArray(row.categories),
+    country: row.country,
+    county: row.county,
+    countyCode: row.county_code,
+    regions: normalizeArray(row.regions),
+    primaryRegion: row.primary_region,
+    locations: row.locations || [],
+    source: row.source,
+    practices: normalizeArray(row.practices),
+    bdsm: normalizeArray(row.bdsm),
+    massage: normalizeArray(row.massage),
+    extraServices: normalizeArray(row.extra_services),
+    role: row.role,
+    openingHours: row.opening_hours,
+    ageCategory: row.age_category,
+    character: row.character,
+    hairColor: row.hair_color,
+    experience: row.experience,
+    agencyId: row.agency_id,
+    isAgencyOwned: row.is_agency_owned,
+    clerkUserId: row.clerk_user_id,
+    isAgencyFeatured: row.is_agency_featured,
+    isActive: row.is_active,
+    isVerified: row.is_verified,
+    verificationStatus: row.verification_status,
+    verificationDocuments: row.verification_documents,
+    isFeatured: row.is_featured,
+    plan: row.plan,
+    totalBookings: row.total_bookings,
+    totalReviews: row.total_reviews,
+    rating: row.rating,
+    totalViews: row.total_views,
+    credits: row.credits,
+    cleanedImages: normalizeArray(row.cleaned_images),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    watermarkStatus: row.watermark_status,
+    watermarkError: row.watermark_error,
+    lastProcessedAt: row.last_processed_at,
+    imagesMetadata: row.images_metadata,
+    totalImagesProcessed: row.total_images_processed,
+    totalImagesFailed: row.total_images_failed,
+    hasCleanedImages: row.has_cleaned_images,
+    street: row.street,
+    workType: row.work_type,
+  };
 }
 
-const MAX_FETCH_ITERATIONS = 50;
-
-const normalize = (val?: string) => (val || "").toLowerCase().trim();
-
-async function runEscortBatch(
-  query: FirebaseFirestore.Query,
+function buildWhereClause(
   params: GetEscortsParams,
-  validLimit: number,
-): Promise<{ docs: Escort[]; hasMore: boolean }> {
-  const batchSize = Math.max(validLimit * 5, 200);
-  let lastDoc: any = null;
-  const allFiltered: Escort[] = [];
-  let hasMore = false;
+  paramIndex: number,
+): { clause: string; params: any[] } {
+  const conditions: string[] = [];
+  const params_arr: any[] = [];
 
-  let iterations = 0;
-
-  while (allFiltered.length < validLimit && iterations < MAX_FETCH_ITERATIONS) {
-    iterations++;
-    let pageQuery = query;
-    if (lastDoc) {
-      pageQuery = pageQuery.startAfter(lastDoc);
-    }
-
-    const snapshot = await pageQuery.limit(batchSize).get();
-
-    if (snapshot.empty) {
-      break;
-    }
-
-    const docs = snapshot.docs.map(convertDocToEscortFast);
-
-    let filtered = docs;
-    if (params.region && params.region !== "all") {
-      const regionLower = normalize(params.region);
-      filtered = filtered.filter((e) =>
-        e.regions?.some((r) => normalize(r) === regionLower) ||
-        normalize(e.primaryRegion) === regionLower
-      );
-    }
-    if (params.practice && params.practice !== "all") {
-      const practiceLower = normalize(params.practice);
-      filtered = filtered.filter((e) =>
-        (e.practices || []).some((p) => normalize(p) === practiceLower) ||
-        (e.bdsm || []).some((p) => normalize(p) === practiceLower) ||
-        (e.massage || []).some((p) => normalize(p) === practiceLower) ||
-        (e.extraServices || []).some((p) => normalize(p) === practiceLower)
-      );
-    }
-
-    allFiltered.push(...filtered);
-    lastDoc = snapshot.docs[snapshot.docs.length - 1];
-    hasMore = snapshot.size === batchSize;
-
-    if (!hasMore || iterations >= MAX_FETCH_ITERATIONS) {
-      break;
-    }
+  if (params.isActive !== undefined) {
+    conditions.push(`is_active = $${paramIndex}`);
+    params_arr.push(params.isActive);
+    paramIndex++;
   }
-
-  return { docs: allFiltered, hasMore };
-}
-
-// ✅ Optimized version - uses server-side filtering + batch fetching
-async function getEscorts(
-  params: GetEscortsParams = {},
-): Promise<GetEscortsResponse> {
-  try {
-    const {
-      page = 1,
-      limit = 20,
-      county,
-      region,
-      isActive = true,
-      isVerified,
-      isFeatured,
-      sortBy = "createdAt",
-      sortOrder = "desc",
-    } = params;
-
-    const validPage = Math.max(1, page);
-    const validLimit = Math.min(100, Math.max(1, limit));
-
-    const validSortFields = [
-      "createdAt",
-      "updatedAt",
-      "rating",
-      "totalViews",
-      "totalBookings",
-    ];
-    const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-
-    const selectFields = LISTING_SELECT_FIELDS;
-
-    function buildQuery(useRegionArrayContains: boolean) {
-      let query: FirebaseFirestore.Query = adminDb.collection("escorts");
-
-      if (isActive !== undefined) {
-        query = query.where("isActive", "==", isActive);
-      }
-      if (isVerified !== undefined) {
-        query = query.where("isVerified", "==", isVerified);
-      }
-      if (isFeatured !== undefined) {
-        query = query.where("isFeatured", "==", isFeatured);
-      }
-      if (county && county !== "all") {
-        query = query.where("county", "==", county);
-      }
-
-      if (useRegionArrayContains && region && region !== "all") {
-        query = query.where("regions", "array-contains", region);
-      }
-
-      query = query.orderBy(sortField, sortOrder);
-      query = query.select(...selectFields);
-
-      return query;
-    }
-
-    // Phase 1: Try with server-side array-contains for region (fast, exact match)
-    const hasRegionFilter = !!(region && region !== "all");
-
-    let query = buildQuery(hasRegionFilter);
-    let { docs: allFiltered, hasMore } = await runEscortBatch(query, params, validLimit);
-
-    // Phase 2: Fallback to client-side filtering only if region filter
-    // yielded 0 results (handles case mismatches in stored data)
-    if (allFiltered.length === 0 && hasRegionFilter) {
-      query = buildQuery(false);
-      const fallback = await runEscortBatch(query, params, validLimit);
-      allFiltered = fallback.docs;
-      hasMore = fallback.hasMore;
-    }
-
-    const total = allFiltered.length;
-    const startIndex = (validPage - 1) * validLimit;
-    const endIndex = Math.min(startIndex + validLimit, total);
-    const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
-
-    return {
-      escorts: paginatedEscorts,
-      total,
-      page: validPage,
-      totalPages: Math.max(1, Math.ceil(total / validLimit)),
-      hasMore: endIndex < total || hasMore,
-    };
-  } catch (error) {
-    console.error("Error fetching escorts:", error);
-    return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
-    };
+  if (params.isVerified !== undefined) {
+    conditions.push(`is_verified = $${paramIndex}`);
+    params_arr.push(params.isVerified);
+    paramIndex++;
   }
-}
-
-const cachedGetEscorts = cache(getEscorts);
-export { cachedGetEscorts as getEscorts };
-
-// Helper function to get escorts with client-side filtering only
-export async function getEscortsWithClientFiltering(
-  params: GetEscortsParams = {},
-): Promise<GetEscortsResponse> {
-  try {
-    const {
-      page = 1,
-      limit = 20,
-      county,
-      region,
-      practice,
-      isActive = true,
-    } = params;
-
-    // Simple query with minimal filters
-    let query: any = adminDb.collection("escorts");
-
-    if (isActive !== undefined) {
-      query = query.where("isActive", "==", isActive);
-    }
-
-    if (county && county !== "all") {
-      query = query.where("county", "==", county);
-    }
-
-    // Get all matching documents (limited to reasonable amount)
-    const snapshot = await query.limit(1000).get();
-    let allEscorts: Escort[] = await Promise.all(
-      snapshot.docs.map(convertQueryDocToEscort),
+  if (params.isFeatured !== undefined) {
+    conditions.push(`is_featured = $${paramIndex}`);
+    params_arr.push(params.isFeatured);
+    paramIndex++;
+  }
+  if (params.county && params.county !== "all") {
+    conditions.push(`county = $${paramIndex}`);
+    params_arr.push(params.county);
+    paramIndex++;
+  }
+  if (params.countyCode && params.countyCode !== "all") {
+    conditions.push(`county_code = $${paramIndex}`);
+    params_arr.push(params.countyCode);
+    paramIndex++;
+  }
+  if (params.nationality && params.nationality !== "all") {
+    conditions.push(`nationality = $${paramIndex}`);
+    params_arr.push(params.nationality);
+    paramIndex++;
+  }
+  if (params.minAge && params.minAge > 0) {
+    conditions.push(`CAST(age AS INTEGER) >= $${paramIndex}`);
+    params_arr.push(params.minAge);
+    paramIndex++;
+  }
+  if (params.maxAge && params.maxAge > 0) {
+    conditions.push(`CAST(age AS INTEGER) <= $${paramIndex}`);
+    params_arr.push(params.maxAge);
+    paramIndex++;
+  }
+  if (params.minRating && params.minRating > 0) {
+    conditions.push(`rating >= $${paramIndex}`);
+    params_arr.push(params.minRating);
+    paramIndex++;
+  }
+  if (params.practice && params.practice !== "all") {
+    conditions.push(`$${paramIndex} = ANY(practices)`);
+    params_arr.push(params.practice);
+    paramIndex++;
+  }
+  if (params.practices && params.practices.length > 0) {
+    conditions.push(`practices && $${paramIndex}::text[]`);
+    params_arr.push(params.practices);
+    paramIndex++;
+  }
+  if (params.categories && params.categories.length > 0) {
+    conditions.push(`categories && $${paramIndex}::text[]`);
+    params_arr.push(params.categories);
+    paramIndex++;
+  }
+  if (params.search) {
+    const searchTerm = `%${params.search.toLowerCase()}%`;
+    conditions.push(
+      `(LOWER(name) LIKE $${paramIndex} OR LOWER(username) LIKE $${paramIndex} OR LOWER(about) LIKE $${paramIndex})`,
     );
+    params_arr.push(searchTerm, searchTerm, searchTerm);
+  }
 
-    // Apply all array filters client-side
-    const normalize = (val?: string) => (val || "").toLowerCase().trim();
+  return {
+    clause: conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
+    params: params_arr,
+  };
+}
 
-    if (region && region !== "all") {
-      const regionLower = normalize(region);
-      allEscorts = allEscorts.filter((escort) =>
-        escort.regions?.some((r) => normalize(r) === regionLower),
-      );
-    }
+function getValidSortField(sortBy?: string): string {
+  const validFields = [
+    "created_at",
+    "updated_at",
+    "age",
+    "total_views",
+    "rating",
+    "total_bookings",
+  ];
+  if (!sortBy) return "created_at";
+  const field = sortBy
+    .replace(/([A-Z])/g, "_$1")
+    .toLowerCase();
+  return validFields.includes(field) ? field : "created_at";
+}
 
-    if (practice && practice !== "all") {
-      const practiceLower = normalize(practice);
-      allEscorts = allEscorts.filter((escort) =>
-        escort.practices?.some((p) => normalize(p) === practiceLower),
-      );
-    }
+async function getEscortsBase(
+  params: GetEscortsParams = {},
+): Promise<{ rows: any[]; total: number }> {
+  const { page = 1, limit = 20 } = params;
+  const validPage = Math.max(1, page);
+  const validLimit = Math.min(100, Math.max(1, limit));
 
-    const total = allEscorts.length;
-    const validPage = Math.max(1, page);
-    const validLimit = Math.min(100, Math.max(1, limit));
-    const startAt = (validPage - 1) * validLimit;
-    const escorts = allEscorts.slice(startAt, startAt + validLimit);
+  const sortField = getValidSortField(params.sortBy);
+  const sortOrder = params.sortOrder === "asc" ? "ASC" : "DESC";
 
-    return {
-      escorts,
-      total,
-      page: validPage,
-      totalPages: Math.ceil(total / validLimit),
-      hasMore: validPage * validLimit < total,
-    };
+  const where = buildWhereClause(params, 1);
+
+  const totalQuery = `SELECT COUNT(*) as count FROM escorts ${where.clause}`;
+  const totalResult: any[] = await executeQuery(totalQuery, where.params);
+  const total = parseInt(totalResult[0]?.count || "0", 10);
+
+  const offset = (validPage - 1) * validLimit;
+  const dataQuery = `SELECT * FROM escorts ${where.clause} ORDER BY ${sortField} ${sortOrder}, created_at DESC LIMIT $${where.params.length + 1} OFFSET $${where.params.length + 2}`;
+  const dataParams = [...where.params, validLimit, offset];
+  const rows: any[] = await executeQuery(dataQuery, dataParams);
+
+  return { rows, total };
+}
+
+async function getEscorts(params: GetEscortsParams = {}): Promise<GetEscortsResponse> {
+  const { rows, total } = await getEscortsBase(params);
+  const { page = 1, limit = 20 } = params;
+  const validPage = Math.max(1, page);
+  const validLimit = Math.min(100, Math.max(1, limit));
+  const startIndex = (validPage - 1) * validLimit;
+  const endIndex = Math.min(startIndex + validLimit, total);
+  const paginated = rows.slice(startIndex, endIndex);
+
+  return {
+    escorts: paginated.map(convertRowToEscort),
+    total,
+    page: validPage,
+    totalPages: Math.max(1, Math.ceil(total / validLimit)),
+    hasMore: endIndex < total,
+  };
+}
+
+export { getEscorts };
+
+export async function getEscortById(id: string): Promise<Escort | null> {
+  try {
+    const rows: any[] = await sql`
+      SELECT * FROM escorts WHERE id = ${id}
+    `;
+    if (!rows || rows.length === 0) return null;
+    return convertRowToEscort(rows[0]);
   } catch (error) {
-    console.error("Error in client-side filtering:", error);
-    return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
-    };
+    console.error("Error fetching escort by ID:", error);
+    return null;
   }
 }
 
-// Helper function that ensures empty array on no results
 export async function getEscortsSafe(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   const result = await getEscorts(params);
-
-  // Ensure escorts is always an array
   if (!result.escorts) {
-    result.escorts = [];
+    return { ...result, escorts: [] };
   }
-
-  // Ensure total is correct
-  if (result.escorts.length === 0 && result.total > 0) {
-    result.total = 0;
-    result.totalPages = 0;
-    result.hasMore = false;
-  }
-
   return result;
 }
 
-// Helper to check if any escorts exist (without fetching all data)
 export async function hasEscorts(
   params: GetEscortsParams = {},
 ): Promise<boolean> {
-  try {
-    const result = await getEscorts({ ...params, limit: 1 });
-    return result.total > 0;
-  } catch (error) {
-    console.error("Error checking escorts existence:", error);
-    return false;
-  }
+  const result = await getEscorts({ ...params, limit: 1 });
+  return result.total > 0;
 }
 
-// Get escorts by county
 export async function getEscortsByCounty(
   countyCode: string,
   limit: number = 20,
@@ -675,7 +427,6 @@ export async function getEscortsByCounty(
   });
 }
 
-// Get escorts by region
 export async function getEscortsByRegion(
   regionId: string,
   limit: number = 20,
@@ -691,32 +442,6 @@ export async function getEscortsByRegion(
   });
 }
 
-// Get escorts by town/city
-export async function getEscortsByTown(
-  town: string,
-  limit: number = 20,
-  page: number = 1,
-): Promise<GetEscortsResponse> {
-  const { escorts, total, totalPages, hasMore } = await getEscorts({
-    isActive: true,
-    limit: limit * 2,
-    page,
-  });
-
-  const filteredEscorts = escorts.filter((escort) =>
-    escort.locations.some((loc) => loc.town === town || loc.estate === town),
-  );
-
-  return {
-    escorts: filteredEscorts.slice(0, limit),
-    total: filteredEscorts.length,
-    page,
-    totalPages: Math.ceil(filteredEscorts.length / limit),
-    hasMore: filteredEscorts.length > page * limit,
-  };
-}
-
-// Get escorts by practice/service
 export async function getEscortsByPractice(
   practice: string,
   limit: number = 20,
@@ -732,12 +457,12 @@ export async function getEscortsByPractice(
   });
 }
 
-// Get escorts by multiple practices
 export async function getEscortsByPractices(
   practices: string[],
   limit: number = 20,
   page: number = 1,
 ): Promise<GetEscortsResponse> {
+  if (practices.length === 0) return getEscorts({ isActive: true, limit, page });
   return getEscorts({
     practices,
     isActive: true,
@@ -748,7 +473,6 @@ export async function getEscortsByPractices(
   });
 }
 
-// Get escorts by category
 export async function getEscortsByCategory(
   category: string,
   limit: number = 20,
@@ -764,852 +488,279 @@ export async function getEscortsByCategory(
   });
 }
 
-// Get escorts by county and practice combined
-export async function getEscortsByCountyAndPractice(
-  countyCode: string,
-  practice: string,
-  limit: number = 20,
-  page: number = 1,
+export async function getEscortsWithClientFiltering(
+  params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
-  return getEscorts({
-    county: countyCode,
-    practice,
-    isActive: true,
-    limit,
-    page,
-    sortBy: "rating",
-    sortOrder: "desc",
-  });
-}
-
-// Get escorts by region and practice combined
-export async function getEscortsByRegionAndPractice(
-  regionId: string,
-  practice: string,
-  limit: number = 20,
-  page: number = 1,
-): Promise<GetEscortsResponse> {
-  return getEscorts({
-    region: regionId,
-    practice,
-    isActive: true,
-    limit,
-    page,
-    sortBy: "rating",
-    sortOrder: "desc",
-  });
-}
-
-// ============================================
-// FAST: Convert document to Escort (sync)
-// ============================================
-function convertDocToEscortFast(doc: any): Escort {
-  const data = doc.data();
-
-  return {
-    id: doc.id,
-    name: data.name || "",
-    username: data.username || "",
-    previewPhoto: data.previewPhoto || "",
-    labels: data.labels || [],
-    email: data.email || "",
-    age: data.age || "",
-    telephone: data.telephone || "",
-    whatsappPhone: data.whatsappPhone || "",
-    images: data.images || [],
-    videos: data.videos || [],
-    about: data.about || "",
-    availability: data.availability || [],
-    ethnicity: data.ethnicity || "",
-    nationality: data.nationality || "",
-    bustSize: data.bustSize || "",
-    weight: data.weight || "",
-    zodiacSign: data.zodiacSign || "",
-    sexualOrientation: data.sexualOrientation || "",
-    gender: data.gender || "",
-    languages: data.languages || [],
-    categories: data.categories || [],
-    country: data.country || "",
-    county: data.county || "",
-    countyCode: data.countyCode || "",
-    regions: data.regions || [],
-    primaryRegion: data.primaryRegion || "",
-    locations: data.locations || [],
-    source: data.source || "",
-    practices: data.practices || [],
-    bdsm: data.bdsm || [],
-    massage: data.massage || [],
-    extraServices: data.extraServices || [],
-    slug: data.slug || "",
-    role: data.role || "",
-    openingHours: data.openingHours || {
-      monday: "Not Specified",
-      tuesday: "Not Specified",
-      wednesday: "Not Specified",
-      thursday: "Not Specified",
-      friday: "Not Specified",
-      saturday: "Not Specified",
-      sunday: "Not Specified",
-    },
-    rates: data.rates || [],
-    breastSize: data.breastSize || "",
-    ageCategory: data.ageCategory || "",
-    character: data.character || "",
-    hairColor: data.hairColor || "",
-    experience: data.experience || "",
-    workType: data.workType || "",
-    agencyId: data.agencyId,
-    isAgencyOwned: data.isAgencyOwned,
-    clerkUserId: data.clerkUserId,
-    isAgencyFeatured: data.isAgencyFeatured || false,
-    isActive: data.isActive !== undefined ? data.isActive : true,
-    isVerified: data.isVerified || false,
-    isFeatured: data.isFeatured || false,
-    plan: data.plan || { type: "free", isActive: true, features: [] },
-    totalBookings: data.totalBookings || 0,
-    totalReviews: data.totalReviews || 0,
-    rating: data.rating || 0,
-    totalViews: data.totalViews || 0,
-    cleaningHistory: data.cleaningHistory || [],
-    hasCleanedImages: data.hasCleanedImages || false,
-    imagesMetadata: data.imagesMetadata || {},
-    cleanedImages: data.cleanedImages || [],
-    createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
-    updatedAt: data.updatedAt?.toDate?.() || data.updatedAt || new Date(),
-  };
-}
-
-// ============================================
-// OPTIMIZED: Get escort by ID
-// ============================================
-export async function getEscortById(id: string): Promise<Escort | null> {
-  try {
-    // ✅ Early validation
-    if (!id || id.trim() === "") {
-      return null;
-    }
-
-    // ✅ Single query - no extra operations
-    const doc = await adminDb.collection("escorts").doc(id).get();
-
-    if (!doc.exists) {
-      return null;
-    }
-
-    // ✅ Fire and forget - doesn't block response
-    adminDb
-      .collection("escorts")
-      .doc(id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch(() => {}); // Silent fail
-
-    // ✅ Fast sync conversion
-    return convertDocToEscortFast(doc);
-  } catch (error) {
-    console.error("Error fetching escort:", error);
-    return null; // Return null instead of throwing
-  }
-}
-
-// Get escort by username - FIXED
-export async function getEscortByUsername(
-  username: string,
-): Promise<Escort | null> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("username", "==", username)
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-    const doc = snapshot.docs[0];
-
-    // Increment view count asynchronously without waiting
-    adminDb
-      .collection("escorts")
-      .doc(doc.id)
-      .update({
-        totalViews: FieldValue.increment(1),
-      })
-      .catch((error) => {
-        console.error("Error incrementing view count:", error);
-      });
-
-    return await convertDocSnapshotToEscort(doc);
-  } catch (error) {
-    console.error("Error fetching escort by username:", error);
-    throw new Error("Failed to fetch escort");
-  }
-}
-
-// Get featured escorts - UPDATED to use convertQueryDocToEscort
-export async function getFeaturedEscorts(
-  limit: number = 10,
-): Promise<Escort[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .where("isFeatured", "==", true)
-      .orderBy("rating", "desc")
-      .limit(limit)
-      .get();
-
-    return Promise.all(snapshot.docs.map(convertQueryDocToEscort));
-  } catch (error) {
-    console.error("Error fetching featured escorts:", error);
-    throw new Error("Failed to fetch featured escorts");
-  }
-}
-
-// Get top rated escorts - UPDATED to use convertQueryDocToEscort
-export async function getTopRatedEscorts(
-  limit: number = 10,
-): Promise<Escort[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .orderBy("rating", "desc")
-      .limit(limit)
-      .get();
-
-    return Promise.all(snapshot.docs.map(convertQueryDocToEscort));
-  } catch (error) {
-    console.error("Error fetching top rated escorts:", error);
-    throw new Error("Failed to fetch top rated escorts");
-  }
-}
-
-// Get most viewed escorts - UPDATED to use convertQueryDocToEscort
-export async function getMostViewedEscorts(
-  limit: number = 10,
-): Promise<Escort[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .orderBy("totalViews", "desc")
-      .limit(limit)
-      .get();
-
-    return Promise.all(snapshot.docs.map(convertQueryDocToEscort));
-  } catch (error) {
-    console.error("Error fetching most viewed escorts:", error);
-    throw new Error("Failed to fetch most viewed escorts");
-  }
-}
-
-// Get recent escorts - UPDATED to use convertQueryDocToEscort
-export async function getRecentEscorts(limit: number = 10): Promise<Escort[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .orderBy("createdAt", "desc")
-      .limit(limit)
-      .get();
-
-    return Promise.all(snapshot.docs.map(convertQueryDocToEscort));
-  } catch (error) {
-    console.error("Error fetching recent escorts:", error);
-    throw new Error("Failed to fetch recent escorts");
-  }
-}
-
-// Get all unique practices
-export async function getAllPractices(): Promise<string[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .select("practices")
-      .get();
-
-    const practicesSet = new Set<string>();
-    snapshot.docs.forEach((doc) => {
-      const practices = doc.data().practices || [];
-      practices.forEach((practice: string) => practicesSet.add(practice));
-    });
-
-    return Array.from(practicesSet).sort();
-  } catch (error) {
-    console.error("Error fetching practices:", error);
-    throw new Error("Failed to fetch practices");
-  }
-}
-
-// Get all unique categories
-export async function getAllCategories(): Promise<string[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .select("categories")
-      .get();
-
-    const categoriesSet = new Set<string>();
-    snapshot.docs.forEach((doc) => {
-      const categories = doc.data().categories || [];
-      categories.forEach((category: string) => categoriesSet.add(category));
-    });
-
-    return Array.from(categoriesSet).sort();
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    throw new Error("Failed to fetch categories");
-  }
-}
-
-// Get all unique nationalities
-export async function getAllNationalities(): Promise<string[]> {
-  try {
-    const snapshot = await adminDb
-      .collection("escorts")
-      .select("nationality")
-      .get();
-
-    const nationalitiesSet = new Set<string>();
-    snapshot.docs.forEach((doc) => {
-      const nationality = doc.data().nationality;
-      if (nationality) {
-        nationalitiesSet.add(nationality);
-      }
-    });
-
-    return Array.from(nationalitiesSet).sort();
-  } catch (error) {
-    console.error("Error fetching nationalities:", error);
-    throw new Error("Failed to fetch nationalities");
-  }
-}
-
-// Get escorts statistics
-export async function getEscortsStatistics() {
-  try {
-    const totalSnapshot = await adminDb.collection("escorts").get();
-    const total = totalSnapshot.size;
-
-    const activeSnapshot = await adminDb
-      .collection("escorts")
-      .where("isActive", "==", true)
-      .get();
-    const active = activeSnapshot.size;
-
-    const verifiedSnapshot = await adminDb
-      .collection("escorts")
-      .where("isVerified", "==", true)
-      .get();
-    const verified = verifiedSnapshot.size;
-
-    const featuredSnapshot = await adminDb
-      .collection("escorts")
-      .where("isFeatured", "==", true)
-      .get();
-    const featured = featuredSnapshot.size;
-
-    // Get county distribution
-    const countiesSnapshot = await adminDb
-      .collection("escorts")
-      .select("countyCode", "county")
-      .get();
-
-    const countyDistribution: Record<
-      string,
-      { code: string; name: string; count: number }
-    > = {};
-    countiesSnapshot.docs.forEach((doc) => {
-      const countyCode = doc.data().countyCode;
-      const countyName = doc.data().county;
-      if (countyCode) {
-        if (!countyDistribution[countyCode]) {
-          countyDistribution[countyCode] = {
-            code: countyCode,
-            name: countyName || countyCode,
-            count: 0,
-          };
-        }
-        countyDistribution[countyCode].count++;
-      }
-    });
-
-    // Get practice distribution
-    const practicesSnapshot = await adminDb
-      .collection("escorts")
-      .select("practices")
-      .get();
-
-    const practiceDistribution: Record<string, number> = {};
-    practicesSnapshot.docs.forEach((doc) => {
-      const practices = doc.data().practices || [];
-      practices.forEach((practice: string) => {
-        practiceDistribution[practice] =
-          (practiceDistribution[practice] || 0) + 1;
-      });
-    });
-
-    // Get age distribution
-    const agesSnapshot = await adminDb
-      .collection("escorts")
-      .select("age")
-      .get();
-    const ageDistribution: Record<string, number> = {};
-    agesSnapshot.docs.forEach((doc) => {
-      const age = doc.data().age;
-      if (age) {
-        const ageNum = parseInt(age);
-        const ageGroup = `${Math.floor(ageNum / 5) * 5}-${Math.floor(ageNum / 5) * 5 + 4}`;
-        ageDistribution[ageGroup] = (ageDistribution[ageGroup] || 0) + 1;
-      }
-    });
-
-    return {
-      total,
-      active,
-      inactive: total - active,
-      verified,
-      unverified: total - verified,
-      featured,
-      countyDistribution: Object.values(countyDistribution),
-      practiceDistribution,
-      ageDistribution,
-    };
-  } catch (error) {
-    console.error("Error fetching escort statistics:", error);
-    throw new Error("Failed to fetch escort statistics");
-  }
-}
-
-// Create new escort
-export async function createEscort(
-  escortData: Omit<Escort, "id" | "createdAt" | "updatedAt">,
-): Promise<Escort> {
-  try {
-    if (process.env.NODE_ENV !== "development") {
-      throw new Error("Creation only allowed in development environment");
-    }
-
-    const now = new Date();
-    const docRef = adminDb.collection("escorts").doc();
-
-    const newEscort = {
-      ...escortData,
-      createdAt: Timestamp.fromDate(now),
-      updatedAt: Timestamp.fromDate(now),
-      totalBookings: 0,
-      totalReviews: 0,
-      rating: 0,
-      totalViews: 0,
-      hasCleanedImages: false,
-    };
-
-    await docRef.set(newEscort);
-
-    revalidatePath("/escorts");
-    revalidatePath(`/escorts/${docRef.id}`);
-
-    return {
-      id: docRef.id,
-      ...escortData,
-      createdAt: now,
-      updatedAt: now,
-      totalBookings: 0,
-      totalReviews: 0,
-      rating: 0,
-      totalViews: 0,
-    };
-  } catch (error) {
-    console.error("Error creating escort:", error);
-    throw new Error("Failed to create escort");
-  }
-}
-
-// Update escort
-export async function updateEscort(
-  id: string,
-  updates: Record<string, any>,
-): Promise<void> {
-  try {
-    const updateData: any = {
-      updatedAt: Timestamp.fromDate(new Date()),
-    };
-
-    if (updates.name) updateData.name = updates.name;
-    if (updates.email) updateData.email = updates.email;
-    if (updates.street !== undefined) updateData.street = updates.street;
-    if (updates.telephone || updates.phone) updateData.telephone = updates.telephone || updates.phone;
-    if (updates.whatsappPhone || updates.whatsappNumber) updateData.whatsappPhone = updates.whatsappPhone || updates.whatsappNumber;
-    if (updates.about !== undefined) updateData.about = updates.about;
-    if (updates.availability) updateData.availability = updates.availability;
-    if (updates.nationality) updateData.nationality = updates.nationality;
-    if (updates.bustSize || updates.breasts) {
-      updateData.bustSize = updates.bustSize || updates.breasts;
-      updateData.breastSize = updates.bustSize || updates.breasts;
-    }
-    if (updates.languages) updateData.languages = updates.languages;
-    if (updates.region !== undefined || updates.regions !== undefined) {
-      updateData.regions = updates.regions || [updates.region];
-      updateData.primaryRegion = updates.primaryRegion || updates.region;
-      updateData.county = updates.county || updates.region;
-      if (updates.region !== undefined) delete updateData.region;
-    }
-    if (updates.practices) updateData.practices = updates.practices;
-    if (updates.bdsm) updateData.bdsm = updates.bdsm;
-    if (updates.massages !== undefined || updates.massage !== undefined) {
-      updateData.massage = updates.massage || updates.massages;
-      if (updates.massages !== undefined) delete updateData.massages;
-    }
-    if (updates.extraServices) updateData.extraServices = updates.extraServices;
-    if (updates.categories) updateData.categories = updates.categories;
-    if (updates.openingHours) updateData.openingHours = updates.openingHours;
-    if (updates.ageCategory) updateData.ageCategory = updates.ageCategory;
-    if (updates.character) updateData.character = updates.character;
-    if (updates.hairColor) updateData.hairColor = updates.hairColor;
-    if (updates.experience) updateData.experience = updates.experience;
-    if (updates.age) updateData.age = updates.age;
-    if (updates.weight) updateData.weight = updates.weight;
-    if (updates.previewPhoto !== undefined) updateData.previewPhoto = updates.previewPhoto;
-    if (updates.images) updateData.images = updates.images;
-    if (updates.role) updateData.role = updates.role;
-    if (updates.agencyId !== undefined) updateData.agencyId = updates.agencyId;
-    if (updates.clerkUserId !== undefined) updateData.clerkUserId = updates.clerkUserId;
-    if (updates.isAgencyOwned !== undefined) updateData.isAgencyOwned = updates.isAgencyOwned;
-    if (updates.town !== undefined) {
-      updateData.locations = [
-        {
-          region: updates.region || updates.primaryRegion || "",
-          town: updates.town,
-          estate: "",
-          address: "",
-          street: updates.street || "",
-          postalCode: "",
-          isActive: true,
-          notes: "",
-        },
-      ];
-    }
-
-    Object.keys(updateData).forEach((key) => {
-      if (updateData[key] === undefined) {
-        delete updateData[key];
-      }
-    });
-
-    await adminDb.collection("escorts").doc(id).update(updateData);
-
-    revalidatePath("/escorts");
-    revalidatePath(`/escorts/${id}`);
-  } catch (error) {
-    console.error("Error updating escort:", error);
-    throw new Error("Failed to update escort");
-  }
-}
-
-// Delete escort
-export async function deleteEscort(id: string): Promise<void> {
-  try {
-    if (process.env.NODE_ENV !== "development") {
-      throw new Error("Deletion only allowed in development environment");
-    }
-
-    await adminDb.collection("escorts").doc(id).delete();
-
-    revalidatePath("/escorts");
-  } catch (error) {
-    console.error("Error deleting escort:", error);
-    throw new Error("Failed to delete escort");
-  }
-}
-
-// Update escort rating
-export async function updateEscortRating(
-  id: string,
-  newRating: number,
-): Promise<void> {
-  try {
-    const doc = await adminDb.collection("escorts").doc(id).get();
-    const data = doc.data();
-
-    const totalReviews = (data?.totalReviews || 0) + 1;
-    const currentTotalRating = (data?.rating || 0) * (data?.totalReviews || 0);
-    const newAverageRating = (currentTotalRating + newRating) / totalReviews;
-
-    await adminDb
-      .collection("escorts")
-      .doc(id)
-      .update({
-        rating: newAverageRating,
-        totalReviews,
-        updatedAt: Timestamp.fromDate(new Date()),
-      });
-
-    revalidatePath(`/escorts/${id}`);
-  } catch (error) {
-    console.error("Error updating escort rating:", error);
-    throw new Error("Failed to update escort rating");
-  }
-}
-
-// Increment booking count
-export async function incrementBookingCount(id: string): Promise<void> {
-  try {
-    await adminDb
-      .collection("escorts")
-      .doc(id)
-      .update({
-        totalBookings: FieldValue.increment(1),
-        updatedAt: Timestamp.fromDate(new Date()),
-      });
-  } catch (error) {
-    console.error("Error incrementing booking count:", error);
-    throw new Error("Failed to update booking count");
-  }
-}
-
-// ============================================
-// OPTIMIZED: Get erotic massage escorts
-// ============================================
-const EROTIC_MASSAGE_TERMS = [
-  "erotic massage",
-  "erotic",
-  "massage",
-  "body to body",
-  "sensual massage",
-  "nuru massage",
-  "tantric massage",
-  "lingam massage",
-  "yoni massage",
-  "b2b",
-  "body-to-body",
-];
-
-const BDSM_TERMS = [
-  "BDSM",
-  "bdsm",
-  "Domination",
-  "domination",
-  "Submission",
-  "submission",
-  "Bondage",
-  "bondage",
-  "Discipline",
-  "discipline",
-  "Sadomasochism",
-  "sadomasochism",
-  "Dominatrix",
-  "dominatrix",
-  "Mistress",
-  "mistress",
-  "Slave",
-  "slave",
-  "Master",
-  "master",
-  "Kinky",
-  "kinky",
-  "Fetish",
-  "fetish",
-  "Spanking",
-  "spanking",
-  "Whipping",
-  "whipping",
-  "Role play",
-  "role play",
-  "Roleplay",
-  "roleplay",
-  "Leather",
-  "leather",
-  "Latex",
-  "latex",
-  "Pegging",
-  "pegging",
-  "Strap-on",
-  "strap-on",
-];
-
-const LISTING_SELECT_FIELDS = [
-  "name",
-  "username",
-  "previewPhoto",
-  "images",
-  "videos",
-  "imagesMetadata",
-  "age",
-  "county",
-  "regions",
-  "primaryRegion",
-  "locations",
-  "practices",
-  "categories",
-  "nationality",
-  "rating",
-  "totalViews",
-  "totalBookings",
-  "isActive",
-  "isVerified",
-  "isFeatured",
-  "slug",
-  "telephone",
-  "whatsappPhone",
-  "createdAt",
-  "hasCleanedImages",
-  "cleanedImages",
-];
-
-async function fetchSpecializedEscorts(
-  params: GetEscortsParams,
-  terms: string[],
-): Promise<GetEscortsResponse> {
-  const {
-    page = 1,
-    limit = 20,
-    county,
-    region,
-    isActive = true,
-    isVerified,
-    isFeatured,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-    minAge,
-    maxAge,
-  } = params;
-
+  const { page = 1, limit = 20 } = params;
   const validPage = Math.max(1, page);
   const validLimit = Math.min(100, Math.max(1, limit));
 
-  let query: any = adminDb.collection("escorts");
+  const { rows, total } = await getEscortsBase(params);
+  const escorts = rows.map(convertRowToEscort);
 
-  if (isActive !== undefined) {
-    query = query.where("isActive", "==", isActive);
-  }
-  if (isVerified !== undefined) {
-    query = query.where("isVerified", "==", isVerified);
-  }
-  if (isFeatured !== undefined) {
-    query = query.where("isFeatured", "==", isFeatured);
-  }
-  if (county && county !== "all") {
-    query = query.where("county", "==", county);
-  }
-
-  if (region && region !== "all") {
-    query = query.where("regions", "array-contains", region);
-  }
-
-  const validSortFields = [
-    "createdAt",
-    "updatedAt",
-    "rating",
-    "totalViews",
-    "totalBookings",
-  ];
-  const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
-  query = query.orderBy(sortField, sortOrder);
-  query = query.select(...LISTING_SELECT_FIELDS);
-
-    const batchSize = Math.max(validLimit * 5, 200);
-    let lastDoc: any = null;
-    const allFiltered: Escort[] = [];
-    let hasMore = false;
-
-    let iterations = 0;
-    while (allFiltered.length < validLimit && iterations < MAX_FETCH_ITERATIONS) {
-      iterations++;
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(batchSize).get();
-
-      if (snapshot.empty) {
-        break;
-      }
-
-      const docs = snapshot.docs.map(convertDocToEscortFast);
-      let filtered = docs;
-
-      if (region && region !== "all") {
-        filtered = filtered.filter((e: Escort) => e.regions?.includes(region));
-      }
-
-      filtered = filtered.filter((doc: Escort) => {
-        if (!doc.practices || doc.practices.length === 0) return false;
-        return doc.practices.some((practice: string) => {
-          const lowerPractice = practice.toLowerCase();
-          return terms.some((term) =>
-            lowerPractice.includes(term.toLowerCase()),
-          );
-        });
-      });
-
-      if (minAge) {
-        filtered = filtered.filter(
-          (e: Escort) => parseInt(e.age || "0") >= minAge,
-        );
-      }
-      if (maxAge) {
-        filtered = filtered.filter(
-          (e: Escort) => parseInt(e.age || "0") <= maxAge,
-        );
-      }
-
-      allFiltered.push(...filtered);
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-      hasMore = snapshot.size === batchSize;
-
-      if (!hasMore || iterations >= MAX_FETCH_ITERATIONS) {
-        break;
-      }
-    }
-
-  const total = allFiltered.length;
   const startIndex = (validPage - 1) * validLimit;
   const endIndex = Math.min(startIndex + validLimit, total);
-  const paginatedEscorts = allFiltered.slice(startIndex, endIndex);
+  const paginatedEscorts = escorts.slice(startIndex, endIndex);
 
   return {
     escorts: paginatedEscorts,
     total,
     page: validPage,
     totalPages: Math.max(1, Math.ceil(total / validLimit)),
-    hasMore: endIndex < total || hasMore,
+    hasMore: endIndex < total,
   };
 }
 
-export async function getEroticMassageEscortsOptimized(
-  params: GetEscortsParams = {},
-): Promise<GetEscortsResponse> {
-  try {
-    return await fetchSpecializedEscorts(params, EROTIC_MASSAGE_TERMS);
-  } catch (error) {
-    console.error("Error fetching erotic massage escorts:", error);
-    return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
-    };
-  }
+export const convertQueryDocToEscort = async (row: any): Promise<Escort> => {
+  return convertRowToEscort(row);
+};
+
+const BDSM_TERMS = [
+  "BDSM", "bdsm", "Domination", "domination", "Submission", "submission",
+  "Bondage", "bondage", "Discipline", "discipline", "Sadomasochism", "sadomasochism",
+  "Dominatrix", "dominatrix", "Mistress", "mistress", "Slave", "slave", "Master", "master",
+  "Kinky", "kinky", "Fetish", "fetish", "Spanking", "spanking", "Whipping", "whipping",
+  "Role play", "role play", "Roleplay", "roleplay", "Leather", "leather", "Latex", "latex",
+  "Pegging", "pegging", "Strap-on", "strap-on",
+];
+
+const EROTIC_MASSAGE_TERMS = [
+  "erotic massage", "erotic", "massage", "body to body", "sensual massage",
+  "nuru massage", "tantric massage", "lingam massage", "yoni massage", "b2b", "body-to-body",
+];
+
+function isBDSMPractice(practice: string): boolean {
+  const lower = practice.toLowerCase();
+  return BDSM_TERMS.some((term) => lower.includes(term));
+}
+
+function isEroticMassagePractice(practice: string): boolean {
+  const lower = practice.toLowerCase();
+  return EROTIC_MASSAGE_TERMS.some((term) => lower.includes(term));
 }
 
 export async function getBDSMEscortsOptimized(
   params: GetEscortsParams = {},
 ): Promise<GetEscortsResponse> {
   try {
-    return await fetchSpecializedEscorts(params, BDSM_TERMS);
+    const { page = 1, limit = 20 } = params;
+    const validPage = Math.max(1, page);
+    const validLimit = Math.min(100, Math.max(1, limit));
+
+    const where = buildWhereClause(
+      { ...params, practice: undefined, practices: undefined },
+      1,
+    );
+
+    const sortField = getValidSortField(params.sortBy);
+    const sortOrder = params.sortOrder === "asc" ? "ASC" : "DESC";
+
+    const totalQuery = `SELECT COUNT(*) as count FROM escorts ${where.clause}`;
+    const totalResult: any[] = await executeQuery(totalQuery, where.params);
+    const total = parseInt(totalResult[0]?.count || "0", 10);
+
+    const offset = (validPage - 1) * validLimit;
+    const dataQuery = `SELECT * FROM escorts ${where.clause} ORDER BY ${sortField} ${sortOrder}, created_at DESC LIMIT $${where.params.length + 1} OFFSET $${where.params.length + 2}`;
+    const dataParams = [...where.params, validLimit, offset];
+    const rows: any[] = await executeQuery(dataQuery, dataParams);
+
+    const escorts = rows
+      .map(convertRowToEscort)
+      .filter((escort) => {
+        if (!escort.practices || escort.practices.length === 0) return false;
+        return escort.practices.some((p) => isBDSMPractice(p));
+      });
+
+    const startIndex = (validPage - 1) * validLimit;
+    const endIndex = Math.min(startIndex + validLimit, escorts.length);
+    const paginated = escorts.slice(startIndex, endIndex);
+
+    return {
+      escorts: paginated,
+      total: escorts.length,
+      page: validPage,
+      totalPages: Math.max(1, Math.ceil(escorts.length / validLimit)),
+      hasMore: endIndex < escorts.length,
+    };
   } catch (error) {
     console.error("Error fetching BDSM escorts:", error);
+    return { escorts: [], total: 0, page: params.page || 1, totalPages: 0, hasMore: false };
+  }
+}
+
+export async function getEroticMassageEscortsOptimized(
+  params: GetEscortsParams = {},
+): Promise<GetEscortsResponse> {
+  try {
+    const { page = 1, limit = 20 } = params;
+    const validPage = Math.max(1, page);
+    const validLimit = Math.min(100, Math.max(1, limit));
+
+    const where = buildWhereClause(
+      { ...params, practice: undefined, practices: undefined },
+      1,
+    );
+
+    const sortField = getValidSortField(params.sortBy);
+    const sortOrder = params.sortOrder === "asc" ? "ASC" : "DESC";
+
+    const totalQuery = `SELECT COUNT(*) as count FROM escorts ${where.clause}`;
+    const totalResult: any[] = await executeQuery(totalQuery, where.params);
+    const total = parseInt(totalResult[0]?.count || "0", 10);
+
+    const offset = (validPage - 1) * validLimit;
+    const dataQuery = `SELECT * FROM escorts ${where.clause} ORDER BY ${sortField} ${sortOrder}, created_at DESC LIMIT $${where.params.length + 1} OFFSET $${where.params.length + 2}`;
+    const dataParams = [...where.params, validLimit, offset];
+    const rows: any[] = await executeQuery(dataQuery, dataParams);
+
+    const escorts = rows
+      .map(convertRowToEscort)
+      .filter((escort) => {
+        if (!escort.practices || escort.practices.length === 0) return false;
+        return escort.practices.some((p) => isEroticMassagePractice(p));
+      });
+
+    const startIndex = (validPage - 1) * validLimit;
+    const endIndex = Math.min(startIndex + validLimit, escorts.length);
+    const paginated = escorts.slice(startIndex, endIndex);
+
     return {
-      escorts: [],
-      total: 0,
-      page: params.page || 1,
-      totalPages: 0,
-      hasMore: false,
+      escorts: paginated,
+      total: escorts.length,
+      page: validPage,
+      totalPages: Math.max(1, Math.ceil(escorts.length / validLimit)),
+      hasMore: endIndex < escorts.length,
     };
+  } catch (error) {
+    console.error("Error fetching erotic massage escorts:", error);
+    return { escorts: [], total: 0, page: params.page || 1, totalPages: 0, hasMore: false };
+  }
+}
+
+export async function updateEscort(
+  id: string,
+  updates: Record<string, any>,
+): Promise<void> {
+  try {
+    const setClauses: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (updates.name !== undefined) {
+      setClauses.push(`name = $${paramIndex}`);
+      params.push(updates.name);
+      paramIndex++;
+    }
+    if (updates.email !== undefined) {
+      setClauses.push(`email = $${paramIndex}`);
+      params.push(updates.email);
+      paramIndex++;
+    }
+    if (updates.street !== undefined) {
+      setClauses.push(`street = $${paramIndex}`);
+      params.push(updates.street);
+      paramIndex++;
+    }
+    if (updates.telephone !== undefined) {
+      setClauses.push(`telephone = $${paramIndex}`);
+      params.push(updates.telephone);
+      paramIndex++;
+    }
+    if (updates.whatsappPhone !== undefined) {
+      setClauses.push(`whatsapp_phone = $${paramIndex}`);
+      params.push(updates.whatsappPhone);
+      paramIndex++;
+    }
+    if (updates.about !== undefined) {
+      setClauses.push(`about = $${paramIndex}`);
+      params.push(updates.about);
+      paramIndex++;
+    }
+    if (updates.age !== undefined) {
+      setClauses.push(`age = $${paramIndex}`);
+      params.push(updates.age);
+      paramIndex++;
+    }
+    if (updates.nationality !== undefined) {
+      setClauses.push(`nationality = $${paramIndex}`);
+      params.push(updates.nationality);
+      paramIndex++;
+    }
+    if (updates.practices !== undefined) {
+      setClauses.push(`practices = $${paramIndex}`);
+      params.push(updates.practices);
+      paramIndex++;
+    }
+    if (updates.bdsm !== undefined) {
+      setClauses.push(`bdsm = $${paramIndex}`);
+      params.push(updates.bdsm);
+      paramIndex++;
+    }
+    if (updates.massage !== undefined) {
+      setClauses.push(`massage = $${paramIndex}`);
+      params.push(updates.massage);
+      paramIndex++;
+    }
+    if (updates.extraServices !== undefined) {
+      setClauses.push(`extra_services = $${paramIndex}`);
+      params.push(updates.extraServices);
+      paramIndex++;
+    }
+    if (updates.categories !== undefined) {
+      setClauses.push(`categories = $${paramIndex}`);
+      params.push(updates.categories);
+      paramIndex++;
+    }
+    if (updates.languages !== undefined) {
+      setClauses.push(`languages = $${paramIndex}`);
+      params.push(updates.languages);
+      paramIndex++;
+    }
+    if (updates.regions !== undefined) {
+      setClauses.push(`regions = $${paramIndex}`);
+      params.push(updates.regions);
+      paramIndex++;
+    }
+    if (updates.primaryRegion !== undefined) {
+      setClauses.push(`primary_region = $${paramIndex}`);
+      params.push(updates.primaryRegion);
+      paramIndex++;
+    }
+    if (updates.county !== undefined) {
+      setClauses.push(`county = $${paramIndex}`);
+      params.push(updates.county);
+      paramIndex++;
+    }
+    if (updates.countyCode !== undefined) {
+      setClauses.push(`county_code = $${paramIndex}`);
+      params.push(updates.countyCode);
+      paramIndex++;
+    }
+    if (updates.isActive !== undefined) {
+      setClauses.push(`is_active = $${paramIndex}`);
+      params.push(updates.isActive);
+      paramIndex++;
+    }
+    if (updates.isVerified !== undefined) {
+      setClauses.push(`is_verified = $${paramIndex}`);
+      params.push(updates.isVerified);
+      paramIndex++;
+    }
+    if (updates.isFeatured !== undefined) {
+      setClauses.push(`is_featured = $${paramIndex}`);
+      params.push(updates.isFeatured);
+      paramIndex++;
+    }
+
+    setClauses.push(`updated_at = NOW()`);
+
+    if (setClauses.length === 0) return;
+
+    params.push(id);
+    const query = `UPDATE escorts SET ${setClauses.join(", ")} WHERE id = $${params.length}`;
+    await executeQuery(query, params);
+  } catch (error) {
+    console.error("Error updating escort:", error);
+    throw new Error("Failed to update escort");
   }
 }
