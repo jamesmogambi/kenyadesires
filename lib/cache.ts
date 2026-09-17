@@ -1,4 +1,3 @@
-import { cacheLife } from "next/cache";
 import {
   getBDSMEscortsOptimized,
   getEroticMassageEscortsOptimized,
@@ -53,7 +52,6 @@ class TTLCache<T> {
   }
 }
 
-// In-memory TTL cache (60 seconds) for fallback / within-request dedup
 const escortCache = new TTLCache<any>(60);
 
 function cacheKey(params: any): string {
@@ -61,10 +59,6 @@ function cacheKey(params: any): string {
 }
 
 export async function getCachedEscorts(params: any) {
-  "use cache";
-  cacheLife("daily");
-
-  // Fallback TTL cache layer (used on cache miss)
   const key = `escorts:${cacheKey(params)}`;
   const cached = escortCache.get(key);
   if (cached) return cached;
@@ -75,9 +69,6 @@ export async function getCachedEscorts(params: any) {
 }
 
 export async function getCachedEscortById(id: string) {
-  "use cache";
-  cacheLife("daily");
-
   const key = `escort-by-id:${id}`;
   const cached = escortCache.get(key);
   if (cached) return cached;
@@ -88,14 +79,10 @@ export async function getCachedEscortById(id: string) {
 }
 
 export async function getCachedMassageEscorts(params: any) {
-  "use cache";
-  cacheLife("daily");
   return getEroticMassageEscortsOptimized(params);
 }
 
 export async function getCachedBDSMEscorts(params: any) {
-  "use cache";
-  cacheLife("daily");
   return getBDSMEscortsOptimized(params);
 }
 

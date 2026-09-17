@@ -2,7 +2,7 @@
 
 import { executeQuery } from "@/lib/neon";
 import { sql } from "@/app/lib/db";
-import { Escort, GetEscortsParams, GetEscortsResponse, convertRowToEscort } from "./escort.action";
+import { Escort, GetEscortsParams, GetEscortsResponse, convertQueryDocToEscort } from "./escort.action";
 
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
@@ -230,7 +230,7 @@ export async function getEscortsWithCleanedImages(
     const validLimit = Math.min(100, Math.max(1, limit));
 
     const { rows, total } = await getCleanedEscortsBase(params);
-    const escorts = rows.map(convertRowToEscort);
+    const escorts = await Promise.all(rows.map(convertQueryDocToEscort));
     const paginated = applyPagination(escorts, validPage, validLimit);
 
     return {
@@ -295,7 +295,7 @@ export async function getMassageEscortsFromCleanedImages(
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
     const { rows, total } = await getCleanedEscortsBase(params);
-    let escorts = rows.map(convertRowToEscort);
+    let escorts = await Promise.all(rows.map(convertQueryDocToEscort));
     escorts = filterForMassage(escorts, massageType);
     const paginated = applyPagination(escorts, validPage, validLimit);
 
@@ -321,7 +321,7 @@ export async function getBDSMEscortsWithCleanedImages(
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
     const { rows, total } = await getCleanedEscortsBase(params);
-    let escorts = rows.map(convertRowToEscort);
+    let escorts = await Promise.all(rows.map(convertQueryDocToEscort));
 
     const BDSM_TYPE_TERMS = [
       "bdsm", "domination", "submission", "bondage", "discipline",
@@ -393,7 +393,7 @@ async function fetchEscortsWithCleanedRows(params: Omit<GetEscortsParams, "pract
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const query = `SELECT * FROM escorts ${where}`;
   const rows: any[] = await executeQuery(query, params_arr);
-  return rows.map(convertRowToEscort);
+  return Promise.all(rows.map(convertQueryDocToEscort));
 }
 
 export async function getBDSMsFromCleanedEscorts(
