@@ -1,10 +1,11 @@
 import { ClientPaginationWrapper } from "@/components/ClientPaginationWrapper";
 import AgencyList from "./AgencyList";
 import { IAgency } from "@/types/agency.types";
+import { Escort } from "@/server-actions/escort.action";
 
 interface AgenciesContentProps {
   agenciesPromise: Promise<{
-    agencies: IAgency[];
+    agencies: (IAgency & { escorts?: Escort[] })[];
     total: number;
     totalPages: number;
     page: number;
@@ -36,7 +37,7 @@ export default async function AgenciesContent({
 
     return (
       <>
-        <AgencyList agencies={agencies} title={displayTitle} />
+        <AgencyList agencies={[]} title={displayTitle} />
         {hasMore && (
           <div className="mt-8">
             <ClientPaginationWrapper

@@ -16,7 +16,7 @@ import AgenciesLoadingSkeleton from "./AgenciesLoadingSkeleton";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { Metadata, ResolvingMetadata } from "next";
 import {
-  getAgenciesFromNeon,
+  getAgenciesWithEscortsFromNeon,
   getAgenciesCountFromNeon,
   getFirstAgencyFromNeon,
 } from "@/server-actions/agency.action";
@@ -292,8 +292,9 @@ const AgenciesPage = async ({ searchParams }: Props) => {
     const currentPage = parsePageNumber(filterParams.page);
 
     // ✅ Start the agencies fetch immediately as a promise (enables streaming)
-    // Filters are now applied server-side via adminDb + field selection
-    const agenciesPromise = getAgenciesFromNeon({
+    // Filters are now applied server-side via Neon DB + field selection
+    // Each agency includes its first 10 escorts pre-loaded for the Swiper
+    const agenciesPromise = getAgenciesWithEscortsFromNeon({
       page: currentPage,
       limit: ITEMS_PER_PAGE,
       county: filterParams.county,

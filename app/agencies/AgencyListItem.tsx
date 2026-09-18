@@ -148,8 +148,13 @@ EscortSwiper.displayName = "EscortSwiper";
 export default function AgencyListItem({ agency, className }: Prop) {
   const { name, coverImage, contactPhone, id } = agency;
 
-  const [escorts, setEscorts] = useState<Escort[]>([]);
-  const [loading, setLoading] = useState(true);
+  // ✅ Initialize state from server-provided escorts to avoid hydration mismatch
+  const initialEscorts =
+    agency.escorts && Array.isArray(agency.escorts) && agency.escorts.length > 0
+      ? agency.escorts
+      : [];
+  const [escorts, setEscorts] = useState<Escort[]>(initialEscorts);
+  const [loading, setLoading] = useState(initialEscorts.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   // ✅ Memoize displayed escorts (limit to 10)
