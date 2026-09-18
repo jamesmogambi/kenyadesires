@@ -175,6 +175,10 @@ export default async function RootLayout({
             }}
           />
           {/* End Meta Pixel Code */}
+          <script
+            defer
+            src="https://www.thunderbolt.com/gateway/api/v1/thunderbolt-ui/embed.js"
+          />
         </Head>
 
         <body
