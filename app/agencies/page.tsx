@@ -16,9 +16,9 @@ import AgenciesLoadingSkeleton from "./AgenciesLoadingSkeleton";
 import { generateBreadcrumbList } from "../girls/seo-utils";
 import { Metadata, ResolvingMetadata } from "next";
 import {
-  getAgencies,
-  getAgenciesCountOptimized,
-  getFirstAgencyOptimized,
+  getAgenciesFromNeon,
+  getAgenciesCountFromNeon,
+  getFirstAgencyFromNeon,
 } from "@/server-actions/agency.action";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -145,12 +145,12 @@ export async function generateMetadata(
 
   // ✅ Fetch lightweight data for metadata only using optimized server actions
   const [totalAgencies, firstAgency] = await Promise.all([
-    getAgenciesCountOptimized({
+    getAgenciesCountFromNeon({
       county: filterParams.county,
       region: filterParams.region,
       business: filterParams.business,
     }),
-    getFirstAgencyOptimized({
+    getFirstAgencyFromNeon({
       county: filterParams.county,
       region: filterParams.region,
       business: filterParams.business,
@@ -287,7 +287,7 @@ const AgenciesPage = async ({ searchParams }: Props) => {
 
     // ✅ Start the agencies fetch immediately as a promise (enables streaming)
     // Filters are now applied server-side via adminDb + field selection
-    const agenciesPromise = getAgencies({
+    const agenciesPromise = getAgenciesFromNeon({
       page: currentPage,
       limit: ITEMS_PER_PAGE,
       county: filterParams.county,
