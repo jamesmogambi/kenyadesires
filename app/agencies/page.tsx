@@ -144,18 +144,24 @@ export async function generateMetadata(
   const pageNumber = parsePageNumber(filterParams.page);
 
   // ✅ Fetch lightweight data for metadata only using optimized server actions
-  const [totalAgencies, firstAgency] = await Promise.all([
-    getAgenciesCountFromNeon({
-      county: filterParams.county,
-      region: filterParams.region,
-      business: filterParams.business,
-    }),
-    getFirstAgencyFromNeon({
-      county: filterParams.county,
-      region: filterParams.region,
-      business: filterParams.business,
-    }),
-  ]);
+  let totalAgencies = 0;
+  let firstAgency: Awaited<ReturnType<typeof getFirstAgencyFromNeon>> = null;
+  try {
+    [totalAgencies, firstAgency] = await Promise.all([
+      getAgenciesCountFromNeon({
+        county: filterParams.county,
+        region: filterParams.region,
+        business: filterParams.business,
+      }),
+      getFirstAgencyFromNeon({
+        county: filterParams.county,
+        region: filterParams.region,
+        business: filterParams.business,
+      }),
+    ]);
+  } catch (error) {
+    console.warn("Failed to fetch metadata data from Neon DB:", error);
+  }
 
   const formattedCounty = formatLocationName(filterParams.county);
   const formattedRegion = formatLocationName(filterParams.region);
