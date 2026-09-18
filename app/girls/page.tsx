@@ -213,11 +213,19 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
       county: params.county,
       region: params.region,
       practice: params.practice,
-      sortBy: params.sort as "createdAt" | "updatedAt" | "age" | "totalViews" | "rating" | "totalBookings" | undefined,
-      sortOrder: params.order as "asc" | "desc" | undefined,
+      sortBy: params.sort as
+        | "createdAt"
+        | "updatedAt"
+        | "age"
+        | "totalViews"
+        | "rating"
+        | "totalBookings"
+        | undefined,
+      // sortOrder: params.order as "desc" | "asc" | undefined,
       page: currentPage,
       limit: ITEMS_PER_PAGE,
       isActive: true,
+      sortOrder: "asc",
     });
     escorts = result.escorts;
     total = result.total;
