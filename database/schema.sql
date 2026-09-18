@@ -571,7 +571,16 @@ BEGIN
         SETWEIGHT(TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.name, '') || ' ' || COALESCE(NEW.username, '') || ' ' || COALESCE(NEW.about, '')), 'A') ||
         SETWEIGHT(TO_TSVECTOR('pg_catalog.english', COALESCE(NEW.locations->>'town', '') || ' ' || COALESCE(NEW.locations->>'estate', '')), 'B') ||
         SETWEIGHT(TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.categories, ' ')), 'C') ||
-        SETWEIGHT(TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.practices, ' ')), 'D');
+        SETWEIGHT(TO_TSVECTOR('pg_catalog.english', array_to_string(NEW.practices, ' ')), 'D')
+    ON CONFLICT (id) DO UPDATE SET
+        name = EXCLUDED.name,
+        username = EXCLUDED.username,
+        about = EXCLUDED.about,
+        town = EXCLUDED.town,
+        estate = EXCLUDED.estate,
+        categories = EXCLUDED.categories,
+        practices = EXCLUDED.practices,
+        search_vector = EXCLUDED.search_vector;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
