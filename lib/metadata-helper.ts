@@ -1,34 +1,11 @@
 // ✅ Lightweight metadata fetch - only gets what's needed (no caching for girls page)
-import { adminDb } from "@/lib/firebase-admin";
+import { executeQuery } from "@/lib/neon";
 
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
 
-function normalizeArray(val: any): any[] {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (val && typeof val === "object" && typeof val.map === "function") return val;
-  if (val && typeof val === "object") return Object.values(val);
-  return [];
-}
-
-const SERVICE_ARRAYS = ["practices", "bdsm", "massage", "extraServices"] as const;
-
-function docMatchesRegion(d: any, region?: string): boolean {
-  if (!region || region === "all") return true;
-  const regionLower = normalize(region);
-  return (
-    normalizeArray(d.regions).some((r: string) => normalize(r) === regionLower) ||
-    normalize(d.primaryRegion) === regionLower
-  );
-}
-
-function docHasPractice(d: any, practice: string): boolean {
-  const practiceLower = normalize(practice);
-  return SERVICE_ARRAYS.some((field) => {
-    const arr = normalizeArray(d[field]);
-    return arr.some((p: string) => normalize(p) === practiceLower);
-  });
+function escapeRegex(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 const MASSAGE_TYPE_TERMS = [
@@ -39,27 +16,6 @@ const MASSAGE_TYPE_TERMS = [
   "four hands", "4 hands",
 ];
 
-function isMassageTerm(value: string): boolean {
-  if (!value) return false;
-  const lower = value.toLowerCase();
-  return MASSAGE_TYPE_TERMS.some((term) => lower.includes(term));
-}
-
-function docIsMassageEscort(d: any): boolean {
-  return SERVICE_ARRAYS.some((field) => {
-    const arr = normalizeArray(d[field]);
-    return arr.some((p: string) => p && isMassageTerm(p));
-  });
-}
-
-function docMatchesMassageType(d: any, massageType: string): boolean {
-  const keyword = normalizeSlug(massageType);
-  return SERVICE_ARRAYS.some((field) => {
-    const arr = normalizeArray(d[field]);
-    return arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
-  });
-}
-
 const BDSM_TERMS = [
   "bdsm", "domination", "submission", "bondage", "discipline",
   "sadomasochism", "dominatrix", "mistress", "slave", "master",
@@ -67,31 +23,88 @@ const BDSM_TERMS = [
   "leather", "latex", "pegging", "strap-on",
 ];
 
-function docIsBDSMescort(d: any): boolean {
-  return SERVICE_ARRAYS.some((field) => {
-    const arr = normalizeArray(d[field]);
-    return arr.some((p: string) => p && BDSM_TERMS.some((term) => p.toLowerCase().includes(term)));
-  });
-}
-
-function docMatchesBDSMPractice(d: any, practice: string): boolean {
-  const keyword = normalizeSlug(practice);
-  return SERVICE_ARRAYS.some((field) => {
-    const arr = normalizeArray(d[field]);
-    return arr.some((p: string) => p && normalizeSlug(p).includes(keyword));
-  });
-}
-
-const METADATA_FIELDS = [
-  "previewPhoto", "name", "username", "county", "regions", "primaryRegion",
-  "practices", "bdsm", "massage", "extraServices", "isActive",
-];
-
-const BATCH_SIZE = 1000;
-const MAX_COUNT = 10000;
-const MAX_BATCHES = 10;
-
 type FilterType = "none" | "massage" | "bdsm";
+
+const SERVICE_ARRAYS_SQL = "practices || bdsm || massage || extra_services";
+
+function buildCategoryCondition(filterType: FilterType): string | null {
+  if (filterType === "none") return null;
+  const terms = filterType === "massage" ? MASSAGE_TYPE_TERMS : BDSM_TERMS;
+  const regex = terms.map(escapeRegex).join("|");
+  return `EXISTS (SELECT 1 FROM unnest(${SERVICE_ARRAYS_SQL}) p WHERE p ~* '${regex}')`;
+}
+
+function buildTypeCondition(
+  practiceOrMassageType: string,
+  paramIndex: number,
+): { clause: string; param: string } {
+  const keyword = normalizeSlug(practiceOrMassageType);
+  const clause = `EXISTS (SELECT 1 FROM unnest(${SERVICE_ARRAYS_SQL}) p WHERE lower(regexp_replace(p, '[-_]', ' ', 'g')) LIKE '%' || $${paramIndex} || '%')`;
+  return { clause, param: keyword };
+}
+
+function buildRegionCondition(paramIndex: number): string {
+  return `(EXISTS (SELECT 1 FROM unnest(regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`;
+}
+
+function buildPracticeCondition(paramIndex: number): string {
+  return `(
+    EXISTS (SELECT 1 FROM unnest(practices) p WHERE lower(p) = lower($${paramIndex}))
+    OR EXISTS (SELECT 1 FROM unnest(bdsm) p WHERE lower(p) = lower($${paramIndex}))
+    OR EXISTS (SELECT 1 FROM unnest(massage) p WHERE lower(p) = lower($${paramIndex}))
+    OR EXISTS (SELECT 1 FROM unnest(extra_services) p WHERE lower(p) = lower($${paramIndex}))
+  )`;
+}
+
+function buildBaseConditions(
+  params: { county?: string; region?: string; practice?: string; massageType?: string },
+  filterType: FilterType,
+  practiceOrMassageType?: string,
+): { conditions: string[]; params: any[] } {
+  const { county, region, practice } = params;
+  const hasRegionFilter = !!(region && region !== "all");
+  const hasPracticeFilter = !!(practice && practice !== "all");
+  const hasTypeFilter = filterType !== "none" && !!practiceOrMassageType && practiceOrMassageType !== "all";
+  const hasCategoryFilter = filterType !== "none" && !hasTypeFilter;
+
+  const conditions: string[] = ["is_active = true"];
+  const queryParams: any[] = [];
+  let paramIndex = 1;
+
+  if (county && county !== "all") {
+    conditions.push(`county = $${paramIndex}`);
+    queryParams.push(county);
+    paramIndex++;
+  }
+
+  if (hasRegionFilter) {
+    conditions.push(buildRegionCondition(paramIndex));
+    queryParams.push(region);
+    paramIndex++;
+  }
+
+  if (hasPracticeFilter) {
+    conditions.push(buildPracticeCondition(paramIndex));
+    queryParams.push(practice);
+    paramIndex++;
+  }
+
+  if (hasCategoryFilter) {
+    const categoryCondition = buildCategoryCondition(filterType);
+    if (categoryCondition) {
+      conditions.push(categoryCondition);
+    }
+  }
+
+  if (hasTypeFilter) {
+    const { clause, param } = buildTypeCondition(practiceOrMassageType!, paramIndex);
+    conditions.push(clause);
+    queryParams.push(param);
+    paramIndex++;
+  }
+
+  return { conditions, params: queryParams };
+}
 
 // ============================================
 // GIRLS ESCORTS METADATA HELPERS
@@ -165,86 +178,18 @@ async function countEscorts(
   params: { county?: string; region?: string; practice?: string; massageType?: string },
   filterType: FilterType,
   practiceOrMassageType?: string,
-  skipArrayContains?: boolean,
 ): Promise<number> {
   try {
-    const { county, region, practice } = params;
-    const hasRegionFilter = !!(region && region !== "all");
-    const hasPracticeFilter = !!(practice && practice !== "all");
-    const hasTypeFilter = filterType !== "none" && practiceOrMassageType && practiceOrMassageType !== "all";
-    const hasCategoryFilter = filterType !== "none" && !hasTypeFilter;
+    const { conditions, params: queryParams } = buildBaseConditions(
+      params,
+      filterType,
+      practiceOrMassageType,
+    );
 
-    let query: any = adminDb
-      .collection("escorts")
-      .select(...METADATA_FIELDS)
-      .where("isActive", "==", true);
-
-    if (county && county !== "all") {
-      query = query.where("county", "==", county);
-    }
-
-    let useArrayContains = !skipArrayContains;
-    if (hasRegionFilter && useArrayContains) {
-      query = query.where("regions", "array-contains", region!);
-    }
-
-    let count = 0;
-    let lastDoc: any = null;
-    let batchesRead = 0;
-
-    while (batchesRead < MAX_BATCHES) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(BATCH_SIZE).get();
-      batchesRead++;
-
-      if (snapshot.empty) break;
-
-      const docs = snapshot.docs.map((doc: any) => doc.data());
-
-      if (hasRegionFilter || hasPracticeFilter || hasCategoryFilter || hasTypeFilter) {
-        const filtered = docs.filter((d: any) => {
-          if (hasRegionFilter && !docMatchesRegion(d, region!)) return false;
-          if (hasPracticeFilter && !docHasPractice(d, practice!)) return false;
-          if (hasCategoryFilter) {
-            if (filterType === "massage" && !docIsMassageEscort(d)) return false;
-            if (filterType === "bdsm" && !docIsBDSMescort(d)) return false;
-          }
-          if (hasTypeFilter) {
-            if (filterType === "massage" && !docMatchesMassageType(d, practiceOrMassageType!)) return false;
-            if (filterType === "bdsm" && !docMatchesBDSMPractice(d, practiceOrMassageType!)) return false;
-          }
-          return true;
-        });
-        count += filtered.length;
-      } else {
-        count += docs.length;
-      }
-
-      if (count >= MAX_COUNT) {
-        count = MAX_COUNT;
-        break;
-      }
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < BATCH_SIZE) break;
-    }
-
-    // Fallback: if array-contains returned 0 and we have region filter, retry without it
-    if (count === 0 && hasRegionFilter && useArrayContains) {
-      return countEscorts(
-        { county, region, practice, massageType: params.massageType },
-        filterType,
-        practiceOrMassageType,
-        true, // skipArrayContains
-      );
-    }
-
-    return count;
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
+    const query = `SELECT COUNT(*) as count FROM escorts ${whereClause}`;
+    const rows = await executeQuery(query, queryParams);
+    return parseInt(rows[0]?.count || "0", 10);
   } catch (error) {
     console.error("Error getting escort count:", error);
     return 0;
@@ -257,65 +202,23 @@ async function findFirstEscort(
   practiceOrMassageType?: string,
 ): Promise<{ previewPhoto?: string; name?: string; username?: string } | null> {
   try {
-    const { county, region, practice } = params;
-    const hasRegionFilter = !!(region && region !== "all");
-    const hasPracticeFilter = !!(practice && practice !== "all");
-    const hasTypeFilter = filterType !== "none" && practiceOrMassageType && practiceOrMassageType !== "all";
-    const hasCategoryFilter = filterType !== "none" && !hasTypeFilter;
+    const { conditions, params: queryParams } = buildBaseConditions(
+      params,
+      filterType,
+      practiceOrMassageType,
+    );
 
-    let query: any = adminDb
-      .collection("escorts")
-      .select(...METADATA_FIELDS)
-      .where("isActive", "==", true);
+    const whereClause = `WHERE ${conditions.join(" AND ")}`;
+    const query = `SELECT preview_photo, name, username FROM escorts ${whereClause} ORDER BY created_at DESC LIMIT 1`;
+    const rows = await executeQuery(query, queryParams);
 
-    if (county && county !== "all") {
-      query = query.where("county", "==", county);
-    }
+    if (rows.length === 0) return null;
 
-    let lastDoc: any = null;
-    let batchesRead = 0;
-
-    while (batchesRead < MAX_BATCHES) {
-      let pageQuery = query;
-      if (lastDoc) {
-        pageQuery = pageQuery.startAfter(lastDoc);
-      }
-
-      const snapshot = await pageQuery.limit(BATCH_SIZE).get();
-      batchesRead++;
-
-      if (snapshot.empty) break;
-
-      const docs = snapshot.docs.map((doc: any) => doc.data());
-
-      const filtered = docs.filter((d: any) => {
-        if (hasRegionFilter && !docMatchesRegion(d, region!)) return false;
-        if (hasPracticeFilter && !docHasPractice(d, practice!)) return false;
-        if (hasCategoryFilter) {
-          if (filterType === "massage" && !docIsMassageEscort(d)) return false;
-          if (filterType === "bdsm" && !docIsBDSMescort(d)) return false;
-        }
-        if (hasTypeFilter) {
-          if (filterType === "massage" && !docMatchesMassageType(d, practiceOrMassageType!)) return false;
-          if (filterType === "bdsm" && !docMatchesBDSMPractice(d, practiceOrMassageType!)) return false;
-        }
-        return true;
-      });
-
-      if (filtered.length > 0) {
-        return {
-          previewPhoto: filtered[0].previewPhoto,
-          name: filtered[0].name,
-          username: filtered[0].username,
-        };
-      }
-
-      lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-      if (snapshot.size < BATCH_SIZE) break;
-    }
-
-    return null;
+    return {
+      previewPhoto: rows[0].preview_photo,
+      name: rows[0].name,
+      username: rows[0].username,
+    };
   } catch (error) {
     console.error("Error getting first escort for metadata:", error);
     return null;
