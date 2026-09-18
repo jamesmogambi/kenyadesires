@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
-
+import { executeQuery } from "@/lib/neon";
 
 export async function POST(
   req: NextRequest,
@@ -26,22 +24,22 @@ export async function POST(
       );
     }
 
-    // Verify escort exists
-    const docRef = adminDb.collection("escorts").doc(id);
-    const doc = await docRef.get();
+    const result: any[] = await executeQuery(
+      "SELECT id FROM escorts WHERE id = $1",
+      [id],
+    );
 
-    if (!doc.exists) {
+    if (result.length === 0) {
       return NextResponse.json(
         { success: false, error: "Escort not found" },
         { status: 404 },
       );
     }
 
-    // Update the videos array on the escort document
-    await docRef.update({
-      videos: videos,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    await executeQuery(
+      "UPDATE escorts SET videos = $1, updated_at = NOW() WHERE id = $2",
+      [videos, id],
+    );
 
     return NextResponse.json({
       success: true,
@@ -76,19 +74,21 @@ export async function GET(
       );
     }
 
-    const doc = await adminDb.collection("escorts").doc(id).get();
+    const result: any[] = await executeQuery(
+      "SELECT videos FROM escorts WHERE id = $1",
+      [id],
+    );
 
-    if (!doc.exists) {
+    if (result.length === 0) {
       return NextResponse.json(
         { success: false, error: "Escort not found" },
         { status: 404 },
       );
     }
 
-    const data = doc.data();
     return NextResponse.json({
       success: true,
-      videos: data?.videos || [],
+      videos: result[0]?.videos || [],
     });
   } catch (error: any) {
     return NextResponse.json(
