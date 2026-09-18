@@ -13,6 +13,7 @@ export interface PreviewPhotoHandle {
   getPreviewFile: () => File | null;
   getPreviewUrl: () => string;
   clear: () => void;
+  setStoredUrl: (url: string) => void;
 }
 
 type Prop = {
@@ -41,6 +42,13 @@ const PreviewPhoto = forwardRef<PreviewPhotoHandle, Prop>(
       clear: () => {
         setPreviewFile(null);
         setPreviewUrl("");
+        if (inputRef.current) {
+          inputRef.current.value = "";
+        }
+      },
+      setStoredUrl: (url: string) => {
+        setPreviewFile(null);
+        setPreviewUrl(url);
         if (inputRef.current) {
           inputRef.current.value = "";
         }

@@ -151,6 +151,7 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
     getPreviewFile: () => File | null;
     getPreviewUrl: () => string;
     clear: () => void;
+    setStoredUrl: (url: string) => void;
   } | null>(null);
 
   const freshKeyRef = useRef(`storageKey_${Math.random()}`);
@@ -456,6 +457,10 @@ region,
         }
 
         const galleryImageUrls = [...existingImages, ...uploadedGalleryUrls];
+
+        form.setValue("previewPhoto", finalPreviewPhotoUrl);
+        useFileStore.setState({ existingImages: galleryImageUrls });
+        previewPhotoRef.current?.setStoredUrl(finalPreviewPhotoUrl);
 
         const escortData: any = {
           name,

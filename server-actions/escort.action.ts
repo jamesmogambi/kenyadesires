@@ -671,6 +671,16 @@ export async function updateEscort(
       params.push(updates.whatsappPhone);
       paramIndex++;
     }
+    if (updates.previewPhoto !== undefined) {
+      setClauses.push(`preview_photo = $${paramIndex}`);
+      params.push(updates.previewPhoto);
+      paramIndex++;
+    }
+    if (updates.images !== undefined) {
+      setClauses.push(`images = $${paramIndex}`);
+      params.push(updates.images);
+      paramIndex++;
+    }
     if (updates.about !== undefined) {
       setClauses.push(`about = $${paramIndex}`);
       params.push(updates.about);
