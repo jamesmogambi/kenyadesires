@@ -294,7 +294,7 @@ function buildWhereClause(
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    conditions.push(`$${paramIndex} = ANY(practices)`);
+    conditions.push(`EXISTS (SELECT 1 FROM unnest(practices) p WHERE lower(p) = lower($${paramIndex}))`);
     params_arr.push(params.practice);
     paramIndex++;
   }

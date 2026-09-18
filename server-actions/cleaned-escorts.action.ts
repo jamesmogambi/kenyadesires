@@ -78,7 +78,7 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    conditions.push(`$${paramIndex} = ANY(escorts.practices)`);
+    conditions.push(`EXISTS (SELECT 1 FROM unnest(escorts.practices) p WHERE lower(p) = lower($${paramIndex}))`);
     params_arr.push(params.practice);
     paramIndex++;
   }
@@ -93,7 +93,7 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`$${paramIndex} = ANY(escorts.regions)`);
+    conditions.push(`(EXISTS (SELECT 1 FROM unnest(escorts.regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(escorts.primary_region) = lower($${paramIndex}))`);
     params_arr.push(params.region);
     paramIndex++;
   }
@@ -400,7 +400,7 @@ async function fetchEscortsWithCleanedRows(params: Omit<GetEscortsParams, "pract
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`$${paramIndex} = ANY(regions)`);
+    conditions.push(`(EXISTS (SELECT 1 FROM unnest(regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
     params_arr.push(params.region);
     paramIndex++;
   }
