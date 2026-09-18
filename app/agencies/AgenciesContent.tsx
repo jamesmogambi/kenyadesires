@@ -37,7 +37,7 @@ export default async function AgenciesContent({
 
     return (
       <>
-        <AgencyList agencies={[]} title={displayTitle} />
+        <AgencyList agencies={agencies} title={displayTitle} />
         {hasMore && (
           <div className="mt-8">
             <ClientPaginationWrapper
