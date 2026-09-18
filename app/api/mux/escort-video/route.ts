@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Mux } from "@mux/mux-node";
-import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
-
+import { executeQuery } from "@/lib/neon";
 
 const muxClient = new Mux({
   tokenId: process.env.MUX_TOKEN_ID!,
@@ -29,7 +27,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file type and size
     const validTypes = [
       "video/mp4",
       "video/webm",
@@ -43,7 +40,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const maxSize = 500 * 1024 * 1024; // 500MB
+    const maxSize = 500 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 500MB." },
@@ -51,13 +48,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify escort exists
-    const escortDoc = await adminDb.collection("escorts").doc(escortId).get();
-    if (!escortDoc.exists) {
+    const result: any[] = await executeQuery(
+      "SELECT id FROM escorts WHERE id = $1",
+      [escortId],
+    );
+    if (result.length === 0) {
       return NextResponse.json({ error: "Escort not found" }, { status: 404 });
     }
 
-    // Create a Direct Upload to Mux with passthrough = escortId
     const upload = await muxClient.video.uploads.create({
       new_asset_settings: {
         playback_policies: ["public"],
@@ -67,7 +65,6 @@ export async function POST(req: NextRequest) {
       cors_origin: "*",
     });
 
-    // Upload the file to the Mux Direct Upload URL
     const buffer = Buffer.from(await file.arrayBuffer());
     await fetch(upload.url!, {
       method: "PUT",
@@ -77,9 +74,8 @@ export async function POST(req: NextRequest) {
       body: buffer,
     });
 
-    // Poll for the asset to be ready (max 60 seconds)
     const maxAttempts = 30;
-    const pollInterval = 2000; // 2 seconds
+    const pollInterval = 2000;
     let playbackId: string | null = null;
     let assetId: string | null = null;
     let assetStatus: string | null = null;
@@ -109,17 +105,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Update Firestore
-    if (playbackId && assetId) {
-      const escortData = escortDoc.data();
-      const existingVideos = Array.isArray(escortData?.videos)
-        ? escortData.videos
-        : [];
-
-      await adminDb.collection("escorts").doc(escortId).update({
-        videos: [...existingVideos, playbackId],
-        updatedAt: FieldValue.serverTimestamp(),
-      });
+    if (playbackId) {
+      const currentResult: any[] = await executeQuery(
+        "SELECT videos FROM escorts WHERE id = $1",
+        [escortId],
+      );
+      const currentVideos: string[] = currentResult[0]?.videos || [];
+      await executeQuery(
+        "UPDATE escorts SET videos = $1, updated_at = NOW() WHERE id = $2",
+        [[...currentVideos, playbackId], escortId],
+      );
 
       return NextResponse.json({
         success: true,
@@ -131,7 +126,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Asset still processing — return upload info for webhook follow-up
     return NextResponse.json({
       success: true,
       message:
