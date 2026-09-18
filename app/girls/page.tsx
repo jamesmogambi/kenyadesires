@@ -318,7 +318,9 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
         </>
       )}
 
-      {total === 0 && <NotFoundList />}
+      {total === 0 && (
+        <NotFoundList county={params.county} />
+      )}
 
       <SectionArticle />
     </>
