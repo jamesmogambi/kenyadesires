@@ -31,11 +31,20 @@ const GirlProfile = ({ girl, className }: Prop) => {
     age,
   } = girl;
 
-  const allPhotos: string[] = [
-    ...(previewPhoto ? [previewPhoto] : []),
-    ...(Array.isArray(cleanedImages) && cleanedImages.length > 0 ? cleanedImages : []),
-    ...(Array.isArray(images) ? images : []),
-  ];
+  const allPhotos: string[] = (() => {
+    if (Array.isArray(cleanedImages) && cleanedImages.length > 0) {
+      return cleanedImages.filter(
+        (url, index, self) =>
+          typeof url === "string" && url.length > 0 && self.indexOf(url) === index,
+      );
+    }
+    const originals = Array.isArray(images) ? images : [];
+    const photos = previewPhoto ? [previewPhoto, ...originals] : originals;
+    return photos.filter(
+      (url, index, self) =>
+        typeof url === "string" && url.length > 0 && self.indexOf(url) === index,
+    );
+  })();
 
   const formatUsername = (username: any) => {
     return username

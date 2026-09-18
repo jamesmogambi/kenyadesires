@@ -172,8 +172,8 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
 
       {/* Custom Styles */}
       <style jsx global>{`
-        .custom-swiper-button-prev,
-        .custom-swiper-button-next {
+        .swiper-button-next,
+        .swiper-button-prev {
           display: none !important;
         }
 
