@@ -12,7 +12,6 @@ import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.ac
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
 
-
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
 export const metadata: Metadata = {
@@ -41,7 +40,7 @@ export default async function Home({ searchParams }: PageProps) {
     county: params.county,
     region: params.region,
     practice: params.practice,
-    page: 1,
+    // page: 1,
     limit: 20,
     sortOrder: "desc",
   });

@@ -15,6 +15,7 @@ interface Prop {
 const GirlProfile = ({ girl, className }: Prop) => {
   const {
     images,
+    cleanedImages,
     name,
     email,
     telephone,
@@ -32,6 +33,7 @@ const GirlProfile = ({ girl, className }: Prop) => {
 
   const allPhotos: string[] = [
     ...(previewPhoto ? [previewPhoto] : []),
+    ...(Array.isArray(cleanedImages) && cleanedImages.length > 0 ? cleanedImages : []),
     ...(Array.isArray(images) ? images : []),
   ];
 
