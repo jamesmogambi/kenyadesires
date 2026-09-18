@@ -82,8 +82,8 @@ export async function generateMetadata(
 
   // ✅ Fetch lightweight data for metadata only (not the full list)
   const [totalMasseuses, firstMasseuse] = await Promise.all([
-    getMassageEscortCount({ county, region, massageType }),
-    getFirstMassageEscort({ county, region, massageType }),
+    getMassageEscortCount({ county, region, massageType }).catch(() => 0),
+    getFirstMassageEscort({ county, region, massageType }).catch(() => null),
   ]);
 
   // Format filter values for display

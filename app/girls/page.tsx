@@ -57,8 +57,8 @@ export async function generateMetadata(
 
   // ✅ Fetch lightweight data for metadata only
   const [totalEscorts, firstEscort] = await Promise.all([
-    getEscortCountForMetadata({ county, region, practice }),
-    getFirstEscortForMetadata({ county, region, practice }),
+    getEscortCountForMetadata({ county, region, practice }).catch(() => 0),
+    getFirstEscortForMetadata({ county, region, practice }).catch(() => null),
   ]);
 
   const formattedCounty =

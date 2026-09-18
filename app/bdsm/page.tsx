@@ -81,8 +81,8 @@ export async function generateMetadata(
 
   // ✅ Fetch lightweight data for metadata only
   const [totalBDSM, firstBDSM] = await Promise.all([
-    getBDSMEscortCount({ county, region, practice }),
-    getFirstBDSMEscort({ county, region, practice }),
+    getBDSMEscortCount({ county, region, practice }).catch(() => 0),
+    getFirstBDSMEscort({ county, region, practice }).catch(() => null),
   ]);
 
   // Format filter values for display
