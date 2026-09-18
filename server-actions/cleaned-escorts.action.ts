@@ -7,96 +7,100 @@ import { Escort, GetEscortsParams, GetEscortsResponse, convertQueryDocToEscort }
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
 
-const LISTING_FIELDS = [
-  "id", "name", "username", "preview_photo", "images", "videos",
+const LISTING_COLUMNS = [
+  "id", "name", "username", "slug", "preview_photo", "images", "videos",
   "images_metadata", "age", "county", "county_code", "regions",
-  "primary_region", "locations", "practices", "categories", "slug",
+  "primary_region", "locations", "practices", "categories",
   "telephone", "whatsapp_phone", "is_active", "is_verified",
   "is_featured", "has_cleaned_images", "cleaned_images",
   "created_at", "updated_at", "total_views", "rating", "total_bookings",
-  "bdsm", "massage", "extra_services",
+  "bdsm", "massage", "extra_services", "work_type", "gender",
 ];
 
+function getEscortListingSelect(): string {
+  return LISTING_COLUMNS.map((c) => `escorts.${c}`).join(", ");
+}
+
 async function getCleanedEscortsBase(
-  params: GetEscortsParams,
+  params: GetEscortsParams & { paginateInSql?: boolean },
 ): Promise<{ rows: any[]; total: number }> {
-  const { page = 1, limit = 20 } = params;
+  const { page = 1, limit = 20, paginateInSql = true } = params;
   const validPage = Math.max(1, page);
   const validLimit = Math.min(100, Math.max(1, limit));
 
-  const conditions: string[] = ["has_cleaned_images = TRUE"];
+  const conditions: string[] = ["escorts.has_cleaned_images = TRUE"];
   const params_arr: any[] = [];
   let paramIndex = 1;
 
   if (params.isActive !== undefined) {
-    conditions.push(`is_active = $${paramIndex}`);
+    conditions.push(`escorts.is_active = $${paramIndex}`);
     params_arr.push(params.isActive);
     paramIndex++;
   }
   if (params.isVerified !== undefined) {
-    conditions.push(`is_verified = $${paramIndex}`);
+    conditions.push(`escorts.is_verified = $${paramIndex}`);
     params_arr.push(params.isVerified);
     paramIndex++;
   }
   if (params.isFeatured !== undefined) {
-    conditions.push(`is_featured = $${paramIndex}`);
+    conditions.push(`escorts.is_featured = $${paramIndex}`);
     params_arr.push(params.isFeatured);
     paramIndex++;
   }
   if (params.county && params.county !== "all") {
-    conditions.push(`county = $${paramIndex}`);
+    conditions.push(`escorts.county = $${paramIndex}`);
     params_arr.push(params.county);
     paramIndex++;
   }
   if (params.countyCode && params.countyCode !== "all") {
-    conditions.push(`county_code = $${paramIndex}`);
+    conditions.push(`escorts.county_code = $${paramIndex}`);
     params_arr.push(params.countyCode);
     paramIndex++;
   }
   if (params.nationality && params.nationality !== "all") {
-    conditions.push(`nationality = $${paramIndex}`);
+    conditions.push(`escorts.nationality = $${paramIndex}`);
     params_arr.push(params.nationality);
     paramIndex++;
   }
   if (params.minAge && params.minAge > 0) {
-    conditions.push(`CAST(age AS INTEGER) >= $${paramIndex}`);
+    conditions.push(`CAST(escorts.age AS INTEGER) >= $${paramIndex}`);
     params_arr.push(params.minAge);
     paramIndex++;
   }
   if (params.maxAge && params.maxAge > 0) {
-    conditions.push(`CAST(age AS INTEGER) <= $${paramIndex}`);
+    conditions.push(`CAST(escorts.age AS INTEGER) <= $${paramIndex}`);
     params_arr.push(params.maxAge);
     paramIndex++;
   }
   if (params.minRating && params.minRating > 0) {
-    conditions.push(`rating >= $${paramIndex}`);
+    conditions.push(`escorts.rating >= $${paramIndex}`);
     params_arr.push(params.minRating);
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    conditions.push(`$${paramIndex} = ANY(practices)`);
+    conditions.push(`$${paramIndex} = ANY(escorts.practices)`);
     params_arr.push(params.practice);
     paramIndex++;
   }
   if (params.practices && params.practices.length > 0) {
-    conditions.push(`practices && $${paramIndex}::text[]`);
+    conditions.push(`escorts.practices && $${paramIndex}::text[]`);
     params_arr.push(params.practices);
     paramIndex++;
   }
   if (params.categories && params.categories.length > 0) {
-    conditions.push(`categories && $${paramIndex}::text[]`);
+    conditions.push(`escorts.categories && $${paramIndex}::text[]`);
     params_arr.push(params.categories);
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`$${paramIndex} = ANY(regions)`);
+    conditions.push(`$${paramIndex} = ANY(escorts.regions)`);
     params_arr.push(params.region);
     paramIndex++;
   }
   if (params.search) {
     const searchTerm = `%${params.search.toLowerCase()}%`;
     conditions.push(
-      `(LOWER(name) LIKE $${paramIndex} OR LOWER(username) LIKE $${paramIndex} OR LOWER(about) LIKE $${paramIndex})`,
+      `(LOWER(escorts.name) LIKE $${paramIndex} OR LOWER(escorts.username) LIKE $${paramIndex} OR LOWER(escorts.about) LIKE $${paramIndex})`,
     );
     params_arr.push(searchTerm, searchTerm, searchTerm);
     paramIndex++;
@@ -115,10 +119,16 @@ async function getCleanedEscortsBase(
   const validSortFields = ["created_at", "updated_at", "age", "total_views", "rating", "total_bookings"];
   const safeSort = validSortFields.includes(sortField) ? sortField : "created_at";
 
-  const offset = (validPage - 1) * validLimit;
-  const dataQuery = `SELECT * FROM escorts ${where} ORDER BY ${safeSort} ${sortOrder}, created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-  const dataParams = [...params_arr, validLimit, offset];
-  const rows: any[] = await executeQuery(dataQuery, dataParams);
+  let rows: any[] = [];
+  if (paginateInSql) {
+    const offset = (validPage - 1) * validLimit;
+    const dataQuery = `SELECT ${getEscortListingSelect()} FROM escorts ${where} ORDER BY ${safeSort} ${sortOrder}, escorts.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    const dataParams = [...params_arr, validLimit, offset];
+    rows = await executeQuery(dataQuery, dataParams);
+  } else {
+    const dataQuery = `SELECT ${getEscortListingSelect()} FROM escorts ${where} ORDER BY ${safeSort} ${sortOrder}, escorts.created_at DESC`;
+    rows = await executeQuery(dataQuery, params_arr);
+  }
 
   return { rows, total };
 }
@@ -231,10 +241,9 @@ export async function getEscortsWithCleanedImages(
 
     const { rows, total } = await getCleanedEscortsBase(params);
     const escorts = await Promise.all(rows.map(convertQueryDocToEscort));
-    const paginated = applyPagination(escorts, validPage, validLimit);
 
     return {
-      escorts: paginated,
+      escorts,
       total,
       page: validPage,
       totalPages: Math.max(1, Math.ceil(total / validLimit)),
@@ -294,7 +303,10 @@ export async function getMassageEscortsFromCleanedImages(
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    const { rows, total } = await getCleanedEscortsBase(params);
+    const { rows, total } = await getCleanedEscortsBase({
+      ...params,
+      paginateInSql: false,
+    });
     let escorts = await Promise.all(rows.map(convertQueryDocToEscort));
     escorts = filterForMassage(escorts, massageType);
     const paginated = applyPagination(escorts, validPage, validLimit);
@@ -320,7 +332,10 @@ export async function getBDSMEscortsWithCleanedImages(
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limitParam));
 
-    const { rows, total } = await getCleanedEscortsBase(params);
+    const { rows, total } = await getCleanedEscortsBase({
+      ...params,
+      paginateInSql: false,
+    });
     let escorts = await Promise.all(rows.map(convertQueryDocToEscort));
 
     const BDSM_TYPE_TERMS = [
