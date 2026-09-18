@@ -1,7 +1,31 @@
 import { Pool } from "pg";
+import { readFileSync } from "fs";
+
+function loadEnvFile(path: string) {
+  const content = readFileSync(path, "utf-8");
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex === -1) continue;
+    const key = trimmed.slice(0, eqIndex).trim();
+    const value = trimmed.slice(eqIndex + 1).trim();
+    process.env[key] = value;
+  }
+}
+
+loadEnvFile(".env.local");
+loadEnvFile(".env.development");
+loadEnvFile(".env.production");
+
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl || databaseUrl.includes("user:password")) {
+  console.error("DATABASE_URL is not set or is a placeholder");
+  process.exit(1);
+}
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ssl: { rejectUnauthorized: false },
 });
 
@@ -36,10 +60,10 @@ $$ LANGUAGE plpgsql;`;
 
 async function main() {
   try {
-    const result = await pool.query(sql);
+    await pool.query(sql);
     console.log("Trigger function updated successfully");
-  } catch (error: any) {
-    console.error("Error updating trigger function:", error.message);
+  } catch (error) {
+    console.error("Error updating trigger function:", error?.message || error);
     process.exit(1);
   } finally {
     await pool.end();
