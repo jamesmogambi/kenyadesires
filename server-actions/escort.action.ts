@@ -758,9 +758,25 @@ export async function updateEscort(
 
     params.push(id);
     const query = `UPDATE escorts SET ${setClauses.join(", ")} WHERE id = $${params.length}`;
-    await executeQuery(query, params);
-  } catch (error) {
-    console.error("Error updating escort:", error);
-    throw new Error("Failed to update escort");
+    console.error("UPDATE_ESCORT_QUERY:", query);
+    console.error("UPDATE_ESCORT_PARAMS:", JSON.stringify(params));
+    try {
+      await executeQuery(query, params);
+    } catch (innerError: any) {
+      console.error("UPDATE_ESCORT_INNER:", innerError?.constructor?.name, innerError?.message, innerError?.code, innerError?.detail);
+      throw innerError || new Error("executeQuery failed");
+    }
+  } catch (error: any) {
+    const errInfo = {
+      message: error?.message,
+      name: error?.name,
+      code: error?.code,
+      detail: error?.detail,
+      hint: error?.hint,
+      sqlState: error?.sqlState,
+      stack: error?.stack?.split("\n").slice(0, 3).join(" | "),
+    };
+    console.error("UPDATE_ESCORT_ERROR:", JSON.stringify(errInfo));
+    throw new Error(`Failed to update escort: ${error?.message || error?.toString() || "Unknown error"}`);
   }
 }

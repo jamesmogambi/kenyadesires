@@ -460,7 +460,6 @@ export async function saveNewEscortProfile(
     addField("source", "admin");
     addField("work_type", data.isAgencyOwned ? "agency" : "independent");
     addField("agency_id", data.agencyId || "");
-    addField("is_agency_owned", data.isAgencyOwned || false);
     addField("is_agency_featured", false);
     addField("is_active", true);
     addField("is_verified", false);
