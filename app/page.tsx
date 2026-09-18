@@ -7,6 +7,7 @@ import NotFoundList from "@/components/NotFoundList";
 import YouTargetsAd from "@/components/YouTargetsAd";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
+import type { Escort } from "@/server-actions/escort.action";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -35,15 +36,22 @@ interface PageProps {
 export default async function Home({ searchParams }: PageProps) {
   const params = await searchParams;
 
-  // Get only 20 escorts with cleaned images - no pagination controls
-  const { escorts, total } = await getEscortsWithCleanedImages({
-    county: params.county,
-    region: params.region,
-    practice: params.practice,
-    // page: 1,
-    limit: 20,
-    sortOrder: "desc",
-  });
+  let escorts: Escort[] = [];
+  let total = 0;
+
+  try {
+    const result = await getEscortsWithCleanedImages({
+      county: params.county,
+      region: params.region,
+      practice: params.practice,
+      limit: 20,
+      sortOrder: "desc",
+    });
+    escorts = result.escorts;
+    total = result.total;
+  } catch (error) {
+    console.error("Error loading home page girls:", error);
+  }
 
   return (
     <>

@@ -15,6 +15,7 @@ import {
   getFirstEscortForMetadata,
 } from "@/lib/metadata-helper";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
+import type { Escort } from "@/server-actions/escort.action";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -201,23 +202,31 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
 
   const title = getDynamicTitle();
 
-  // ✅ Use the new action with cleaned images
-  const {
-    escorts,
-    total,
-    totalPages,
-    page: currentPageFromResponse,
-    hasMore,
-  } = await getEscortsWithCleanedImages({
-    county: params.county,
-    region: params.region,
-    practice: params.practice,
-    sortBy: params.sort as "createdAt" | "updatedAt" | "age" | "totalViews" | "rating" | "totalBookings" | undefined,
-    sortOrder: params.order as "asc" | "desc" | undefined,
-    page: currentPage,
-    limit: ITEMS_PER_PAGE,
-    isActive: true,
-  });
+  let escorts: Escort[] = [];
+  let total = 0;
+  let totalPages = 0;
+  let currentPageFromResponse = 1;
+  let hasMore = false;
+
+  try {
+    const result = await getEscortsWithCleanedImages({
+      county: params.county,
+      region: params.region,
+      practice: params.practice,
+      sortBy: params.sort as "createdAt" | "updatedAt" | "age" | "totalViews" | "rating" | "totalBookings" | undefined,
+      sortOrder: params.order as "asc" | "desc" | undefined,
+      page: currentPage,
+      limit: ITEMS_PER_PAGE,
+      isActive: true,
+    });
+    escorts = result.escorts;
+    total = result.total;
+    totalPages = result.totalPages;
+    currentPageFromResponse = result.page;
+    hasMore = result.hasMore;
+  } catch (error) {
+    console.error("Error loading girls listing:", error);
+  }
 
   const structuredData = generateListStructuredData({
     title,
