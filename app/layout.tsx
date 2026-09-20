@@ -27,6 +27,7 @@ import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
 import { GoogleTagManager } from "@next/third-parties/google";
 import AttributionCapture from "@/components/AttributionCapture";
+import UtmCapture from "@/components/UtmCapture";
 
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";

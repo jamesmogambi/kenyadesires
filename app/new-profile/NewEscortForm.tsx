@@ -31,6 +31,7 @@ import { saveNewEscortProfile } from "@/server-actions/girl.action";
 import { updateEscort } from "@/server-actions/escort.action";
 import type { NewEscortProfileInput } from "@/server-actions/girl.action";
 import { useAttribution } from "@/lib/attribution";
+import { trackProvider } from "@/lib/analytics";
 
 // Define the RichTextEditorHandle type
 type RichTextEditorHandle = {
@@ -525,6 +526,8 @@ region,
         if (mode === "edit" && initialData?.id) {
           escortId = initialData.id;
           await updateEscort(initialData.id, escortData);
+          const providerId = user?.id || initialData.id;
+          trackProvider("profile_published", { provider_id: providerId });
           toast.custom(() => (
             <SuccessToast message="Your profile was updated successfully." />
           ));
@@ -536,6 +539,9 @@ region,
             return;
           }
           escortId = res.id;
+          const providerId = user?.id || res.id;
+          trackProvider("complete_profile", { provider_id: providerId });
+          trackProvider("profile_published", { provider_id: providerId });
            toast.custom(() => (
              <SuccessToast message="Your profile was created successfully." />
            ));

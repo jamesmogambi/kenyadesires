@@ -1,7 +1,7 @@
 "use client";
 import SectionCard from "@/components/SectionCard";
 import { cn } from "@/lib/utils";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,10 +17,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSignUp } from "@clerk/nextjs";
 import { Eye, EyeOff } from "lucide-react";
 import { sendRegistrationEmails } from "@/server-actions/email";
+import { trackProvider } from "@/lib/analytics";
+import { getStoredUtms } from "@/lib/utm";
 import Link from "next/link";
 
 interface Prop {
@@ -66,12 +68,20 @@ export const registrationSchema = z
 
 const RegisterForm = ({ className }: Prop) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registrationStartedRef = useRef(false);
 
   const [loading, setLoader] = useState(false);
   const [error, setError] = useState<any>(null);
   const [message, setMessage] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleFirstInputFocus = () => {
+    if (registrationStartedRef.current) return;
+    registrationStartedRef.current = true;
+    trackProvider("start_registration", { ...getStoredUtms() });
+  };
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof registrationSchema>>({
@@ -131,6 +141,22 @@ const RegisterForm = ({ className }: Prop) => {
         // Set the session as active
         await setActive({ session: result.createdSessionId });
 
+        const providerId = result.id;
+        trackProvider("complete_registration", {
+          provider_id: providerId,
+          ...getStoredUtms(),
+        });
+
+        const referrerId = searchParams.get("ref");
+        if (referrerId) {
+          window.localStorage.setItem("kd_referrer_id", referrerId);
+          trackProvider("referral_signup", {
+            provider_id: providerId,
+            referrer_id: referrerId,
+            referred_provider_id: providerId,
+          });
+        }
+
         // Send welcome and admin emails (server action)
         await sendRegistrationEmails({
           email,
@@ -187,6 +213,7 @@ const RegisterForm = ({ className }: Prop) => {
                         placeholder=""
                         {...field}
                         className="bg-white text-black px-6 h-14 text-2xl focus-visible:ring-0 "
+                        onFocus={handleFirstInputFocus}
                       />
                     </FormControl>
 

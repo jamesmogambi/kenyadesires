@@ -3,7 +3,7 @@ import React from "react";
 import { Metadata } from "next";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
-import Link from "next/link";
+import VerifyProfileCta from "./VerifyProfileCta";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
