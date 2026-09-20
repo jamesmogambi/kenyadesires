@@ -6,6 +6,8 @@ const UTM_FIELDS = [
   "utm_campaign",
   "utm_content",
   "utm_term",
+  "utm_id",
+  "utm_source_platform",
 ] as const;
 
 export type StoredUtms = Partial<Record<(typeof UTM_FIELDS)[number], string>>;

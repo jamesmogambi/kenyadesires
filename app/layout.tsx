@@ -186,6 +186,7 @@ export default async function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
         >
           <AttributionCapture />
+          <UtmCapture />
           <AgeVerificationModal />
 
           {/* Fixed Grayscale Background */}

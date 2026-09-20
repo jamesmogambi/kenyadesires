@@ -11,6 +11,8 @@ const PRESERVED_PARAMS = [
   "utm_campaign",
   "utm_content",
   "utm_term",
+  "utm_id",
+  "utm_source_platform",
   "ref",
 ];
 
