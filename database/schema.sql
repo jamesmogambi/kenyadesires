@@ -608,3 +608,20 @@ CREATE TRIGGER trigger_transactions_updated_at BEFORE UPDATE ON transactions FOR
 CREATE TRIGGER trigger_whatsapp_campaigns_updated_at BEFORE UPDATE ON whatsapp_campaigns FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER trigger_kyc_verifications_updated_at BEFORE UPDATE ON kyc_verifications FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER trigger_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================
+-- 14. ZOHO CRM CONNECTION TABLE
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS zoho_connections (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider TEXT NOT NULL,
+    account_id TEXT,
+    refresh_token TEXT NOT NULL,
+    access_token TEXT,
+    access_token_expires_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TRIGGER trigger_zoho_connections_updated_at BEFORE UPDATE ON zoho_connections FOR EACH ROW EXECUTE FUNCTION update_updated_at();
