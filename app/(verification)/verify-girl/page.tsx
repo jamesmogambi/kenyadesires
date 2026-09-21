@@ -1,5 +1,6 @@
 import SectionCard from "@/components/SectionCard";
 import React from "react";
+import Link from "next/link";
 import { Metadata } from "next";
 import HeaderSection from "./HeaderSection";
 import InfoSection from "@/app/administration/InfoSection";
