@@ -15,8 +15,6 @@
     "monitor:batch": "node scripts/monitor-batch.ts",
     "fix-tokens": "node scripts/fix-missing-tokens.ts",
     "campaign": "node scripts/campaign.ts",
-    "sms-campaign": "node scripts/sms-campaign.ts",
-    "backup": "tsx scripts/firestore-backup.ts",
     "upload-images": "tsx scripts/upload-escort-images-to-cloudinary.ts",
     "map-cleaned-images": "tsx scripts/map-cleaned-images-to-escorts.ts",
     "migrate": "tsx scripts/run-migrations.ts",
