@@ -1,4 +1,4 @@
-const ZOHO_CLIENT_ID = process.env.ZOHO_CLIENT_ID || "1000.AMADSC0QBAZZ8Q9DODJBDEEH7B8C0A";
+const ZOHO_CLIENT_ID = process.env.ZOHO_CLIENT_ID || "1000.J9MGTMSFQ80M0WYI3OYDDCVVMHM58J";
 const ZOHO_ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || "https://accounts.zoho.com";
 
 const authUrl = `${ZOHO_ACCOUNTS_URL}/oauth/v2/auth?` + new URLSearchParams({
