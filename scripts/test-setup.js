@@ -9,13 +9,6 @@ try {
 }
 
 try {
-  require("firebase-admin");
-  console.log("✅ firebase-admin loaded");
-} catch (e) {
-  console.error("❌ firebase-admin failed:", e.message);
-}
-
-try {
   require("replicate");
   console.log("✅ replicate loaded");
 } catch (e) {

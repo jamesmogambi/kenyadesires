@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
     if (result.length > 0) {
       const row = result[0];
-      const rewardRecord = await getCreditRewardRecord(userId);
+      const rewardRecord: any = await getCreditRewardRecord(userId);
       return NextResponse.json({
         credits: row.credits ?? 0,
         plan: row.plan_type || "free",
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     if (agencyResult.length > 0) {
       const row = agencyResult[0];
-      const rewardRecord = await getCreditRewardRecord(userId);
+      const rewardRecord: any = await getCreditRewardRecord(userId);
       return NextResponse.json({
         credits: row.credits ?? 0,
         plan: row.plan_type || "free",

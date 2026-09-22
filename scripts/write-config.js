@@ -8,12 +8,12 @@ if (process.env.NODE_ENV !== "production" && !process.env.CI) {
 }
 
 const configDir = path.join(process.cwd(), "config");
-const configPath = path.join(configDir, "firebase-admin.json");
+const configPath = path.join(configDir, "service-account.json");
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+const serviceAccount = process.env.SERVICE_ACCOUNT;
 
 if (!serviceAccount) {
-  console.error("❌ FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+  console.error("❌ SERVICE_ACCOUNT environment variable is not set");
   process.exit(1);
 }
 
@@ -22,4 +22,4 @@ if (!fs.existsSync(configDir)) {
 }
 
 fs.writeFileSync(configPath, serviceAccount, "utf8");
-console.log("✅ Firebase config written to", configPath);
+  console.log("✅ Service account config written to", configPath);

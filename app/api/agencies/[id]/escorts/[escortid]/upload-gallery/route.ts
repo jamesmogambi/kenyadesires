@@ -1,8 +1,7 @@
 // app/api/agencies/[id]/escorts/[escortId]/upload-gallery/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { EscortModel } from "@/lib/models/escort.model";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { executeQuery } from "@/lib/neon";
 
 export async function POST(
   request: NextRequest,
@@ -11,18 +10,18 @@ export async function POST(
   try {
     const { id: agencyId, escortId } = await params;
 
-    // Verify agency exists
-    const agencyRef = doc(db, "agencies", agencyId);
-    const agencyDoc = await getDoc(agencyRef);
+    const agencyResult: any[] = await executeQuery(
+      `SELECT 1 FROM agencies WHERE id = $1`,
+      [agencyId],
+    );
 
-    if (!agencyDoc.exists()) {
+    if (agencyResult.length === 0) {
       return NextResponse.json(
         { success: false, error: "Agency not found" },
         { status: 404 },
       );
     }
 
-    // Verify escort belongs to agency
     const escort = await EscortModel.getById(escortId);
     if (!escort) {
       return NextResponse.json(
@@ -48,17 +47,10 @@ export async function POST(
       );
     }
 
-    const uploadedUrls = await EscortModel.uploadGallery(
-      escortId,
-      files,
-      agencyId,
+    return NextResponse.json(
+      { success: false, error: "Image storage not available" },
+      { status: 503 },
     );
-
-    return NextResponse.json({
-      success: true,
-      data: { uploaded: uploadedUrls },
-      message: `${uploadedUrls.length} images uploaded successfully`,
-    });
   } catch (error: any) {
     console.error("Error uploading gallery:", error);
     return NextResponse.json(

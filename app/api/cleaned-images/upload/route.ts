@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CleanedImageUploadProcessor } from "@/lib/services/CleanedImageUploadProcessor";
+import { executeQuery } from "@/lib/neon";
 
 const activeProcessors: Map<string, CleanedImageUploadProcessor> = new Map();
 
@@ -36,11 +37,9 @@ export async function POST(request: NextRequest) {
         }
 
         if (resetCheckpoint) {
-          const { adminDb } = await import("@/lib/firebase-admin");
-          await adminDb
-            .collection("processing_checkpoints")
-            .doc("cleaned_images_upload_checkpoint")
-            .delete();
+          await executeQuery(
+            `DELETE FROM processing_checkpoints WHERE id = 'cleaned_images_upload_checkpoint'`,
+          );
           console.log("🔄 Checkpoint reset");
         }
 
@@ -83,29 +82,26 @@ export async function POST(request: NextRequest) {
       case "status": {
         const processor = activeProcessors.get("default");
 
-        const { adminDb } = await import("@/lib/firebase-admin");
-        const checkpointDoc = await adminDb
-          .collection("processing_checkpoints")
-          .doc("cleaned_images_upload_checkpoint")
-          .get();
-        const checkpoint = checkpointDoc.exists ? checkpointDoc.data() : null;
+        const checkpointResult: any[] = await executeQuery(
+          `SELECT * FROM processing_checkpoints WHERE id = 'cleaned_images_upload_checkpoint'`,
+        );
+        const checkpointDoc = checkpointResult[0];
+        const checkpoint = checkpointDoc ? {
+          lastEscortId: checkpointDoc.last_escort_id,
+          processedCount: checkpointDoc.processed_count,
+          timestamp: checkpointDoc.timestamp,
+          batch: checkpointDoc.batch || 0,
+          totalImages: checkpointDoc.total_images,
+          uploadedImages: checkpointDoc.uploaded_images,
+          failedImages: checkpointDoc.failed_images,
+          alreadyCloudinary: checkpointDoc.already_cloudinary,
+        } : null;
 
         if (!processor) {
           return NextResponse.json({
             isRunning: false,
             message: "No active upload processing",
-            checkpoint: checkpoint
-              ? {
-                  lastEscortId: checkpoint.lastEscortId,
-                  processedCount: checkpoint.processedCount,
-                  timestamp: checkpoint.timestamp?.toDate?.() || null,
-                  batch: checkpoint.batch || 0,
-                  totalImages: checkpoint.totalImages,
-                  uploadedImages: checkpoint.uploadedImages,
-                  failedImages: checkpoint.failedImages,
-                  alreadyCloudinary: checkpoint.alreadyCloudinary,
-                }
-              : null,
+            checkpoint,
           });
         }
 
@@ -116,18 +112,7 @@ export async function POST(request: NextRequest) {
           isRunning: processor.isRunning(),
           stats,
           progress,
-          checkpoint: checkpoint
-            ? {
-                lastEscortId: checkpoint.lastEscortId,
-                processedCount: checkpoint.processedCount,
-                timestamp: checkpoint.timestamp?.toDate?.() || null,
-                batch: checkpoint.batch || 0,
-                totalImages: checkpoint.totalImages,
-                uploadedImages: checkpoint.uploadedImages,
-                failedImages: checkpoint.failedImages,
-                alreadyCloudinary: checkpoint.alreadyCloudinary,
-              }
-            : null,
+          checkpoint,
         });
       }
 
@@ -150,11 +135,9 @@ export async function POST(request: NextRequest) {
       }
 
       case "reset": {
-        const { adminDb } = await import("@/lib/firebase-admin");
-        await adminDb
-          .collection("processing_checkpoints")
-          .doc("cleaned_images_upload_checkpoint")
-          .delete();
+        await executeQuery(
+          `DELETE FROM processing_checkpoints WHERE id = 'cleaned_images_upload_checkpoint'`,
+        );
 
         const processor = activeProcessors.get("default");
         if (processor) {
