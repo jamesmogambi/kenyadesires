@@ -18,7 +18,10 @@
     "sms-campaign": "node scripts/sms-campaign.ts",
     "backup": "tsx scripts/firestore-backup.ts",
     "upload-images": "tsx scripts/upload-escort-images-to-cloudinary.ts",
-    "map-cleaned-images": "tsx scripts/map-cleaned-images-to-escorts.ts"
+    "map-cleaned-images": "tsx scripts/map-cleaned-images-to-escorts.ts",
+    "migrate": "tsx scripts/run-migrations.ts",
+    "zoho-campaigns": "tsx scripts/create-zoho-campaigns.ts",
+    "zoho-retry": "tsx scripts/zoho-sync-retry.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
