@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { adminDb } from "@/lib/firebase-admin";
 import { getCreditRewardRecord } from "@/server-actions/credit-rewards.action";
+import { executeQuery } from "@/lib/neon";
 
 export async function GET(req: Request) {
   try {
@@ -10,18 +10,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const escortSnap = await adminDb
-      .collection("escorts")
-      .where("clerkUserId", "==", userId)
-      .limit(1)
-      .get();
+    const result: any[] = await executeQuery(
+      `SELECT credits, plan_type, plan_is_active FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
+      [userId],
+    );
 
-    if (!escortSnap.empty) {
-      const data = escortSnap.docs[0].data();
+    if (result.length > 0) {
+      const row = result[0];
       const rewardRecord = await getCreditRewardRecord(userId);
       return NextResponse.json({
-        credits: data.credits ?? 0,
-        plan: data.plan?.type || "free",
+        credits: row.credits ?? 0,
+        plan: row.plan_type || "free",
         role: "escort",
         rewardMilestones: rewardRecord?.awardedMilestones || {},
         totalCreditsAwarded: rewardRecord?.totalCreditsAwarded || 0,
@@ -30,18 +29,17 @@ export async function GET(req: Request) {
       });
     }
 
-    const agencySnap = await adminDb
-      .collection("agencies")
-      .where("ownerId", "==", userId)
-      .limit(1)
-      .get();
+    const agencyResult: any[] = await executeQuery(
+      `SELECT credits, plan_type, plan_is_active FROM agencies WHERE owner_id = $1 LIMIT 1`,
+      [userId],
+    );
 
-    if (!agencySnap.empty) {
-      const data = agencySnap.docs[0].data();
+    if (agencyResult.length > 0) {
+      const row = agencyResult[0];
       const rewardRecord = await getCreditRewardRecord(userId);
       return NextResponse.json({
-        credits: data.credits ?? 0,
-        plan: data.plan?.type || "free",
+        credits: row.credits ?? 0,
+        plan: row.plan_type || "free",
         role: "agency",
         rewardMilestones: rewardRecord?.awardedMilestones || {},
         totalCreditsAwarded: rewardRecord?.totalCreditsAwarded || 0,
@@ -67,4 +65,3 @@ export async function GET(req: Request) {
     );
   }
 }
-

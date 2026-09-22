@@ -1,14 +1,4 @@
 // lib/scrapers/rahaescorts-db.service.ts
-import { db } from "@/lib/firebase";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-} from "firebase/firestore";
 import { RahaEscort } from "./rahaescorts.scraper";
 import {
   Escort,
@@ -20,40 +10,12 @@ import {
 import RegionService from "@/lib/services/region.service";
 
 export class RahaEscortsDatabaseService {
-  static async escortExists(slug: string): Promise<boolean> {
-    try {
-      const escortRef = doc(db, "escorts", slug);
-      const escortDoc = await getDoc(escortRef);
-      return escortDoc.exists();
-    } catch (error) {
-      console.error("Error checking escort existence:", error);
-      return false;
-    }
+  static async escortExists(_slug: string): Promise<boolean> {
+    return false;
   }
 
-  static async getCountyByName(countyName: string): Promise<string | null> {
-    try {
-      const countiesRef = collection(db, "counties");
-      const q = query(countiesRef, where("name", "==", countyName));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].id;
-      }
-
-      const countyCode = countyName.toLowerCase().replace(/\s+/g, "_");
-      const q2 = query(countiesRef, where("code", "==", countyCode));
-      const querySnapshot2 = await getDocs(q2);
-
-      if (!querySnapshot2.empty) {
-        return querySnapshot2.docs[0].id;
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error getting county:", error);
-      return null;
-    }
+  static async getCountyByName(_countyName: string): Promise<string | null> {
+    return null;
   }
 
   private static getAgeCategory(age: string): string {
@@ -206,42 +168,10 @@ export class RahaEscortsDatabaseService {
   }
 
   static async saveEscort(
-    scrapedData: Partial<RahaEscort>,
-    fullDetails: Partial<RahaEscort>,
-    regionDoc?: any,
+    _scrapedData: Partial<RahaEscort>,
+    _fullDetails: Partial<RahaEscort>,
+    _regionDoc?: any,
   ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const escortId = fullDetails.slug || scrapedData.slug;
-      if (!escortId) {
-        return { success: false, error: "No escort slug provided" };
-      }
-
-      // Add region reference if provided
-      if (regionDoc) {
-        fullDetails.regionId = regionDoc.id;
-        fullDetails.regionName = regionDoc.name;
-      }
-
-      const escort = this.convertToEscortModel(scrapedData, fullDetails);
-
-      if (!escort.telephone) {
-        console.log(`⚠️ No phone number for ${escort.name}, skipping save`);
-        return { success: false, error: "No phone number provided" };
-      }
-
-      const escortRef = doc(db, "escorts", escortId);
-      await setDoc(escortRef, escort, { merge: true });
-
-      console.log(
-        `✅ Saved: ${escort.name} | Age: ${escort.age || "N/A"} | Gender: ${escort.gender} | Images: ${escort.images.length} | Region: ${regionDoc?.name || fullDetails.region || "N/A"}`,
-      );
-      return { success: true };
-    } catch (error) {
-      console.error(`Error saving escort ${scrapedData.name}:`, error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
+    return { success: false, error: "Firebase removed" };
   }
 }

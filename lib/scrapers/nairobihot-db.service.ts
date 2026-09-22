@@ -1,6 +1,4 @@
 // lib/scrapers/nairobihot-db.service.ts
-import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
 import { NairobiHotEscort } from "./nairobihot.scrapers";
 import {
   Escort,
@@ -11,15 +9,8 @@ import {
 } from "@/server-actions/escort.action";
 
 export class NairobiHotDatabaseService {
-  static async escortExists(username: string): Promise<boolean> {
-    try {
-      const escortRef = doc(db, "escorts", username);
-      const escortDoc = await getDoc(escortRef);
-      return escortDoc.exists();
-    } catch (error) {
-      console.error("Error checking escort existence:", error);
-      return false;
-    }
+  static async escortExists(_username: string): Promise<boolean> {
+    return false;
   }
 
   static convertToEscortModel(
@@ -29,7 +20,6 @@ export class NairobiHotDatabaseService {
     const now = new Date();
     const merged = { ...scrapedData, ...fullDetails };
 
-    // Create location object
     const locations: Location[] = [
       {
         region: merged.town || merged.county || "Nairobi",
@@ -43,7 +33,6 @@ export class NairobiHotDatabaseService {
       },
     ];
 
-    // Create rates
     const rates: Rate[] = [];
     if (merged.incallRate || merged.outcallRate) {
       rates.push({
@@ -53,7 +42,6 @@ export class NairobiHotDatabaseService {
       });
     }
 
-    // Create opening hours
     const openingHours: OpeningHours = {
       monday: "",
       tuesday: "",
@@ -64,7 +52,6 @@ export class NairobiHotDatabaseService {
       sunday: "",
     };
 
-    // Create plan
     const plan: Plan = {
       type: "free",
       isActive: true,
@@ -140,47 +127,15 @@ export class NairobiHotDatabaseService {
   }
 
   static async saveEscort(
-    scrapedData: Partial<NairobiHotEscort>,
-    fullDetails?: Partial<NairobiHotEscort>,
+    _scrapedData: Partial<NairobiHotEscort>,
+    _fullDetails?: Partial<NairobiHotEscort>,
   ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const escortId = scrapedData.id || scrapedData.username;
-      if (!escortId) {
-        return { success: false, error: "No escort ID" };
-      }
-
-      // Convert to full Escort model
-      const escort = this.convertToEscortModel(scrapedData, fullDetails);
-
-      // Save to Firestore
-      const escortRef = doc(db, "escorts", escortId);
-      await setDoc(escortRef, escort, { merge: true });
-
-      return { success: true };
-    } catch (error) {
-      console.error(`Error saving escort ${scrapedData.name}:`, error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
+    return { success: false, error: "Firebase removed" };
   }
 
   static async saveEscorts(
-    escorts: Partial<NairobiHotEscort>[],
+    _escorts: Partial<NairobiHotEscort>[],
   ): Promise<{ success: number; failed: number }> {
-    let success = 0;
-    let failed = 0;
-
-    for (const escort of escorts) {
-      const result = await this.saveEscort(escort);
-      if (result.success) {
-        success++;
-      } else {
-        failed++;
-      }
-    }
-
-    return { success, failed };
+    return { success: 0, failed: 0 };
   }
 }

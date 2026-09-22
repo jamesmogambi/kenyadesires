@@ -1,5 +1,4 @@
 // types/escort.types.ts
-import { Timestamp } from "firebase/firestore";
 
 export interface IEscort {
   id: string;

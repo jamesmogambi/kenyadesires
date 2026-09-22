@@ -1,6 +1,5 @@
 import { MetadataRoute } from "next";
 import {
-  firebaseTimestampToDate,
   sanitizeUrl,
   logSitemapStats,
   validateSitemapEntries,
@@ -141,78 +140,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    // ==================== 3. ESCORTS - Firebase ====================
-    let escortEntries: MetadataRoute.Sitemap = [];
-
-    try {
-      // Dynamic import to avoid Firebase issues if not available
-      const { db } = await import("@/lib/firebase");
-      const { collection, getDocs } = await import("firebase/firestore");
-
-      const escortsRef = collection(db, "escorts");
-      const escortsSnapshot = await getDocs(escortsRef);
-
-      escortEntries = escortsSnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          const id = data.id || doc.id;
-          const slug = data.slug || id;
-
-          if (!slug) return null;
-
-          const lastModified = firebaseTimestampToDate(data.updatedAt);
-
-          // Higher priority for verified escorts
-          const priority = data.isVerified ? 0.95 : 0.8;
-
-          return {
-            url: sanitizeUrl(baseUrl, `girl/${slug}`),
-            lastModified,
-            changeFrequency: "daily" as const,
-            priority,
-          };
-        })
-        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-
-      console.log(`✅ Added ${escortEntries.length} escorts to sitemap`);
-    } catch (error) {
-      console.error(`❌ Error fetching escorts for sitemap:`, error);
-      // Continue with other content types
-    }
-
-    // ==================== 4. AGENCIES - Firebase ====================
-    let agencyEntries: MetadataRoute.Sitemap = [];
-
-    try {
-      const { db } = await import("@/lib/firebase");
-      const { collection, getDocs } = await import("firebase/firestore");
-
-      const agenciesRef = collection(db, "agencies");
-      const agenciesSnapshot = await getDocs(agenciesRef);
-
-      agencyEntries = agenciesSnapshot.docs
-        .map((doc) => {
-          const data = doc.data();
-          const slug = data.slug || doc.id;
-
-          if (!slug) return null;
-
-          const lastModified = firebaseTimestampToDate(data.updatedAt);
-
-          return {
-            url: sanitizeUrl(baseUrl, `agencies/${slug}`),
-            lastModified,
-            changeFrequency: "weekly" as const,
-            priority: 0.6,
-          };
-        })
-        .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
-
-      console.log(`✅ Added ${agencyEntries.length} agencies to sitemap`);
-    } catch (error) {
-      console.error(`❌ Error fetching agencies for sitemap:`, error);
-    }
-
     // ==================== 5. COUNTY-FILTERED GIRLS PAGES ====================
     let countyEntries: MetadataRoute.Sitemap = [];
 
@@ -299,8 +226,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const allEntries = [
       ...staticEntries,
       ...blogEntries,
-      ...escortEntries,
-      ...agencyEntries,
       ...countyEntries,
       ...practiceEntries,
       ...comboEntries,
@@ -317,8 +242,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const categories = {
       static: staticEntries.length,
       blog: blogEntries.length,
-      escorts: escortEntries.length,
-      agencies: agencyEntries.length,
       counties: countyEntries.length,
       practices: practiceEntries.length,
       combos: comboEntries.length,

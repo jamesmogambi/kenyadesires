@@ -106,18 +106,6 @@ const nextConfig = {
         hostname: "thikaescorts.s3.us-east-005.backblazeb2.com",
       },
 
-      // ✅ Firebase Storage (consolidated)
-      {
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-        pathname: "/**",
-      },
-
       // Local development
       {
         protocol: "http",
@@ -135,14 +123,14 @@ const nextConfig = {
   // Enable compression
   compress: true,
 
-  cacheComponents: true,
-  cacheLife: {
-    daily: {
-      stale: 3600, // 1 hour — client cache duration
-      revalidate: 3600, // 1 hour — server refresh interval
-      expire: 86400, // 1 day — max cache lifetime
-    },
-  },
+  // cacheComponents: true,
+  // cacheLife: {
+  //   daily: {
+  //     stale: 3600, // 1 hour — client cache duration
+  //     revalidate: 3600, // 1 hour — server refresh interval
+  //     expire: 86400, // 1 day — max cache lifetime
+  //   },
+  // },
 };
 
 module.exports = nextConfig;

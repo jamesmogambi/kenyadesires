@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
-
 
 const muxSigningSecret = process.env.MUX_SIGNING_SECRET!;
 
@@ -24,7 +21,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse the signature header: "t=timestamp,v1=signature"
     const parts = signatureHeader.split(",");
     let timestamp = "";
     let receivedSignature = "";
@@ -42,17 +38,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the raw body for signature verification
     const rawBody = await req.text();
-
-    // Compute the expected signature
     const payload = `${timestamp}.${rawBody}`;
     const expectedSignature = crypto
       .createHmac("sha256", muxSigningSecret)
       .update(payload)
       .digest("hex");
 
-    // Use timing-safe comparison
     const expectedBuffer = Buffer.from(expectedSignature, "utf-8");
     const receivedBuffer = Buffer.from(receivedSignature, "utf-8");
 
@@ -67,16 +59,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse the event
     const event = JSON.parse(rawBody);
     const asset = event.data;
 
-    // Only handle asset-ready events
     if (event.type !== "video.asset.ready") {
       return NextResponse.json({ message: "Event ignored" });
     }
 
-    // Extract escort ID from passthrough
     const escortId = asset.passthrough;
     if (!escortId) {
       return NextResponse.json(
@@ -85,7 +74,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get the playback ID
     const playbackId = asset.playback_ids?.[0]?.id;
     if (!playbackId) {
       return NextResponse.json(
@@ -94,39 +82,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Update the escort in Firestore
-    const escortDoc = await adminDb.collection("escorts").doc(escortId).get();
-
-    if (!escortDoc.exists) {
-      return NextResponse.json(
-        { error: "Escort not found" },
-        { status: 404 },
-      );
-    }
-
-    const escortData = escortDoc.data();
-    const existingVideos = Array.isArray(escortData?.videos)
-      ? escortData.videos
-      : [];
-
-    // Avoid duplicates
-    if (existingVideos.includes(playbackId)) {
-      return NextResponse.json({
-        message: "Playback ID already exists for this escort",
-      });
-    }
-
-    await adminDb.collection("escorts").doc(escortId).update({
-      videos: [...existingVideos, playbackId],
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Video added to escort successfully",
-      escortId,
-      playbackId,
-    });
+    return NextResponse.json({ error: "Not available" }, { status: 503 });
   } catch (error: any) {
     console.error("Mux webhook error:", error);
     return NextResponse.json(

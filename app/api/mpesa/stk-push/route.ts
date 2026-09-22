@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { initiateSTKPush, STKPushRequest } from "@/lib/mpesa";
 
 
@@ -36,22 +34,6 @@ export async function POST(req: Request) {
     if (!checkoutRequestId) {
       throw new Error("M-Pesa did not return a CheckoutRequestID");
     }
-
-    const transactionRef = adminDb.collection("transactions").doc(checkoutRequestId);
-    await transactionRef.set({
-      userId,
-      type: type || (packageId ? (packageId.startsWith("credits-") ? "credit_purchase" : "ad_purchase") : "credit_purchase"),
-      packageId: packageId || null,
-      phoneNumber: formattedPhone,
-      amount,
-      accountReference: accountReference || "KenyaDesires",
-      transactionDesc: transactionDesc || "Payment",
-      status: "processing",
-      checkoutRequestId,
-      merchantRequestId: stkResponse.MerchantRequestID,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    });
 
     return NextResponse.json({
       success: true,

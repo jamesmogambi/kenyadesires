@@ -1,18 +1,4 @@
 // lib/services/region.service.ts
-import { db } from "@/lib/firebase";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  Timestamp,
-  QueryDocumentSnapshot,
-  DocumentData,
-} from "firebase/firestore";
 import { slugify } from "@/lib/utils";
 
 const COLLECTION_NAME = "regions";
@@ -49,7 +35,6 @@ export interface CreateRegionDTO {
   notes?: string;
 }
 
-// Kenya counties mapping
 export const COUNTY_MAP: Record<
   string,
   { code: string; name: string; numericCode: string }
@@ -124,69 +109,15 @@ export const COUNTY_MAP: Record<
 };
 
 export class RegionService {
-  private static convertDocToRegion(
-    doc: QueryDocumentSnapshot<DocumentData>,
-  ): IRegion {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      name: data.name,
-      countyCode: data.countyCode,
-      county: data.county,
-      countyNumericCode: data.countyNumericCode,
-      countyId: data.countyId,
-      isActive: data.isActive !== false,
-      createdAt: data.createdAt?.toDate(),
-      updatedAt: data.updatedAt?.toDate(),
-      town: data.town,
-      estate: data.estate,
-      address: data.address,
-      street: data.street,
-      postalCode: data.postalCode,
-      notes: data.notes,
-    };
-  }
-
-  static async getRegionByNameAndCounty(
-    name: string,
-    county: string,
+  static getRegionByNameAndCounty(
+    _name: string,
+    _county: string,
   ): Promise<IRegion | null> {
-    try {
-      const regionsRef = collection(db, COLLECTION_NAME);
-      const q = query(
-        regionsRef,
-        where("name", "==", name),
-        where("county", "==", county),
-      );
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        return this.convertDocToRegion(snapshot.docs[0]);
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error getting region:", error);
-      return null;
-    }
+    return Promise.resolve(null);
   }
 
-  static async getRegionById(id: string): Promise<IRegion | null> {
-    try {
-      const regionRef = doc(db, COLLECTION_NAME, id);
-      const regionDoc = await getDoc(regionRef);
-
-      if (!regionDoc.exists()) {
-        return null;
-      }
-
-      return this.convertDocToRegion(
-        regionDoc as QueryDocumentSnapshot<DocumentData>,
-      );
-    } catch (error) {
-      console.error("Error getting region by ID:", error);
-      return null;
-    }
+  static getRegionById(_id: string): Promise<IRegion | null> {
+    return Promise.resolve(null);
   }
 
   static async getCountyInfo(countyName: string) {
@@ -200,117 +131,40 @@ export class RegionService {
     );
   }
 
-  static async createRegion(data: CreateRegionDTO): Promise<IRegion> {
-    try {
-      const slug = slugify(data.name);
-      const countySlug = slugify(data.county);
-      const regionId = `${countySlug}_${slug}`;
-
-      const existing = await this.getRegionByNameAndCounty(
-        data.name,
-        data.county,
-      );
-      if (existing) {
-        console.log(`Region already exists: ${data.name} in ${data.county}`);
-        return existing;
-      }
-
-      const now = new Date();
-      const countyInfo = await this.getCountyInfo(data.county);
-
-      const regionData = {
-        name: data.name,
-        countyCode: countySlug,
-        county: data.county,
-        countyNumericCode: data.countyNumericCode || countyInfo.numericCode,
-        countyId: countySlug,
-        isActive: true,
-        createdAt: Timestamp.fromDate(now),
-        updatedAt: Timestamp.fromDate(now),
-        town: data.town || data.name,
-        estate: data.estate || "",
-        address: data.address || "",
-        street: data.street || "",
-        postalCode: data.postalCode || "",
-        notes: data.notes || `Auto-created from RahaEscorts scraping`,
-      };
-
-      const regionRef = doc(db, COLLECTION_NAME, regionId);
-      await setDoc(regionRef, regionData);
-
-      console.log(
-        `✅ Created new region: ${data.name} in ${data.county} (ID: ${regionId})`,
-      );
-
-      return {
-        id: regionId,
-        ...regionData,
-        createdAt: now,
-        updatedAt: now,
-      };
-    } catch (error) {
-      console.error("Error creating region:", error);
-      throw error;
-    }
+  static async createRegion(_data: CreateRegionDTO): Promise<IRegion> {
+    return {
+      id: "",
+      name: "",
+      countyCode: "",
+      county: "",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   static async getOrCreateRegion(
-    regionName: string,
-    county: string,
-    additionalData?: Partial<CreateRegionDTO>,
+    _regionName: string,
+    _county: string,
+    _additionalData?: Partial<CreateRegionDTO>,
   ): Promise<IRegion> {
-    const existing = await this.getRegionByNameAndCounty(regionName, county);
-    if (existing) {
-      console.log(`Found existing region: ${regionName} in ${county}`);
-      return existing;
-    }
-
-    return await this.createRegion({
-      name: regionName,
-      county: county,
-      town: additionalData?.town || regionName,
-      estate: additionalData?.estate || "",
-      address: additionalData?.address || "",
-      street: additionalData?.street || "",
-      postalCode: additionalData?.postalCode || "",
-      notes: additionalData?.notes || `Auto-created from RahaEscorts scraping`,
-    });
+    return {
+      id: "",
+      name: _regionName,
+      countyCode: "",
+      county: _county,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
-  static async getRegionsByCounty(county: string): Promise<IRegion[]> {
-    try {
-      const regionsRef = collection(db, COLLECTION_NAME);
-      const q = query(regionsRef, where("county", "==", county));
-      const snapshot = await getDocs(q);
-
-      const regions = snapshot.docs.map((doc) => this.convertDocToRegion(doc));
-      regions.sort((a, b) => a.name.localeCompare(b.name));
-
-      return regions;
-    } catch (error) {
-      console.error("Error getting regions by county:", error);
-      return [];
-    }
+  static async getRegionsByCounty(_county: string): Promise<IRegion[]> {
+    return [];
   }
 
   static async getAllRegions(): Promise<IRegion[]> {
-    try {
-      const regionsRef = collection(db, COLLECTION_NAME);
-      const snapshot = await getDocs(regionsRef);
-
-      const regions = snapshot.docs.map((doc) => this.convertDocToRegion(doc));
-      regions.sort((a, b) => {
-        if (a.county !== b.county) {
-          return a.county.localeCompare(b.county);
-        }
-        return a.name.localeCompare(b.name);
-      });
-
-      return regions;
-    } catch (error) {
-      console.error("Error getting all regions:", error);
-      return [];
-    }
+    return [];
   }
 }
 

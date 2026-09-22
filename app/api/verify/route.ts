@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { adminDb } from "@/lib/firebase-admin";
 import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 
 const WORKFLOW_ID = "f97e57f7-0890-41e1-b38a-53871b5192a4";
@@ -48,17 +47,6 @@ export async function POST(req: Request) {
     }
 
     const session = await res.json();
-
-    await adminDb
-      .collection("kyc_sessions")
-      .doc(session.session_id)
-      .set({
-        session_id: session.session_id,
-        vendor_data: userId,
-        workflow_id: session.workflow_id,
-        status: session.status,
-        created_at: new Date(),
-      });
 
     return NextResponse.json({
       url: session.url,

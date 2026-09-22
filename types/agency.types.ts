@@ -1,5 +1,4 @@
 // types/agency.types.ts
-import { Timestamp } from "firebase/firestore";
 
 export interface IAgency {
   id: string;

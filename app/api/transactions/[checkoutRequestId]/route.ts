@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { adminDb } from "@/lib/firebase-admin";
 
 export async function GET(
   req: Request,
@@ -13,18 +12,8 @@ export async function GET(
     }
 
     const { checkoutRequestId } = await params;
-    const doc = await adminDb.collection("transactions").doc(checkoutRequestId).get();
 
-    if (!doc.exists) {
-      return NextResponse.json({ error: "not_found" }, { status: 404 });
-    }
-
-    const data = doc.data();
-    if (data?.userId !== userId) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    }
-
-    return NextResponse.json({ id: doc.id, ...data });
+    return NextResponse.json({ error: "Not available" }, { status: 503 });
   } catch (error: any) {
     console.error("Error fetching transaction:", error);
     return NextResponse.json(

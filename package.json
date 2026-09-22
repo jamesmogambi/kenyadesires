@@ -1,6 +1,6 @@
 {
   "name": "kenyadesires-site",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev ",
@@ -56,8 +56,6 @@
     "cloudinary": "^2.9.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
-    "firebase": "^12.12.0",
-    "firebase-admin": "^10.3.0",
     "gray-matter": "^4.0.3",
     "https-proxy-agent": "^9.0.0",
     "input-otp": "^1.4.2",

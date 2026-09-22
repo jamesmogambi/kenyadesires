@@ -1,19 +1,7 @@
 // server-actions/agency.action.ts
 "use server";
 
-import { db } from "@/lib/firebase";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  getCountFromServer,
-  QueryConstraint,
-} from "firebase/firestore";
 import { revalidatePath } from "next/cache";
-import { adminDb } from "@/lib/firebase-admin";
 import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
@@ -33,35 +21,6 @@ import {
 // ============================================
 // GET AGENCIES
 // ============================================
-function serializePlan(plan: any): IAgency["plan"] {
-  if (!plan) {
-    return {
-      type: "basic",
-      isActive: true,
-      features: [],
-      maxEmployees: 5,
-      maxGalleryImages: 10,
-    };
-  }
-
-  return {
-    type: plan.type || "basic",
-    isActive: plan.isActive !== undefined ? plan.isActive : true,
-    activatedAt: plan.activatedAt?.toDate?.()
-      ? plan.activatedAt.toDate().toISOString()
-      : plan.activatedAt
-        ? new Date(plan.activatedAt).toISOString()
-        : undefined,
-    expiresAt: plan.expiresAt?.toDate?.()
-      ? plan.expiresAt.toDate().toISOString()
-      : plan.expiresAt
-        ? new Date(plan.expiresAt).toISOString()
-        : undefined,
-    features: plan.features || [],
-    maxEmployees: plan.maxEmployees || 5,
-    maxGalleryImages: plan.maxGalleryImages || 10,
-  };
-}
 export async function getCachedAgencies(
   page: number = 1,
   limitCount: number = 24,

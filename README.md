@@ -19,7 +19,7 @@ multiple cloud services for media and data management.
 - **State Management**: [Zustand](https://zustand-demo.pmnd.rs/)
 - **Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [Radix UI](https://www.radix-ui.com/)
 - **Email**: [Resend](https://resend.com/)
-- **Deployment**: [Firebase App Hosting](https://firebase.google.com/docs/app-hosting)
+- **Deployment**: [Vercel](https://vercel.com)
 
 ## 📋 Requirements
 
@@ -82,7 +82,6 @@ template.
 - **Mux**: `MUX_TOKEN_ID`, `MUX_TOKEN_SECRET`, `MUX_SIGNING_SECRET`
 - **AWS**: `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET`
 - **Resend**: `RESEND_API_KEY`
-- **Firebase**: `NEXT_PUBLIC_FIREBASE_*` and `FIREBASE_ADMIN_*`
 
 ## 📂 Project Structure
 

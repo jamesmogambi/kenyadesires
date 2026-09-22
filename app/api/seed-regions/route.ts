@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
 import regionsData from "../../../data/development/regions.json";
+import { executeQuery } from "@/lib/neon";
 
 export interface IRegion {
   name: string;
@@ -12,7 +12,6 @@ export interface IRegion {
 
 export async function POST(request: Request) {
   try {
-    // Security check - only allow in development
     if (process.env.NODE_ENV !== "development") {
       return NextResponse.json(
         { error: "Seeding only allowed in development environment" },
@@ -20,7 +19,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ensure data is an array
     const regions = Array.isArray(regionsData) ? regionsData : [regionsData];
 
     console.log(`📊 Processing ${regions.length} regions...`);
@@ -29,57 +27,31 @@ export async function POST(request: Request) {
     let skipped = 0;
     let errors = 0;
 
-    // Use Firestore batch with Admin SDK
-    const batch = adminDb.batch();
-    let batchCount = 0;
-    const BATCH_LIMIT = 500;
-
     for (const region of regions) {
       try {
-        // Validate required fields
         if (!region.name || !region.countyCode) {
           console.error(`❌ Invalid region data: missing name or countyCode`);
           errors++;
           continue;
         }
 
-        // Check if region already exists using Admin SDK
-        const existingQuery = await adminDb
-          .collection("regions")
-          .where("name", "==", region.name)
-          .where("countyCode", "==", region.countyCode)
-          .get();
+        const existing: any[] = await executeQuery(
+          `SELECT COUNT(*) as count FROM regions WHERE name = $1 AND county_code = $2`,
+          [region.name, region.countyCode],
+        );
 
-        if (!existingQuery.empty) {
-          console.log(
-            `⚠️ Skipping ${region.name} (${region.countyCode}) - already exists`,
-          );
+        if (parseInt(existing[0]?.count || "0", 10) > 0) {
+          console.log(`⚠️ Skipping ${region.name} (${region.countyCode}) - already exists`);
           skipped++;
           continue;
         }
 
-        // Create document reference with auto-generated ID
-        const docRef = adminDb.collection("regions").doc();
+        await executeQuery(
+          `INSERT INTO regions (name, county_code, is_active, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW())`,
+          [region.name, region.countyCode, region.isActive !== undefined ? region.isActive : true],
+        );
 
-        // Add to batch
-        batch.set(docRef, {
-          name: region.name,
-          countyCode: region.countyCode,
-          isActive: region.isActive !== undefined ? region.isActive : true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-
-        batchCount++;
         added++;
-
-        // Commit batch when limit reached
-        if (batchCount >= BATCH_LIMIT) {
-          await batch.commit();
-          console.log(`📦 Committed batch of ${batchCount} regions`);
-          batchCount = 0;
-        }
-
         console.log(`✅ Added: ${region.name} (County: ${region.countyCode})`);
       } catch (error) {
         console.error(`❌ Error processing ${region.name}:`, error);
@@ -87,21 +59,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Commit remaining
-    if (batchCount > 0) {
-      await batch.commit();
-      console.log(`📦 Committed final batch of ${batchCount} regions`);
-    }
-
     return NextResponse.json({
       success: true,
-      stats: {
-        added,
-        skipped,
-        errors,
-        total: regions.length,
-      },
-      message: `Successfully added ${added} regions to Firestore`,
+      stats: { added, skipped, errors, total: regions.length },
+      message: `Successfully added ${added} regions to Neon DB`,
     });
   } catch (error) {
     console.error("Seeding failed:", error);

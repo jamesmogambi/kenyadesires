@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { sendVerificationNotificationEmail } from "@/server-actions/email";
 import { awardVerificationCredits } from "@/server-actions/credit-rewards.action";
+import { executeQuery } from "@/lib/neon";
 
 export async function POST(req: Request) {
   try {
@@ -12,34 +12,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const userRecord = await adminDb
-      .collection("users")
-      .doc(userId)
-      .get();
+    const userResult: any[] = await executeQuery(
+      `SELECT * FROM users WHERE id = $1`,
+      [userId],
+    );
+    const userRecord = userResult[0];
 
-    if (!userRecord.exists) {
+    if (!userRecord) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
-    const userData = userRecord.data();
-    const role = userData?.role;
+    const userData = userRecord;
+    const role = userData.role;
 
     const isAdmin =
       role === "admin" ||
       role === "superadmin" ||
-      userData?.isAdmin === true;
+      userData.isAdmin === true;
 
     if (!isAdmin) {
       return NextResponse.json({ error: "forbidden" }, { status: 403 });
     }
 
     const body = await req.json();
-    const {
-      type,
-      id,
-      status,
-      decision,
-    }: {
+    const { type, id, status, decision }: {
       type: "escort" | "agency";
       id: string;
       status: "verified" | "rejected";
@@ -61,36 +57,48 @@ export async function POST(req: Request) {
     }
 
     const collectionName = type === "escort" ? "escorts" : "agencies";
-    const docRef = adminDb.collection(collectionName).doc(id);
-    const snapshot = await docRef.get();
+    const columnId = type === "escort" ? "clerk_user_id" : "owner_id";
 
-    if (!snapshot.exists) {
+    const result: any[] = await executeQuery(
+      `SELECT * FROM ${collectionName} WHERE ${columnId} = $1 LIMIT 1`,
+      [id],
+    );
+    const snapshot = result[0];
+
+    if (!snapshot) {
       return NextResponse.json(
         { error: `${type} profile not found` },
         { status: 404 },
       );
     }
 
-    const existingData = snapshot.data() || {};
-    const email = existingData.email || existingData.contactEmail;
+    const existingData = snapshot;
+    const email = existingData.email || existingData.contact_email || existingData.contactEmail;
 
     const updateData: any = {
-      isVerified: status === "verified",
-      verificationStatus: status,
-      updatedAt: new Date(),
+      is_verified: status === "verified",
+      verification_status: status,
+      updated_at: new Date(),
     };
 
     if (decision) {
-      updateData.verificationDecision = decision;
+      updateData.verification_decision = decision;
     }
 
-    await docRef.update(updateData);
+    const columns = Object.keys(updateData);
+    const values = Object.values(updateData);
+    const setClause = columns.map((c, i) => `${c} = $${i + 1}`).join(", ");
 
-    const clerkUserId = existingData.clerkUserId || existingData.ownerId;
+    await executeQuery(
+      `UPDATE ${collectionName} SET ${setClause} WHERE id = $${columns.length + 1}`,
+      [...values, id],
+    );
+
+    const clerkUserId = existingData.clerk_user_id || existingData.owner_id;
     const phone =
       existingData.telephone ||
-      existingData.whatsappPhone ||
-      existingData.contactPhone ||
+      existingData.whatsapp_phone ||
+      existingData.contact_phone ||
       "";
 
     let awardedCredits = 0;
@@ -112,7 +120,7 @@ export async function POST(req: Request) {
       try {
         await sendVerificationNotificationEmail(
           email,
-          existingData.name || existingData.contactName || "User",
+          existingData.name || existingData.contact_name || "User",
           status === "verified" ? "Approved" : "Declined",
           decision || null,
           awardedCredits,

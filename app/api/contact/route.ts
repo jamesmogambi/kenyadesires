@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import { adminDb } from "@/lib/firebase-admin";
-import { FieldValue } from "firebase-admin/firestore";
 
 const supportAdmin = "hello@kenyadesires.com";
 
@@ -10,7 +8,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, name, message, clerkUserId = "" } = body;
 
-    // Check for missing fields and identify them
     const missingFields = [];
     if (!email) missingFields.push("email");
     if (!name) missingFields.push("name");
@@ -30,7 +27,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Send email via Gmail using Nodemailer
     let emailSent = false;
     let smtpError = null;
 
@@ -73,25 +69,10 @@ export async function POST(req: NextRequest) {
       smtpError = err.message;
     }
 
-    // 2. Save to Firestore
-    const submissionData = {
-      name,
-      email,
-      message,
-      clerkUserId,
-      submittedAt: FieldValue.serverTimestamp(),
-      ip: req.headers.get("x-forwarded-for") ?? "unknown",
-      userAgent: req.headers.get("user-agent") ?? "unknown",
-      emailSent,
-      emailError: smtpError,
-    };
-
-    await adminDb.collection("contactSubmissions").add(submissionData);
-
     if (!emailSent) {
       return NextResponse.json(
         {
-          error: "Failed to send email, but message was saved.",
+          error: "Failed to send email",
           details: smtpError,
         },
         { status: 500 },
