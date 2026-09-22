@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 
-const dbUrl = "postgresql://neondb_owner:npg_FVarfndqK9m1@ep-icy-band-b44e0e4t-pooler.c-6.us-east-2.aws.neon.tech/neondb?uselibpqcompat=true&sslmode=require&channel_binding=require";
+const dbUrl = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_FVarfndqK9m1@ep-icy-band-b44e0e4t-pooler.c-6.us-east-2.aws.neon.tech/neondb?uselibpqcompat=true&sslmode=require&channel_binding=require";
 
 async function main() {
   console.log("Connecting to database...");

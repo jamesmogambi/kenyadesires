@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   try {
     const tokenData = await getZohoAccessToken();
 
-    const response = await zohoFetch("/crm/v2/settings", {
+    const response = await zohoFetch("/crm/v2/Leads", {
       method: "GET",
     });
 
@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
       connected: true,
       message: "Zoho CRM connection successful",
       data: {
-        organization: data?.organization_info || null,
-        api_version: data?.api_version || null,
+        leads: data?.data || [],
+        lead_count: data?.data ? data.data.length : 0,
       },
     });
   } catch (err) {

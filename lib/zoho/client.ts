@@ -1,7 +1,7 @@
 import { getZohoAccessToken } from "./auth";
 
 const ZOHO_API_BASE_URL =
-  process.env.ZOHO_API_BASE_URL || "https://www.zohoapis.com/crm/v8";
+  process.env.ZOHO_API_BASE_URL || "https://www.zohoapis.com";
 
 interface ZohoFetchOptions extends RequestInit {
   params?: Record<string, string>;
