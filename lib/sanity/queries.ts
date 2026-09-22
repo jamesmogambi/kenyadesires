@@ -1,6 +1,28 @@
 import { client } from "./client";
 import type { Category, Post } from "@/types/sanity";
 
+const SANITY_FETCH_TIMEOUT_MS = 5000;
+
+async function fetchWithTimeout<T>(
+  promise: Promise<T>,
+  label: string,
+): Promise<T | null> {
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) =>
+        setTimeout(() => {
+          console.warn(`[Sanity] Timeout fetching ${label} after ${SANITY_FETCH_TIMEOUT_MS}ms`);
+          resolve(null);
+        }, SANITY_FETCH_TIMEOUT_MS),
+      ),
+    ]);
+  } catch (error) {
+    console.error(`[Sanity] Error fetching ${label}:`, error);
+    return null;
+  }
+}
+
 // ==================== CATEGORY QUERIES ====================
 
 export const FEATURED_CATEGORIES_QUERY = `*[_type == "category" && featured == true] | order(order asc, name asc) {
@@ -264,28 +286,40 @@ export async function getAllCategories(): Promise<{
   featured: Category[];
   nonFeatured: Category[];
 }> {
-  return await client.fetch(ALL_CATEGORIES_QUERY);
+  const result = await fetchWithTimeout(client.fetch(ALL_CATEGORIES_QUERY), "getAllCategories");
+  if (!result) return { featured: [], nonFeatured: [] };
+  const categories = result as { featured: Category[]; nonFeatured: Category[] };
+  return categories;
 }
 
 export async function getCategoryBySlug(
   slug: string,
 ): Promise<Category | null> {
-  return await client.fetch(CATEGORY_BY_SLUG_QUERY, { slug });
+  return (await fetchWithTimeout(
+    client.fetch(CATEGORY_BY_SLUG_QUERY, { slug }),
+    `getCategoryBySlug(${slug})`,
+  )) as Category | null;
 }
 
 // Featured Posts Functions
 export async function getFeaturedPosts(): Promise<Post[]> {
-  return await client.fetch(FEATURED_POSTS_QUERY);
+  const result = await fetchWithTimeout(client.fetch(FEATURED_POSTS_QUERY), "getFeaturedPosts");
+  return (result || []) as Post[];
 }
 
 export async function getFeaturedPostsWithLimit(
   limit: number = 6,
 ): Promise<Post[]> {
-  return await client.fetch(FEATURED_POSTS_WITH_LIMIT_QUERY(limit));
+  const result = await fetchWithTimeout(
+    client.fetch(FEATURED_POSTS_WITH_LIMIT_QUERY(limit)),
+    `getFeaturedPostsWithLimit(${limit})`,
+  );
+  return (result || []) as Post[];
 }
 
 export async function getFeaturedPostsWithContent(): Promise<Post[]> {
-  return await client.fetch(FEATURED_POSTS_FULL_QUERY);
+  const result = await fetchWithTimeout(client.fetch(FEATURED_POSTS_FULL_QUERY), "getFeaturedPostsWithContent");
+  return (result || []) as Post[];
 }
 
 export async function getFeaturedPostsByCategory(
@@ -324,7 +358,8 @@ export async function getPostsWithPagination(
 
 // All posts
 export async function getAllPosts(): Promise<Post[]> {
-  return await client.fetch(ALL_POSTS_QUERY);
+  const result = await fetchWithTimeout(client.fetch(ALL_POSTS_QUERY), "getAllPosts");
+  return (result || []) as Post[];
 }
 
 // Posts by category
@@ -334,8 +369,9 @@ export async function getPostsByCategory(
   const category = await getCategoryBySlug(categorySlug);
   if (!category) return [];
 
-  return await client.fetch(
-    `*[_type == "post" && references($categoryId)] | order(featured desc, _createdAt desc) {
+  const posts = await fetchWithTimeout(
+    client.fetch(
+      `*[_type == "post" && references($categoryId)] | order(featured desc, _createdAt desc) {
       _id,
       title,
       slug,
@@ -366,8 +402,11 @@ export async function getPostsByCategory(
         icon
       }
     }`,
-    { categoryId: category._id },
+      { categoryId: category._id },
+    ),
+    `getPostsByCategory(${categorySlug})`,
   );
+  return (posts || []) as Post[];
 }
 
 export const RELATED_POSTS_QUERY = (categoryId: string, currentPostId: string, limit: number = 3) =>
@@ -453,7 +492,10 @@ export const SINGLE_POST_QUERY = `*[_type == "post" && slug.current == $slug][0]
 }`;
 
 export async function getBlogBySlug(slug: string): Promise<Post | null> {
-  return await client.fetch(SINGLE_POST_QUERY, { slug });
+  return (await fetchWithTimeout(
+    client.fetch(SINGLE_POST_QUERY, { slug }),
+    `getBlogBySlug(${slug})`,
+  )) as Post | null;
 }
 
 // ==================== SITEMAP QUERIES ====================
@@ -534,7 +576,8 @@ export async function getBlogPostsForSitemapPaginated(
 
 export async function getBlogPostsCountForSitemap(): Promise<number> {
   try {
-    return await client.fetch(SITEMAP_BLOG_COUNT_QUERY);
+    const count = await fetchWithTimeout(client.fetch(SITEMAP_BLOG_COUNT_QUERY), "getBlogPostsCountForSitemap");
+    return (count || 0) as number;
   } catch (error) {
     console.error("Error counting blog posts for sitemap:", error);
     return 0;
@@ -543,7 +586,8 @@ export async function getBlogPostsCountForSitemap(): Promise<number> {
 
 export async function getFeaturedBlogPostsForSitemap(): Promise<any[]> {
   try {
-    return await client.fetch(SITEMAP_FEATURED_BLOG_QUERY);
+    const result = await fetchWithTimeout(client.fetch(SITEMAP_FEATURED_BLOG_QUERY), "getFeaturedBlogPostsForSitemap");
+    return (result || []) as any[];
   } catch (error) {
     console.error("Error fetching featured blog posts for sitemap:", error);
     return [];

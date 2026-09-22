@@ -25,17 +25,7 @@ interface CategoryPageProps {
 // GENERATE STATIC PATHS
 // ============================================
 export async function generateStaticParams() {
-  try {
-    const categories = await getCachedBlogCategories();
-    const allCategories = [...categories.featured, ...categories.nonFeatured];
-
-    return allCategories.map((category: { slug: { current: string } }) => ({
-      slug: category.slug.current,
-    }));
-  } catch (error) {
-    console.error("Error generating static params for categories:", error);
-    return [{ slug: "placeholder" }];
-  }
+  return [{ slug: "placeholder" }];
 }
 
 // ============================================

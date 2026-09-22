@@ -48,22 +48,6 @@ export async function generateMetadata(
 }
 
 // ============================================
-// GENERATE STATIC PATHS FOR ALL POSTS
-// ============================================
-export async function generateStaticParams() {
-  try {
-    const posts = await getCachedAllBlogPosts();
-
-    return posts.map((post) => ({
-      slug: post.slug.current,
-    }));
-  } catch (error) {
-    console.error("Error generating static params:", error);
-    return [{ slug: "placeholder" }];
-  }
-}
-
-// ============================================
 // PAGE COMPONENT
 // ============================================
 const Page = async ({ params }: Props) => {
