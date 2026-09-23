@@ -42,12 +42,11 @@ export async function enqueueSync(
   const delayMs = input.delay_ms ?? 0;
   const nextRetryAt = new Date(Date.now() + delayMs);
 
-  const rows = await executeQuery<ZohoSyncQueueRow>(
+  await executeQuery<ZohoSyncQueueRow>(
     `INSERT INTO zoho_sync_queue (
       id, entity_type, action, entity_id, zoho_entity_id, payload,
       retry_count, max_retries, next_retry_at, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, 'pending')
-    RETURNING *`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, 0, $7, $8, 'pending')`,
     [
       id,
       input.entity_type,
@@ -58,6 +57,11 @@ export async function enqueueSync(
       input.max_retries ?? 10,
       nextRetryAt,
     ],
+  );
+
+  const rows = await executeQuery<ZohoSyncQueueRow>(
+    `SELECT * FROM zoho_sync_queue WHERE id = $1`,
+    [id],
   );
   return rows[0];
 }
@@ -98,7 +102,7 @@ export async function markSyncFailed(
     `UPDATE zoho_sync_queue
      SET status = 'pending', retry_count = retry_count + 1,
          last_error = $2,
-         next_retry_at = NOW() + ($3 || ' milliseconds')::interval
+         next_retry_at = DATE_ADD(NOW(), INTERVAL $3 + 0 MILLISECOND)
      WHERE id = $1`,
     [id, error, delayMs],
   );

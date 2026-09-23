@@ -7,7 +7,7 @@ import {
   getCategoriesFromCleanedEscorts,
 } from "./cleaned-escorts.action";
 import { sql } from "@/app/lib/db";
-import { neon } from "@neondatabase/serverless";
+import { executeQuery } from "@/lib/neon";
 
 async function fetchUniqueFieldFromCleanedEscorts(
   params: Record<string, any> = {},
@@ -24,7 +24,7 @@ async function fetchUniqueFieldFromCleanedEscorts(
       paramIndex++;
     }
     if (params.region && params.region !== "all") {
-      conditions.push(`(EXISTS (SELECT 1 FROM unnest(regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
+      conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
       params_arr.push(params.region);
       paramIndex++;
     }
@@ -52,8 +52,7 @@ async function fetchUniqueFieldFromCleanedEscorts(
     const whereClause = conditions.join(" AND ");
     const query = `SELECT ${field} FROM escorts WHERE ${whereClause}`;
 
-    const client = neon(process.env.DATABASE_URL!);
-    const rows = await client.query(query, params_arr);
+    const rows = await executeQuery(query, params_arr);
 
     const valueCounts: Record<string, number> = {};
 

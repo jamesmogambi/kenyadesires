@@ -294,18 +294,18 @@ function buildWhereClause(
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    conditions.push(`EXISTS (SELECT 1 FROM unnest(practices) p WHERE lower(p) = lower($${paramIndex}))`);
+    conditions.push(`EXISTS (SELECT 1 FROM JSON_TABLE(practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))`);
     params_arr.push(params.practice);
     paramIndex++;
   }
   if (params.practices && params.practices.length > 0) {
-    conditions.push(`practices && $${paramIndex}::text[]`);
-    params_arr.push(params.practices);
+    conditions.push(`JSON_OVERLAPS(practices, $${paramIndex})`);
+    params_arr.push(JSON.stringify(params.practices));
     paramIndex++;
   }
   if (params.categories && params.categories.length > 0) {
-    conditions.push(`categories && $${paramIndex}::text[]`);
-    params_arr.push(params.categories);
+    conditions.push(`JSON_OVERLAPS(categories, $${paramIndex})`);
+    params_arr.push(JSON.stringify(params.categories));
     paramIndex++;
   }
   if (params.search) {

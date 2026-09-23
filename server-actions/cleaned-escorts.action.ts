@@ -78,22 +78,22 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    conditions.push(`EXISTS (SELECT 1 FROM unnest(escorts.practices) p WHERE lower(p) = lower($${paramIndex}))`);
+    conditions.push(`EXISTS (SELECT 1 FROM JSON_TABLE(escorts.practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))`);
     params_arr.push(params.practice);
     paramIndex++;
   }
   if (params.practices && params.practices.length > 0) {
-    conditions.push(`escorts.practices && $${paramIndex}::text[]`);
-    params_arr.push(params.practices);
+    conditions.push(`JSON_OVERLAPS(escorts.practices, $${paramIndex})`);
+    params_arr.push(JSON.stringify(params.practices));
     paramIndex++;
   }
   if (params.categories && params.categories.length > 0) {
-    conditions.push(`escorts.categories && $${paramIndex}::text[]`);
-    params_arr.push(params.categories);
+    conditions.push(`JSON_OVERLAPS(escorts.categories, $${paramIndex})`);
+    params_arr.push(JSON.stringify(params.categories));
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`(EXISTS (SELECT 1 FROM unnest(escorts.regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(escorts.primary_region) = lower($${paramIndex}))`);
+    conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(escorts.regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(escorts.primary_region) = lower($${paramIndex}))`);
     params_arr.push(params.region);
     paramIndex++;
   }
@@ -400,7 +400,7 @@ async function fetchEscortsWithCleanedRows(params: Omit<GetEscortsParams, "pract
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`(EXISTS (SELECT 1 FROM unnest(regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
+    conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
     params_arr.push(params.region);
     paramIndex++;
   }

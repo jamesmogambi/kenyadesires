@@ -43,7 +43,7 @@ export async function getUserActivePackages() {
     }
 
     const transactions: any[] = await executeQuery(
-      `SELECT * FROM transactions WHERE user_id = $1 AND metadata->>'type' = 'ad_purchase' ORDER BY created_at DESC`,
+      `SELECT * FROM transactions WHERE user_id = $1 AND JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.type')) = 'ad_purchase' ORDER BY created_at DESC`,
       [userId],
     );
 
@@ -171,17 +171,25 @@ export async function purchaseAdPackage(packageId: string) {
 
 export async function incrementUserCredits(userId: string, credits: number) {
   try {
-    const escortResult: any[] = await executeQuery(
-      `UPDATE escorts SET credits = credits + $2, updated_at = NOW() WHERE clerk_user_id = $1 RETURNING credits`,
+    await executeQuery(
+      `UPDATE escorts SET credits = credits + $2, updated_at = NOW() WHERE clerk_user_id = $1`,
       [userId, credits],
+    );
+    const escortResult: any[] = await executeQuery(
+      `SELECT credits FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
+      [userId],
     );
     if (escortResult.length > 0) {
       return { success: true, credits: Number(escortResult[0].credits) };
     }
 
-    const agencyResult: any[] = await executeQuery(
-      `UPDATE agencies SET credits = credits + $2, updated_at = NOW() WHERE owner_id = $1 RETURNING credits`,
+    await executeQuery(
+      `UPDATE agencies SET credits = credits + $2, updated_at = NOW() WHERE owner_id = $1`,
       [userId, credits],
+    );
+    const agencyResult: any[] = await executeQuery(
+      `SELECT credits FROM agencies WHERE owner_id = $1 LIMIT 1`,
+      [userId],
     );
     if (agencyResult.length > 0) {
       return { success: true, credits: Number(agencyResult[0].credits) };

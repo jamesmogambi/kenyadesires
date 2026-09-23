@@ -1,5 +1,5 @@
 import mysqlPool from '@/lib/db';
-import { RowDataPacket, ResultSetHeader, PoolConnection } from 'mysql2/promise';
+import { RowDataPacket, PoolConnection } from 'mysql2/promise';
 
 const MAX_QUERY_RETRIES = 3;
 const BASE_RETRY_DELAY_MS = 500;
@@ -114,14 +114,24 @@ export async function executeQueryOne<T = any>(
   return rows[0] || null;
 }
 
+export interface TransactionConnection {
+  query: (text: string, params?: any[]) => Promise<[RowDataPacket[], any]>;
+}
+
 export async function executeTransaction<T>(
-  callback: (connection: PoolConnection) => Promise<T>
+  callback: (connection: TransactionConnection) => Promise<T>
 ): Promise<T> {
   return executeWithRetry(async () => {
     const connection = await mysqlPool.getConnection();
     try {
       await connection.beginTransaction();
-      const result = await callback(connection);
+      const wrapped: TransactionConnection = {
+        query: async (text: string, params: any[] = []) => {
+          const { query: newQuery, params: newParams } = convertParams(text, params);
+          return connection.query(newQuery, newParams) as Promise<[RowDataPacket[], any]>;
+        },
+      };
+      const result = await callback(wrapped);
       await connection.commit();
       return result;
     } catch (error) {
@@ -136,7 +146,7 @@ export async function executeTransaction<T>(
   });
 }
 
-export function sql(strings: TemplateStringsArray, ...values: any[]) {
+export async function sql(strings: TemplateStringsArray, ...values: any[]): Promise<RowDataPacket[]> {
   let query = '';
   const params: any[] = [];
   strings.forEach((str, i) => {
@@ -146,7 +156,8 @@ export function sql(strings: TemplateStringsArray, ...values: any[]) {
       query += '?';
     }
   });
-  return { query, params };
+  const [rows] = await mysqlPool.query(query, params);
+  return rows as RowDataPacket[];
 }
 
 export function escapeIdentifier(identifier: string): string {
@@ -176,8 +187,8 @@ export function buildWhereClause(filters: Record<string, any>, paramStart: numbe
     
     if (Array.isArray(value)) {
       if (value.length > 0) {
-        conditions.push(`${escapeIdentifier(columnName)} && $${paramIndex}`);
-        params.push(value);
+        conditions.push(`JSON_OVERLAPS(${escapeIdentifier(columnName)}, $${paramIndex})`);
+        params.push(JSON.stringify(value));
         paramIndex++;
       }
     } else if (typeof value === 'object' && value.operator) {

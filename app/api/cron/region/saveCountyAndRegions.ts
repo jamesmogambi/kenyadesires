@@ -1,24 +1,35 @@
-// import { sql } from "@/db"; // assuming your Neon export lives here
-
-import { sql } from "@/lib/neon";
+import { executeQuery } from "@/lib/neon";
 
 async function saveCountyAndRegions(countyName: string, regionNames: string[]) {
-  // Insert or fetch county
-  const countyRes = await sql`
-    INSERT INTO counties (name)
-    VALUES (${countyName})
-    ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-    RETURNING id
-  `;
-  const countyId = countyRes[0].id;
+  const existingRows: any[] = await executeQuery(
+    `SELECT id FROM counties WHERE name = $1 LIMIT 1`,
+    [countyName],
+  );
+  let countyId: string;
 
-  // Insert regions
+  if (existingRows.length > 0) {
+    countyId = existingRows[0].id;
+  } else {
+    const id = crypto.randomUUID();
+    await executeQuery(
+      `INSERT INTO counties (id, name) VALUES ($1, $2)`,
+      [id, countyName],
+    );
+    countyId = id;
+  }
+
   for (const regionName of regionNames) {
-    await sql`
-      INSERT INTO regions (name, region_id)
-      VALUES (${regionName}, ${countyId})
-      ON CONFLICT (name) DO NOTHING
-    `;
+    const existingRegion: any[] = await executeQuery(
+      `SELECT id FROM regions WHERE name = $1 AND county_id = $2 LIMIT 1`,
+      [regionName, countyId],
+    );
+    if (existingRegion.length === 0) {
+      const regionId = crypto.randomUUID();
+      await executeQuery(
+        `INSERT INTO regions (id, name, county_id) VALUES ($1, $2, $3)`,
+        [regionId, regionName, countyId],
+      );
+    }
   }
 }
 
@@ -31,15 +42,17 @@ export async function saveCountiesAndRegions(
 }
 
 export const insertRegions = async (values: [string, number][]) => {
-  const sanitized = values
-    .map(
-      ([region, countyId]) => `('${region.replace(/'/g, "''")}', ${countyId})`
-    )
-    .join(", ");
-
-  return sql.unsafe(`
-    INSERT INTO regions (name, county_id)
-    VALUES ${sanitized}
-    ON CONFLICT (name) DO NOTHING
-  `);
+  for (const [region, countyId] of values) {
+    const existingRegion: any[] = await executeQuery(
+      `SELECT id FROM regions WHERE name = $1 AND county_id = $2 LIMIT 1`,
+      [region, countyId],
+    );
+    if (existingRegion.length === 0) {
+      const regionId = crypto.randomUUID();
+      await executeQuery(
+        `INSERT INTO regions (id, name, county_id) VALUES ($1, $2, $3)`,
+        [regionId, region, countyId],
+      );
+    }
+  }
 };

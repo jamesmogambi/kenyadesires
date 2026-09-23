@@ -40,11 +40,14 @@ export async function createPostback(
   const rows = await executeQuery<TrafficstarsPostbackRow>(
     `INSERT INTO trafficstars_postbacks (
       id, click_id, event, value, provider_lead_id, status, attempts
-    ) VALUES ($1, $2, $3, $4, $5, 'pending', 0)
-    RETURNING *`,
+    ) VALUES ($1, $2, $3, $4, $5, 'pending', 0)`,
     [id, input.click_id, input.event, input.value ?? null, input.provider_lead_id ?? null],
   );
-  return rows[0];
+  const selectRows = await executeQuery<TrafficstarsPostbackRow>(
+    `SELECT * FROM trafficstars_postbacks WHERE id = $1`,
+    [id],
+  );
+  return selectRows[0];
 }
 
 export async function findPostbackByClickAndEvent(
@@ -74,11 +77,14 @@ export async function findPendingPostbacks(
 export async function markPostbackSent(
   id: string,
 ): Promise<TrafficstarsPostbackRow | null> {
-  return executeQueryOne<TrafficstarsPostbackRow>(
+  await executeQuery(
     `UPDATE trafficstars_postbacks
      SET status = 'sent', sent_at = NOW(), attempts = attempts + 1
-     WHERE id = $1
-     RETURNING *`,
+     WHERE id = $1`,
+    [id],
+  );
+  return executeQueryOne<TrafficstarsPostbackRow>(
+    `SELECT * FROM trafficstars_postbacks WHERE id = $1`,
     [id],
   );
 }
@@ -87,12 +93,15 @@ export async function markPostbackFailed(
   id: string,
   error: string,
 ): Promise<TrafficstarsPostbackRow | null> {
-  return executeQueryOne<TrafficstarsPostbackRow>(
+  await executeQuery(
     `UPDATE trafficstars_postbacks
      SET status = 'failed', last_error = $2, attempts = attempts + 1
-     WHERE id = $1
-     RETURNING *`,
+     WHERE id = $1`,
     [id, error],
+  );
+  return executeQueryOne<TrafficstarsPostbackRow>(
+    `SELECT * FROM trafficstars_postbacks WHERE id = $1`,
+    [id],
   );
 }
 
@@ -100,11 +109,14 @@ export async function incrementPostbackAttempts(
   id: string,
   error?: string,
 ): Promise<TrafficstarsPostbackRow | null> {
-  return executeQueryOne<TrafficstarsPostbackRow>(
+  await executeQuery(
     `UPDATE trafficstars_postbacks
      SET attempts = attempts + 1, last_error = COALESCE($2, last_error)
-     WHERE id = $1
-     RETURNING *`,
+     WHERE id = $1`,
     [id, error ?? null],
+  );
+  return executeQueryOne<TrafficstarsPostbackRow>(
+    `SELECT * FROM trafficstars_postbacks WHERE id = $1`,
+    [id],
   );
 }

@@ -25,13 +25,13 @@ const BDSM_TERMS = [
 
 type FilterType = "none" | "massage" | "bdsm";
 
-const SERVICE_ARRAYS_SQL = "practices || bdsm || massage || extra_services";
+const SERVICE_ARRAYS_SQL_MYSQL = "(JSON_MERGE_PRESERVE(practices, bdsm, massage, extra_services))";
 
 function buildCategoryCondition(filterType: FilterType): string | null {
   if (filterType === "none") return null;
   const terms = filterType === "massage" ? MASSAGE_TYPE_TERMS : BDSM_TERMS;
-  const regex = terms.map(escapeRegex).join("|");
-  return `EXISTS (SELECT 1 FROM unnest(${SERVICE_ARRAYS_SQL}) p WHERE p ~* '${regex}')`;
+  const escapedTerms = terms.map(escapeRegex).join("|");
+  return `EXISTS (SELECT 1 FROM JSON_TABLE(${SERVICE_ARRAYS_SQL_MYSQL}, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE jt.p REGEXP '${escapedTerms}')`;
 }
 
 function buildTypeCondition(
@@ -39,20 +39,20 @@ function buildTypeCondition(
   paramIndex: number,
 ): { clause: string; param: string } {
   const keyword = normalizeSlug(practiceOrMassageType);
-  const clause = `EXISTS (SELECT 1 FROM unnest(${SERVICE_ARRAYS_SQL}) p WHERE lower(regexp_replace(p, '[-_]', ' ', 'g')) LIKE '%' || $${paramIndex} || '%')`;
+  const clause = `EXISTS (SELECT 1 FROM JSON_TABLE(${SERVICE_ARRAYS_SQL_MYSQL}, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(REPLACE(REPLACE(jt.p, '-', ' '), '_', ' ')) LIKE CONCAT('%', $${paramIndex}, '%'))`;
   return { clause, param: keyword };
 }
 
 function buildRegionCondition(paramIndex: number): string {
-  return `(EXISTS (SELECT 1 FROM unnest(regions) r WHERE lower(r) = lower($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`;
+  return `(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR LOWER(primary_region) = LOWER($${paramIndex}))`;
 }
 
 function buildPracticeCondition(paramIndex: number): string {
   return `(
-    EXISTS (SELECT 1 FROM unnest(practices) p WHERE lower(p) = lower($${paramIndex}))
-    OR EXISTS (SELECT 1 FROM unnest(bdsm) p WHERE lower(p) = lower($${paramIndex}))
-    OR EXISTS (SELECT 1 FROM unnest(massage) p WHERE lower(p) = lower($${paramIndex}))
-    OR EXISTS (SELECT 1 FROM unnest(extra_services) p WHERE lower(p) = lower($${paramIndex}))
+    EXISTS (SELECT 1 FROM JSON_TABLE(practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
+    OR EXISTS (SELECT 1 FROM JSON_TABLE(bdsm, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
+    OR EXISTS (SELECT 1 FROM JSON_TABLE(massage, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
+    OR EXISTS (SELECT 1 FROM JSON_TABLE(extra_services, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
   )`;
 }
 

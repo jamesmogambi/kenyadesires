@@ -185,11 +185,11 @@ function buildWhereClause(params: {
     params_arr.push(params.business);
     paramIndex++;
   }
-  if (params.town && params.town !== "all") {
-    conditions.push(`EXISTS (SELECT 1 FROM unnest(agencies.locations) l WHERE lower(l.town) = lower($${paramIndex}))`);
-    params_arr.push(params.town);
-    paramIndex++;
-  }
+   if (params.town && params.town !== "all") {
+     conditions.push(`EXISTS (SELECT 1 FROM JSON_TABLE(agencies.locations, '$[*]' COLUMNS (town VARCHAR(255) PATH '$.town')) AS jt WHERE LOWER(jt.town) = LOWER($${paramIndex}))`);
+     params_arr.push(params.town);
+     paramIndex++;
+   }
   if (params.verified === "true") {
     conditions.push(`agencies.is_verified = TRUE`);
   }

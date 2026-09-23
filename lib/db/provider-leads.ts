@@ -84,8 +84,7 @@ export async function createProviderLead(
     ) VALUES (
       $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
       $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
-    )
-    RETURNING *`,
+    )`,
     [
       id,
       input.first_name,
@@ -116,7 +115,12 @@ export async function createProviderLead(
     ],
   );
 
-  return rows[0];
+  const selectRows = await executeQuery<ProviderLeadRow>(
+    `SELECT * FROM provider_leads WHERE id = $1`,
+    [id],
+  );
+
+  return selectRows[0];
 }
 
 export async function findProviderLeadByEmail(
@@ -178,9 +182,13 @@ export async function updateProviderLeadZoho(
   if (fields.length === 0) return null;
 
   params.push(providerLeadId);
-  return executeQueryOne<ProviderLeadRow>(
-    `UPDATE provider_leads SET ${fields.join(", ")} WHERE id = $${idx} RETURNING *`,
+  await executeQuery(
+    `UPDATE provider_leads SET ${fields.join(", ")} WHERE id = ${idx}`,
     params,
+  );
+  return executeQueryOne<ProviderLeadRow>(
+    `SELECT * FROM provider_leads WHERE id = $1`,
+    [providerLeadId],
   );
 }
 
@@ -188,11 +196,14 @@ export async function updateProviderLeadDescription(
   providerLeadId: string,
   append: string,
 ): Promise<ProviderLeadRow | null> {
-  return executeQueryOne<ProviderLeadRow>(
+  await executeQuery(
     `UPDATE provider_leads
      SET description = CONCAT(COALESCE(description, ''), $1)
-     WHERE id = $2
-     RETURNING *`,
+     WHERE id = $2`,
     [append, providerLeadId],
+  );
+  return executeQueryOne<ProviderLeadRow>(
+    `SELECT * FROM provider_leads WHERE id = $1`,
+    [providerLeadId],
   );
 }

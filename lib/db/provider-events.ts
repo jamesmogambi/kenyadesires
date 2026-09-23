@@ -37,11 +37,10 @@ export async function createProviderEvent(
   input: CreateEventInput,
 ): Promise<ProviderEventRow> {
   const id = uuidv4();
-  const rows = await executeQuery<ProviderEventRow>(
+  await executeQuery<ProviderEventRow>(
     `INSERT INTO provider_events (
       id, provider_lead_id, zoho_entity_id, event_type, event_data
-    ) VALUES ($1, $2, $3, $4, $5)
-    RETURNING *`,
+    ) VALUES ($1, $2, $3, $4, $5)`,
     [
       id,
       input.provider_lead_id ?? null,
@@ -49,6 +48,11 @@ export async function createProviderEvent(
       input.event_type,
       JSON.stringify(input.event_data || {}),
     ],
+  );
+
+  const rows = await executeQuery<ProviderEventRow>(
+    `SELECT * FROM provider_events WHERE id = $1`,
+    [id],
   );
   return rows[0];
 }

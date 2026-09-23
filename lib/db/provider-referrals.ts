@@ -37,12 +37,11 @@ export async function createReferral(
   input: CreateReferralInput,
 ): Promise<ProviderReferralRow> {
   const id = uuidv4();
-  const rows = await executeQuery<ProviderReferralRow>(
+  await executeQuery<ProviderReferralRow>(
     `INSERT INTO provider_referrals (
       id, referrer_lead_id, referrer_zoho_id, referral_code,
       referred_lead_id, referred_zoho_id, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, 'pending')
-    RETURNING *`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, 'pending')`,
     [
       id,
       input.referrer_lead_id ?? null,
@@ -51,6 +50,11 @@ export async function createReferral(
       input.referred_lead_id ?? null,
       input.referred_zoho_id ?? null,
     ],
+  );
+
+  const rows = await executeQuery<ProviderReferralRow>(
+    `SELECT * FROM provider_referrals WHERE id = $1`,
+    [id],
   );
   return rows[0];
 }
@@ -95,9 +99,13 @@ export async function updateReferralStatus(
     }
   }
 
-  return executeQueryOne<ProviderReferralRow>(
-    `UPDATE provider_referrals SET ${fields.join(", ")} WHERE id = $1 RETURNING *`,
+  await executeQuery(
+    `UPDATE provider_referrals SET ${fields.join(", ")} WHERE id = $1`,
     params,
+  );
+  return executeQueryOne<ProviderReferralRow>(
+    `SELECT * FROM provider_referrals WHERE id = $1`,
+    [id],
   );
 }
 
