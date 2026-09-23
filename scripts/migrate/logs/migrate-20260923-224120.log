@@ -1,0 +1,5 @@
+regions MySQL count before: 455
+insertSql: INSERT IGNORE INTO `regions` (`id`, `name`, `county_code`, `county`, `county_numeric_code`, `county_id`, `is_active`, `c
+values[0] length: 15 | values length: 461
+bulk INSERT OK: 3
+regions MySQL count after: 458

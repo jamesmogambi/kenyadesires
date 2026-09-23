@@ -1,0 +1,2 @@
+regions MySQL cols (2): , 
+regions Neon cols (15): id, name, county_code, county, county_numeric_code, county_id, is_active, created_at, updated_at, town, estate, address, street, postal_code, notes

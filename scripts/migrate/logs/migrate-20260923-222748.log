@@ -1,0 +1,19 @@
+MySQL regions DDL:
+CREATE TABLE `regions` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT (uuid()),
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `county_code` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `county` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `county_numeric_code` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `county_id` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `town` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estate` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `street` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `postal_code` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

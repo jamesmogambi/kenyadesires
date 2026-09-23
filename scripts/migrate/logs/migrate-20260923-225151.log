@@ -1,0 +1,54 @@
+MySQL rows matching prefixes (48):
+  kiambu_gatundu-north | Gatundu North
+  kiambu_gatundu-south | Gatundu South
+  kiambu_githunguri | Githunguri
+  kiambu_juja | Juja
+  kiambu_kabete | Kabete
+  kiambu_kiambaa | Kiambaa
+  kiambu_kiambu | Kiambu
+  kiambu_kiambu-town | Kiambu Town
+  kiambu_kikuyu | Kikuyu
+  kiambu_lari | Lari
+  kiambu_limuru | Limuru
+  kiambu_ruiru | Ruiru
+  kiambu_thika-town | Thika Town
+  Kiambu_thindigua | 
+  nairobi_kabete | Kabete
+  nairobi_kahawa | Kahawa
+  nairobi_kahawa-sukari | Kahawa Sukari
+  nairobi_kahawa-wendani | Kahawa Wendani
+  nairobi_kahawa-west | Kahawa West
+  nairobi_kamakis | Kamakis
+  nairobi_kamukunji | Kamukunji
+  nairobi_kangundo-road | Kangundo Road
+  nairobi_karen | Karen
+  nairobi_kariobangi | Kariobangi
+  nairobi_kasarani | Kasarani
+  nairobi_katani | Katani
+  nairobi_kawangware | Kawangware
+  nairobi_kayole | Kayole
+  nairobi_kenyatta-road | Kenyatta Road
+  nairobi_kiambu-road | Kiambu Road
+  nairobi_kibra | Kibra
+  nairobi_kikuyu | Kikuyu
+  nairobi_kileleshwa | Kileleshwa
+  Nairobi_kilimani | 
+  nairobi_kinoo | Kinoo
+  nairobi_kitengela | Kitengela
+  nairobi_kitisuru | Kitisuru
+  nairobi_komarock | Komarock
+  nairobi_madaraka | Madaraka
+  nairobi_makadara | Makadara
+  nairobi_manyanja-road | Manyanja Road
+  Nairobi_mathare | 
+  nairobi_membley | Membley
+  nairobi_mirema | Mirema
+  nairobi_mlolongo | Mlolongo
+  nairobi_mombasa-road | Mombasa Road
+  nairobi_mwihoko | Mwihoko
+  nairobi_mwiki | Mwiki
+Neon rows (3):
+  kiambu_thindigua | Thindigua
+  nairobi_kilimani | Kilimani
+  nairobi_mathare | Mathare
+PK collation: A

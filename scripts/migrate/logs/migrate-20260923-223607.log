@@ -1,0 +1,39 @@
+
+========== create-tables ==========
+[create] Loaded 32 statements from /home/james/projects/kenyadesires/scripts/migrate/schema.sql
+[create] dry-run = false
+[create] MySQL reachable.
+[create] executed: SET FOREIGN_KEY_CHECKS=0;
+[create] created/verified table: agencies
+[create] created/verified table: blog_categories
+[create] created/verified table: blog_comments
+[create] created/verified table: blog_posts
+[create] created/verified table: cleaning_logs
+[create] created/verified table: contact_submissions
+[create] created/verified table: counties
+[create] created/verified table: credit_rewards
+[create] created/verified table: escort_images
+[create] created/verified table: escort_search
+[create] created/verified table: escorts
+[create] created/verified table: image_sync_trackers
+[create] created/verified table: kyc_verifications
+[create] created/verified table: lookup_ages
+[create] created/verified table: lookup_bdsm
+[create] created/verified table: lookup_breast_sizes
+[create] created/verified table: lookup_categories
+[create] created/verified table: lookup_extra_services
+[create] created/verified table: lookup_massage
+[create] created/verified table: lookup_practices
+[create] created/verified table: processing_logs
+[create] created/verified table: processing_queue
+[create] created/verified table: regions
+[create] created/verified table: settings
+[create] created/verified table: transactions
+[create] created/verified table: users
+[create] created/verified table: whatsapp_campaign_contacts
+[create] created/verified table: whatsapp_campaigns
+[create] created/verified table: zoho_connections
+[create] skip: escort_search :: Duplicate foreign key constraint name 'fk_escort_search_escort_search_id_fkey'
+[create] executed: SET FOREIGN_KEY_CHECKS=1;
+[create] done. executed=31 skipped=1
+[create] Done.

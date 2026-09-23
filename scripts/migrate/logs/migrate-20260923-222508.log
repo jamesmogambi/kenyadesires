@@ -1,0 +1,7 @@
+MySQL escort_search columns (2):
+  undefined  undefined  null=undefined  key=undefined  default=undefined
+  undefined  undefined  null=undefined  key=undefined  default=undefined
+Neon escort_search columns (9): id, name, username, about, town, estate, categories, practices, search_vector
+Dropped escort_search
+Recreated escort_search
+MySQL escort_search columns now (2): , 

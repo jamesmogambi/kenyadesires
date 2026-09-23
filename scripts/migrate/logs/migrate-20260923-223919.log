@@ -1,0 +1,8 @@
+Neon regions rows: 461
+columns (15): id, name, county_code, county, county_numeric_code, county_id, is_active, created_at, updated_at, town, estate, address, street, postal_code, notes
+SQL:
+INSERT IGNORE INTO regions (`id`, `name`, `county_code`, `county`, `county_numeric_code`, `county_id`, `is_active`, `created_at`, `updated_at`, `town`, `estate`, `address`, `street`, `postal_code`, `notes`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+values[0] length: 15 | values length: 461
+bulk INSERT FAIL: ER_PARSE_ERROR You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)' at line 1
+single-row INSERT FAIL: ER_PARSE_ERROR You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)' at line 1
+regions MySQL count: 455

@@ -1,0 +1,7 @@
+Neon cols (9): id | name | username | about | town | estate | categories | practices | search_vector
+MySQL cols (0): 
+Neon only: id, name, username, about, town, estate, categories, practices, search_vector
+MySQL only: (none)
+SQL head: INSERT INTO escort_search (`id`, `name`, `username`, `about`, `town`, `estate`, `categories`, `practices`, `search_vecto
+values length: 9
+INSERT FAIL: ER_WRONG_VALUE_COUNT_ON_ROW Column count doesn't match value count at row 1

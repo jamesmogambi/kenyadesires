@@ -1,0 +1,3 @@
+regions Neon rows: 461 | MySQL rows: 458 | missing: 3 ["kiambu_thindigua","nairobi_kilimani","nairobi_mathare"]
+duplicate PKs in Neon regions: 0 []
+direct INSERT FAIL for kiambu_thindigua : ER_DUP_ENTRY Duplicate entry 'kiambu_thindigua' for key 'regions.PRIMARY'

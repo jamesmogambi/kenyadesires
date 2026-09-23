@@ -1,0 +1,6 @@
+Neon rows: 461 MySQL rows: 458
+case-insensitive conflicts: 3
+  neon=kiambu_thindigua (Thindigua) vs mysql=Kiambu_thindigua ()
+  neon=nairobi_kilimani (Kilimani) vs mysql=Nairobi_kilimani ()
+  neon=nairobi_mathare (Mathare) vs mysql=Nairobi_mathare ()
+duplicate ids in Neon: 0 []

@@ -1,0 +1,64 @@
+
+========== copy-data ==========
+[copy] 29 tables from Neon -> MySQL. dry-run=false
+[copy] MySQL reachable.
+[copy] agencies: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] agencies: copied 0/0
+[copy] blog_categories: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] blog_categories: copied 0/0
+[copy] blog_comments: neon_rows=6, batch=1000, large=false, mysql_rows=6
+[copy] blog_comments: copied 6/6
+[copy] blog_posts: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] blog_posts: copied 0/0
+[copy] cleaning_logs: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] cleaning_logs: copied 0/0
+[copy] contact_submissions: neon_rows=22, batch=1000, large=false, mysql_rows=22
+[copy] contact_submissions: copied 22/22
+[copy] counties: neon_rows=47, batch=1000, large=false, mysql_rows=47
+[copy] counties: copied 47/47
+[copy] credit_rewards: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] credit_rewards: copied 0/0
+[copy] escort_images: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] escort_images: copied 0/0
+[copy] escort_search: neon_rows=921, batch=1000, large=false, mysql_rows=921
+[copy] escort_search: copied 921/921
+[copy] escorts: neon_rows=921, batch=1000, large=false, mysql_rows=921
+[copy] escorts: copied 921/921
+[copy] image_sync_trackers: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] image_sync_trackers: copied 0/0
+[copy] kyc_verifications: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] kyc_verifications: copied 0/0
+[copy] lookup_ages: neon_rows=7, batch=1000, large=false, mysql_rows=7
+[copy] lookup_ages: copied 7/7
+[copy] lookup_bdsm: neon_rows=30, batch=1000, large=false, mysql_rows=30
+[copy] lookup_bdsm: copied 30/30
+[copy] lookup_breast_sizes: neon_rows=7, batch=1000, large=false, mysql_rows=7
+[copy] lookup_breast_sizes: copied 7/7
+[copy] lookup_categories: neon_rows=3, batch=1000, large=false, mysql_rows=3
+[copy] lookup_categories: copied 3/3
+[copy] lookup_extra_services: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] lookup_extra_services: copied 0/0
+[copy] lookup_massage: neon_rows=30, batch=1000, large=false, mysql_rows=30
+[copy] lookup_massage: copied 30/30
+[copy] lookup_practices: neon_rows=30, batch=1000, large=false, mysql_rows=30
+[copy] lookup_practices: copied 30/30
+[copy] processing_logs: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] processing_logs: copied 0/0
+[copy] processing_queue: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] processing_queue: copied 0/0
+[copy] regions: neon_rows=461, batch=1000, large=false, mysql_rows=458
+[copy] regions: copied 461/461
+[copy] settings: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] settings: copied 0/0
+[copy] transactions: neon_rows=58, batch=1000, large=false, mysql_rows=58
+[copy] transactions: copied 58/58
+[copy] users: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] users: copied 0/0
+[copy] whatsapp_campaign_contacts: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] whatsapp_campaign_contacts: copied 0/0
+[copy] whatsapp_campaigns: neon_rows=0, batch=1000, large=false, mysql_rows=0
+[copy] whatsapp_campaigns: copied 0/0
+[copy] zoho_connections: neon_rows=1, batch=1000, large=false, mysql_rows=1
+[copy] zoho_connections: copied 1/1
+[copy] DONE. total copied = 2544
+[copy] Done.

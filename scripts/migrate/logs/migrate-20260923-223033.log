@@ -1,0 +1,5 @@
+Neon ids count: 461 MySQL ids count: 458
+missing (string includes): 3 ["kiambu_thindigua","nairobi_kilimani","nairobi_mathare"]
+  MySQL candidates for kiambu_t : [{"id":"kiambu_thika-town","h":"6B69616D62755F7468696B612D746F776E","l":17},{"id":"Kiambu_thindigua","h":"4B69616D62755F7468696E6469677561","l":16}]
+  MySQL candidates for nairobi_ : [{"id":"nairobi_adams-arcade","h":"6E6169726F62695F6164616D732D617263616465","l":20},{"id":"nairobi_allsops","h":"6E6169726F62695F616C6C736F7073","l":15},{"id":"nairobi_athi-river","h":"6E6169726F62695F617468692D7269766572","l":18},{"id":"nairobi_bee-center","h":"6E6169726F62695F6265652D63656E746572","l":18},{"id":"nairobi_buruburu","h":"6E6169726F62695F6275727562757275","l":16}]
+  MySQL candidates for nairobi_ : [{"id":"nairobi_adams-arcade","h":"6E6169726F62695F6164616D732D617263616465","l":20},{"id":"nairobi_allsops","h":"6E6169726F62695F616C6C736F7073","l":15},{"id":"nairobi_athi-river","h":"6E6169726F62695F617468692D7269766572","l":18},{"id":"nairobi_bee-center","h":"6E6169726F62695F6265652D63656E746572","l":18},{"id":"nairobi_buruburu","h":"6E6169726F62695F6275727562757275","l":16}]

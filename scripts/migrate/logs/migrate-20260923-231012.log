@@ -1,0 +1,10 @@
+neonUrl used: postgresql://neondb_owner:*****@ep-icy-band-b44e0e4t-pooler.c-6.us-east-2.aws.neon.tech/neondb?uselibpqcompat=true&sslmode=require
+MySQL matches: 3
+  Kiambu_thindigua | 
+  Nairobi_kilimani | 
+  Nairobi_mathare | 
+Neon matches: 3
+  kiambu_thindigua | Thindigua
+  nairobi_kilimani | Kilimani
+  nairobi_mathare | Mathare
+PK collation: A

@@ -1,0 +1,15 @@
+MySQL escort_search DDL:
+CREATE TABLE `escort_search` (
+  `id` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `username` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `about` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `town` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estate` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `categories` json DEFAULT NULL,
+  `practices` json DEFAULT NULL,
+  `search_vector` text COLLATE utf8mb4_unicode_ci,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_escort_search_escort_search_id_fkey` FOREIGN KEY (`id`) REFERENCES `escorts` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+MySQL escort_search columns (9): id, name, username, about, town, estate, categories, practices, search_vector

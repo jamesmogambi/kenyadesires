@@ -1,0 +1,3 @@
+plain insert FAIL: ER_PARSE_ERROR You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right synta
+full SQL: INSERT INTO regions (`id`, `name`, `county_code`, `county`, `county_numeric_code`, `county_id`, `is_active`, `created_at`, `updated_at`, `town`, `estate`, `address`, `street`, `postal_code`, `notes`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+full insert FAIL: ER_PARSE_ERROR You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)' at line 1

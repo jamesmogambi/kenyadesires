@@ -1,0 +1,49 @@
+MySQL rows (48):
+  id=kiambu_gatundu-north name=Gatundu North hex=6B69616D62755F676174756E64752D6E6F727468 len=20
+  id=kiambu_gatundu-south name=Gatundu South hex=6B69616D62755F676174756E64752D736F757468 len=20
+  id=kiambu_githunguri name=Githunguri hex=6B69616D62755F67697468756E67757269 len=17
+  id=kiambu_juja name=Juja hex=6B69616D62755F6A756A61 len=11
+  id=kiambu_kabete name=Kabete hex=6B69616D62755F6B6162657465 len=13
+  id=kiambu_kiambaa name=Kiambaa hex=6B69616D62755F6B69616D626161 len=14
+  id=kiambu_kiambu name=Kiambu hex=6B69616D62755F6B69616D6275 len=13
+  id=kiambu_kiambu-town name=Kiambu Town hex=6B69616D62755F6B69616D62752D746F776E len=18
+  id=kiambu_kikuyu name=Kikuyu hex=6B69616D62755F6B696B757975 len=13
+  id=kiambu_lari name=Lari hex=6B69616D62755F6C617269 len=11
+  id=kiambu_limuru name=Limuru hex=6B69616D62755F6C696D757275 len=13
+  id=kiambu_ruiru name=Ruiru hex=6B69616D62755F7275697275 len=12
+  id=kiambu_thika-town name=Thika Town hex=6B69616D62755F7468696B612D746F776E len=17
+  id=Kiambu_thindigua name= hex=4B69616D62755F7468696E6469677561 len=16
+  id=nairobi_kabete name=Kabete hex=6E6169726F62695F6B6162657465 len=14
+  id=nairobi_kahawa name=Kahawa hex=6E6169726F62695F6B6168617761 len=14
+  id=nairobi_kahawa-sukari name=Kahawa Sukari hex=6E6169726F62695F6B61686177612D73756B617269 len=21
+  id=nairobi_kahawa-wendani name=Kahawa Wendani hex=6E6169726F62695F6B61686177612D77656E64616E69 len=22
+  id=nairobi_kahawa-west name=Kahawa West hex=6E6169726F62695F6B61686177612D77657374 len=19
+  id=nairobi_kamakis name=Kamakis hex=6E6169726F62695F6B616D616B6973 len=15
+  id=nairobi_kamukunji name=Kamukunji hex=6E6169726F62695F6B616D756B756E6A69 len=17
+  id=nairobi_kangundo-road name=Kangundo Road hex=6E6169726F62695F6B616E67756E646F2D726F6164 len=21
+  id=nairobi_karen name=Karen hex=6E6169726F62695F6B6172656E len=13
+  id=nairobi_kariobangi name=Kariobangi hex=6E6169726F62695F6B6172696F62616E6769 len=18
+  id=nairobi_kasarani name=Kasarani hex=6E6169726F62695F6B61736172616E69 len=16
+  id=nairobi_katani name=Katani hex=6E6169726F62695F6B6174616E69 len=14
+  id=nairobi_kawangware name=Kawangware hex=6E6169726F62695F6B6177616E6777617265 len=18
+  id=nairobi_kayole name=Kayole hex=6E6169726F62695F6B61796F6C65 len=14
+  id=nairobi_kenyatta-road name=Kenyatta Road hex=6E6169726F62695F6B656E79617474612D726F6164 len=21
+  id=nairobi_kiambu-road name=Kiambu Road hex=6E6169726F62695F6B69616D62752D726F6164 len=19
+  id=nairobi_kibra name=Kibra hex=6E6169726F62695F6B69627261 len=13
+  id=nairobi_kikuyu name=Kikuyu hex=6E6169726F62695F6B696B757975 len=14
+  id=nairobi_kileleshwa name=Kileleshwa hex=6E6169726F62695F6B696C656C6573687761 len=18
+  id=Nairobi_kilimani name= hex=4E6169726F62695F6B696C696D616E69 len=16
+  id=nairobi_kinoo name=Kinoo hex=6E6169726F62695F6B696E6F6F len=13
+  id=nairobi_kitengela name=Kitengela hex=6E6169726F62695F6B6974656E67656C61 len=17
+  id=nairobi_kitisuru name=Kitisuru hex=6E6169726F62695F6B69746973757275 len=16
+  id=nairobi_komarock name=Komarock hex=6E6169726F62695F6B6F6D61726F636B len=16
+  id=nairobi_madaraka name=Madaraka hex=6E6169726F62695F6D61646172616B61 len=16
+  id=nairobi_makadara name=Makadara hex=6E6169726F62695F6D616B6164617261 len=16
+  id=nairobi_manyanja-road name=Manyanja Road hex=6E6169726F62695F6D616E79616E6A612D726F6164 len=21
+  id=Nairobi_mathare name= hex=4E6169726F62695F6D617468617265 len=15
+  id=nairobi_membley name=Membley hex=6E6169726F62695F6D656D626C6579 len=15
+  id=nairobi_mirema name=Mirema hex=6E6169726F62695F6D6972656D61 len=14
+  id=nairobi_mlolongo name=Mlolongo hex=6E6169726F62695F6D6C6F6C6F6E676F len=16
+  id=nairobi_mombasa-road name=Mombasa Road hex=6E6169726F62695F6D6F6D626173612D726F6164 len=20
+  id=nairobi_mwihoko name=Mwihoko hex=6E6169726F62695F6D7769686F6B6F len=15
+  id=nairobi_mwiki name=Mwiki hex=6E6169726F62695F6D77696B69 len=13

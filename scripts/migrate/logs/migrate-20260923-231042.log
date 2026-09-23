@@ -1,0 +1,11 @@
+empty-name rows in MySQL: 3
+  Kiambu_thindigua | name=""
+  Nairobi_kilimani | name=""
+  Nairobi_mathare | name=""
+deleted Kiambu_thindigua -> 1
+deleted Nairobi_kilimani -> 1
+deleted Nairobi_mathare -> 1
+inserted kiambu_thindigua -> 1
+inserted nairobi_kilimani -> 1
+inserted nairobi_mathare -> 1
+regions MySQL count: 458

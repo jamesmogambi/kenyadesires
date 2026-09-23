@@ -1,11 +1,12 @@
 import { mysqlPool, neonPool, log } from './config';
 
 (async () => {
-  const neonRes = await neonPool.query('SELECT * FROM escort_search ORDER BY id LIMIT 1');
-  const mysqlRes = await mysqlPool.query('SELECT * FROM escort_search ORDER BY id LIMIT 1');
-  log('Neon cols:', Object.keys(neonRes.rows[0]).join(','));
-  log('MySQL cols:', Object.keys(mysqlRes[0]).join(','));
+  const [cnt] = await mysqlPool.query('SELECT COUNT(*) n FROM regions');
+  log('regions MySQL count:', (cnt as any)[0].n);
+  const [neon] = await neonPool.query('SELECT COUNT(*) n FROM regions');
+  log('regions Neon count:', (neon as any)[0].n);
+
   await mysqlPool.end();
-  await neonPool.end();
+  try { await neonPool.end(); } catch {}
   process.exit(0);
 })().catch((e) => { console.error('TOP', e && e.message ? e.message : e); process.exit(1); });
