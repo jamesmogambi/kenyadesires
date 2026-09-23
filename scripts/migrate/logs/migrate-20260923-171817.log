@@ -1,0 +1,35 @@
+
+========== verify ==========
+[verify] comparing 29 tables
+TABLE                        |       Neon |      MySQL | Match
+agencies                     | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.agencies' doesn' | FAIL
+blog_categories              | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.blog_categories' | FAIL
+blog_comments                | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.blog_comments' d | FAIL
+blog_posts                   | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.blog_posts' does | FAIL
+cleaning_logs                | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.cleaning_logs' d | FAIL
+contact_submissions          | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.contact_submissi | FAIL
+counties                     | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.counties' doesn' | FAIL
+credit_rewards               | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.credit_rewards'  | FAIL
+escort_images                | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.escort_images' d | FAIL
+escort_search                | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.escort_search' d | FAIL
+escorts                      | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.escorts' doesn't | FAIL
+image_sync_trackers          | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.image_sync_track | FAIL
+kyc_verifications            | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.kyc_verification | FAIL
+lookup_ages                  | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_ages' doe | FAIL
+lookup_bdsm                  | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_bdsm' doe | FAIL
+lookup_breast_sizes          | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_breast_si | FAIL
+lookup_categories            | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_categorie | FAIL
+lookup_extra_services        | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_extra_ser | FAIL
+lookup_massage               | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_massage'  | FAIL
+lookup_practices             | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.lookup_practices | FAIL
+processing_logs              | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.processing_logs' | FAIL
+processing_queue             | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.processing_queue | FAIL
+regions                      | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.regions' doesn't | FAIL
+settings                     | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.settings' doesn' | FAIL
+transactions                 | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.transactions' do | FAIL
+users                        | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.users' doesn't e | FAIL
+whatsapp_campaign_contacts   | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.whatsapp_campaig | FAIL
+whatsapp_campaigns           | ERR: Your project has exceeded the data trans | ERR: Table 'kenyadesires-xyz.whatsapp_campaig | FAIL
+zoho_connections             | ERR: AggregateError | ERR: Table 'kenyadesires-xyz.zoho_connections | FAIL
+[verify] Mismatches: 29
+[verify] Done.

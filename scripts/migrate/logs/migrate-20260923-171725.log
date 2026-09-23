@@ -1,0 +1,35 @@
+[translate] Loaded 29 tables from /home/james/projects/kenyadesires/scripts/migrate/schema.json
+
+========== Table type mapping ==========
+[translate] agencies: 63 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] blog_categories: 8 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] blog_comments: 6 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] blog_posts: 16 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] cleaning_logs: 9 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] contact_submissions: 7 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] counties: 10 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] credit_rewards: 8 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] escort_images: 11 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] escort_search: 9 cols, pk=[id], uk=0, fk=1, serials=[]
+[translate] escorts: 84 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] image_sync_trackers: 7 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] kyc_verifications: 11 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] lookup_ages: 3 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] lookup_bdsm: 3 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] lookup_breast_sizes: 3 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] lookup_categories: 3 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] lookup_extra_services: 3 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] lookup_massage: 3 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] lookup_practices: 3 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] processing_logs: 6 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] processing_queue: 9 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] regions: 15 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] settings: 3 cols, pk=[key], uk=0, fk=0, serials=[]
+[translate] transactions: 14 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] users: 10 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] whatsapp_campaign_contacts: 7 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] whatsapp_campaigns: 13 cols, pk=[id], uk=1, fk=0, serials=[]
+[translate] zoho_connections: 8 cols, pk=[id], uk=0, fk=0, serials=[]
+[translate] Emitting 1 foreign-key ALTER statements.
+[translate] Wrote schema.sql -> /home/james/projects/kenyadesires/scripts/migrate/schema.sql
+[translate] Enum strategy: Postgres enums mapped to MySQL ENUM(...) (preserves value constraints). 0 tables contain enum columns.

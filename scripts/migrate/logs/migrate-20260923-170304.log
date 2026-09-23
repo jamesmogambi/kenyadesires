@@ -1,0 +1,4 @@
+[introspect] Neon URL: postgresql://neondb_owner:*****@ep-icy-band-b44e0e4t.c-6.us-east-2.aws.neon.tech/neondb?sslmode=require
+[introspect] Target schema: public
+[introspect] Found 29 base tables.
+[introspect] Found 0 enum types.
