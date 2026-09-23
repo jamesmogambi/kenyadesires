@@ -1,6 +1,18 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
+import mysqlPool from '@/lib/db';
+import { RowDataPacket } from 'mysql2/promise';
 
-// Use HTTP for queries instead of WebSockets to avoid needing the 'ws' package
-neonConfig.poolQueryViaFetch = true;
+export const sql = async (strings: TemplateStringsArray, ...values: any[]) => {
+  let query = '';
+  const params: any[] = [];
+  strings.forEach((str, i) => {
+    query += str;
+    if (i < values.length) {
+      params.push(values[i]);
+      query += '?';
+    }
+  });
+  const [rows] = await mysqlPool.query(query, params);
+  return rows as RowDataPacket[];
+};
 
-export const sql = neon(process.env.DATABASE_URL!);
+export default sql;
