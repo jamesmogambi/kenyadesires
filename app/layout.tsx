@@ -75,13 +75,21 @@ export default async function RootLayout({
   const agency = isBusiness && userId ? await getAgencyByOwnerId(userId) : null;
 
   // ✅ Pre-fetch on server
-  const [counties, regions, lookup, allCounties] = await Promise.all([
-    getCachedPopularCounties(),
-    getCachedRegions(),
-    // getCachedLookupData(),
-    getAllLookupData(),
-    getAllCounties(),
-  ]);
+  let counties, regions, lookup, allCounties;
+  try {
+    [counties, regions, lookup, allCounties] = await Promise.all([
+      getCachedPopularCounties(),
+      getCachedRegions(),
+      getAllLookupData(),
+      getAllCounties(),
+    ]);
+  } catch (error) {
+    console.warn("Database pre-fetch failed during build, using empty data:", error);
+    counties = { success: true, data: [] };
+    regions = { success: true, data: [] };
+    lookup = { success: true, data: [] };
+    allCounties = { success: true, data: [] };
+  }
 
   return (
     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
