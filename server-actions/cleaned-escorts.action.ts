@@ -561,6 +561,37 @@ export async function getMassagesFromCleanedEscorts(
   }
 }
 
+export async function getCategoriesFromCleanedEscorts(
+  params: Omit<GetEscortsParams, "practice" | "practices" | "page" | "limit"> = {},
+): Promise<{ value: string; count: number }[]> {
+  try {
+    const escorts = await fetchEscortsWithCleanedRows(params);
+
+    const valueCounts: Record<string, number> = {};
+
+    escorts.forEach((escort) => {
+      const values = escort.categories;
+      if (values && Array.isArray(values)) {
+        values.forEach((value: string) => {
+          if (value) {
+            valueCounts[value] = (valueCounts[value] || 0) + 1;
+          }
+        });
+      }
+    });
+
+    return Object.entries(valueCounts)
+      .map(([value, count]) => ({ value, count }))
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return a.value.localeCompare(b.value);
+      });
+  } catch (error) {
+    console.error("Error fetching categories from cleaned escorts:", error);
+    return [];
+  }
+}
+
 export async function getCleanedImagesForEscort(
   escortId: string,
 ): Promise<string[]> {
