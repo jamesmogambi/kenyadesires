@@ -1,55 +1,72 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/girls',
+  '/girls/(.*)',
+  '/agencies',
+  '/agencies/(.*)',
+  '/blog',
+  '/blog/(.*)',
+  '/erotic-massages',
+  '/bdsm',
+  '/search',
+  '/contact',
+  '/privacy-policy',
+  '/terms',
+  '/withdrawal-contract',
+  '/frequent-questions',
+  '/api/webhooks/(.*)',
+  '/api/mpesa/callback',
+  '/api/mux/(.*)',
+  '/api/cron/(.*)',
+  '/api/sitemap-status',
+  '/api/version',
+  '/_next/(.*)',
+  '/favicon.ico',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/icon',
+  '/spaceship-test',
+  '/action',
+  '/payment-status',
+  '/api/admin/images/migrate',
+  '/api/admin/images/status',
+  '/api/admin/images/migrate/(.*)',
+  '/api/agencies/(.*)',
+  '/api/escorts/(.*)',
+  '/api/regions/(.*)',
+  '/api/seed-(.*)',
+  '/api/fix-image-tokens',
+  '/api/clean-image',
+  '/api/cloudinary-signature',
+  '/api/cleaned-images/upload',
+  '/api/firebase/migrate-images/(.*)',
+  '/api/dewatermark/(.*)',
+  '/api/migrate-regions',
+  '/api/update-escort-primary-location',
+  '/api/test-storage',
+  '/api/contact',
+  '/api/sms/send',
+  '/api/spaceship-test',
+  '/api/zoho/(.*)',
+  '/api/packages',
+  '/api/credits',
+  '/api/transactions/(.*)',
+  '/api/verify/(.*)',
+]);
+
 export default clerkMiddleware(async (auth, request) => {
-  const { userId } = await auth();
-
-  if (request.nextUrl.pathname === "/api/mpesa/callback") {
-    return NextResponse.next();
+  if (!isPublicRoute(request)) {
+    await auth.protect();
   }
-
-  const protectedRoutes = [
-    "/extend",
-    "/invoices",
-    "/payment-status",
-    "/adjustment",
-    "/add-girl",
-    "/admin",
-    "/administration",
-    "/agency-admin-profile",
-    "/agency-documents-verification",
-    "/agency-profile",
-    "/edit-girl",
-    "/edit-profile",
-    "/girl-documents-verification",
-    "/new-profile",
-    "/private-apartment-girl-listing",
-    "/verify",
-    "/verification",
-    "/verify-girl",
-    "/verify-agency",
-    "/verify/done",
-    "/agency-verification-status",
-  ];
-
-  const isProtected = protectedRoutes.some((route) => {
-    const pathname = request.nextUrl.pathname;
-    return pathname === route || pathname.startsWith(route + "/");
-  });
-
-  if (isProtected && !userId) {
-    const loginUrl = new URL("/", request.url);
-    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
   return NextResponse.next();
 });
 
 export const config = {
   matcher: [
-    "/((?!.*\\..*|_next).*)",
-    "/",
-    "/(api|trpc)(.*)",
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
   ],
 };
