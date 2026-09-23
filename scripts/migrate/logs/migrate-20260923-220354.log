@@ -1,0 +1,36 @@
+
+========== verify ==========
+[verify] comparing 29 tables
+TABLE                        |       Neon |      MySQL | Match
+agencies                     |  ERR:53000 |          0 | FAIL
+blog_categories              |  ERR:53000 |          0 | FAIL
+blog_comments                | ERR:ETIMEDOU |          0 | FAIL
+blog_posts                   | ERR:ETIMEDOU |          0 | FAIL
+cleaning_logs                |  ERR:53000 |          0 | FAIL
+contact_submissions          |  ERR:53000 |          0 | FAIL
+counties                     |  ERR:53000 |          0 | FAIL
+credit_rewards               | ERR:ETIMEDOU |          0 | FAIL
+escort_images                |  ERR:53000 |          0 | FAIL
+escort_search                |  ERR:53000 |          0 | FAIL
+escorts                      | ERR:ETIMEDOU |          0 | FAIL
+image_sync_trackers          |  ERR:53000 |          0 | FAIL
+kyc_verifications            |  ERR:53000 |          0 | FAIL
+lookup_ages                  |  ERR:53000 |          0 | FAIL
+lookup_bdsm                  |  ERR:53000 |          0 | FAIL
+lookup_breast_sizes          |  ERR:53000 |          0 | FAIL
+lookup_categories            |  ERR:53000 |          0 | FAIL
+lookup_extra_services        | ERR:ETIMEDOU |          0 | FAIL
+lookup_massage               |  ERR:53000 |          0 | FAIL
+lookup_practices             |  ERR:53000 |          0 | FAIL
+processing_logs              |  ERR:53000 |          0 | FAIL
+processing_queue             |  ERR:53000 |          0 | FAIL
+regions                      | ERR:ETIMEDOU |          0 | FAIL
+settings                     |  ERR:53000 |          0 | FAIL
+transactions                 | ERR:ETIMEDOU |          0 | FAIL
+users                        | ERR:ETIMEDOU |          0 | FAIL
+whatsapp_campaign_contacts   | ERR:ETIMEDOU |          0 | FAIL
+whatsapp_campaigns           |  ERR:53000 |          0 | FAIL
+zoho_connections             |  ERR:53000 |          0 | FAIL
+
+Mismatches: 29
+[verify] Done.

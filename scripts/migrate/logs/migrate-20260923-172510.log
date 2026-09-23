@@ -1,0 +1,499 @@
+
+========== create-tables ==========
+[create] Loaded 32 statements from /home/james/projects/kenyadesires/scripts/migrate/schema.sql
+[create] dry-run = true
+[create][dry-run] SET FOREIGN_KEY_CHECKS=0;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `agencies` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  `description` TEXT NULL,
+  `contact_email` TEXT NULL,
+  `contact_phone` TEXT NULL,
+  `whatsapp_phone` TEXT NULL,
+  `website` TEXT NULL,
+  `owner_id` TEXT NOT NULL,
+  `country` TEXT NULL DEFAULT 'Kenya',
+  `county` TEXT NULL,
+  `county_code` TEXT NULL,
+  `region` TEXT NULL,
+  `town` TEXT NULL,
+  `regions` JSON NULL DEFAULT '{}',
+  `primary_region` TEXT NULL,
+  `estate` TEXT NULL,
+  `address` TEXT NULL,
+  `street` TEXT NULL,
+  `postal_code` TEXT NULL,
+  `business_type` TEXT NULL DEFAULT 'agency',
+  `categories` JSON NULL DEFAULT '{}',
+  `opening_hours` JSON NULL DEFAULT '{}',
+  `services` JSON NULL DEFAULT '{}',
+  `specialties` JSON NULL DEFAULT '{}',
+  `is_verified` TINYINT(1) NULL DEFAULT 0,
+  `verification_status` TEXT NULL DEFAULT 'pending',
+  `verification_documents` JSON NULL,
+  `logo` TEXT NULL,
+  `cover_image` TEXT NULL,
+  `gallery` JSON NULL DEFAULT '{}',
+  `videos` JSON NULL DEFAULT '{}',
+  `establishment_year` INT NULL,
+  `languages` JSON NULL DEFAULT '{English}',
+  `payment_methods` JSON NULL DEFAULT '{Cash,M-Pesa}',
+  `social_media` JSON NULL,
+  `plan_type` TEXT NULL DEFAULT 'basic',
+  `plan_is_active` TINYINT(1) NULL DEFAULT 1,
+  `plan_activated_at` DATETIME NULL,
+  `plan_expires_at` DATETIME NULL,
+  `plan_features` JSON NULL DEFAULT '{}',
+  `plan_max_employees` INT NULL DEFAULT 5,
+  `plan_max_gallery_images` INT NULL DEFAULT 10,
+  `rating` DECIMAL(3,2) NULL DEFAULT 0,
+  `total_reviews` INT NULL DEFAULT 0,
+  `total_bookings` INT NULL DEFAULT 0,
+  `total_views` INT NULL DEFAULT 0,
+  `featured_employees_count` INT NULL DEFAULT 0,
+  `credits` DECIMAL(10,0) NULL,
+  `is_active` TINYINT(1) NULL DEFAULT 1,
+  `is_featured` TINYINT(1) NULL DEFAULT 0,
+  `utm_source` TEXT NULL,
+  `utm_medium` TEXT NULL,
+  `utm_campaign` TEXT NULL,
+  `utm_content` TEXT NULL,
+  `utm_term` TEXT NULL,
+  `utm_id` TEXT NULL,
+  `utm_source_platform` TEXT NULL,
+  `landing_page` TEXT NULL,
+  `first_touch_at` TEXT NULL,
+  `registration_date` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `agencies_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `blog_categories` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  `description` TEXT NULL,
+  `icon` TEXT NULL,
+  `color` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `blog_categories_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `blog_comments` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `post_slug` TEXT NOT NULL,
+  `author_name` TEXT NULL,
+  `content` TEXT NULL,
+  `is_approved` TINYINT(1) NULL DEFAULT 0,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `blog_posts` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `title` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  `excerpt` TEXT NULL,
+  `body` JSON NULL,
+  `main_image` TEXT NULL,
+  `categories` JSON NULL DEFAULT '{}',
+  `tags` JSON NULL DEFAULT '{}',
+  `is_published` TINYINT(1) NULL DEFAULT 1,
+  `is_featured` TINYINT(1) NULL DEFAULT 0,
+  `author_id` TEXT NULL,
+  `views` INT NULL DEFAULT 0,
+  `estimated_reading_time` INT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `published_at` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `blog_posts_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `cleaning_logs` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `escort_id` TEXT NOT NULL,
+  `image_url` TEXT NOT NULL,
+  `cleaned_url` TEXT NULL,
+  `cloudinary_url` TEXT NULL,
+  `status` TEXT NULL DEFAULT 'pending',
+  `error_message` TEXT NULL,
+  `processed_at` DATETIME NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `contact_submissions` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `email` TEXT NOT NULL,
+  `subject` TEXT NULL,
+  `message` TEXT NULL,
+  `phone` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `counties` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `code` TEXT NULL,
+  `description` TEXT NULL,
+  `is_popular` TINYINT(1) NULL DEFAULT 0,
+  `population` INT NULL,
+  `area` TEXT NULL,
+  `capital` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `credit_rewards` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `user_id` TEXT NOT NULL,
+  `escort_id` TEXT NULL,
+  `agency_id` TEXT NULL,
+  `action_type` TEXT NOT NULL,
+  `points` INT NOT NULL,
+  `description` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `escort_images` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `escort_id` TEXT NOT NULL,
+  `image_url` TEXT NOT NULL,
+  `cleaned_url` TEXT NULL,
+  `cloudinary_url` TEXT NULL,
+  `status` TEXT NULL DEFAULT 'pending',
+  `error_message` TEXT NULL,
+  `processed_at` DATETIME NULL,
+  `file_size` INT NULL,
+  `mime_type` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `escort_search` (
+  `id` TEXT NOT NULL,
+  `name` TEXT NULL,
+  `username` TEXT NULL,
+  `about` TEXT NULL,
+  `town` TEXT NULL,
+  `estate` TEXT NULL,
+  `categories` JSON NULL,
+  `practices` JSON NULL,
+  `search_vector` TEXT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `escorts` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `clerk_user_id` TEXT NULL,
+  `name` TEXT NULL,
+  `username` TEXT NULL,
+  `preview_photo` TEXT NULL,
+  `labels` JSON NULL DEFAULT '{}',
+  `email` TEXT NULL,
+  `age` TEXT NULL,
+  `telephone` TEXT NULL,
+  `whatsapp_phone` TEXT NULL,
+  `images` JSON NULL DEFAULT '{}',
+  `videos` JSON NULL DEFAULT '{}',
+  `about` TEXT NULL,
+  `availability` JSON NULL DEFAULT '{}',
+  `ethnicity` TEXT NULL DEFAULT '',
+  `nationality` TEXT NULL DEFAULT '',
+  `bust_size` TEXT NULL,
+  `weight` TEXT NULL,
+  `zodiac_sign` TEXT NULL,
+  `sexual_orientation` TEXT NULL,
+  `gender` TEXT NULL DEFAULT 'girl',
+  `languages` JSON NULL DEFAULT '{}',
+  `categories` JSON NULL DEFAULT '{}',
+  `country` TEXT NULL DEFAULT 'Kenya',
+  `county` TEXT NULL,
+  `county_code` TEXT NULL,
+  `regions` JSON NULL DEFAULT '{}',
+  `primary_region` TEXT NULL,
+  `locations` JSON NULL DEFAULT '[]',
+  `source` TEXT NULL DEFAULT 'custom',
+  `practices` JSON NULL DEFAULT '{}',
+  `bdsm` JSON NULL DEFAULT '{}',
+  `massage` JSON NULL DEFAULT '{}',
+  `extra_services` JSON NULL DEFAULT '{}',
+  `slug` TEXT NULL,
+  `role` TEXT NULL DEFAULT 'escort',
+  `opening_hours` JSON NULL DEFAULT '{}',
+  `rates` JSON NULL DEFAULT '[]',
+  `breast_size` TEXT NULL DEFAULT '',
+  `age_category` TEXT NULL DEFAULT '',
+  `character` TEXT NULL DEFAULT '',
+  `hair_color` TEXT NULL DEFAULT '',
+  `experience` TEXT NULL DEFAULT '',
+  `work_type` TEXT NULL DEFAULT 'independent',
+  `agency_id` TEXT NULL,
+  `agency_role` TEXT NULL,
+  `agency_commission_rate` DECIMAL(5,2) NULL,
+  `is_agency_featured` TINYINT(1) NULL DEFAULT 0,
+  `is_active` TINYINT(1) NULL DEFAULT 1,
+  `is_verified` TINYINT(1) NULL DEFAULT 0,
+  `is_featured` TINYINT(1) NULL DEFAULT 0,
+  `verification_status` TEXT NULL,
+  `verification_documents` JSON NULL,
+  `street` TEXT NULL,
+  `utm_source` TEXT NULL,
+  `utm_medium` TEXT NULL,
+  `utm_campaign` TEXT NULL,
+  `utm_content` TEXT NULL,
+  `utm_term` TEXT NULL,
+  `utm_id` TEXT NULL,
+  `utm_source_platform` TEXT NULL,
+  `landing_page` TEXT NULL,
+  `first_touch_at` TEXT NULL,
+  `registration_date` TEXT NULL,
+  `watermark_status` TEXT NULL,
+  `watermark_error` TEXT NULL,
+  `last_processed_at` DATETIME NULL,
+  `images_metadata` JSON NULL,
+  `total_images_processed` INT NULL,
+  `total_images_failed` INT NULL,
+  `has_cleaned_images` TINYINT(1) NULL,
+  `cleaned_images` JSON NULL DEFAULT '{}',
+  `credits` DECIMAL(10,0) NULL DEFAULT 0,
+  `plan_type` TEXT NULL DEFAULT 'basic',
+  `plan_is_active` TINYINT(1) NULL DEFAULT 1,
+  `plan_features` JSON NULL DEFAULT '{}',
+  `plan_activated_at` DATETIME NULL,
+  `plan_expires_at` DATETIME NULL,
+  `total_bookings` INT NULL DEFAULT 0,
+  `total_reviews` INT NULL DEFAULT 0,
+  `rating` DECIMAL(3,2) NULL DEFAULT 0,
+  `total_views` INT NULL DEFAULT 0,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `escorts_username_key` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `image_sync_trackers` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `escort_id` TEXT NOT NULL,
+  `last_synced_at` DATETIME NULL,
+  `total_images` INT NULL DEFAULT 0,
+  `status` TEXT NULL DEFAULT 'pending',
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `kyc_verifications` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `event_id` TEXT NOT NULL,
+  `escort_id` TEXT NULL,
+  `agency_id` TEXT NULL,
+  `verification_type` TEXT NULL,
+  `status` TEXT NULL,
+  `document_url` TEXT NULL,
+  `details` JSON NULL,
+  `error_message` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kyc_verifications_event_id_key` (`event_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_ages` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `value` INT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_bdsm` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `lookup_bdsm_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_breast_sizes` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `value` TEXT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_categories` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `lookup_categories_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_extra_services` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `lookup_extra_services_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_massage` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `lookup_massage_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `lookup_practices` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `slug` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `lookup_practices_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `processing_logs` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `escort_id` TEXT NULL,
+  `action` TEXT NULL,
+  `status` TEXT NULL,
+  `message` TEXT NULL,
+  `timestamp` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `processing_queue` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `escort_id` TEXT NULL,
+  `action` TEXT NOT NULL,
+  `status` TEXT NULL DEFAULT 'pending',
+  `error_message` TEXT NULL,
+  `retry_count` INT NULL DEFAULT 0,
+  `scheduled_at` DATETIME NULL,
+  `processed_at` DATETIME NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `regions` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `name` TEXT NOT NULL,
+  `county_code` TEXT NOT NULL,
+  `county` TEXT NULL,
+  `county_numeric_code` TEXT NULL,
+  `county_id` TEXT NULL,
+  `is_active` TINYINT(1) NULL DEFAULT 1,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `town` TEXT NULL,
+  `estate` TEXT NULL,
+  `address` TEXT NULL,
+  `street` TEXT NULL,
+  `postal_code` TEXT NULL,
+  `notes` TEXT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `settings` (
+  `key` TEXT NOT NULL,
+  `value` JSON NOT NULL,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `transactions` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `checkout_request_id` TEXT NOT NULL,
+  `user_id` TEXT NULL,
+  `escort_id` TEXT NULL,
+  `agency_id` TEXT NULL,
+  `amount` DECIMAL(10,0) NULL,
+  `currency` TEXT NULL DEFAULT 'KES',
+  `status` TEXT NULL DEFAULT 'pending',
+  `payment_method` TEXT NULL,
+  `phone_number` TEXT NULL,
+  `callback_url` TEXT NULL,
+  `metadata` JSON NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `transactions_checkout_request_id_key` (`checkout_request_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `users` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `clerk_user_id` TEXT NOT NULL,
+  `name` TEXT NULL,
+  `email` TEXT NULL,
+  `phone` TEXT NULL,
+  `role` TEXT NULL DEFAULT 'user',
+  `agency_id` TEXT NULL,
+  `is_active` TINYINT(1) NULL DEFAULT 1,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_clerk_user_id_key` (`clerk_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `whatsapp_campaign_contacts` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `campaign_id` TEXT NULL,
+  `phone_number` TEXT NOT NULL,
+  `status` TEXT NULL DEFAULT 'pending',
+  `error_message` TEXT NULL,
+  `sent_at` DATETIME NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `whatsapp_campaigns` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `campaign_id` TEXT NOT NULL,
+  `name` TEXT NULL,
+  `phone_number` TEXT NULL,
+  `message` TEXT NULL,
+  `status` TEXT NULL DEFAULT 'pending',
+  `scheduled_at` DATETIME NULL,
+  `sent_at` DATETIME NULL,
+  `delivered_at` DATETIME NULL,
+  `read_at` DATETIME NULL,
+  `error_message` TEXT NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `whatsapp_campaigns_campaign_id_key` (`campaign_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] CREATE TABLE IF NOT EXISTS `zoho_connections` (
+  `id` TEXT NOT NULL DEFAULT (UUID()),
+  `provider` TEXT NOT NULL,
+  `account_id` TEXT NULL,
+  `refresh_token` TEXT NOT NULL,
+  `access_token` TEXT NULL,
+  `access_token_expires_at` DATETIME NULL,
+  `created_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+[create][dry-run] ALTER TABLE `escort_search` ADD CONSTRAINT `fk_escort_search_escort_search_id_fkey` FOREIGN KEY (`id`) REFERENCES `escorts` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION;
+[create][dry-run] SET FOREIGN_KEY_CHECKS=1;
+[create][dry-run] No statements executed (--dry-run).
+
+========== verify ==========
+[verify] comparing 29 tables
+TABLE                        |       Neon |      MySQL | Match
+agencies                     |  ERR:53000 | ERR:ER_NO_SU | FAIL
+blog_categories              |  ERR:53000 | ERR:ER_NO_SU | FAIL
+blog_comments                |  ERR:53000 | ERR:ER_NO_SU | FAIL
+blog_posts                   |  ERR:53000 | ERR:ER_NO_SU | FAIL
+cleaning_logs                |  ERR:53000 | ERR:ER_NO_SU | FAIL
+contact_submissions          |  ERR:53000 | ERR:ER_NO_SU | FAIL
+counties                     |  ERR:53000 | ERR:ER_NO_SU | FAIL
+credit_rewards               | ERR:ETIMEDOU | ERR:ER_NO_SU | FAIL
+escort_images                |  ERR:53000 | ERR:ER_NO_SU | FAIL
+escort_search                |  ERR:53000 | ERR:ER_NO_SU | FAIL
+escorts                      |  ERR:53000 | ERR:ER_NO_SU | FAIL
+image_sync_trackers          | ERR:ETIMEDOU | ERR:ER_NO_SU | FAIL
+kyc_verifications            |  ERR:53000 | ERR:ER_NO_SU | FAIL
+lookup_ages                  |  ERR:53000 | ERR:ER_NO_SU | FAIL
+lookup_bdsm                  | ERR:ETIMEDOU | ERR:ER_NO_SU | FAIL
+lookup_breast_sizes          |  ERR:53000 | ERR:ER_NO_SU | FAIL
+lookup_categories            |  ERR:53000 | ERR:ER_NO_SU | FAIL
+lookup_extra_services        |  ERR:53000 | ERR:ER_NO_SU | FAIL
+lookup_massage               |  ERR:53000 | ERR:ER_NO_SU | FAIL
+lookup_practices             |  ERR:53000 | ERR:ER_NO_SU | FAIL
+processing_logs              |  ERR:53000 | ERR:ER_NO_SU | FAIL
+processing_queue             | ERR:ETIMEDOU | ERR:ER_NO_SU | FAIL
+regions                      |  ERR:53000 | ERR:ER_NO_SU | FAIL
+settings                     |  ERR:53000 | ERR:ER_NO_SU | FAIL
+transactions                 | ERR:ETIMEDOU | ERR:ER_NO_SU | FAIL
+users                        |  ERR:53000 | ERR:ER_NO_SU | FAIL
+whatsapp_campaign_contacts   |  ERR:53000 | ERR:ER_NO_SU | FAIL
+whatsapp_campaigns           |  ERR:53000 | ERR:ER_NO_SU | FAIL
+zoho_connections             |  ERR:53000 | ERR:ER_NO_SU | FAIL
+
+Mismatches: 29
+[verify] Done.

@@ -1,0 +1,39 @@
+
+========== create-tables ==========
+[create] Loaded 32 statements from /home/james/projects/kenyadesires/scripts/migrate/schema.sql
+[create] dry-run = false
+[create] MySQL reachable.
+[create] executed: SET FOREIGN_KEY_CHECKS=0;
+[create] skip: agencies :: BLOB, TEXT, GEOMETRY or JSON column 'country' can't have a default value
+[create] skip: blog_categories :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: blog_comments :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: blog_posts :: BLOB, TEXT, GEOMETRY or JSON column 'categories' can't have a default value
+[create] skip: cleaning_logs :: BLOB, TEXT, GEOMETRY or JSON column 'status' can't have a default value
+[create] skip: contact_submissions :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: counties :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: credit_rewards :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: escort_images :: BLOB, TEXT, GEOMETRY or JSON column 'status' can't have a default value
+[create] skip: escort_search :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: escorts :: BLOB, TEXT, GEOMETRY or JSON column 'labels' can't have a default value
+[create] skip: image_sync_trackers :: BLOB, TEXT, GEOMETRY or JSON column 'status' can't have a default value
+[create] skip: kyc_verifications :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_ages :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_bdsm :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_breast_sizes :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_categories :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_extra_services :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_massage :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: lookup_practices :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: processing_logs :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: processing_queue :: BLOB, TEXT, GEOMETRY or JSON column 'status' can't have a default value
+[create] skip: regions :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: settings :: BLOB/TEXT column 'key' used in key specification without a key length
+[create] skip: transactions :: BLOB, TEXT, GEOMETRY or JSON column 'currency' can't have a default value
+[create] skip: users :: BLOB, TEXT, GEOMETRY or JSON column 'role' can't have a default value
+[create] skip: whatsapp_campaign_contacts :: BLOB, TEXT, GEOMETRY or JSON column 'status' can't have a default value
+[create] skip: whatsapp_campaigns :: BLOB, TEXT, GEOMETRY or JSON column 'status' can't have a default value
+[create] skip: zoho_connections :: BLOB/TEXT column 'id' used in key specification without a key length
+[create] skip: escort_search :: Table 'kenyadesires-xyz.escort_search' doesn't exist
+[create] executed: SET FOREIGN_KEY_CHECKS=1;
+[create] done. executed=2 skipped=30
+[create] Done.

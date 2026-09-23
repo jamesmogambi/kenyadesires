@@ -1,0 +1,5 @@
+[ddltest] OK   :: JSON DEFAULT ({}) expr
+[ddltest] OK   :: JSON DEFAULT ([]) expr
+[ddltest] FAIL :: FK TEXT prefix both sides -> [42000] You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version
+[ddltest] FAIL :: FK VARCHAR no prefix -> [42000] You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version
+[ddltest] done

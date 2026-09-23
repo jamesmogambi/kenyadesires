@@ -1,0 +1,10 @@
+[ddltest] MySQL version: 8.0.46-0ubuntu0.24.04.4
+[ddltest] FAIL :: TEXT DEFAULT literal -> 42000 BLOB, TEXT, GEOMETRY or JSON column 'c' can't have a default value
+[ddltest] OK   :: TEXT DEFAULT (expr)
+[ddltest] OK   :: TEXT DEFAULT (UUID())
+[ddltest] FAIL :: JSON DEFAULT {} literal -> 42000 BLOB, TEXT, GEOMETRY or JSON column 'c' can't have a default value
+[ddltest] OK   :: JSON DEFAULT (JSON_ARRAY())
+[ddltest] FAIL :: TEXT PK no prefix -> 42000 BLOB/TEXT column 'id' used in key specification without a key length
+[ddltest] OK   :: TEXT PK prefix(191)
+[ddltest] OK   :: VARCHAR(36) PK
+[ddltest] FAIL :: FK TEXT prefix both -> 42000 You have an error in your SQL syntax; check the manual that corresponds to your MySQL serv

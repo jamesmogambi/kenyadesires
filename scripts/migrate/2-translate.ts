@@ -39,7 +39,10 @@ function mapType(col: ColumnInfo): string {
     case 'boolean':
       return 'TINYINT(1)';
     case 'text':
-      return 'TEXT';
+      // TEXT cannot be a PK/UK/FK participant in MySQL (needs a prefix length),
+      // and MySQL disallows prefix lengths in FOREIGN KEY clauses. Use VARCHAR(191)
+      // so indexed TEXT columns work everywhere without special handling.
+      return 'VARCHAR(191)';
     case 'varchar':
       return `VARCHAR(${col.character_maximum_length || 255})`;
     case 'bpchar':
@@ -156,7 +159,12 @@ function buildColumnDef(col: ColumnInfo, table: TableInfo): string {
     def += ' AUTO_INCREMENT';
   }
   if (col.mysql_default !== null && col.mysql_default !== undefined && !auto) {
-    def += ` DEFAULT ${col.mysql_default}`;
+    // MySQL rejects plain literal DEFAULTs on TEXT/BLOB/JSON columns; wrap them
+    // in expression form DEFAULT (...) which is accepted. Numeric / boolean /
+    // enum / varchar defaults keep the plain form.
+    const needsExpr = /^(TEXT|JSON|LONGBLOB|BLOB|GEOMETRY)$/.test(type);
+    const val = needsExpr ? `(${col.mysql_default})` : col.mysql_default;
+    def += ` DEFAULT ${val}`;
   }
   return def;
 }

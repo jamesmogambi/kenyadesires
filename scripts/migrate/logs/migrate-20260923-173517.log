@@ -1,0 +1,7 @@
+[ddltest] OK   :: JSON DEFAULT ({}) expr
+[ddltest] OK   :: JSON DEFAULT ([]) expr
+[ddltest] OK   :: FK parent TEXT PK prefix
+[ddltest] FAIL :: FK child TEXT prefix ref -> [42000] You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version
+[ddltest] OK   :: FK VARCHAR parent PK
+[ddltest] OK   :: FK VARCHAR child ref
+[ddltest] done
