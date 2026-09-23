@@ -149,7 +149,17 @@ function buildColumnDef(col: ColumnInfo, table: TableInfo): string {
   col.is_auto_increment = auto;
   col.mysql_default = auto ? null : translateDefault(col);
 
-  let def = mysqlQuoteIdent(col.column_name) + ' ' + type;
+  // PK/UK/FK columns must be case-sensitive: PostgreSQL's default collation
+  // (C/POSIX) is case-sensitive, but MySQL's utf8mb4_unicode_ci is not.
+  // Without this, case-variant duplicate PKs (e.g. "Kiambu_thindigua" vs
+  // "kiambu_thindigua") would silently collapse to one row.
+  const isKeyColumn =
+    table.primary_key.includes(col.column_name) ||
+    table.unique_constraints.some((u) => u.columns.includes(col.column_name)) ||
+    table.foreign_keys.some((f) => f.columns.includes(col.column_name));
+  const collation = isKeyColumn ? ' COLLATE utf8mb4_bin' : '';
+
+  let def = mysqlQuoteIdent(col.column_name) + ' ' + type + collation;
   if (col.is_nullable === 'NO') {
     def += ' NOT NULL';
   } else {

@@ -1,0 +1,10 @@
+MySQL regions count: 458
+Neon regions count: 461
+Missing from MySQL: 3
+  Kiambu_thindigua | 
+  Nairobi_kilimani | 
+  Nairobi_mathare | 
+MySQL matches for the 3 ids: 3
+  kiambu_thindigua | Thindigua
+  nairobi_kilimani | Kilimani
+  nairobi_mathare | Mathare

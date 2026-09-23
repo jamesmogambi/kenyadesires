@@ -1,0 +1,36 @@
+
+========== verify ==========
+[verify] comparing 29 tables
+TABLE                        |       Neon |      MySQL | Match
+agencies                     |          0 |          0 | PASS
+blog_categories              |          0 |          0 | PASS
+blog_comments                |          6 |          6 | PASS
+blog_posts                   |          0 |          0 | PASS
+cleaning_logs                |          0 |          0 | PASS
+contact_submissions          |         22 |         22 | PASS
+counties                     |         47 |         47 | PASS
+credit_rewards               |          0 |          0 | PASS
+escort_images                |          0 |          0 | PASS
+escort_search                |        921 |        921 | PASS
+escorts                      |        921 |        921 | PASS
+image_sync_trackers          |          0 |          0 | PASS
+kyc_verifications            |          0 |          0 | PASS
+lookup_ages                  |          7 |          7 | PASS
+lookup_bdsm                  |         30 |         30 | PASS
+lookup_breast_sizes          |          7 |          7 | PASS
+lookup_categories            |          3 |          3 | PASS
+lookup_extra_services        |          0 |          0 | PASS
+lookup_massage               |         30 |         30 | PASS
+lookup_practices             |         30 |         30 | PASS
+processing_logs              |          0 |          0 | PASS
+processing_queue             |          0 |          0 | PASS
+regions                      |        461 |        458 | FAIL
+settings                     |          0 |          0 | PASS
+transactions                 |         58 |         58 | PASS
+users                        |          0 |          0 | PASS
+whatsapp_campaign_contacts   |          0 |          0 | PASS
+whatsapp_campaigns           |          0 |          0 | PASS
+zoho_connections             |          1 |          1 | PASS
+
+Mismatches: 1
+[verify] Done.

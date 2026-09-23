@@ -1,8 +1,8 @@
 SET FOREIGN_KEY_CHECKS=0;
 CREATE TABLE IF NOT EXISTS `agencies` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `description` VARCHAR(191) NULL,
   `contact_email` VARCHAR(191) NULL,
   `contact_phone` VARCHAR(191) NULL,
@@ -67,9 +67,9 @@ CREATE TABLE IF NOT EXISTS `agencies` (
   UNIQUE KEY `agencies_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `blog_categories` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `description` VARCHAR(191) NULL,
   `icon` VARCHAR(191) NULL,
   `color` VARCHAR(191) NULL,
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS `blog_categories` (
   UNIQUE KEY `blog_categories_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `blog_comments` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `post_slug` VARCHAR(191) NOT NULL,
   `author_name` VARCHAR(191) NULL,
   `content` VARCHAR(191) NULL,
@@ -88,9 +88,9 @@ CREATE TABLE IF NOT EXISTS `blog_comments` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `blog_posts` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `title` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `excerpt` VARCHAR(191) NULL,
   `body` JSON NULL,
   `main_image` VARCHAR(191) NULL,
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS `blog_posts` (
   UNIQUE KEY `blog_posts_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `cleaning_logs` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `escort_id` VARCHAR(191) NOT NULL,
   `image_url` VARCHAR(191) NOT NULL,
   `cleaned_url` VARCHAR(191) NULL,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `cleaning_logs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `contact_submissions` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
   `email` VARCHAR(191) NOT NULL,
   `subject` VARCHAR(191) NULL,
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `contact_submissions` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `counties` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
   `code` VARCHAR(191) NULL,
   `description` VARCHAR(191) NULL,
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS `counties` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `credit_rewards` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `user_id` VARCHAR(191) NOT NULL,
   `escort_id` VARCHAR(191) NULL,
   `agency_id` VARCHAR(191) NULL,
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `credit_rewards` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `escort_images` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `escort_id` VARCHAR(191) NOT NULL,
   `image_url` VARCHAR(191) NOT NULL,
   `cleaned_url` VARCHAR(191) NULL,
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `escort_images` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `escort_search` (
-  `id` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `name` VARCHAR(191) NULL,
   `username` VARCHAR(191) NULL,
   `about` VARCHAR(191) NULL,
@@ -180,10 +180,10 @@ CREATE TABLE IF NOT EXISTS `escort_search` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `escorts` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `clerk_user_id` VARCHAR(191) NULL,
   `name` VARCHAR(191) NULL,
-  `username` VARCHAR(191) NULL,
+  `username` VARCHAR(191) COLLATE utf8mb4_bin NULL,
   `preview_photo` VARCHAR(191) NULL,
   `labels` JSON NULL DEFAULT ('{}'),
   `email` VARCHAR(191) NULL,
@@ -268,7 +268,7 @@ CREATE TABLE IF NOT EXISTS `escorts` (
   UNIQUE KEY `escorts_username_key` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `image_sync_trackers` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `escort_id` VARCHAR(191) NOT NULL,
   `last_synced_at` DATETIME NULL,
   `total_images` INT NULL DEFAULT 0,
@@ -278,8 +278,8 @@ CREATE TABLE IF NOT EXISTS `image_sync_trackers` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `kyc_verifications` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
-  `event_id` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
+  `event_id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `escort_id` VARCHAR(191) NULL,
   `agency_id` VARCHAR(191) NULL,
   `verification_type` VARCHAR(191) NULL,
@@ -293,54 +293,54 @@ CREATE TABLE IF NOT EXISTS `kyc_verifications` (
   UNIQUE KEY `kyc_verifications_event_id_key` (`event_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_ages` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
   `value` INT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_bdsm` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `lookup_bdsm_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_breast_sizes` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
   `value` VARCHAR(191) NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_categories` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `lookup_categories_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_extra_services` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `lookup_extra_services_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_massage` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `lookup_massage_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_practices` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
-  `slug` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `lookup_practices_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `processing_logs` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `escort_id` VARCHAR(191) NULL,
   `action` VARCHAR(191) NULL,
   `status` VARCHAR(191) NULL,
@@ -349,7 +349,7 @@ CREATE TABLE IF NOT EXISTS `processing_logs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `processing_queue` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `escort_id` VARCHAR(191) NULL,
   `action` VARCHAR(191) NOT NULL,
   `status` VARCHAR(191) NULL DEFAULT 'pending',
@@ -361,7 +361,7 @@ CREATE TABLE IF NOT EXISTS `processing_queue` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `regions` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,
   `county_code` VARCHAR(191) NOT NULL,
   `county` VARCHAR(191) NULL,
@@ -379,14 +379,14 @@ CREATE TABLE IF NOT EXISTS `regions` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `settings` (
-  `key` VARCHAR(191) NOT NULL,
+  `key` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `value` JSON NOT NULL,
   `updated_at` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `transactions` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
-  `checkout_request_id` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
+  `checkout_request_id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `user_id` VARCHAR(191) NULL,
   `escort_id` VARCHAR(191) NULL,
   `agency_id` VARCHAR(191) NULL,
@@ -403,8 +403,8 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   UNIQUE KEY `transactions_checkout_request_id_key` (`checkout_request_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `users` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
-  `clerk_user_id` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
+  `clerk_user_id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `name` VARCHAR(191) NULL,
   `email` VARCHAR(191) NULL,
   `phone` VARCHAR(191) NULL,
@@ -417,7 +417,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `users_clerk_user_id_key` (`clerk_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `whatsapp_campaign_contacts` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `campaign_id` VARCHAR(191) NULL,
   `phone_number` VARCHAR(191) NOT NULL,
   `status` VARCHAR(191) NULL DEFAULT 'pending',
@@ -427,8 +427,8 @@ CREATE TABLE IF NOT EXISTS `whatsapp_campaign_contacts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `whatsapp_campaigns` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
-  `campaign_id` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
+  `campaign_id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
   `name` VARCHAR(191) NULL,
   `phone_number` VARCHAR(191) NULL,
   `message` VARCHAR(191) NULL,
@@ -444,7 +444,7 @@ CREATE TABLE IF NOT EXISTS `whatsapp_campaigns` (
   UNIQUE KEY `whatsapp_campaigns_campaign_id_key` (`campaign_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `zoho_connections` (
-  `id` VARCHAR(191) NOT NULL DEFAULT (UUID()),
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `provider` VARCHAR(191) NOT NULL,
   `account_id` VARCHAR(191) NULL,
   `refresh_token` VARCHAR(191) NOT NULL,
