@@ -2,7 +2,7 @@
  * Database access for trafficstars_postbacks table.
  */
 
-import { executeQuery, executeQueryOne, executeTransaction } from "@/lib/neon";
+import { executeQuery, executeQueryOne } from "@/lib/neon";
 import { v4 as uuidv4 } from "uuid";
 
 export type PostbackStatus = "pending" | "sent" | "failed";

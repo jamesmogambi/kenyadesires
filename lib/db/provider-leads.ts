@@ -2,7 +2,7 @@
  * Database access for provider_leads table.
  */
 
-import { executeQuery, executeQueryOne, executeTransaction } from "@/lib/neon";
+import { executeQuery, executeQueryOne } from "@/lib/neon";
 import { v4 as uuidv4 } from "uuid";
 
 export interface ProviderLeadRow {
@@ -138,15 +138,6 @@ export async function findProviderLeadByClickId(
   return executeQueryOne<ProviderLeadRow>(
     `SELECT * FROM provider_leads WHERE click_id = $1 ORDER BY created_at DESC LIMIT 1`,
     [clickId],
-  );
-}
-
-export async function findProviderLeadById(
-  id: string,
-): Promise<ProviderLeadRow | null> {
-  return executeQueryOne<ProviderLeadRow>(
-    `SELECT * FROM provider_leads WHERE id = $1`,
-    [id],
   );
 }
 

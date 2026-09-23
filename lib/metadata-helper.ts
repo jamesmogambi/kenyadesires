@@ -43,16 +43,16 @@ function buildTypeCondition(
   return { clause, param: keyword };
 }
 
-function buildRegionCondition(paramIndex: number): string {
-  return `(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR LOWER(primary_region) = LOWER($${paramIndex}))`;
+function buildRegionCondition(paramIndex: number, paramIndex2: number): string {
+  return `(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR LOWER(primary_region) = LOWER($${paramIndex2}))`;
 }
 
-function buildPracticeCondition(paramIndex: number): string {
+function buildPracticeCondition(paramIndex1: number, paramIndex2: number, paramIndex3: number, paramIndex4: number): string {
   return `(
-    EXISTS (SELECT 1 FROM JSON_TABLE(practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
-    OR EXISTS (SELECT 1 FROM JSON_TABLE(bdsm, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
-    OR EXISTS (SELECT 1 FROM JSON_TABLE(massage, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
-    OR EXISTS (SELECT 1 FROM JSON_TABLE(extra_services, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))
+    EXISTS (SELECT 1 FROM JSON_TABLE(practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex1}))
+    OR EXISTS (SELECT 1 FROM JSON_TABLE(bdsm, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex2}))
+    OR EXISTS (SELECT 1 FROM JSON_TABLE(massage, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex3}))
+    OR EXISTS (SELECT 1 FROM JSON_TABLE(extra_services, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex4}))
   )`;
 }
 
@@ -78,15 +78,15 @@ function buildBaseConditions(
   }
 
   if (hasRegionFilter) {
-    conditions.push(buildRegionCondition(paramIndex));
-    queryParams.push(region);
-    paramIndex++;
+    conditions.push(buildRegionCondition(paramIndex, paramIndex + 1));
+    queryParams.push(region, region);
+    paramIndex += 2;
   }
 
   if (hasPracticeFilter) {
-    conditions.push(buildPracticeCondition(paramIndex));
-    queryParams.push(practice);
-    paramIndex++;
+    conditions.push(buildPracticeCondition(paramIndex, paramIndex + 1, paramIndex + 2, paramIndex + 3));
+    queryParams.push(practice, practice, practice, practice);
+    paramIndex += 4;
   }
 
   if (hasCategoryFilter) {

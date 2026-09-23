@@ -92,7 +92,7 @@ const nextConfig = {
         hostname: "rahaescorts.com",
       },
 
-      // Backblaze storage
+       // Backblaze storage
       {
         protocol: "https",
         hostname: "mombasahot.s3.us-east-005.backblazeb2.com",
@@ -104,6 +104,13 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "thikaescorts.s3.us-east-005.backblazeb2.com",
+      },
+
+      // Firebase Storage
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+        pathname: "/**",
       },
 
       // Local development

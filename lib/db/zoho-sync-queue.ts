@@ -2,7 +2,7 @@
  * Database access for zoho_sync_queue fallback table.
  */
 
-import { executeQuery, executeQueryOne } from "@/lib/neon";
+import { executeQuery } from "@/lib/neon";
 import { v4 as uuidv4 } from "uuid";
 
 export type SyncStatus = "pending" | "processing" | "done" | "dead";

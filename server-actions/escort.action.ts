@@ -279,12 +279,12 @@ function buildWhereClause(
     paramIndex++;
   }
   if (params.minAge && params.minAge > 0) {
-    conditions.push(`CAST(age AS INTEGER) >= $${paramIndex}`);
+    conditions.push(`CAST(age AS UNSIGNED) >= $${paramIndex}`);
     params_arr.push(params.minAge);
     paramIndex++;
   }
   if (params.maxAge && params.maxAge > 0) {
-    conditions.push(`CAST(age AS INTEGER) <= $${paramIndex}`);
+    conditions.push(`CAST(age AS UNSIGNED) <= $${paramIndex}`);
     params_arr.push(params.maxAge);
     paramIndex++;
   }

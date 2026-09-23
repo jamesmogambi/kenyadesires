@@ -6,7 +6,6 @@ import {
   getBDSMsFromCleanedEscorts,
   getCategoriesFromCleanedEscorts,
 } from "./cleaned-escorts.action";
-import { sql } from "@/app/lib/db";
 import { executeQuery } from "@/lib/neon";
 
 async function fetchUniqueFieldFromCleanedEscorts(
@@ -24,9 +23,9 @@ async function fetchUniqueFieldFromCleanedEscorts(
       paramIndex++;
     }
     if (params.region && params.region !== "all") {
-      conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
-      params_arr.push(params.region);
-      paramIndex++;
+      conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(primary_region) = lower($${paramIndex + 1}))`);
+      params_arr.push(params.region, params.region);
+      paramIndex += 2;
     }
     if (params.nationality && params.nationality !== "all") {
       conditions.push(`nationality = $${paramIndex}`);

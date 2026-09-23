@@ -5,7 +5,6 @@
  */
 
 import { zohoFetch } from "@/lib/zoho/client";
-import { executeQuery, executeTransaction } from "@/lib/neon";
 
 export interface ZohoLeadPayload {
   First_Name: string;

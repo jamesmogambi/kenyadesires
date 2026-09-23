@@ -63,12 +63,12 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.minAge && params.minAge > 0) {
-    conditions.push(`CAST(escorts.age AS INTEGER) >= $${paramIndex}`);
+    conditions.push(`CAST(escorts.age AS UNSIGNED) >= $${paramIndex}`);
     params_arr.push(params.minAge);
     paramIndex++;
   }
   if (params.maxAge && params.maxAge > 0) {
-    conditions.push(`CAST(escorts.age AS INTEGER) <= $${paramIndex}`);
+    conditions.push(`CAST(escorts.age AS UNSIGNED) <= $${paramIndex}`);
     params_arr.push(params.maxAge);
     paramIndex++;
   }
@@ -92,11 +92,11 @@ async function getCleanedEscortsBase(
     params_arr.push(JSON.stringify(params.categories));
     paramIndex++;
   }
-  if (params.region && params.region !== "all") {
-    conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(escorts.regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(escorts.primary_region) = lower($${paramIndex}))`);
-    params_arr.push(params.region);
-    paramIndex++;
-  }
+    if (params.region && params.region !== "all") {
+      conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(escorts.regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(escorts.primary_region) = lower($${paramIndex + 1}))`);
+      params_arr.push(params.region, params.region);
+      paramIndex += 2;
+    }
   if (params.search) {
     const searchTerm = `%${params.search.toLowerCase()}%`;
     conditions.push(
@@ -400,9 +400,9 @@ async function fetchEscortsWithCleanedRows(params: Omit<GetEscortsParams, "pract
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(primary_region) = lower($${paramIndex}))`);
-    params_arr.push(params.region);
-    paramIndex++;
+    conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(primary_region) = lower($${paramIndex + 1}))`);
+    params_arr.push(params.region, params.region);
+    paramIndex += 2;
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
