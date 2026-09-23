@@ -30,7 +30,7 @@ Please note that if you disable your profile for, e.g., 5 days, it does not affe
     question: "Question No. 4: How can I delete my profile completely?",
     answer: `After logging in on the website, click "ACCOUNT SETTINGS".
 From the menu, select "EDIT PROFILE".
-If you want to completely delete your account on the website, including login details, contact us at hello@kenyadesires.com and we will delete it immediately.`,
+If you want to completely delete your account on the website, including login details, contact us at support@kenyadesires.xyz and we will delete it immediately.`,
   },
   {
     question:
@@ -77,7 +77,7 @@ We recommend starting, for example, with 20 credits for 1 day to see how it work
 Select the desired credit package.
 After the payment is made and the variable symbol is entered correctly, the credits will be automatically added to your account within 40 minutes.
 You can use the purchased credits both to extend advertising and to boost your profile.
-If you have any questions or problems, please contact us at hello@kenyadesires.com.`,
+If you have any questions or problems, please contact us at support@kenyadesires.xyz.`,
   },
 ];
 

@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import type { IAgency } from "@/types/agency.types";
 
-const ADMIN_EMAIL = "hello@kenyadesires.com";
+const ADMIN_EMAIL = "admin@kenyadesires.xyz";
 
 interface NotifyAgencyArgs {
   name: string;

@@ -103,7 +103,7 @@ export const metadata: Metadata = {
         alt: "KenyaDesires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
       },
     ],
-    emails: ["hello@kenyadesires.com"],
+    emails: ["hello@kenyadesires.xyz", "support@kenyadesires.xyz"],
     phoneNumbers: ["+254743129621"],
     countryName: "Kenya",
   },

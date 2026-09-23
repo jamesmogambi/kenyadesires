@@ -222,10 +222,10 @@ export default async function WithdrawalPage() {
                     <li>
                       For any questions, contact us at{" "}
                       <a
-                        href="mailto:hello@kenyadesires.com"
+                        href="mailto:support@kenyadesires.xyz"
                         className="text-primary hover:underline font-medium"
                       >
-                        hello@kenyadesires.com
+                        support@kenyadesires.xyz
                       </a>
                     </li>
                 </ul>

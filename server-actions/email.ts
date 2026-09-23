@@ -9,7 +9,7 @@ import {
 import { verificationSubmittedEmail } from "@/email-templates/verification-submitted";
 import { paymentConfirmationEmail } from "@/email-templates/payment-confirmation";
 
-const ADMIN_EMAIL = "hello@kenyadesires.com";
+const ADMIN_EMAIL = "admin@kenyadesires.xyz";
 
 function getTransporter() {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {

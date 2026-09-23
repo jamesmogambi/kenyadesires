@@ -68,7 +68,7 @@ const InfoSection = () => {
             />
           </svg>
 
-          <span className="text-gray-1">hello@kenyadesires.com</span>
+          <span className="text-gray-1">support@kenyadesires.xyz</span>
         </div>
       </div>
     </article>

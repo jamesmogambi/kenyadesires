@@ -4,7 +4,7 @@ export const agencies = Array.from({ length: 20 }, (_, i) => ({
   coverImage:
     "https://dobryprivat.cz/wp-content/uploads/2025/08/sen-relax-salon-IMG_6016.png",
   agencyPhone: "0701694004",
-  agencyEmail: "mugambijames96@gmail.com",
+  agencyEmail: "support@kenyadesires.xyz",
   description:
     "Welcome to Exclusive, a place where relaxation, sensuality and exclusive care are perfectly combined. Treat yourself to a unique experience in a discreet and elegant environment where we will take care of your comfort and complete relaxation. We provide massages for women, men and couples. We are located a short distance from the center of Brno with good accessibility.",
   address: "Kirigiti, Near Kiambu mall",

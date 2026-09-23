@@ -264,10 +264,10 @@ export default async function TermsPage() {
                     <p className="text-gray-600 leading-relaxed">
                       You can report illegal content to our contact email:{" "}
                       <a
-                        href="mailto:hello@kenyadesires.com"
+                        href="mailto:support@kenyadesires.xyz"
                         className="text-primary hover:underline font-medium"
                       >
-                        hello@kenyadesires.com
+                        support@kenyadesires.xyz
                       </a>
                     </p>
                 </div>
