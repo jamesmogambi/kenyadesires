@@ -202,9 +202,22 @@ verbatim in the rendered HTML.
 - ✅ **The About block is deliberately NOT on the homepage.** `/` is a
       visual listing grid and a multi-paragraph business description broke
       its layout. `/about` carries the entity definition instead: it is
-      public, in the sitemap, linked in the site-wide footer, and has
-      `AboutPage` schema, so crawlers and answer engines reach it without it
-      being duplicated on the homepage.
+      public and in the sitemap, so crawlers and answer engines reach it
+      without it being duplicated on the homepage.
+- ✅ **The footer is unchanged from its original design.** `/about` and
+      `/frequent-questions` links were added during this work and then
+      removed at the owner's request, to keep the site chrome as it was.
+      Do not re-add nav items without asking.
+      - Consequence: `/about` has no site-wide nav link. It is still
+        discoverable via `sitemap.xml` (referenced from `robots.txt`) and is
+        linked from `/frequent-questions`, which is itself in the sitemap.
+        If citation looks thin, the fix is a header/nav link or off-site
+        entity profiles — not text hidden on other pages.
+      - The one footer change that is **kept** is the nested-anchor fix
+        (regression risk 12). It resolves a hydration error that was
+        reported in this session, and it is visually identical to the
+        original: a `<span>` with the same classes, minus a dead
+        `href="#"`. Reverting it would reintroduce that error.
 - ⛔ **Do not reintroduce it on the homepage hidden via CSS.** Keeping the
       text in the DOM but invisible to visitors is the hidden-text pattern
       this brief explicitly ruled out. Google treats it as a violation and
@@ -232,8 +245,9 @@ verbatim in the rendered HTML.
 - ✅ `public/llms.txt` rewritten with the accurate business model, the 47
       counties, the official profile list, and explicit
       `arranges-meetings: false` / `charges-visitors: false` statements
-- ✅ Internal links: `/about` and `/frequent-questions` in the site-wide
-      footer, plus contextual links from the `/about` page and the FAQ page
+- ✅ Internal links: `/about` and `/frequent-questions` are linked from each
+      other and both appear in `sitemap.xml`. The site-wide footer is
+      deliberately unchanged — see the note above.
 
 ### Tone constraints observed
 

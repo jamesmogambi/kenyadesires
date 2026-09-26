@@ -101,53 +101,6 @@ const Footer = () => {
               <span className="group-hover:text-primary ">contact</span>
             </Link>
 
-            {/* AEO: /about and /frequent-questions carry the entity
-                definition and the brand/trust answers. They need a
-                site-wide internal link or answer engines treat them as
-                orphaned and skip them. */}
-            <Link
-              href="/about"
-              className="uppercase group font-medium flex items-center  gap-2 lg:py-5 text-base lg:text-lg  "
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={20}
-                height={20}
-                viewBox="0 0 48 48"
-                className="text-gray-500 hidden lg:block"
-              >
-                <path
-                  fill="currentColor"
-                  stroke="currentColor"
-                  strokeWidth={4}
-                  d="M24 33a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
-                ></path>
-              </svg>{" "}
-              <span className="group-hover:text-primary">about</span>
-            </Link>
-
-            <Link
-              href="/frequent-questions"
-              className="uppercase group font-medium flex items-center  gap-2 lg:py-5 text-base lg:text-lg  "
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={20}
-                height={20}
-                viewBox="0 0 48 48"
-                className="text-gray-500 hidden lg:block"
-              >
-                <path
-                  fill="currentColor"
-                  stroke="currentColor"
-                  strokeWidth={4}
-                  d="M24 33a9 9 0 1 0 0-18a9 9 0 0 0 0 18Z"
-                ></path>
-              </svg>{" "}
-              <span className="group-hover:text-primary">faq</span>
-            </Link>
-
-
             <Link
               href={"/privacy-policy"}
               className="uppercase group font-medium flex items-center  gap-2 lg:py-5 text-base lg:text-lg   "
