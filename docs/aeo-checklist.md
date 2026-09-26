@@ -199,10 +199,21 @@ verbatim in the rendered HTML.
 - ✅ `/about` — new page, canonical, indexable, explicit `AboutPage` schema
 - ✅ `/about` and `/llms.txt` added to the public-route allowlist in
       `proxy.ts`; both were returning 307 to the Clerk sign-in page
-- ✅ Homepage About section — rendered on `/` itself, `id="about"`, so an
-      assistant retrieving the homepage gets the entity definition without a
-      second request
-- ✅ Both render from `lib/aeo/about.ts`, so they cannot drift apart
+- ✅ **The About block is deliberately NOT on the homepage.** `/` is a
+      visual listing grid and a multi-paragraph business description broke
+      its layout. `/about` carries the entity definition instead: it is
+      public, in the sitemap, linked in the site-wide footer, and has
+      `AboutPage` schema, so crawlers and answer engines reach it without it
+      being duplicated on the homepage.
+- ⛔ **Do not reintroduce it on the homepage hidden via CSS.** Keeping the
+      text in the DOM but invisible to visitors is the hidden-text pattern
+      this brief explicitly ruled out. Google treats it as a violation and
+      AI crawlers increasingly filter non-visible content, so it carries the
+      compliance risk without a reliable citation benefit. If the homepage
+      needs the entity text back, use a collapsed `<details>` disclosure or a
+      short summary linking to `/about` — both are honest and both work.
+- ✅ `/about` and `/frequent-questions` both render from `lib/aeo/about.ts`
+      and `lib/aeo/faq.ts`, so the page and its schema cannot drift apart
 - ✅ Answers who we are / what we offer / where we operate / how to contact
       and verify
 - ✅ `/frequent-questions` — rewritten. The old page was provider-advertising
@@ -222,8 +233,7 @@ verbatim in the rendered HTML.
       counties, the official profile list, and explicit
       `arranges-meetings: false` / `charges-visitors: false` statements
 - ✅ Internal links: `/about` and `/frequent-questions` in the site-wide
-      footer, plus contextual links from the homepage About block, the
-      contact page trail, and the FAQ page
+      footer, plus contextual links from the `/about` page and the FAQ page
 
 ### Tone constraints observed
 

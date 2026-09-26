@@ -4,7 +4,6 @@ import WhyProfile from "@/components/blog/WhyProfile";
 import GirlList from "@/components/GirlList";
 import GirlRegions from "@/components/GirlRegions";
 import NotFoundList from "@/components/NotFoundList";
-import AboutSection from "@/components/aeo/AboutSection";
 import JsonLd from "@/components/seo/JsonLd";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
@@ -96,12 +95,6 @@ export default async function Home({ searchParams }: PageProps) {
 
       <WhyProfile className="mt-20" />
       <PassionateMoments className="mt-8" />
-
-      {/* Factual business description. Placed below the listings so it does
-          not push the directory content down, but rendered on the homepage
-          itself — an answer engine retrieving `/` gets the entity
-          definition without a second request. */}
-      <AboutSection className="mt-12" />
     </>
   );
 }
