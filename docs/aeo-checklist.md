@@ -352,8 +352,24 @@ Things that will silently undo this work:
 9. **Using `next/head` in this App Router app.** It is silently ignored, so
    anything inside it disappears from the HTML without error. Use the
    `metadata` export or render tags directly.
-10. **Emitting a node in a page graph that the root layout already defines.**
+10. **Placing a `<script>` or `<noscript>` as a child of `<html>`** in
+    `app/layout.tsx`. React 19 hoists `<link>` and `<meta>` into `<head>`
+    but nothing else. A `<script>` there throws *"In HTML, `<script>`
+    cannot be a child of `<html>`"* and *"Cannot render a sync or defer
+    `<script>` outside the main document"*, and a `<noscript>` throws
+    *"Cannot render `<noscript>` outside the main document"*.
+    - JSON-LD and `<noscript>` belong inside `<body>`. Google reads
+      `application/ld+json` from either location.
+    - Third-party scripts belong in `<body>` via `next/script`, never as a
+      raw `<script>`. A raw inline script rendered by a React component is
+      not re-executed on client-side navigation, so `next/script` with
+      `afterInteractive` / `lazyOnload` is the supported form.
+11. **Emitting a node in a page graph that the root layout already defines.**
     Two definitions of the same `@id` on one URL is a malformed graph.
+12. **Nesting a `<Link>` inside a `<Link>`** (the footer did this with an
+    outer `href="#"` around the real destination). One `<a>` cannot contain
+    another; the outer element should be a `<span>` when it only carries
+    layout and a `group` hook.
 
 ---
 

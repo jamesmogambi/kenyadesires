@@ -25,10 +25,12 @@ const Footer = () => {
               girls for sex
             </Link>
 
-            <Link
-              href={"#"}
-              className="uppercase group text-base flex font-medium items-center  gap-2 lg:py-5 lg:text-lg   "
-            >
+            {/* A <span>, not a <Link>: this used to be a <Link href="#">
+                wrapping the real link, which nested one <a> inside another
+                and threw a hydration error. The outer element only carried
+                layout and the `group` hook, so a span is the correct
+                element — and the dead `href="#"` is gone. */}
+            <span className="uppercase group text-base flex font-medium items-center  gap-2 lg:py-5 lg:text-lg   ">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width={20}
@@ -49,7 +51,7 @@ const Footer = () => {
               >
                 erection support
               </Link>
-            </Link>
+            </span>
 
             <Link
               href={

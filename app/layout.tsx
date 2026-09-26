@@ -25,6 +25,7 @@ import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import { headers } from "next/headers";
 import { PostHogProvider } from "./PostHogProvider";
 import { GoogleTagManager } from "@next/third-parties/google";
+import Script from "next/script";
 import AttributionCapture from "@/components/AttributionCapture";
 import UtmCapture from "@/components/UtmCapture";
 
@@ -100,96 +101,106 @@ export default async function RootLayout({
         {/*
           App Router: `next/head`'s <Head> is a Pages Router API and is
           silently dropped here, so everything below used to be emitted into
-          the RSC payload without ever reaching the HTML. Tags are now
-          rendered directly and Next hoists them into <head>.
+          the RSC payload without ever reaching the HTML. These tags are now
+          rendered directly; React 19 hoists <link> and <meta> into <head>.
+
+          ONLY hoistable tags belong here. React refuses to render a
+          <script> that is a direct child of <html> ("In HTML, <script>
+          cannot be a child of <html>"), and a sync or defer script outside
+          the main document has no known order. So the JSON-LD and the
+          tracking scripts all live in <body> below.
         */}
-        <>
-          {/* Structured Data: one linked @graph, no page-specific FAQ */}
+        {/* DNS Prefetching for Sanity CDN */}
+        <link rel="dns-prefetch" href="https://cdn.sanity.io" />
+        <link rel="preconnect" href="https://cdn.sanity.io" />
+        <link
+          rel="preconnect"
+          href="https://cdn.sanity.io"
+          crossOrigin="anonymous"
+        />
+
+        {/* Apple touch icon */}
+        <link rel="apple-touch-icon" href="/icon" />
+
+        <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        {/* Microsoft Tiles */}
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        {/* Additional meta tags */}
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="KenyaDesires" />
+        {/* Language and region */}
+        <meta name="language" content="English" />
+        <meta name="geo.country" content="KE" />
+        <meta name="geo.region" content="KE-30" />
+        {/* PWA Configuration */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#fe0032" />
+        {/* RSS Feed */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="KenyaDesires - Latest Escorts"
+          href="/rss.xml"
+        />
+        {/* Exolick site verification */}
+        <meta
+          name="6a97888e-site-verification"
+          content="7076eebf366b5125e5462f1490d115bf"
+        />
+        {/* Sitemap */}
+        <link
+          rel="sitemap"
+          type="application/xml"
+          title="Sitemap"
+          href="/sitemap.xml"
+        />
+
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
+        >
+          {/* Structured Data: one linked @graph, no page-specific FAQ.
+              A plain <script type="application/ld+json"> is valid in <body>
+              and is what Google reads. It must NOT be a child of <html>. */}
           <JsonLd nodes={siteWideGraph()} />
-          {/* DNS Prefetching for Sanity CDN */}
-          <link rel="dns-prefetch" href="https://cdn.sanity.io" />
-          <link rel="preconnect" href="https://cdn.sanity.io" />
-          <link
-            rel="preconnect"
-            href="https://cdn.sanity.io"
-            crossOrigin="anonymous"
-          />
 
-          {/* Apple touch icon */}
-          <link rel="apple-touch-icon" href="/icon" />
-
-          <meta name="apple-mobile-web-app-title" content="KenyaDesires" />
-          <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta
-            name="apple-mobile-web-app-status-bar-style"
-            content="black-translucent"
-          />
-          {/* Microsoft Tiles */}
-          <meta name="msapplication-TileColor" content="#000000" />
-          <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
-          <meta name="msapplication-config" content="/browserconfig.xml" />
-          {/* Additional meta tags */}
-          <meta name="format-detection" content="telephone=no" />
-          <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="application-name" content="KenyaDesires" />
-          {/* Language and region */}
-          <meta name="language" content="English" />
-          <meta name="geo.country" content="KE" />
-          <meta name="geo.region" content="KE-30" />
-          {/* PWA Configuration */}
-          <link rel="manifest" href="/manifest.json" />
-          <meta name="theme-color" content="#fe0032" />
-          {/* RSS Feed */}
-          <link
-            rel="alternate"
-            type="application/rss+xml"
-            title="KenyaDesires - Latest Escorts"
-            href="/rss.xml"
-          />
-          {/* Exolick site verification */}
-          <meta
-            name="6a97888e-site-verification"
-            content="7076eebf366b5125e5462f1490d115bf"
-          />
-          {/* Sitemap */}
-          <link
-            rel="sitemap"
-            type="application/xml"
-            title="Sitemap"
-            href="/sitemap.xml"
-          />
-          {/* Meta Pixel Code */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '1072230955456230');
-                fbq('track', 'PageView');
-              `,
-            }}
-          />
+          {/* Meta Pixel Code.
+              Uses next/script rather than a raw <script>: a raw inline
+              <script> rendered by a React component is not re-executed on
+              client-side navigation, which breaks PageView tracking. */}
+          <Script id="facebook-pixel" strategy="afterInteractive">
+            {`
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '1072230955456230');
+              fbq('track', 'PageView');
+            `}
+          </Script>
           <noscript
             dangerouslySetInnerHTML={{
               __html: `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1072230955456230&ev=PageView&noscript=1" />`,
             }}
           />
           {/* End Meta Pixel Code */}
-          <script
-            defer
+          <Script
+            id="thunderbolt-embed"
             src="https://www.thunderbolt.com/gateway/api/v1/thunderbolt-ui/embed.js"
+            strategy="lazyOnload"
           />
-        </>
 
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}
-        >
           <AttributionCapture />
           <UtmCapture />
           <AgeVerificationModal />
