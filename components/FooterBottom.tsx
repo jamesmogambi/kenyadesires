@@ -6,7 +6,7 @@ const FooterBottom = () => {
     <div className="w-full bg-primary">
       <div className="lg:max-w-[1400] flex-col lg:flex-row flex justify-between items-center w-full text-white mx-auto py-3">
         <span className="text-sm font-medium">
-          Copyright 2027 © - www.kenyadesires.xyz |{" "}
+          Copyright 2026 © - www.kenyadesires.co.ke |{" "}
           <Link href={""} className="font-bold">
             Sex Kenya
           </Link>
@@ -21,10 +21,10 @@ const FooterBottom = () => {
           >
             Terms and Conditions
           </Link> */}
-          <Link href={"/withdrawal-contract"} className="font-medium">
+          <Link href={"/withdrawal-contract"} className="font-light">
             Withdrawal from the Contract
           </Link>
-          <Link href={"/terms"} className="font-medium">
+          <Link href={"/terms"} className="font-light">
             Terms of Use of the Web Interface
           </Link>
         </div>
