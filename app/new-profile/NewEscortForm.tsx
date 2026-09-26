@@ -158,7 +158,14 @@ function convertToFormDefaults(data: NewEscortProfileInput) {
   };
 }
 
-const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fresh, isEscort }: Prop) => {
+const NewEscortForm = ({
+  className,
+  mode = "create",
+  initialData,
+  agencyId,
+  fresh,
+  isEscort,
+}: Prop) => {
   const router = useRouter();
 
   const [error, setError] = useState<any>(null);
@@ -261,9 +268,9 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
       street,
       phone,
       whatsappNumber,
-region,
-       county,
-       towns,
+      region,
+      county,
+      towns,
       nationality,
       age,
       height,
@@ -444,7 +451,14 @@ region,
           setLoader(false);
           return;
         }
-        if (imageFiles.length === 0 && existingImages.length === 0 && !(previewPhotoRef.current?.getPreviewFile() || previewPhotoRef.current?.getPreviewUrl())) {
+        if (
+          imageFiles.length === 0 &&
+          existingImages.length === 0 &&
+          !(
+            previewPhotoRef.current?.getPreviewFile() ||
+            previewPhotoRef.current?.getPreviewUrl()
+          )
+        ) {
           setError("Please upload at least one image for your profile");
           setLoader(false);
           return;
@@ -510,9 +524,9 @@ region,
           towns,
           county,
           region,
-          regions: Array.from(
-            new Set([region, ...(towns || [])]),
-          ).filter((r): r is string => Boolean(r)),
+          regions: Array.from(new Set([region, ...(towns || [])])).filter(
+            (r): r is string => Boolean(r),
+          ),
           practices: selected,
           bdsm,
           massages,
@@ -574,15 +588,16 @@ region,
           const providerId = user?.id || res.id;
           trackProvider("complete_profile", { provider_id: providerId });
           trackProvider("profile_published", { provider_id: providerId });
-           toast.custom(() => (
-             <SuccessToast message="Your profile was created successfully." />
-           ));
+          toast.custom(() => (
+            <SuccessToast message="Your profile was created successfully." />
+          ));
 
-           window.dispatchEvent(new CustomEvent("credits-updated"));
+          window.dispatchEvent(new CustomEvent("credits-updated"));
         }
 
         // Upload videos to Mux for this escort
-        const { existingVideos: currentExistingVideos } = useFileStore.getState();
+        const { existingVideos: currentExistingVideos } =
+          useFileStore.getState();
         const newPlaybackIds: string[] = [];
 
         if (videoFiles && videoFiles.length > 0 && escortId) {

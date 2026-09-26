@@ -7,10 +7,11 @@ import {
   getCategoriesFromCleanedEscorts,
 } from "./cleaned-escorts.action";
 import { executeQuery } from "@/lib/neon";
+import { variantSettings } from "@/fixtures/setting";
 
 async function fetchUniqueFieldFromCleanedEscorts(
   params: Record<string, any> = {},
-  field: "practices" | "massage" | "categories" | "bdsm" | "work_type" | "gender" | "nationality" | "extra_services",
+  field: "practices" | "massage" | "categories" | "bdsm" | "work_type" | "gender" | "nationality" | "extra_services" | "availability",
 ): Promise<{ value: string; count: number }[]> {
   try {
     const conditions: string[] = ["has_cleaned_images = TRUE"];
@@ -110,8 +111,10 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
     categories,
     workTypes,
     genders,
-    nationalities,
     extraServices,
+    availability,
+    ageRows,
+    breastRows,
   ] = await Promise.all([
     getPracticesFromCleanedEscorts(params),
     getMassagesFromCleanedEscorts(params),
@@ -119,8 +122,10 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
     getCategoriesFromCleanedEscorts(params),
     getWorkTypesFromCleanedEscorts(params),
     getGendersFromCleanedEscorts(params),
-    getNationalitiesFromCleanedEscorts(params),
     getExtraServicesFromCleanedEscorts(params),
+    fetchUniqueFieldFromCleanedEscorts(params, "availability"),
+    executeQuery("SELECT name FROM lookup_ages"),
+    executeQuery("SELECT name FROM lookup_breast_sizes"),
   ]);
 
   return {
@@ -135,15 +140,15 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
     categories: categories.map((c) => c.value),
     workTypes: workTypes.map((w) => w.value),
     genders: genders.map((g) => g.value),
-    nationalities: nationalities.map((n) => n.value),
     extraServices: extraServices.map((e) => e.value),
-    availability: [],
-    age: [],
-    breast: [],
-    character: [],
-    hairColor: [],
-    experience: [],
-    languages: [],
+    availability: availability.map((a) => a.value),
+    age: ageRows.map((a: any) => ({ name: a.name })),
+    breast: breastRows.map((b: any) => ({ name: b.name })),
+    character: variantSettings.character,
+    hairColor: variantSettings.hairColor,
+    nationality: variantSettings.nationality,
+    experience: variantSettings.experience,
+    languages: variantSettings.languages,
   };
 }
 
