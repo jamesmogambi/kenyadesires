@@ -18,7 +18,6 @@ import LocationInitializer from "@/components/FileInputInitializer";
 import AgeVerificationModal from "@/components/AgeVerificationModal";
 import ScrollToTopBottom from "@/components/ScrollToTopBottom";
 // import YouTargetsAd from "@/components/YouTargetsAd";
-import Head from "next/head";
 import { getAllCounties } from "@/server-actions/region.action";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getEscortByClerkUserId } from "@/server-actions/girl.action";
@@ -31,7 +30,8 @@ import UtmCapture from "@/components/UtmCapture";
 
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";
-import { structuredData, organizationSchema } from "./config/structured-data";
+import JsonLd from "@/components/seo/JsonLd";
+import { siteWideGraph } from "@/lib/aeo/schema";
 import { getAllLookupData } from "@/server-actions/lookup.action";
 import YouTargetsAd from "@/components/YouTargetsAd";
 
@@ -97,18 +97,15 @@ export default async function RootLayout({
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         )}
-        <Head>
-          {/* Structured Data */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-          />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(organizationSchema),
-            }}
-          />
+        {/*
+          App Router: `next/head`'s <Head> is a Pages Router API and is
+          silently dropped here, so everything below used to be emitted into
+          the RSC payload without ever reaching the HTML. Tags are now
+          rendered directly and Next hoists them into <head>.
+        */}
+        <>
+          {/* Structured Data: one linked @graph, no page-specific FAQ */}
+          <JsonLd nodes={siteWideGraph()} />
           {/* DNS Prefetching for Sanity CDN */}
           <link rel="dns-prefetch" href="https://cdn.sanity.io" />
           <link rel="preconnect" href="https://cdn.sanity.io" />
@@ -188,7 +185,7 @@ export default async function RootLayout({
             defer
             src="https://www.thunderbolt.com/gateway/api/v1/thunderbolt-ui/embed.js"
           />
-        </Head>
+        </>
 
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased text-white bg-dark-slate min-h-screen flex flex-col`}

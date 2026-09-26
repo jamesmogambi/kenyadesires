@@ -4,23 +4,24 @@ import WhyProfile from "@/components/blog/WhyProfile";
 import GirlList from "@/components/GirlList";
 import GirlRegions from "@/components/GirlRegions";
 import NotFoundList from "@/components/NotFoundList";
-import YouTargetsAd from "@/components/YouTargetsAd";
+import AboutSection from "@/components/aeo/AboutSection";
+import JsonLd from "@/components/seo/JsonLd";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 import type { Escort } from "@/server-actions/escort.action";
+import { absoluteUrl } from "@/lib/aeo/entity";
+import { NODE_IDS, breadcrumbNode } from "@/lib/aeo/schema";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 
 export const metadata: Metadata = {
   title: "KenyaDesires.xyz | Female Escorts & Companions in Kenya",
   description:
     "Browse verified female escort and companion profiles across Kenya. Explore photos, videos, locations and contact details on KenyaDesires.xyz.",
   alternates: {
-    canonical: SITE_URL,
+    canonical: absoluteUrl("/"),
   },
 };
 
@@ -55,6 +56,32 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <>
+      {/* Homepage graph. No FAQPage here: the questions are visible on
+          /frequent-questions, and marking up content that is not on the
+          page is a structured-data policy violation. */}
+      {/* Page-specific nodes only. The Organization, OfferCatalog, WebSite,
+          OnlineBusiness and age-policy nodes are defined once in the root
+          layout's site-wide graph and referenced by @id here — redefining
+          them per page would emit duplicate definitions of the same @id on
+          a single URL. */}
+      <JsonLd
+        nodes={[
+          {
+            "@type": "WebPage",
+            "@id": `${absoluteUrl("/")}#webpage`,
+            url: absoluteUrl("/"),
+            name: "KenyaDesires — Female Escorts & Companions in Kenya",
+            description:
+              "Directory of adult companion and escort profiles in Kenya, with photographs, locations and service categories.",
+            isPartOf: { "@id": NODE_IDS.website },
+            about: { "@id": NODE_IDS.organization },
+            primaryItemOfPage: { "@id": NODE_IDS.website },
+            inLanguage: "en-KE",
+          },
+          breadcrumbNode([{ name: "Home", path: "/" }]),
+        ]}
+      />
+
       {/* YouTargets Ad - 300x250 medium rectangle */}
       {/* <div className="flex justify-center">
         <YouTargetsAd />
@@ -69,6 +96,12 @@ export default async function Home({ searchParams }: PageProps) {
 
       <WhyProfile className="mt-20" />
       <PassionateMoments className="mt-8" />
+
+      {/* Factual business description. Placed below the listings so it does
+          not push the directory content down, but rendered on the homepage
+          itself — an answer engine retrieving `/` gets the entity
+          definition without a second request. */}
+      <AboutSection className="mt-12" />
     </>
   );
 }

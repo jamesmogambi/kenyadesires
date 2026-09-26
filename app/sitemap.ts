@@ -28,16 +28,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ==================== 1. STATIC ROUTES ====================
     const staticRoutes = [
       { path: "", priority: 1.0, changefreq: "daily" as const },
+      // AEO: /about and the FAQ are the pages answer engines cite when
+      // asked "what is KenyaDesires" / "is KenyaDesires legit", so both
+      // are listed early rather than tucked into the legal tail.
+      { path: "/about", priority: 0.9, changefreq: "monthly" as const },
+      {
+        path: "/frequent-questions",
+        priority: 0.8,
+        changefreq: "monthly" as const,
+      },
       { path: "/girls", priority: 0.9, changefreq: "daily" as const },
       { path: "/agencies", priority: 0.8, changefreq: "daily" as const },
       { path: "/blog", priority: 0.9, changefreq: "daily" as const },
       { path: "/contact", priority: 0.7, changefreq: "monthly" as const },
-      {
-        path: "/frequent-questions",
-        priority: 0.6,
-        changefreq: "monthly" as const,
-      },
-      { path: "/terms-of-use", priority: 0.5, changefreq: "yearly" as const },
+      // The route is /terms, not /terms-of-use. The old entry was a dead
+      // URL in the sitemap, which is a crawl-budget leak and an inaccurate
+      // statement of what exists on the site.
+      { path: "/terms", priority: 0.5, changefreq: "yearly" as const },
       { path: "/privacy-policy", priority: 0.5, changefreq: "yearly" as const },
       { path: "/bdsm", priority: 0.6, changefreq: "monthly" as const },
       {

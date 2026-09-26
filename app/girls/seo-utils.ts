@@ -1,4 +1,15 @@
 // /lib/seo-utils.ts
+//
+// AEO note: this file previously hard-coded a second, conflicting set of
+// entity facts (`kenyadivas` social handles and a placeholder
+// `+254700000000` phone). Answer engines treat a site that names different
+// social profiles and phone numbers on different pages as having weak
+// entity identity, so all identity facts now come from the single source
+// in `lib/aeo/entity.ts` and all identity nodes are referenced by `@id`
+// from the site-wide graph emitted in the root layout.
+
+import { SITE_URL, absoluteUrl } from "@/lib/aeo/entity";
+import { NODE_IDS } from "@/lib/aeo/schema";
 
 interface BreadcrumbItem {
     name: string;
@@ -13,7 +24,7 @@ export function generateBreadcrumbList(items: BreadcrumbItem[]) {
             "@type": "ListItem",
             position: index + 1,
             name: item.name,
-            item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}${item.url}`,
+            item: absoluteUrl(item.url),
         })),
     };
 }
@@ -41,7 +52,7 @@ export function generateListStructuredData({
                                                filters,
                                                items,
                                            }: ListStructuredDataProps) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+    const baseUrl = SITE_URL;
 
     return {
         "@context": "https://schema.org",
@@ -53,11 +64,13 @@ export function generateListStructuredData({
                 description: description,
                 url: `${baseUrl}/girls`,
                 numberOfItems: totalItems,
+                inLanguage: "en-KE",
+                // Links this collection to the site-wide WebSite and
+                // Organization nodes emitted in the root layout.
+                isPartOf: { "@id": NODE_IDS.website },
+                about: { "@id": NODE_IDS.organization },
                 ...(currentPage > 1 && {
-                    isPartOf: {
-                        "@type": "CollectionPage",
-                        "@id": `${baseUrl}/girls`,
-                    },
+                    breadcrumb: { "@id": `${baseUrl}/girls#breadcrumb` },
                 }),
                 ...(currentPage < totalPages && {
                     nextPage: `${baseUrl}/girls?page=${currentPage + 1}`,
@@ -81,74 +94,24 @@ export function generateListStructuredData({
                                 name:
                                     item.town || item.workingAreas?.[0]?.countyName || "Kenya",
                             },
+                            // Links each listing back to the one Organization
+                            // node, so the person entities inherit the site's
+                            // verified identity instead of floating free.
+                            subjectOf: {
+                                "@type": "WebPage",
+                                url: `${baseUrl}/girl/${item.id}`,
+                                isPartOf: { "@id": NODE_IDS.website },
+                            },
                         },
                     })),
                 },
-            },
-            {
-                "@type": "WebSite",
-                "@id": `${baseUrl}/#website`,
-                name: "KenyaDesires",
-                description: "Premium Escort Directory in Kenya",
-                url: baseUrl,
-                potentialAction: {
-                    "@type": "SearchAction",
-                    target: {
-                        "@type": "EntryPoint",
-                        urlTemplate: `${baseUrl}/search?q={search_term_string}`,
-                    },
-                    "query-input": "required name=search_term_string",
-                },
-            },
-            {
-                "@type": "Organization",
-                "@id": `${baseUrl}/#organization`,
-                name: "KenyaDesires",
-                url: baseUrl,
-                logo: {
-                    "@type": "ImageObject",
-                    url: `${baseUrl}/logo.png`,
-                    width: 600,
-                    height: 60,
-                },
-                sameAs: [
-                    "https://twitter.com/kenyadivas",
-                    "https://www.instagram.com/kenyadivas",
-                    "https://www.facebook.com/kenyadivas",
-                ],
-                contactPoint: {
-                    "@type": "ContactPoint",
-                    telephone: "+254700000000",
-                    contactType: "customer service",
-                    email: "contact@kenyadesires.com",
-                    availableLanguage: ["English", "Swahili"],
-                    areaServed: "KE",
-                },
-            },
-            {
-                "@type": "ItemList",
-                "@id": `${baseUrl}/girls#itemlist`,
-                name: title,
-                description: description,
-                numberOfItems: totalItems,
-                itemListOrder: "https://schema.org/ItemListOrderDescending",
-                itemListElement: items.slice(0, 5).map((item, index) => ({
-                    "@type": "ListItem",
-                    position: index + 1,
-                    item: {
-                        "@type": "Person",
-                        name: item.name || item.username,
-                        url: `${baseUrl}/girl/${item.id}`,
-                        image: item.previewPhoto,
-                    },
-                })),
             },
         ],
     };
 }
 
 export function generateFilterStructuredData(filters: any) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+    const baseUrl = SITE_URL;
 
     return {
         "@context": "https://schema.org",

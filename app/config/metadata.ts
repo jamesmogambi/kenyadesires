@@ -1,7 +1,6 @@
 // app/config/metadata.ts
 import type { Metadata } from "next";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+import { CONTACT, SITE_DESCRIPTION_SHORT, SITE_URL } from "@/lib/aeo/entity";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -12,8 +11,7 @@ export const metadata: Metadata = {
     template: "%s | Kenya Desires",
   },
 
-  description:
-    "KenyaDesires is Kenya's premier escort directory. Find 900+ verified, high-class companions in Nairobi, Mombasa, Kisumu, and all major cities. Real photos, honest reviews, and discreet booking.",
+  description: SITE_DESCRIPTION_SHORT,
 
   keywords: [
     // Primary brand
@@ -103,8 +101,8 @@ export const metadata: Metadata = {
         alt: "KenyaDesires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
       },
     ],
-    emails: ["hello@kenyadesires.xyz", "support@kenyadesires.xyz"],
-    phoneNumbers: ["+254743129621"],
+    emails: [CONTACT.email, CONTACT.emailSupport],
+    phoneNumbers: [CONTACT.phone],
     countryName: "Kenya",
   },
 
@@ -192,8 +190,8 @@ export const metadata: Metadata = {
     "twitter:app:country": "KE",
     "business:contact_data:country": "Kenya",
     "business:contact_data:region": "Nairobi",
-    "business:contact_data:email": "support@kenyadesires.com",
-    "business:contact_data:phone_number": "+254743129621",
+    "business:contact_data:email": CONTACT.email,
+    "business:contact_data:phone_number": CONTACT.phone,
     "pinterest-rich-pin": "enabled",
   },
 };

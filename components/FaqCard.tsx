@@ -92,10 +92,13 @@ const parseAnswer = (answer: React.ReactNode): React.ReactNode => {
       flushList();
     } else {
       flushList();
+      // <p>, not <li>: this branch is a plain paragraph. Emitting a bare
+      // <li> outside a <ul> is invalid HTML and confuses crawlers
+      // reading the FAQ hierarchy.
       result.push(
-        <li key={`p-${key++}`} className="mb-2 ">
+        <p key={`p-${key++}`} className="mb-2">
           {renderInlineText(trimmed)}
-        </li>,
+        </p>,
       );
     }
   });

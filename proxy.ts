@@ -18,6 +18,11 @@ const isPublicRoute = createRouteMatcher([
   '/terms',
   '/withdrawal-contract',
   '/frequent-questions',
+  // AEO: the About page carries the entity definition. It must be
+  // publicly readable, otherwise every AI crawler gets a redirect to the
+  // Clerk sign-in page and none of the structured data is retrievable.
+  '/about',
+  '/llms.txt',
   '/api/webhooks/(.*)',
   '/api/mpesa/callback',
   '/api/mux/(.*)',
