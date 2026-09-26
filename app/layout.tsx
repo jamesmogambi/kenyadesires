@@ -246,7 +246,7 @@ export default async function RootLayout({
             <LocationInitializer
               initialCounties={allCounties.data}
               initialRegions={regions.data}
-              initialLookup={lookup.data}
+              initialLookup={lookup}
             />
 
             {/* YouTargets Ad - 300x250 medium rectangle */}
