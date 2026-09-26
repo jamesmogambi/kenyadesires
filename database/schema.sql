@@ -473,6 +473,13 @@ CREATE TABLE IF NOT EXISTS lookup_ages (
     value   INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS lookup_availability (
+    id          TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT NOT NULL,
+    slug        TEXT UNIQUE NOT NULL,
+    sort_order  INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS lookup_breast_sizes (
     id      TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     name    TEXT NOT NULL,

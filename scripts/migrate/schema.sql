@@ -298,6 +298,14 @@ CREATE TABLE IF NOT EXISTS `lookup_ages` (
   `value` INT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `lookup_availability` (
+  `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
+  `name` VARCHAR(191) NOT NULL,
+  `slug` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL,
+  `sort_order` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `lookup_availability_slug_key` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE TABLE IF NOT EXISTS `lookup_bdsm` (
   `id` VARCHAR(191) COLLATE utf8mb4_bin NOT NULL DEFAULT (UUID()),
   `name` VARCHAR(191) NOT NULL,

@@ -79,6 +79,21 @@ async function fetchUniqueFieldFromCleanedEscorts(
   }
 }
 
+const DEFAULT_AVAILABILITY = ["Incall", "outcall", "Both"];
+
+export async function getAvailabilityLookup(): Promise<string[]> {
+  try {
+    const rows = await executeQuery(
+      "SELECT name FROM lookup_availability ORDER BY sort_order ASC, name ASC",
+    );
+    const names = rows.map((r: any) => r?.name).filter(Boolean);
+    return names.length > 0 ? names : DEFAULT_AVAILABILITY;
+  } catch (error) {
+    console.error("Error fetching availability lookup:", error);
+    return DEFAULT_AVAILABILITY;
+  }
+}
+
 export async function getWorkTypesFromCleanedEscorts(
   params: Record<string, any> = {},
 ): Promise<{ value: string; count: number }[]> {
@@ -123,7 +138,7 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
     getWorkTypesFromCleanedEscorts(params),
     getGendersFromCleanedEscorts(params),
     getExtraServicesFromCleanedEscorts(params),
-    fetchUniqueFieldFromCleanedEscorts(params, "availability"),
+    getAvailabilityLookup(),
     executeQuery("SELECT name FROM lookup_ages"),
     executeQuery("SELECT name FROM lookup_breast_sizes"),
   ]);
@@ -134,6 +149,9 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
     // It keeps that shape because app/sitemap.ts and
     // components/FileInputInitializer.tsx both read `.practice` from it, so
     // the difference is normalised here instead of at the source.
+    // `availability` is the exception: it is not derived from escort rows but
+    // read straight from the `lookup_availability` table so the dropdown is
+    // always prepopulated with the canonical options.
     practices: practices.map((p) => p.practice),
     massage: massage.map((m) => m.value),
     bdsm: bdsm.map((b) => b.value),
@@ -141,7 +159,7 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
     workTypes: workTypes.map((w) => w.value),
     genders: genders.map((g) => g.value),
     extraServices: extraServices.map((e) => e.value),
-    availability: availability.map((a) => a.value),
+    availability,
     age: ageRows.map((a: any) => ({ name: a.name })),
     breast: breastRows.map((b: any) => ({ name: b.name })),
     character: variantSettings.character,

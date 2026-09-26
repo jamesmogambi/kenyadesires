@@ -86,7 +86,7 @@ export const variantSettings = {
       flag: "KE",
     },
   ],
-  availability: ["InCall", "OutCall"],
+  availability: ["Incall", "outcall", "Both"],
   categories: ["Sex", "Massages", "BDSM"],
   practices: Array.from({ length: 40 }, (_, i) => ({
     id: i + 1,
