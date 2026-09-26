@@ -3,7 +3,7 @@ import React from "react";
 
 const FooterBottom = () => {
   return (
-    <div className="w-full bg-primary relative z-50">
+    <div className="w-full bg-primary">
       <div className="lg:max-w-[1400] flex-col lg:flex-row flex justify-between items-center w-full text-white mx-auto py-3">
         <span className="text-sm ">
           Copyright 2026 © - www.kenyadesires.xyz |{" "}
