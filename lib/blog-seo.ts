@@ -5,7 +5,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
 const SITE_NAME = "KenyaDesires";
 const BLOG_NAME = "Kenyan Dating Blog";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`;
-const LOGO_URL = `${SITE_URL}/logo.png`;
 
 const GEO = {
   country: "KE",
@@ -285,14 +284,56 @@ export function generateBlogCategoryMetadata(
   };
 }
 
+/**
+ * Escape a JSON-LD document so it is safe as the text content of a
+ * `<script type="application/ld+json">` element. Post copy (headlines,
+ * excerpts, author bios) is stored verbatim in Sanity and may contain
+ * `<` or `</script>`; an unescaped `<` lets the HTML parser close the
+ * script element early and makes the graph unparseable. Mirrors the policy
+ * in `components/seo/JsonLd.tsx`.
+ */
+function escapeJsonLdForScript(json: string): string {
+  return json
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+/**
+ * Wrap nodes in a single `@graph` document.
+ *
+ * Page-level graphs MUST NOT redefine `Organization` or `WebSite` — those are
+ * defined once in the root layout's site-wide graph (`lib/aeo/schema.ts` →
+ * `siteWideGraph()`) and are referenced here by `@id`. Redefining them emits a
+ * duplicate `@id` on one URL (a malformed graph) and previously shipped stale
+ * contact data (phone `+254701694004` / `support@kenyadesires.com`) that
+ * conflicted with the canonical facts in `lib/aeo/entity.ts`.
+ *
+ * The page components render the result through their own
+ * `<script type="application/ld+json" dangerouslySetInnerHTML>` tag, so this
+ * function returns the JSON string ONLY (no wrapping `<script>` tags of its
+ * own) — emitting a second wrapper produced nested `<script>` elements that the
+ * browser could not parse, silently voiding the schema on every blog page.
+ */
+function serializeGraph(nodes: object[]): string {
+  const doc = {
+    "@context": "https://schema.org",
+    "@graph": nodes.filter(Boolean),
+  };
+  return escapeJsonLdForScript(JSON.stringify(doc));
+}
+
 export function generateBlogPostJsonLd(post: Post, slug: string): string {
   const baseUrl = SITE_URL;
   const postUrl = `${baseUrl}/blog/${slug}`;
   const imageUrl = post.mainImage?.asset?.url || DEFAULT_OG_IMAGE;
-  const imageAlt = post.mainImage?.alt || post.title;
 
   const authorName = post.author?.name || "KenyaDesires Editor";
-  const authorId = post.author?._id ? `${baseUrl}/blog/author/${post.author._id}` : `${baseUrl}/#author`;
+  const authorId = post.author?._id
+    ? `${baseUrl}/blog/author/${post.author._id}`
+    : `${baseUrl}/#author`;
 
   const authorSchema = {
     "@type": "Person",
@@ -311,9 +352,9 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
     knowsAbout: post.categories?.map((c) => c.name) || ["Dating", "Relationships", "Kenya"],
   };
 
-  const structuredData = {
-    "@context": "https://schema.org",
+  const blogPosting = {
     "@type": "BlogPosting",
+    "@id": `${postUrl}#article`,
     headline: post.title,
     description: post.excerpt || post.title,
     image: imageUrl,
@@ -321,36 +362,21 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
     dateModified: post._updatedAt || post._createdAt,
     author: authorSchema,
     publisher: {
-      "@type": "Organization",
       "@id": `${baseUrl}/#organization`,
-      name: BLOG_NAME,
-      logo: {
-        "@type": "ImageObject",
-        url: LOGO_URL,
-        width: 600,
-        height: 60,
-      },
     },
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": postUrl,
     },
     url: postUrl,
+    inLanguage: "en-KE",
+    isAccessibleForFree: true,
+    thumbnailUrl: imageUrl,
     keywords: post.categories?.map((c) => c.name).join(", ") || "",
     articleSection: post.categories?.[0]?.name || "Dating",
-    inLanguage: "en-KE",
-    thumbnailUrl: imageUrl,
-    thumbnail: [
-      {
-        "@type": "ImageObject",
-        url: imageUrl,
-        caption: imageAlt,
-      },
-    ],
   };
 
-  const breadcrumbData = {
-    "@context": "https://schema.org",
+  const breadcrumbList = {
     "@type": "BreadcrumbList",
     itemListElement: [
       {
@@ -374,56 +400,15 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
     ],
   };
 
-  const websiteData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${baseUrl}/#website`,
-    name: BLOG_NAME,
-    description:
-      "Kenya's premier dating and lifestyle blog featuring expert advice, relationship tips, and insights for singles across Kenya.",
-    url: baseUrl,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${baseUrl}/blog/search?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
-    inLanguage: "en-KE",
-    publisher: {
-      "@id": `${baseUrl}/#organization`,
-    },
-  };
-
-  const organizationData = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": `${baseUrl}/#organization`,
-    name: SITE_NAME,
-    alternateName: "Kenya Desires",
-    url: baseUrl,
-    logo: LOGO_URL,
-    sameAs: [
-      "https://twitter.com/kenyadesires",
-      "https://www.instagram.com/kenyadesires",
-      "https://www.facebook.com/kenyadesires",
-    ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+254701694004",
-      contactType: "customer service",
-      email: "support@kenyadesires.com",
-      availableLanguage: ["English", "Swahili"],
-      areaServed: "KE",
-    },
-  };
-
-  const faqData = post.faq && post.faq.length > 0
+  // FAQPage only when the post carries FAQ data AND renders it visibly
+  // (BlogArticle renders <FaqSection faq={faq || []} />). The `faq` field is
+  // not selected in SINGLE_POST_QUERY today, so this stays inert — it is
+  // never invented. When wired up, the visible Q&As and this schema share one
+  // source of truth.
+  const faq = post.faq && post.faq.length > 0
     ? {
-        "@context": "https://schema.org",
         "@type": "FAQPage",
-        "@id": `${postUrl}/#faq`,
+        "@id": `${postUrl}#faq`,
         mainEntity: post.faq.map((item) => ({
           "@type": "Question",
           name: item.question,
@@ -435,46 +420,31 @@ export function generateBlogPostJsonLd(post: Post, slug: string): string {
       }
     : null;
 
-  const allData = [
-    structuredData,
-    breadcrumbData,
-    websiteData,
-    organizationData,
-    ...(faqData ? [faqData] : []),
-  ];
-
-  return `<script type="application/ld+json">${JSON.stringify(
-    allData,
-  )}</script>`;
+  return serializeGraph([blogPosting, breadcrumbList, ...(faq ? [faq] : [])]);
 }
 
 export function generateBlogListJsonLd(): string {
   const baseUrl = SITE_URL;
 
   const collectionPage = {
-    "@context": "https://schema.org",
     "@type": "CollectionPage",
+    "@id": `${baseUrl}/blog#collection`,
     name: "Blog - KenyaDesires",
     description:
       "Latest blog posts about dating, relationships, and lifestyle in Kenya.",
     url: `${baseUrl}/blog`,
     isPartOf: {
-      "@type": "WebSite",
-      name: BLOG_NAME,
-      url: baseUrl,
+      "@id": `${baseUrl}/#website`,
     },
     about: {
-      "@type": "Organization",
-      name: SITE_NAME,
-      url: baseUrl,
+      "@id": `${baseUrl}/#organization`,
     },
     inLanguage: "en-KE",
     keywords:
       "Kenya dating blog, dating advice Kenya, relationships Kenya, Nairobi dating",
   };
 
-  const breadcrumbData = {
-    "@context": "https://schema.org",
+  const breadcrumbList = {
     "@type": "BreadcrumbList",
     itemListElement: [
       {
@@ -492,21 +462,7 @@ export function generateBlogListJsonLd(): string {
     ],
   };
 
-  const websiteData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: BLOG_NAME,
-    description:
-      "Kenya's premier dating and lifestyle blog featuring expert advice, relationship tips, and insights for singles across Kenya.",
-    url: baseUrl,
-    inLanguage: "en-KE",
-  };
-
-  const allData = [collectionPage, breadcrumbData, websiteData];
-
-  return `<script type="application/ld+json">${JSON.stringify(
-    allData,
-  )}</script>`;
+  return serializeGraph([collectionPage, breadcrumbList]);
 }
 
 export function generateBlogCategoryJsonLd(
@@ -517,29 +473,24 @@ export function generateBlogCategoryJsonLd(
   const categoryUrl = `${baseUrl}/blog/category/${slug}`;
 
   const collectionPage = {
-    "@context": "https://schema.org",
     "@type": "CollectionPage",
+    "@id": `${categoryUrl}#collection`,
     name: `${category.name} - ${BLOG_NAME}`,
     description:
       category.description ||
       `Articles about ${category.name} in Kenya.`,
     url: categoryUrl,
     isPartOf: {
-      "@type": "WebSite",
-      name: BLOG_NAME,
-      url: baseUrl,
+      "@id": `${baseUrl}/#website`,
     },
     about: {
-      "@type": "Organization",
-      name: SITE_NAME,
-      url: baseUrl,
+      "@id": `${baseUrl}/#organization`,
     },
     inLanguage: "en-KE",
     keywords: `${category.name} Kenya, ${category.name} dating, Kenya dating blog`,
   };
 
-  const breadcrumbData = {
-    "@context": "https://schema.org",
+  const breadcrumbList = {
     "@type": "BreadcrumbList",
     itemListElement: [
       {
@@ -563,19 +514,5 @@ export function generateBlogCategoryJsonLd(
     ],
   };
 
-  const websiteData = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: BLOG_NAME,
-    description:
-      "Kenya's premier dating and lifestyle blog featuring expert advice, relationship tips, and insights for singles across Kenya.",
-    url: baseUrl,
-    inLanguage: "en-KE",
-  };
-
-  const allData = [collectionPage, breadcrumbData, websiteData];
-
-  return `<script type="application/ld+json">${JSON.stringify(
-    allData,
-  )}</script>`;
+  return serializeGraph([collectionPage, breadcrumbList]);
 }

@@ -11,6 +11,9 @@ const PRIVATE_PATHS = [
   "/api/",
   "/login",
   "/signup",
+  "/checkout",
+  "/cart",
+  "/account",
   "/forgot-password",
   "/reset-password",
   "/profile/",
@@ -58,8 +61,15 @@ const AI_CRAWLERS = [
   "MistralAI-User",
   // Apple Intelligence
   "Applebot-Extended",
+  "Applebot",
   // Common Crawl — upstream corpus for many third-party AI systems
   "CCBot",
+  // Additional answer-engine / AI crawlers
+  "anthropic-ai",
+  "cohere-ai",
+  "DuckAssistBot",
+  "Amazonbot",
+  "YouBot",
 ];
 
 export default function robots(): MetadataRoute.Robots {
