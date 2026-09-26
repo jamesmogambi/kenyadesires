@@ -25,8 +25,7 @@ const Footer = () => {
               girls for sex
             </Link>
 
-            <Link
-              href={"#"}
+            <span
               className="uppercase group text-base flex font-medium items-center  gap-2 lg:py-5 lg:text-lg   "
             >
               <svg
@@ -49,7 +48,7 @@ const Footer = () => {
               >
                 erection support
               </Link>
-            </Link>
+            </span>
 
             <Link
               href={
