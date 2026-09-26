@@ -11,7 +11,7 @@ const Footer = () => {
   const isLoggedIn = Boolean(isSignedIn);
 
   return (
-    <footer className="w-full">
+    <footer className="w-full relative z-50">
       {/* // section 1 */}
       <div className="bg-dark-slate py-4  w-full ">
         <div className="w-full pl-5 lg:p-0 lg:items-center justify-between lg:max-w-[1400] flex flex-col lg:flex-row mx-auto  border-white ">
