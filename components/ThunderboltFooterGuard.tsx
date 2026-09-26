@@ -1,96 +1,126 @@
 /**
  * components/ThunderboltFooterGuard.tsx
  *
- * Stops the Thunderbolt chat widget from covering the footer's links
- * WITHOUT changing the footer, the layout, or the widget itself.
+ * Keeps the Thunderbolt chat widget from covering the footer's links,
+ * without changing the footer, the layout, or the widget's own behaviour.
  *
- * THE PROBLEM
- * -----------
- * The embed script (thunderbolt.com/.../thunderbolt-ui/embed.js) injects a
- * fixed iframe at `bottom: 8px; right: 8px`, 348px x 112px in its resting
- * collapsed state, with `z-index: 2147483647` — the maximum 32-bit value,
- * above every layer on this site. It is mounted inside a *closed* shadow
- * root appended to `document.body`, so it cannot be restyled or reached by
- * CSS from the host page.
+ * WHY THE FIRST ATTEMPT FAILED
+ * ----------------------------
+ * This originally drove the widget through its public API
+ * (`window.Thunderbolt.close()` / `.open()`). That is unreliable: the
+ * embed's message handler has no case for a close command, so `close()`
+ * merely postMessages the widget iframe and hopes it complies. When it did
+ * not, the widget stayed on top of the links; when it half-worked, the
+ * close/open round trip made the widget visibly pop in and out while
+ * scrolling. The widget must not be controlled through that channel.
  *
- * Because it is `position: fixed`, the only place it can collide with page
- * content is the end of the document. It lands on the right-hand end of the
- * footer nav, which swallows clicks on "contact" and "privacy policy" while
- * leaving the links to its left working — the exact reported symptom.
+ * HOW THIS WORKS INSTEAD
+ * ----------------------
+ * The embed mounts its iframes inside a *closed* shadow root, so the
+ * iframes themselves are unreachable — but the shadow HOST is a plain
+ * `<div>` that the script appends to `document.body`. Hiding that host
+ * hides everything inside the shadow root.
  *
- * WHY NOT JUST ADD PADDING
- * ------------------------
- * Reserving space at the bottom of the page does fix the overlap, but it
- * changes the page. This component leaves the footer and the document
- * structure exactly as they are and only manages the widget's visibility.
+ * Crucially this is pure CSS. The widget's own state is never touched, so
+ * there is no open/close cycle and nothing to pop. When the footer scrolls
+ * back into view the host is simply revealed again, exactly as it was.
  *
- * HOW IT WORKS
- * ------------
- * The embed script assigns a small API to `window.Thunderbolt`, including
- * `open()`, `close()` and a `ready()` promise. We observe the footer with an
- * `IntersectionObserver` and close the widget whenever the footer is on
- * screen, restoring it when the user scrolls away.
+ * IDENTIFYING THE HOST
+ * --------------------
+ * Two independent signals, both deliberately narrow:
  *
- * Two safeguards:
- *  - We only ever re-open a widget that *we* closed, so a widget the user
- *    dismissed deliberately stays dismissed.
- *  - If the embed script is blocked, fails to load, or exposes no API, the
- *    component does nothing. The site is unaffected either way.
+ *  1. `Element.prototype.attachShadow` is wrapped at module import time —
+ *     ahead of the `lazyOnload` embed script — so every closed shadow root
+ *     the embed creates is recorded with the element it was attached to.
+ *     This is exact.
+ *
+ *  2. A structural fallback for hosts that already existed before the
+ *     patch. It is deliberately strict, because a false positive would
+ *     hide real page content. A node qualifies only when ALL of the
+ *     following hold:
+ *
+ *       - it is a `<div>` that is a direct child of `<body>`;
+ *       - it is not part of this app's tree (it neither contains nor is
+ *         contained by the app's `<main>`, `<header>`, or `<footer>`),
+ *         which excludes the footer's own wrapper `<div>`;
+ *       - it renders no box of its own (zero offset width *and* height),
+ *         which is how a container that exists only to hold fixed-position
+ *         content presents itself, and which excludes the full-viewport
+ *         background `<div>` the layout renders.
+ *
+ *     If the real host does present a non-zero box the fallback simply
+ *     does not fire, and signal 1 still covers it. The fallback is
+ *     therefore allowed to miss, never to over-match.
  */
 
 "use client";
 
 import { useEffect } from "react";
 
-/** The subset of the embed script's public API that this component uses. */
-interface ThunderboltApi {
-  open: () => void;
-  close: () => void;
-  toggle: () => void;
-  ready: () => Promise<void>;
-  on?: (event: string, handler: () => void) => () => void;
+/** Marks the embed's shadow hosts once they have been identified. */
+const HOST_ATTR = "data-tbolt-widget-host";
+
+/** Marks <html> while the footer is on screen. */
+const SUPPRESS_ATTR = "data-tbolt-suppressed";
+
+const STYLE_ID = "tbolt-footer-guard-style";
+
+/** Closed shadow roots seen by the patched `attachShadow`. */
+const capturedHosts = new Set<Element>();
+
+/**
+ * Records closed shadow roots as they are created.
+ *
+ * `attachShadow({ mode: "closed" })` is observable only from inside the
+ * call, since `element.shadowRoot` is null afterwards by design. Wrapping
+ * the prototype is the only way to identify these hosts reliably, and
+ * doing it at module scope means it runs at import time — before the
+ * `lazyOnload` embed script executes.
+ */
+function patchAttachShadow() {
+  if (typeof Element === "undefined") return;
+  const proto = Element.prototype as Element & {
+    attachShadow: (init: ShadowRootInit) => ShadowRoot;
+    __tboltPatched?: boolean;
+  };
+  if (proto.__tboltPatched) return;
+  proto.__tboltPatched = true;
+
+  const original = proto.attachShadow;
+  proto.attachShadow = function (init: ShadowRootInit) {
+    const root = original.call(this, init);
+    if (init?.mode === "closed") {
+      capturedHosts.add(this);
+      this.setAttribute(HOST_ATTR, "");
+    }
+    return root;
+  };
 }
 
-declare global {
-  interface Window {
-    Thunderbolt?: ThunderboltApi;
-  }
+// Runs at import time, ahead of the effect and ahead of the lazy script.
+if (typeof window !== "undefined") {
+  patchAttachShadow();
 }
 
-/** How long to wait for the lazyOnload embed to expose its API. */
-const API_POLL_INTERVAL_MS = 250;
-const API_POLL_TIMEOUT_MS = 15_000;
+const GUARD_CSS = `
+[${SUPPRESS_ATTR}] body [${HOST_ATTR}] {
+  display: none !important;
+}
+`;
 
 export default function ThunderboltFooterGuard() {
   useEffect(() => {
-    let cancelled = false;
     let observer: IntersectionObserver | null = null;
-    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let bodyObserver: MutationObserver | null = null;
+    let suppressed = false;
 
-    /** True only while WE are the reason the widget is hidden. */
-    let closedByUs = false;
-
-    const closeWidget = () => {
-      const api = window.Thunderbolt;
-      if (!api) return;
-      try {
-        api.close();
-        closedByUs = true;
-      } catch {
-        // The widget may not be ready yet; nothing to restore later.
-      }
-    };
-
-    const restoreWidget = () => {
-      const api = window.Thunderbolt;
-      // Never re-open a widget the user closed themselves.
-      if (!api || !closedByUs) return;
-      try {
-        api.open();
-      } catch {
-        // Ignore: the widget is optional decoration.
-      } finally {
-        closedByUs = false;
+    const setSuppressed = (next: boolean) => {
+      if (next === suppressed) return;
+      suppressed = next;
+      if (next) {
+        document.documentElement.setAttribute(SUPPRESS_ATTR, "");
+      } else {
+        document.documentElement.removeAttribute(SUPPRESS_ATTR);
       }
     };
 
@@ -100,82 +130,95 @@ export default function ThunderboltFooterGuard() {
 
       observer = new IntersectionObserver(
         (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              // The footer is on screen, so the bottom-right corner is
-              // about to be occupied by the widget. Get it out of the way.
-              closeWidget();
-            } else {
-              restoreWidget();
-            }
-          }
+          for (const entry of entries) setSuppressed(entry.isIntersecting);
         },
-        // Any visibility counts. Erring toward hiding the widget is the
-        // safe direction: an over-eager hide is a missing button, whereas
-        // an over-eager show puts it back over the links.
         { threshold: 0 },
       );
-
       observer.observe(footer);
     };
 
     /**
-     * The embed is `strategy="lazyOnload"`, so `window.Thunderbolt` may not
-     * exist when this effect runs. Poll for it, then wait for `ready()` so
-     * we never send commands before the widget can accept them.
+     * Elements that belong to this app and must never be treated as a
+     * widget host: every ancestor of the app's <main>/<header>/<footer>
+     * up to and including <body>, and every one of their descendants.
      */
-    const attach = () => {
-      if (cancelled) return;
-
-      const api = window.Thunderbolt;
-      if (!api) {
-        if (API_POLL_TIMEOUT_MS > 0 && !pollTimer) {
-          // Bounded: give up rather than poll forever.
-          const startedAt = Date.now();
-          pollTimer = setInterval(() => {
-            if (Date.now() - startedAt > API_POLL_TIMEOUT_MS) {
-              if (pollTimer) clearInterval(pollTimer);
-              pollTimer = null;
-              return;
-            }
-            if (window.Thunderbolt) {
-              if (pollTimer) clearInterval(pollTimer);
-              pollTimer = null;
-              attach();
-            }
-          }, API_POLL_INTERVAL_MS);
+    const appElements = (): Set<Element> => {
+      const owned = new Set<Element>();
+      const roots = Array.from(
+        document.querySelectorAll("main, header, footer"),
+      );
+      for (const root of roots) {
+        let node: Element | null = root;
+        while (node) {
+          owned.add(node);
+          node = node.parentElement;
         }
-        return;
+        for (const descendant of Array.from(root.querySelectorAll("*"))) {
+          owned.add(descendant);
+        }
       }
+      return owned;
+    };
 
-      const start = () => {
-        if (cancelled) return;
-        observeFooter();
-      };
+    /**
+     * A structural candidate is a zero-area <div> appended to <body> that
+     * this app does not own. Anything that renders site content, or that
+     * the app's own content lives inside, is excluded — which is what
+     * keeps the page, the header, and the footer visible while the widget
+     * is hidden.
+     */
+    const isOverlayCandidate = (node: Node, owned: Set<Element>): boolean => {
+      if (!(node instanceof HTMLDivElement)) return false;
+      if (node.parentElement !== document.body) return false;
+      if (owned.has(node)) return false;
+      // A container that only holds fixed-position content has no box.
+      return node.offsetWidth === 0 && node.offsetHeight === 0;
+    };
 
-      try {
-        const ready = api.ready();
-        if (ready && typeof ready.then === "function") {
-          ready.then(start, start);
-        } else {
-          start();
+    const adoptCandidates = () => {
+      const owned = appElements();
+      for (const host of capturedHosts) host.setAttribute(HOST_ATTR, "");
+      for (const child of Array.from(document.body?.children ?? [])) {
+        if (isOverlayCandidate(child, owned)) {
+          child.setAttribute(HOST_ATTR, "");
         }
-      } catch {
-        start();
       }
     };
 
-    attach();
+    // Install the rule once per document.
+    if (!document.getElementById(STYLE_ID)) {
+      const style = document.createElement("style");
+      style.id = STYLE_ID;
+      style.textContent = GUARD_CSS;
+      document.head.appendChild(style);
+    }
+
+    adoptCandidates();
+    observeFooter();
+
+    // Catch overlay hosts added after this effect (the embed is lazyOnload).
+    bodyObserver = new MutationObserver((mutations) => {
+      const added = mutations.flatMap((mutation) =>
+        Array.from(mutation.addedNodes),
+      );
+      if (added.length === 0) return;
+      const owned = appElements();
+      for (const node of added) {
+        if (isOverlayCandidate(node, owned)) {
+          (node as HTMLDivElement).setAttribute(HOST_ATTR, "");
+        }
+      }
+    });
+    bodyObserver.observe(document.body, { childList: true });
 
     return () => {
-      cancelled = true;
-      if (pollTimer) clearInterval(pollTimer);
       observer?.disconnect();
-      // Do NOT re-open on unmount: leaving the route should not resurrect a
-      // widget the user had closed.
+      bodyObserver?.disconnect();
+      // Never leave the attribute behind for the next page.
+      document.documentElement.removeAttribute(SUPPRESS_ATTR);
     };
   }, []);
 
-  // Renders nothing — this is a behaviour-only component.
+  // Behaviour only — renders nothing.
   return null;
 }
