@@ -5,7 +5,6 @@ import "./globals.css";
 import Image from "next/image";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ThunderboltChat from "@/components/ThunderboltChat";
 import "quill/dist/quill.core.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
@@ -259,7 +258,20 @@ export default async function RootLayout({
           <Toaster position="bottom-left" />
 
           <ScrollToTopBottom />
-          <ThunderboltChat />
+
+          {/*
+            Thunderbolt launcher/pop widget — kept as a raw <script defer>
+            rendered directly in <body> (NOT inside the deprecated next/head
+            block). embed.js runs `const e = document.currentScript; if (!e)
+            return;` so it MUST execute as a parser-inserted script from the
+            initial HTML (currentScript is null for next/script's JS-injected
+            scripts and is unreliable inside next/head). The widget listens for
+            [data-thunderbolt-launcher] clicks to open().
+          */}
+          <script
+            defer
+            src="https://www.thunderbolt.com/gateway/api/v1/thunderbolt-ui/embed.js"
+          />
         </body>
       </html>
     </ClerkProvider>
