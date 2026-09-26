@@ -24,7 +24,7 @@ export default async function PrivacyPage() {
 
   return (
     <div className="min-h-screen bg-white py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-block p-3 bg-primary/10 rounded-full mb-4">

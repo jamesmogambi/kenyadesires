@@ -24,7 +24,7 @@ export default async function TermsPage() {
 
   return (
     <div className="min-h-screen bg-white py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-block p-3 bg-primary/10 rounded-full mb-4">
@@ -261,15 +261,15 @@ export default async function TermsPage() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     Report Illegal Content
                   </h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      You can report illegal content to our contact email:{" "}
-                      <a
-                        href="mailto:support@kenyadesires.xyz"
-                        className="text-primary hover:underline font-medium"
-                      >
-                        support@kenyadesires.xyz
-                      </a>
-                    </p>
+                  <p className="text-gray-600 leading-relaxed">
+                    You can report illegal content to our contact email:{" "}
+                    <a
+                      href="mailto:support@kenyadesires.xyz"
+                      className="text-primary hover:underline font-medium"
+                    >
+                      support@kenyadesires.xyz
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>
