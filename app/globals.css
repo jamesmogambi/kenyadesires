@@ -234,36 +234,3 @@ a[href^="tel"] {
 .animate-slideUp {
   animation: slideUp 0.25s ease-in forwards;
 }
-
-/* Thunderbolt widget - constrain to not cover footer */
-#thunderbolt-launcher,
-[data-thunderbolt-launcher],
-.thunderbolt-widget,
-.thunderbolt-chat,
-[class*="thunderbolt"] {
-  z-index: 9990 !important;
-}
-
-/* Force Thunderbolt launcher to bottom-right, away from footer links */
-#thunderbolt-launcher,
-[data-thunderbolt-launcher] {
-  right: 20px !important;
-  left: auto !important;
-  bottom: 100px !important;
-}
-
-/* Prevent Thunderbolt chat panel from covering footer */
-.thunderbolt-chat-window,
-.thunderbolt-popup,
-.thunderbolt-panel,
-[class*="thunderbolt"][style*="fixed"],
-[class*="thunderbolt"][style*="bottom"] {
-  max-height: calc(100vh - 120px) !important;
-  bottom: 120px !important;
-}
-
-/* Ensure footer links are clickable */
-footer a {
-  position: relative;
-  z-index: 9999;
-}
