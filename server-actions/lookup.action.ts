@@ -124,7 +124,12 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
   ]);
 
   return {
-    practices: practices.map((p) => p.value),
+    // `getPracticesFromCleanedEscorts` is the one lookup that returns
+    // `{ practice, count }`; the other seven return `{ value, count }`.
+    // It keeps that shape because app/sitemap.ts and
+    // components/FileInputInitializer.tsx both read `.practice` from it, so
+    // the difference is normalised here instead of at the source.
+    practices: practices.map((p) => p.practice),
     massage: massage.map((m) => m.value),
     bdsm: bdsm.map((b) => b.value),
     categories: categories.map((c) => c.value),

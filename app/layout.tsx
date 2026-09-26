@@ -258,7 +258,12 @@ export default async function RootLayout({
             <LocationInitializer
               initialCounties={allCounties.data}
               initialRegions={regions.data}
-              initialLookup={lookup.data}
+              // getAllLookupData() returns the lookup object flat
+              // ({ practices, massage, bdsm, ... }); it has no `data`
+              // wrapper, unlike getAllCounties/getAllRegions above.
+              // Reading `lookup.data` yielded undefined, which silently
+              // skipped LocationInitializer's whole initialLookup effect.
+              initialLookup={lookup}
             />
 
             {/* YouTargets Ad - 300x250 medium rectangle */}
