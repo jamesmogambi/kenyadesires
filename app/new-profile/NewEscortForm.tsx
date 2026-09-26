@@ -134,6 +134,30 @@ const DEFAULT_VALUES = {
   variantAvailability: [],
 };
 
+function convertToFormDefaults(data: NewEscortProfileInput) {
+  return {
+    name: data.name || "",
+    email: data.email || "",
+    street: data.street || "",
+    phone: data.phone || "",
+    whatsappNumber: data.whatsappNumber || "",
+    myAge: data.age || "",
+    myHeight: data.height || "",
+    myBreasts: data.breasts || "",
+    myWeight: data.weight || "",
+    variantAge: data.ageCategory || "",
+    variantGender: "female",
+    monday: data.openingHours?.monday || "",
+    tuesday: data.openingHours?.tuesday || "",
+    wednesday: data.openingHours?.wednesday || "",
+    thursday: data.openingHours?.thursday || "",
+    friday: data.openingHours?.friday || "",
+    saturday: data.openingHours?.saturday || "",
+    sunday: data.openingHours?.sunday || "",
+    variantAvailability: data.availability || [],
+  };
+}
+
 const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fresh, isEscort }: Prop) => {
   const router = useRouter();
 
@@ -159,7 +183,10 @@ const NewEscortForm = ({ className, mode = "create", initialData, agencyId, fres
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: DEFAULT_VALUES,
+    defaultValues:
+      mode === "edit" && initialData
+        ? convertToFormDefaults(initialData)
+        : DEFAULT_VALUES,
   });
 
   const { watch, setValue, formState } = form;
@@ -261,6 +288,11 @@ region,
 
     setHydrated(false);
 
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("storageKey");
+      localStorage.removeItem("form-store");
+      localStorage.removeItem("Setting-selection");
+    }
     setValue("name", name || "");
     setValue("email", email || "");
     setValue("street", street || "");
