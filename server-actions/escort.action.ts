@@ -216,7 +216,10 @@ function convertRowToEscort(row: any): Escort {
     clerkUserId: row.clerk_user_id,
     isAgencyFeatured: row.is_agency_featured,
     isActive: row.is_active,
-    isVerified: row.is_verified,
+    // Boolean(): MySQL tinyint(1) arrives as 0/1, not a boolean. Without
+    // this the value contradicts the `isVerified: boolean` contract, and
+    // `0 && <X/>` in a render tree emits a literal "0" into the HTML.
+    isVerified: Boolean(row.is_verified),
     verificationStatus: row.verification_status,
     verificationDocuments: row.verification_documents,
     isFeatured: row.is_featured,

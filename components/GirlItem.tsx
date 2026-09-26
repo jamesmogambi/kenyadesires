@@ -114,8 +114,13 @@ const GirlItem = ({
         {/* Header - Image */}
         <GirlImageSwiper images={displayImages} priority={priority} />
 
-        {/* Verification badge - only rendered for verified escorts */}
-        {isVerified && (
+        {/* Verification badge - only rendered for verified escorts.
+            Boolean() is required, not cosmetic: `is_verified` is a MySQL
+            tinyint, so it arrives as the number 0 for unverified profiles.
+            `0 && <Badge/>` evaluates to 0, and React renders that as a
+            literal "0" text node — which was rendering a stray 0 above the
+            card footer for every unverified listing. */}
+        {Boolean(isVerified) && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
