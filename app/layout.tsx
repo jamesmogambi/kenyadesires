@@ -28,6 +28,7 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import Script from "next/script";
 import AttributionCapture from "@/components/AttributionCapture";
 import UtmCapture from "@/components/UtmCapture";
+import ThunderboltFooterGuard from "@/components/ThunderboltFooterGuard";
 
 // ✅ Import metadata and structured data from separate files
 import { metadata } from "./config/metadata";
@@ -200,6 +201,9 @@ export default async function RootLayout({
             src="https://www.thunderbolt.com/gateway/api/v1/thunderbolt-ui/embed.js"
             strategy="lazyOnload"
           />
+          {/* Keeps the widget from covering the footer links. Renders
+              nothing and changes no markup. */}
+          <ThunderboltFooterGuard />
 
           <AttributionCapture />
           <UtmCapture />
