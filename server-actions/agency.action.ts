@@ -613,11 +613,16 @@ export async function updateAgency(
 
     const columns = Object.keys(updateData);
     const values = Object.values(updateData);
-    const setClause = columns.map((c, i) => `${c} = $${i + 1}`).join(", ");
+    const setClause = columns
+      .map((c, i) => `\`${c}\` = $${i + 1}`)
+      .join(", ");
+    const params = columns.map((column, i) =>
+      encodeJsonColumn(column, values[i]),
+    );
 
     await executeQuery(
       `UPDATE agencies SET ${setClause} WHERE id = $${columns.length + 1}`,
-      [...values, id],
+      [...params, id],
     );
 
     const slug = existing.slug || id;

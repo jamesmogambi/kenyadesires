@@ -25,7 +25,10 @@ import {
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
 
-// ✅ Force dynamic - no caching
+// Agency data is intentionally never cached: the listing actions issue a plain
+// `executeQuery` per call (no `unstable_cache` / "use cache" / `cacheLife`), so
+// every render reads current rows. The `getCached*` names on some of those actions
+// are historical and misleading — nothing is memoised behind them.
 
 // ============ CONSTANTS ============
 const ITEMS_PER_PAGE = 24;
