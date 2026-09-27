@@ -42,7 +42,8 @@ function convertParams(query: string, params: any[]): { query: string; params: a
 }
 
 /**
- * `escorts`/`agencies` columns that hold JSON in MySQL.
+ * Every column that holds JSON in MySQL, verified against
+ * `information_schema.COLUMNS WHERE DATA_TYPE = 'json'`.
  *
  * `executeQuery` goes through `mysqlPool.query()`, which inlines values into the
  * statement text instead of binding them, and mysql2's array/object formatting is
@@ -51,35 +52,53 @@ function convertParams(query: string, params: any[]): { query: string; params: a
  * and an object renders as `'[object Object]'`. Encoding these columns as JSON
  * text before they reach the driver keeps the generated statement well-formed and
  * the stored data valid JSON.
+ *
+ * Keep this in sync when a JSON column is added — a missing entry reintroduces
+ * the syntax error above rather than failing loudly.
  */
 export const JSON_COLUMNS = new Set([
-  'availability',
+  // escorts
   'labels',
+  'images',
+  'videos',
+  'availability',
   'languages',
   'regions',
+  'locations',
   'practices',
   'bdsm',
   'massage',
   'extra_services',
   'categories',
-  'images',
-  'videos',
-  'locations',
-  'plan_features',
   'opening_hours',
   'rates',
-  'cleaned_images',
   'verification_documents',
   'images_metadata',
-  'social_media',
-  'payment_methods',
+  'cleaned_images',
+  'plan_features',
+  // agencies
   'services',
   'specialties',
+  'gallery',
+  'payment_methods',
+  'social_media',
+  // blog / misc
+  'body',
+  'tags',
+  'details',
+  'metadata',
+  'value',
 ]);
 
-/** JSON-encodes a value destined for a JSON column, leaving other values untouched. */
+/**
+ * JSON-encodes a value destined for a JSON column, leaving other values untouched.
+ *
+ * `null` and `undefined` are passed through rather than encoded, so MySQL stores a
+ * real SQL NULL instead of the four-character JSON string "null".
+ */
 export function encodeJsonColumn(column: string, value: any): any {
   if (!JSON_COLUMNS.has(column)) return value;
+  if (value === null || value === undefined) return value;
   if (typeof value === 'string') return value;
   return JSON.stringify(value);
 }

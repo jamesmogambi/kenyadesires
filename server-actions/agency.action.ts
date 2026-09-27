@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
-import { executeQuery } from "@/lib/neon";
+import { executeQuery, encodeJsonColumn } from "@/lib/neon";
 import { notifyAdminOfAgencyVerification } from "./agency-verification-email";
 import {
   sendWelcomeEmail,
@@ -330,43 +330,91 @@ export async function createAgency(
     const planType = data.planType || "basic";
     const socialMedia = cleanSocialMedia(data.socialMedia);
 
+    // Built as [column, value] pairs rather than a hand-written column list plus
+    // $1..$147 placeholder list: those had drifted out of sync (147 placeholders
+    // for 63 columns, and no value at all for `credits`), which produced a
+    // statement mysql2 could not format. Deriving the placeholders from the
+    // values makes the two impossible to desynchronise, and lets
+    // encodeJsonColumn key off the real column name.
+    const fields: [string, any][] = [
+      ["id", id],
+      ["name", data.name],
+      ["slug", slug],
+      ["description", data.description || ""],
+      ["contact_email", data.contactEmail],
+      ["contact_phone", data.contactPhone],
+      ["whatsapp_phone", data.whatsappPhone || ""],
+      ["website", data.website || ""],
+      ["owner_id", data.ownerId],
+      ["country", "Kenya"],
+      ["county", data.county],
+      ["county_code", data.countyCode || (data.county || "").toLowerCase().replace(/\s+/g, "-")],
+      ["region", data.region],
+      ["town", data.town],
+      ["regions", data.regions || (data.region ? [data.region] : [])],
+      ["primary_region", data.primaryRegion || data.region],
+      ["estate", data.estate || ""],
+      ["address", data.address || ""],
+      ["street", data.street || ""],
+      ["postal_code", data.postalCode || ""],
+      ["business_type", data.businessType || "agency"],
+      ["categories", data.categories || []],
+      ["opening_hours", DEFAULT_OPENING_HOURS],
+      ["services", data.services || []],
+      ["specialties", data.specialties || []],
+      ["is_verified", false],
+      ["verification_status", "pending"],
+      ["verification_documents", data.verificationDocuments || null],
+      ["logo", data.logo || ""],
+      ["cover_image", data.coverImage || ""],
+      ["gallery", data.gallery || []],
+      ["videos", data.videos || []],
+      ["establishment_year", data.establishmentYear || null],
+      ["languages", data.languages?.length ? data.languages : ["English"]],
+      ["payment_methods", data.paymentMethods?.length ? data.paymentMethods : ["Cash", "M-Pesa"]],
+      ["social_media", socialMedia || null],
+      ["plan_type", planType],
+      ["plan_is_active", true],
+      ["plan_activated_at", now],
+      ["plan_expires_at", null],
+      ["plan_features", []],
+      ["plan_max_employees", PLAN_LIMITS[planType].maxEmployees],
+      ["plan_max_gallery_images", PLAN_LIMITS[planType].maxGalleryImages],
+      ["rating", 0],
+      ["total_reviews", 0],
+      ["total_bookings", 0],
+      ["total_views", 0],
+      ["featured_employees_count", 0],
+      ["credits", 10],
+      ["is_active", true],
+      ["is_featured", false],
+      ["utm_source", data.utm_source ?? null],
+      ["utm_medium", data.utm_medium ?? null],
+      ["utm_campaign", data.utm_campaign ?? null],
+      ["utm_content", data.utm_content ?? null],
+      ["utm_term", data.utm_term ?? null],
+      ["utm_id", data.utm_id ?? null],
+      ["utm_source_platform", data.utm_source_platform ?? null],
+      ["landing_page", data.landing_page ?? null],
+      ["first_touch_at", data.first_touch_at ?? null],
+      ["registration_date", data.registration_date || now.toISOString()],
+      ["created_at", now],
+      ["updated_at", now],
+    ];
+
+    const quotedColumns = fields
+      .map(([column]) => `\`${column}\``)
+      .join(", ");
+    const placeholders = fields
+      .map((_, index) => `$${index + 1}`)
+      .join(", ");
+    const params = fields.map(([column, value]) =>
+      encodeJsonColumn(column, value),
+    );
+
     await executeQuery(
-      `INSERT INTO agencies (
-        id, name, slug, description, contact_email, contact_phone, whatsapp_phone, website,
-        owner_id, country, county, county_code, region, town, regions, primary_region,
-        estate, address, street, postal_code, business_type, categories, opening_hours,
-        services, specialties, is_verified, verification_status, verification_documents,
-        logo, cover_image, gallery, videos, establishment_year, languages, payment_methods,
-        social_media, plan_type, plan_is_active, plan_activated_at, plan_expires_at,
-        plan_features, plan_max_employees, plan_max_gallery_images, rating, total_reviews,
-        total_bookings, total_views, featured_employees_count, credits, is_active, is_featured,
-        utm_source, utm_medium, utm_campaign, utm_content, utm_term, utm_id,
-        utm_source_platform, landing_page, first_touch_at, registration_date,
-        created_at, updated_at
-      ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,
-        $25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,
-        $47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$90,$91,$92,$93,$94,$95,$96,$97,$98,$99,$100,$101,$102,$103,$104,$105,$106,$107,$108,$109,$110,$111,$112,$113,$114,$115,$116,$117,$118,$119,$120,$121,$122,$123,$124,$125,$126,$127,$128,$129,$130,$131,$132,$133,$134,$135,$136,$137,$138,$139,$140,$141,$142,$143,$144,$145,$146,$147
-      )`,
-      [
-        id, data.name, slug, data.description || "", data.contactEmail, data.contactPhone, data.whatsappPhone || "", data.website || "",
-        data.ownerId, "Kenya", data.county, data.countyCode || data.county.toLowerCase().replace(/\s+/g, "-"), data.region, data.town,
-        data.regions || (data.region ? [data.region] : []), data.primaryRegion || data.region,
-        data.estate || "", data.address || "", data.street || "", data.postalCode || "",
-        data.businessType || "agency", data.categories || [], JSON.stringify({
-          monday: "9:00 AM - 6:00 PM", tuesday: "9:00 AM - 6:00 PM", wednesday: "9:00 AM - 6:00 PM",
-          thursday: "9:00 AM - 6:00 PM", friday: "9:00 AM - 6:00 PM", saturday: "9:00 AM - 6:00 PM", sunday: "Closed",
-        }),
-        data.services || [], data.specialties || [], false, "pending", data.verificationDocuments || null,
-        data.logo || "", data.coverImage || "", data.gallery || [], data.videos || [],
-        data.establishmentYear || null, data.languages?.length ? data.languages : ["English"], data.paymentMethods?.length ? data.paymentMethods : ["Cash", "M-Pesa"],
-        socialMedia ? JSON.stringify(socialMedia) : null, planType, true, now.toISOString(), null,
-        JSON.stringify([]), PLAN_LIMITS[planType].maxEmployees, PLAN_LIMITS[planType].maxGalleryImages, 0, 0, 0, 0, 0,
-        true, false,
-        data.utm_source, data.utm_medium, data.utm_campaign, data.utm_content, data.utm_term, data.utm_id,
-        data.utm_source_platform, data.landing_page, data.first_touch_at, data.registration_date || now.toISOString(),
-        now.toISOString(), now.toISOString(),
-      ],
+      `INSERT INTO agencies (${quotedColumns}) VALUES (${placeholders})`,
+      params,
     );
 
     await awardAccountCreationCredits(
