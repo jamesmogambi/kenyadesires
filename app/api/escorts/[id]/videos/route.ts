@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { executeQuery } from "@/lib/neon";
+import { executeQuery, encodeJsonColumn } from "@/lib/neon";
 
 export async function POST(
   req: NextRequest,
@@ -38,7 +38,7 @@ export async function POST(
 
     await executeQuery(
       "UPDATE escorts SET videos = $1, updated_at = NOW() WHERE id = $2",
-      [videos, id],
+      [encodeJsonColumn("videos", videos), id],
     );
 
     return NextResponse.json({

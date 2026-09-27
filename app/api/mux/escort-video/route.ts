@@ -1,11 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Mux } from "@mux/mux-node";
-import { executeQuery } from "@/lib/neon";
+import { executeQuery, encodeJsonColumn } from "@/lib/neon";
 
 const muxClient = new Mux({
   tokenId: process.env.MUX_TOKEN_ID!,
   tokenSecret: process.env.MUX_TOKEN_SECRET!,
 });
+
+const UPLOAD_TIMEOUT_MS = 120_000;
+const UPLOAD_ATTEMPTS = 3;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Creates a direct-upload URL and PUTs the video to it.
+ *
+ * The upload target is a signed Mux/GCS URL reached from the server, so the
+ * socket can drop on a transient network fault (ETIMEDOUT/ECONNRESET) with no
+ * code error. A fresh URL is created per attempt because signed upload URLs are
+ * single-use, and the response status is checked: a 4xx/5xx here used to be
+ * ignored, leaving the caller polling for an asset that will never exist.
+ */
+async function uploadToMux(file: File, escortId: string) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= UPLOAD_ATTEMPTS; attempt++) {
+    try {
+      const upload: any = await muxClient.video.uploads.create({
+        new_asset_settings: {
+          playback_policies: ["public"],
+          passthrough: escortId,
+          test: process.env.NODE_ENV !== "production",
+        },
+        cors_origin: "*",
+      });
+
+      const response = await fetch(upload.url!, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: Buffer.from(await file.arrayBuffer()),
+        signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+      });
+
+      if (!response.ok) {
+        const detail = await response.text().catch(() => "");
+        throw new Error(
+          `Mux upload rejected the file: ${response.status} ${response.statusText} ${detail}`.trim(),
+        );
+      }
+
+      return { uploadId: upload.id };
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `Mux upload attempt ${attempt}/${UPLOAD_ATTEMPTS} failed:`,
+        error,
+      );
+      if (attempt < UPLOAD_ATTEMPTS) await sleep(attempt * 1000);
+    }
+  }
+
+  const cause = (lastError as any)?.cause;
+  const code = cause?.code || (lastError as any)?.code;
+  throw new Error(
+    `Failed to upload video to Mux after ${UPLOAD_ATTEMPTS} attempts${
+      code ? ` (${code})` : ""
+    }: ${(lastError as any)?.message || String(lastError)}`,
+  );
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,23 +118,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Escort not found" }, { status: 404 });
     }
 
-    const upload = await muxClient.video.uploads.create({
-      new_asset_settings: {
-        playback_policies: ["public"],
-        passthrough: escortId,
-        test: process.env.NODE_ENV !== "production",
-      },
-      cors_origin: "*",
-    });
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await fetch(upload.url!, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-      },
-      body: buffer,
-    });
+    const { uploadId } = await uploadToMux(file, escortId);
 
     const maxAttempts = 30;
     const pollInterval = 2000;
@@ -81,9 +127,9 @@ export async function POST(req: NextRequest) {
     let assetStatus: string | null = null;
 
     for (let i = 0; i < maxAttempts; i++) {
-      await new Promise((resolve) => setTimeout(resolve, pollInterval));
+      await sleep(pollInterval);
 
-      const uploadStatus = await muxClient.video.uploads.retrieve(upload.id);
+      const uploadStatus = await muxClient.video.uploads.retrieve(uploadId);
 
       if (uploadStatus.status === "asset_created" && uploadStatus.asset_id) {
         assetId = uploadStatus.asset_id;
@@ -111,9 +157,12 @@ export async function POST(req: NextRequest) {
         [escortId],
       );
       const currentVideos: string[] = currentResult[0]?.videos || [];
+      const nextVideos = Array.from(
+        new Set([...currentVideos, playbackId]),
+      );
       await executeQuery(
         "UPDATE escorts SET videos = $1, updated_at = NOW() WHERE id = $2",
-        [[...currentVideos, playbackId], escortId],
+        [encodeJsonColumn("videos", nextVideos), escortId],
       );
 
       return NextResponse.json({
@@ -122,7 +171,7 @@ export async function POST(req: NextRequest) {
         escortId,
         playbackId,
         assetId,
-        uploadId: upload.id,
+        uploadId,
       });
     }
 
@@ -131,7 +180,7 @@ export async function POST(req: NextRequest) {
       message:
         "Video uploaded. Processing in progress. The video will appear once processing is complete.",
       escortId,
-      uploadId: upload.id,
+      uploadId,
       assetId,
       status: assetStatus || "processing",
       playbackId,
