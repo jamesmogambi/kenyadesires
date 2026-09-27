@@ -291,6 +291,25 @@ const AgencyProfileForm = ({
     defaultValues: DEFAULT_VALUES,
   });
 
+  // Re-sync every field from the saved row. `router.refresh()` after a save
+  // re-renders the server component with a fresh `agency`, and this resets the form
+  // to those DB values instead of leaving stale ones on screen. Keyed on
+  // `updatedAt` so unrelated re-renders never discard in-progress edits.
+  const lastSyncedAt = useRef(agency?.updatedAt);
+
+  useEffect(() => {
+    if (!agency?.id) return;
+    if (agency.updatedAt === lastSyncedAt.current) return;
+
+    lastSyncedAt.current = agency.updatedAt;
+
+    form.reset(buildDefaultValues(agency, defaultEmail));
+    setLogoUrl(agency.logo || "");
+    setCoverUrl(agency.coverImage || "");
+    setLogoFile(null);
+    setCoverFile(null);
+  }, [agency?.id, agency?.updatedAt]);
+
   const selectedCounty = form.watch("county");
   const [regionsOpen, setRegionsOpen] = useState(false);
   const [primaryRegionOpen, setPrimaryRegionOpen] = useState(false);
@@ -493,10 +512,28 @@ const AgencyProfileForm = ({
         window.dispatchEvent(new CustomEvent("credits-updated"));
       }
 
-      form.reset(DEFAULT_VALUES);
+      form.reset({
+        ...values,
+        // The server merges the primary region into `regions`; mirror that here so
+        // the form shows what was actually written rather than the pre-save array.
+        regions: payload.regions,
+        planType: payload.planType,
+      });
+
+      // The uploaded URLs are the persisted values now. Keeping them only in the
+      // request payload left `logoUrl`/`coverUrl` on the previous image, so the form
+      // displayed the old picture and the next save wrote the old URL back.
+      setLogoUrl(logo);
+      setCoverUrl(coverImage);
       setLogoFile(null);
       setCoverFile(null);
-      router.push("/administration");
+
+      // Pull the updated row back from the server so the form mirrors the database
+      router.refresh();
+
+      if (!isEdit) {
+        router.push("/administration");
+      }
     } catch (err: any) {
       showAlert(
         err?.message ||
