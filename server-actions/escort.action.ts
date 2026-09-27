@@ -1,7 +1,7 @@
 "use server";
 
 import { sql } from "@/app/lib/db";
-import { executeQuery } from "@/lib/neon";
+import { executeQuery, encodeJsonColumn } from "@/lib/neon";
 
 export interface Location {
   region: string;
@@ -649,125 +649,72 @@ export async function updateEscort(
     const params: any[] = [];
     let paramIndex = 1;
 
-    if (updates.name !== undefined) {
-      setClauses.push(`name = $${paramIndex}`);
-      params.push(updates.name);
+    // Values are JSON-encoded per column so array/object values cannot break the
+    // generated statement; see JSON_COLUMNS/encodeJsonColumn in lib/neon.ts.
+    const setField = (column: string, value: any) => {
+      setClauses.push(`\`${column}\` = $${paramIndex}`);
+      params.push(encodeJsonColumn(column, value));
       paramIndex++;
-    }
-    if (updates.email !== undefined) {
-      setClauses.push(`email = $${paramIndex}`);
-      params.push(updates.email);
-      paramIndex++;
-    }
-    if (updates.street !== undefined) {
-      setClauses.push(`street = $${paramIndex}`);
-      params.push(updates.street);
-      paramIndex++;
-    }
-    if (updates.telephone !== undefined) {
-      setClauses.push(`telephone = $${paramIndex}`);
-      params.push(updates.telephone);
-      paramIndex++;
-    }
-    if (updates.whatsappPhone !== undefined) {
-      setClauses.push(`whatsapp_phone = $${paramIndex}`);
-      params.push(updates.whatsappPhone);
-      paramIndex++;
-    }
-    if (updates.previewPhoto !== undefined) {
-      setClauses.push(`preview_photo = $${paramIndex}`);
-      params.push(updates.previewPhoto);
-      paramIndex++;
-    }
-    if (updates.images !== undefined) {
-      setClauses.push(`images = $${paramIndex}`);
-      params.push(updates.images);
-      paramIndex++;
-    }
-    if (updates.about !== undefined) {
-      setClauses.push(`about = $${paramIndex}`);
-      params.push(updates.about);
-      paramIndex++;
-    }
-    if (updates.age !== undefined) {
-      setClauses.push(`age = $${paramIndex}`);
-      params.push(updates.age);
-      paramIndex++;
-    }
-    if (updates.nationality !== undefined) {
-      setClauses.push(`nationality = $${paramIndex}`);
-      params.push(updates.nationality);
-      paramIndex++;
-    }
-    if (updates.practices !== undefined) {
-      setClauses.push(`practices = $${paramIndex}`);
-      params.push(updates.practices);
-      paramIndex++;
-    }
-    if (updates.bdsm !== undefined) {
-      setClauses.push(`bdsm = $${paramIndex}`);
-      params.push(updates.bdsm);
-      paramIndex++;
-    }
-    if (updates.massage !== undefined) {
-      setClauses.push(`massage = $${paramIndex}`);
-      params.push(updates.massage);
-      paramIndex++;
-    }
-    if (updates.extraServices !== undefined) {
-      setClauses.push(`extra_services = $${paramIndex}`);
-      params.push(updates.extraServices);
-      paramIndex++;
-    }
-    if (updates.categories !== undefined) {
-      setClauses.push(`categories = $${paramIndex}`);
-      params.push(updates.categories);
-      paramIndex++;
-    }
-    if (updates.languages !== undefined) {
-      setClauses.push(`languages = $${paramIndex}`);
-      params.push(updates.languages);
-      paramIndex++;
-    }
-    if (updates.regions !== undefined) {
-      setClauses.push(`regions = $${paramIndex}`);
-      params.push(updates.regions);
-      paramIndex++;
-    }
-    if (updates.primaryRegion !== undefined) {
-      setClauses.push(`primary_region = $${paramIndex}`);
-      params.push(updates.primaryRegion);
-      paramIndex++;
-    }
-    if (updates.county !== undefined) {
-      setClauses.push(`county = $${paramIndex}`);
-      params.push(updates.county);
-      paramIndex++;
-    }
-    if (updates.countyCode !== undefined) {
-      setClauses.push(`county_code = $${paramIndex}`);
-      params.push(updates.countyCode);
-      paramIndex++;
-    }
-    if (updates.isActive !== undefined) {
-      setClauses.push(`is_active = $${paramIndex}`);
-      params.push(updates.isActive);
-      paramIndex++;
-    }
-    if (updates.isVerified !== undefined) {
-      setClauses.push(`is_verified = $${paramIndex}`);
-      params.push(updates.isVerified);
-      paramIndex++;
-    }
-    if (updates.isFeatured !== undefined) {
-      setClauses.push(`is_featured = $${paramIndex}`);
-      params.push(updates.isFeatured);
-      paramIndex++;
-    }
+    };
+
+    if (updates.name !== undefined) setField("name", updates.name);
+    if (updates.email !== undefined) setField("email", updates.email);
+    if (updates.street !== undefined) setField("street", updates.street);
+    if (updates.telephone !== undefined)
+      setField("telephone", updates.telephone);
+    if (updates.whatsappPhone !== undefined)
+      setField("whatsapp_phone", updates.whatsappPhone);
+    if (updates.previewPhoto !== undefined)
+      setField("preview_photo", updates.previewPhoto);
+    if (updates.images !== undefined) setField("images", updates.images);
+    if (updates.videos !== undefined) setField("videos", updates.videos);
+    if (updates.about !== undefined) setField("about", updates.about);
+    if (updates.age !== undefined) setField("age", updates.age);
+    if (updates.bustSize !== undefined)
+      setField("bust_size", updates.bustSize);
+    if (updates.breastSize !== undefined)
+      setField("breast_size", updates.breastSize);
+    if (updates.weight !== undefined) setField("weight", updates.weight);
+    if (updates.nationality !== undefined)
+      setField("nationality", updates.nationality);
+    if (updates.practices !== undefined)
+      setField("practices", updates.practices);
+    if (updates.bdsm !== undefined) setField("bdsm", updates.bdsm);
+    if (updates.massage !== undefined) setField("massage", updates.massage);
+    if (updates.extraServices !== undefined)
+      setField("extra_services", updates.extraServices);
+    if (updates.categories !== undefined)
+      setField("categories", updates.categories);
+    if (updates.languages !== undefined)
+      setField("languages", updates.languages);
+    if (updates.availability !== undefined)
+      setField("availability", updates.availability);
+    if (updates.openingHours !== undefined)
+      setField("opening_hours", updates.openingHours);
+    if (updates.ageCategory !== undefined)
+      setField("age_category", updates.ageCategory);
+    if (updates.character !== undefined)
+      setField("character", updates.character);
+    if (updates.hairColor !== undefined)
+      setField("hair_color", updates.hairColor);
+    if (updates.experience !== undefined)
+      setField("experience", updates.experience);
+    if (updates.regions !== undefined) setField("regions", updates.regions);
+    if (updates.primaryRegion !== undefined)
+      setField("primary_region", updates.primaryRegion);
+    if (updates.county !== undefined) setField("county", updates.county);
+    if (updates.countyCode !== undefined)
+      setField("county_code", updates.countyCode);
+    if (updates.isActive !== undefined)
+      setField("is_active", updates.isActive);
+    if (updates.isVerified !== undefined)
+      setField("is_verified", updates.isVerified);
+    if (updates.isFeatured !== undefined)
+      setField("is_featured", updates.isFeatured);
 
     setClauses.push(`updated_at = NOW()`);
 
-    if (setClauses.length === 0) return;
+    if (setClauses.length === 1) return;
 
     params.push(id);
     const query = `UPDATE escorts SET ${setClauses.join(", ")} WHERE id = $${params.length}`;

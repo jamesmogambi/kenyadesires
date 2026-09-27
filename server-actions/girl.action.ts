@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache";
 import { slugify } from "@/lib/utils";
-import { executeQuery } from "@/lib/neon";
+import { executeQuery, encodeJsonColumn } from "@/lib/neon";
 import { sql } from "@/app/lib/db";
 import {
   Escort,
@@ -413,42 +413,12 @@ export async function saveNewEscortProfile(
     const values: any[] = [];
     let paramIndex = 1;
 
-    // These columns hold JSON in MySQL. mysql2's `query()` inlines values into
-    // the statement text rather than binding them, and its array/object
-    // formatting is not SQL: `[]` renders as nothing (yielding `VALUES (,...`
-    // and a syntax error), a populated array expands to N separate values
-    // (shifting the rest of the tuple), and an object renders as
-    // `'[object Object]'`. Encoding these columns as JSON text first is what
-    // keeps the generated statement well-formed and the stored data valid JSON.
-    const JSON_COLUMNS = new Set([
-      "availability",
-      "languages",
-      "regions",
-      "practices",
-      "bdsm",
-      "massage",
-      "extra_services",
-      "categories",
-      "images",
-      "videos",
-      "locations",
-      "plan_features",
-      "opening_hours",
-      "rates",
-      "labels",
-      "cleaned_images",
-    ]);
-
+    // JSON columns are encoded here; see JSON_COLUMNS/encodeJsonColumn in
+    // lib/neon.ts for why raw arrays and objects cannot be passed through.
     const addField = (column: string, value: any) => {
       if (value === undefined) return;
       columns.push(column);
-      values.push(
-        JSON_COLUMNS.has(column)
-          ? typeof value === "string"
-            ? value
-            : JSON.stringify(value)
-          : value,
-      );
+      values.push(encodeJsonColumn(column, value));
       paramIndex++;
     };
 

@@ -41,6 +41,49 @@ function convertParams(query: string, params: any[]): { query: string; params: a
   return { query: newQuery, params };
 }
 
+/**
+ * `escorts`/`agencies` columns that hold JSON in MySQL.
+ *
+ * `executeQuery` goes through `mysqlPool.query()`, which inlines values into the
+ * statement text instead of binding them, and mysql2's array/object formatting is
+ * not SQL: an empty array renders as nothing (`VALUES (,...`, a syntax error), a
+ * populated array expands to N separate values and shifts the rest of the tuple,
+ * and an object renders as `'[object Object]'`. Encoding these columns as JSON
+ * text before they reach the driver keeps the generated statement well-formed and
+ * the stored data valid JSON.
+ */
+export const JSON_COLUMNS = new Set([
+  'availability',
+  'labels',
+  'languages',
+  'regions',
+  'practices',
+  'bdsm',
+  'massage',
+  'extra_services',
+  'categories',
+  'images',
+  'videos',
+  'locations',
+  'plan_features',
+  'opening_hours',
+  'rates',
+  'cleaned_images',
+  'verification_documents',
+  'images_metadata',
+  'social_media',
+  'payment_methods',
+  'services',
+  'specialties',
+]);
+
+/** JSON-encodes a value destined for a JSON column, leaving other values untouched. */
+export function encodeJsonColumn(column: string, value: any): any {
+  if (!JSON_COLUMNS.has(column)) return value;
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value);
+}
+
 async function executeWithRetry<T>(
   fn: (attempt: number) => Promise<T>,
   maxRetries: number = MAX_QUERY_RETRIES
