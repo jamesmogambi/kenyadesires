@@ -603,7 +603,7 @@ export async function submitEscortVerification(
         updated_at = NOW()
       WHERE id = $${4}`,
       [
-        verificationDocuments,
+        encodeJsonColumn("verification_documents", verificationDocuments),
         "pending",
         false,
         data.escortId,
