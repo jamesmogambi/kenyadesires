@@ -2,6 +2,14 @@
 
 import { sql } from "@/app/lib/db";
 import { executeQuery, encodeJsonColumn } from "@/lib/neon";
+import {
+  REGION_COLUMNS,
+  SEARCHABLE_COLUMNS,
+  SERVICE_COLUMNS,
+  buildAnyColumnCondition,
+  likeTerm,
+  normalizedJsonLike,
+} from "@/lib/escort-filters";
 
 export interface Location {
   region: string;
@@ -286,26 +294,10 @@ function convertRowToEscort(row: any): Escort {
 
 /**
  * JSON columns are matched with LIKE against their lowercased text rather than with
- * `JSON_TABLE`.
- *
- * `JSON_TABLE` in a *correlated* subquery does not correlate on MySQL 8.0.46: the
- * same predicate written as a JOIN extracts 24,160 rows from `escorts`, but the
- * `EXISTS (SELECT 1 FROM JSON_TABLE(e.practices, ...))` form silently matches
- * nothing. Every service/region filter was built on that form, so it returned an
- * empty result set instead of an error.
- *
- * `JSON_SEARCH` does work but compares case-sensitively here (`'%OWO%'` matches 742
- * rows, `'%owo%'` matches 0), which is too fragile for user-supplied terms.
- *
- * `-` and `_` fold to spaces so a stored slug like `nairobi_kilimani` matches the
- * display name "Kilimani".
+ * `JSON_TABLE`; the rationale and the MySQL correlation bug behind that choice live
+ * in `lib/escort-filters.ts`, which is shared with the cleaned-image listing path so
+ * /search and /girls filter identically.
  */
-function normalizedJsonLike(column: string, placeholder: number): string {
-  return `REPLACE(REPLACE(LOWER(COALESCE(${column}, '')), '-', ' '), '_', ' ') LIKE $${placeholder}`;
-}
-
-const SERVICE_COLUMNS = ["practices", "bdsm", "massage", "extra_services"];
-
 function buildWhereClause(
   params: GetEscortsParams,
   paramIndex: number,
@@ -372,60 +364,59 @@ function buildWhereClause(
   // display name ("Kilimani") and `locations` holds per-place town/estate, so all
   // three are searched for a region or town term.
   if (params.region && params.region !== "all") {
-    const term = `%${params.region.toLowerCase().trim()}%`;
-    const columns = ["primary_region", "regions", "locations"];
-    const clauses: string[] = [];
-    for (const column of columns) {
-      clauses.push(normalizedJsonLike(column, paramIndex));
-      params_arr.push(term);
-      paramIndex++;
-    }
-    conditions.push(`(${clauses.join(" OR ")})`);
+    const built = buildAnyColumnCondition(
+      REGION_COLUMNS,
+      params.region,
+      paramIndex,
+    );
+    conditions.push(built.clause);
+    params_arr.push(...built.params);
+    paramIndex = built.nextIndex;
   }
   if (params.town && params.town !== "all") {
     conditions.push(normalizedJsonLike("locations", paramIndex));
-    params_arr.push(`%${params.town.toLowerCase().trim()}%`);
+    params_arr.push(likeTerm(params.town));
     paramIndex++;
   }
   if (params.estate && params.estate !== "all") {
     conditions.push(normalizedJsonLike("locations", paramIndex));
-    params_arr.push(`%${params.estate.toLowerCase().trim()}%`);
+    params_arr.push(likeTerm(params.estate));
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    const term = `%${params.practice.toLowerCase().trim()}%`;
-    const clauses: string[] = [];
-    for (const column of SERVICE_COLUMNS) {
-      clauses.push(normalizedJsonLike(column, paramIndex));
-      params_arr.push(term);
-      paramIndex++;
-    }
-    conditions.push(`(${clauses.join(" OR ")})`);
+    const built = buildAnyColumnCondition(
+      SERVICE_COLUMNS,
+      params.practice,
+      paramIndex,
+    );
+    conditions.push(built.clause);
+    params_arr.push(...built.params);
+    paramIndex = built.nextIndex;
   }
   if (params.practices && params.practices.length > 0) {
     // Every requested service must be present, in any of the service columns
     for (const practice of params.practices) {
       if (!practice || practice === "all") continue;
-      const term = `%${practice.toLowerCase().trim()}%`;
-      const clauses: string[] = [];
-      for (const column of SERVICE_COLUMNS) {
-        clauses.push(normalizedJsonLike(column, paramIndex));
-        params_arr.push(term);
-        paramIndex++;
-      }
-      conditions.push(`(${clauses.join(" OR ")})`);
+      const built = buildAnyColumnCondition(
+        SERVICE_COLUMNS,
+        practice,
+        paramIndex,
+      );
+      conditions.push(built.clause);
+      params_arr.push(...built.params);
+      paramIndex = built.nextIndex;
     }
   }
   if (params.category && params.category !== "all") {
     conditions.push(normalizedJsonLike("categories", paramIndex));
-    params_arr.push(`%${params.category.toLowerCase().trim()}%`);
+    params_arr.push(likeTerm(params.category));
     paramIndex++;
   }
   if (params.categories && params.categories.length > 0) {
     for (const category of params.categories) {
       if (!category || category === "all") continue;
       conditions.push(normalizedJsonLike("categories", paramIndex));
-      params_arr.push(`%${category.toLowerCase().trim()}%`);
+      params_arr.push(likeTerm(category));
       paramIndex++;
     }
   }
@@ -433,25 +424,13 @@ function buildWhereClause(
     // Free text spans the profile copy *and* the location columns, so searching
     // "nairobi" returns the escorts in Nairobi rather than only the handful whose
     // name or about happens to contain the word.
-    const searchTerm = `%${params.search.toLowerCase().trim()}%`;
-    const columns = [
-      "name",
-      "username",
-      "about",
-      "county",
-      "county_code",
-      "nationality",
-      "primary_region",
-      "regions",
-      "locations",
-    ];
-    const clauses: string[] = [];
-    for (const column of columns) {
-      clauses.push(normalizedJsonLike(column, paramIndex));
-      params_arr.push(searchTerm);
-      paramIndex++;
-    }
-    conditions.push(`(${clauses.join(" OR ")})`);
+    const built = buildAnyColumnCondition(
+      SEARCHABLE_COLUMNS,
+      params.search,
+      paramIndex,
+    );
+    conditions.push(built.clause);
+    params_arr.push(...built.params);
   }
 
   return {

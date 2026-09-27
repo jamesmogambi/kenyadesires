@@ -2,6 +2,14 @@
 
 import { executeQuery } from "@/lib/neon";
 import { sql } from "@/app/lib/db";
+import {
+  REGION_COLUMNS,
+  SEARCHABLE_COLUMNS,
+  SERVICE_COLUMNS,
+  buildAnyColumnCondition,
+  likeTerm,
+  normalizedJsonLike,
+} from "@/lib/escort-filters";
 import { Escort, GetEscortsParams, GetEscortsResponse, convertQueryDocToEscort } from "./escort.action";
 
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
@@ -78,32 +86,77 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    conditions.push(`EXISTS (SELECT 1 FROM JSON_TABLE(escorts.practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))`);
-    params_arr.push(params.practice);
-    paramIndex++;
+    // See lib/escort-filters.ts: the previous JSON_TABLE-in-EXISTS form never
+    // correlated on MySQL, so this filter silently matched nothing.
+    const built = buildAnyColumnCondition(
+      SERVICE_COLUMNS,
+      params.practice,
+      paramIndex,
+      "escorts.",
+    );
+    conditions.push(built.clause);
+    params_arr.push(...built.params);
+    paramIndex = built.nextIndex;
   }
   if (params.practices && params.practices.length > 0) {
-    conditions.push(`JSON_OVERLAPS(escorts.practices, $${paramIndex})`);
-    params_arr.push(JSON.stringify(params.practices));
+    for (const practice of params.practices) {
+      if (!practice || practice === "all") continue;
+      const built = buildAnyColumnCondition(
+        SERVICE_COLUMNS,
+        practice,
+        paramIndex,
+        "escorts.",
+      );
+      conditions.push(built.clause);
+      params_arr.push(...built.params);
+      paramIndex = built.nextIndex;
+    }
+  }
+  if (params.category && params.category !== "all") {
+    conditions.push(normalizedJsonLike("categories", paramIndex, "escorts."));
+    params_arr.push(likeTerm(params.category));
     paramIndex++;
   }
   if (params.categories && params.categories.length > 0) {
-    conditions.push(`JSON_OVERLAPS(escorts.categories, $${paramIndex})`);
-    params_arr.push(JSON.stringify(params.categories));
+    for (const category of params.categories) {
+      if (!category || category === "all") continue;
+      conditions.push(normalizedJsonLike("categories", paramIndex, "escorts."));
+      params_arr.push(likeTerm(category));
+      paramIndex++;
+    }
+  }
+  if (params.gender && params.gender !== "all") {
+    conditions.push(`LOWER(escorts.gender) = $${paramIndex}`);
+    params_arr.push(params.gender.toLowerCase().trim());
     paramIndex++;
   }
-    if (params.region && params.region !== "all") {
-      conditions.push(`(EXISTS (SELECT 1 FROM JSON_TABLE(escorts.regions, '$[*]' COLUMNS (r VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.r) = LOWER($${paramIndex})) OR lower(escorts.primary_region) = lower($${paramIndex + 1}))`);
-      params_arr.push(params.region, params.region);
-      paramIndex += 2;
-    }
-  if (params.search) {
-    const searchTerm = `%${params.search.toLowerCase()}%`;
-    conditions.push(
-      `(LOWER(escorts.name) LIKE $${paramIndex} OR LOWER(escorts.username) LIKE $${paramIndex} OR LOWER(escorts.about) LIKE $${paramIndex})`,
+  if (params.region && params.region !== "all") {
+    // `regions` stores slugs ("nairobi_kilimani") while `primary_region` stores the
+    // display name, and `locations` carries per-place town/estate.
+    const built = buildAnyColumnCondition(
+      REGION_COLUMNS,
+      params.region,
+      paramIndex,
+      "escorts.",
     );
-    params_arr.push(searchTerm, searchTerm, searchTerm);
+    conditions.push(built.clause);
+    params_arr.push(...built.params);
+    paramIndex = built.nextIndex;
+  }
+  if (params.town && params.town !== "all") {
+    conditions.push(normalizedJsonLike("locations", paramIndex, "escorts."));
+    params_arr.push(likeTerm(params.town));
     paramIndex++;
+  }
+  if (params.search) {
+    const built = buildAnyColumnCondition(
+      SEARCHABLE_COLUMNS,
+      params.search,
+      paramIndex,
+      "escorts.",
+    );
+    conditions.push(built.clause);
+    params_arr.push(...built.params);
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

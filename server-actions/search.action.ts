@@ -1,6 +1,16 @@
 "use server";
 
-import { getEscorts } from "./escort.action";
+/**
+ * Search deliberately goes through `getEscortsWithCleanedImages`, the same action
+ * /girls and the other public listings use, so results carry the dewatermarked
+ * Cloudinary copies (`has_cleaned_images = TRUE`).
+ *
+ * Search used to call `getEscorts`, which selects every active row with no
+ * `has_cleaned_images` restriction. That made it the only listing that fell back to
+ * the raw scraped `images` — watermarked files served from Firebase Storage — and it
+ * surfaced escorts the rest of the site deliberately hides.
+ */
+import { getEscortsWithCleanedImages } from "./cleaned-escorts.action";
 import type { Escort } from "./escort.action";
 import type { GetEscortsParams } from "./escort.action";
 
@@ -69,7 +79,7 @@ export async function searchEscorts(
       params.search = query.trim();
     }
 
-    const result = await getEscorts(params);
+    const result = await getEscortsWithCleanedImages(params);
 
     const totalPages = Math.max(1, Math.ceil(result.total / validLimit));
 
