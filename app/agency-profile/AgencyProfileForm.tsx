@@ -512,6 +512,8 @@ const AgencyProfileForm = ({
         window.dispatchEvent(new CustomEvent("credits-updated"));
       }
 
+      router.push("/administration");
+
       form.reset({
         ...values,
         // The server merges the primary region into `regions`; mirror that here so
@@ -521,19 +523,12 @@ const AgencyProfileForm = ({
       });
 
       // The uploaded URLs are the persisted values now. Keeping them only in the
-      // request payload left `logoUrl`/`coverUrl` on the previous image, so the form
-      // displayed the old picture and the next save wrote the old URL back.
+      // request payload left `logoUrl`/`coverUrl` on the previous image, so returning
+      // to the form showed the old picture and the next save wrote the old URL back.
       setLogoUrl(logo);
       setCoverUrl(coverImage);
       setLogoFile(null);
       setCoverFile(null);
-
-      // Pull the updated row back from the server so the form mirrors the database
-      router.refresh();
-
-      if (!isEdit) {
-        router.push("/administration");
-      }
     } catch (err: any) {
       showAlert(
         err?.message ||
