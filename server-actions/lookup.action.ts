@@ -173,3 +173,38 @@ export async function getAllLookupData(params: Record<string, any> = {}) {
 export async function getPractices(params?: Record<string, any>) {
   return getPracticesFromCleanedEscorts(params || {});
 }
+
+// Canonical service option lists. These read the `lookup_*` tables directly so the
+// selectable options are the canonical catalogue, not values inferred from the
+// rows escorts happen to have selected. Table names are restricted to this
+// union so the identifier can never come from user input.
+type ServiceLookupTable =
+  | "lookup_practices"
+  | "lookup_bdsm"
+  | "lookup_massage";
+
+async function getServiceLookupNames(
+  table: ServiceLookupTable,
+): Promise<string[]> {
+  try {
+    const rows = await executeQuery(
+      `SELECT name FROM ${table} ORDER BY name ASC`,
+    );
+    return rows.map((r: any) => r?.name).filter(Boolean);
+  } catch (error) {
+    console.error(`Error fetching ${table}:`, error);
+    return [];
+  }
+}
+
+export async function getPracticesLookup(): Promise<string[]> {
+  return getServiceLookupNames("lookup_practices");
+}
+
+export async function getMassageTypes(): Promise<string[]> {
+  return getServiceLookupNames("lookup_massage");
+}
+
+export async function getBdsmPractices(): Promise<string[]> {
+  return getServiceLookupNames("lookup_bdsm");
+}

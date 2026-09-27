@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import {
   cn,
@@ -13,12 +13,76 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSettingStore } from "@/store/settingStore";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useVariantStore } from "@/store/variantStore";
-import { getPractices } from "@/server-actions/lookup.action";
+import {
+  getPracticesLookup,
+  getMassageTypes,
+  getBdsmPractices,
+} from "@/server-actions/lookup.action";
 
 const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
   english: "GB",
   swahili: "KE",
   arabic: "SA",
+};
+
+const toNames = (items: any): string[] => {
+  if (!Array.isArray(items)) return [];
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const item of items) {
+    const name =
+      typeof item === "string"
+        ? item
+        : (item?.name ?? item?.value ?? item?.practice ?? "");
+    const trimmed = typeof name === "string" ? name.trim() : "";
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    names.push(trimmed);
+  }
+  return names;
+};
+
+const withSelected = (options: string[], selectedValues: string[]) =>
+  options.concat(
+    toNames(selectedValues).filter((name) => !options.includes(name)),
+  );
+
+interface ServiceChipsProps {
+  items: string[];
+  selectedValues: string[];
+  onToggle: (name: string) => void;
+  breakClassName?: string;
+}
+
+const ServiceChips = ({
+  items,
+  selectedValues,
+  onToggle,
+  breakClassName = "wrap-break-word",
+}: ServiceChipsProps) => {
+  const columns = useMemo(() => splitIntoThreeColumns(items), [items]);
+
+  return (
+    <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
+      {columns.map((column, i) => (
+        <div key={i} className="space-y-3 flex flex-col">
+          {column.map((name) => (
+            <span
+              onClick={() => onToggle(name)}
+              key={name}
+              className={cn(
+                "cursor-pointer font-medium text-white text-center rounded-full p-2.5 line-clamp-2",
+                breakClassName,
+                selectedValues.includes(name) ? "bg-primary" : "bg-gray-1",
+              )}
+            >
+              {formatPracticeName(name)}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 interface Prop {
@@ -31,7 +95,9 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   const variantSettings = useVariantStore();
   const { practices, massage } = variantSettings;
 
-  const [dbPractices, setDbPractices] = useState<any[]>([]);
+  const [dbPractices, setDbPractices] = useState<string[]>([]);
+  const [dbMassages, setDbMassages] = useState<string[]>([]);
+  const [dbBdsm, setDbBdsm] = useState<string[]>([]);
 
   const {
     massages,
@@ -50,36 +116,73 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   } = useSettingStore();
 
   useEffect(() => {
-    async function loadPractices() {
-      try {
-        const res = await getPractices();
-        if (res.success && Array.isArray(res.data)) {
-          const formatted = res.data.map((item: any, idx: number) => ({
-            id: typeof item.id === "number" ? item.id : idx,
-            name: item.name || item.practice || "",
-            label: item.name || item.practice || "",
-            value: item.name || item.practice || "",
-            count: item.count ?? 0,
-          }));
-          setDbPractices(formatted);
-        }
-      } catch (err) {
-        console.error("Failed to load practices from DB:", err);
-      }
+    let cancelled = false;
+
+    async function loadOptions() {
+      const [practiceRes, massageRes, bdsmRes] = await Promise.all([
+        getPracticesLookup().catch((err) => {
+          console.error("Failed to load practices from DB:", err);
+          return [];
+        }),
+        getMassageTypes().catch((err) => {
+          console.error("Failed to load massage types from DB:", err);
+          return [];
+        }),
+        getBdsmPractices().catch((err) => {
+          console.error("Failed to load bdsm practices from DB:", err);
+          return [];
+        }),
+      ]);
+
+      if (cancelled) return;
+
+      setDbPractices(toNames(practiceRes));
+      setDbMassages(toNames(massageRes));
+      setDbBdsm(toNames(bdsmRes));
     }
 
-    loadPractices();
+    loadOptions();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const [practiceCol1, practiceCol2, practiceCol3] =
-    splitIntoThreeColumns(dbPractices);
-
-  const [massageCol1, massageCol2, massageCol3] =
-    splitIntoThreeColumns(massage);
-
-  const [bdsmCol1, bdsmCol2, bdsmCol3] = splitIntoThreeColumns(
-    variantSettings.bdsm,
+  // `variantStore` may hold plain strings or `{ id, name }` records for these
+  // lookups, so normalise both and use it as a fallback while the DB read for
+  // the canonical `lookup_*` table is still in flight.
+  const practiceOptions = useMemo(
+    () => (dbPractices.length ? dbPractices : toNames(practices)),
+    [dbPractices, practices],
   );
+
+  const massageOptions = useMemo(
+    () => (dbMassages.length ? dbMassages : toNames(massage)),
+    [dbMassages, massage],
+  );
+
+  const bdsmOptions = useMemo(
+    () => (dbBdsm.length ? dbBdsm : toNames(variantSettings.bdsm)),
+    [dbBdsm, variantSettings.bdsm],
+  );
+
+  // Values already saved on the profile are appended to the lookup lists so an
+  // existing selection is always visible and highlighted, even when it is no
+  // longer present in the `lookup_*` catalogue.
+  const practiceItems = useMemo(
+    () => withSelected(practiceOptions, selected),
+    [practiceOptions, selected],
+  );
+
+  const massageItems = useMemo(
+    () => withSelected(massageOptions, massages),
+    [massageOptions, massages],
+  );
+
+  const bdsmItems = useMemo(
+    () => withSelected(bdsmOptions, bdsm),
+    [bdsmOptions, bdsm],
+  );
+
   return (
     <section className={cn("w-full ", className)}>
       <h4 className="text-primary text-xl  mb-6 font-bold">
@@ -112,70 +215,26 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent className="mt-4" value="practices">
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
-            {[practiceCol1, practiceCol2, practiceCol3].map((column, i) => (
-              <div key={i} className="space-y-3 flex flex-col">
-                {column.map((item, j) => (
-                  <span
-                    onClick={() => {
-                      toggle(item.name);
-                    }}
-                    key={j}
-                    className={cn(
-                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 wrap-break-word",
-                      selected.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                    )}
-                  >
-                    {formatPracticeName(item.name)}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
+          <ServiceChips
+            items={practiceItems}
+            selectedValues={selected}
+            onToggle={toggle}
+          />
         </TabsContent>
         <TabsContent className="mt-4" value="massage">
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
-            {[massageCol1, massageCol2, massageCol3].map((column, i) => (
-              <div key={i} className="space-y-3 flex flex-col">
-                {column.map((item, j) => (
-                  <span
-                    onClick={() => {
-                      toggleMassage(item.name);
-                    }}
-                    key={j}
-                    className={cn(
-                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 wrap-break-word",
-                      massages.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                    )}
-                  >
-                    {formatPracticeName(item.name)}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
+          <ServiceChips
+            items={massageItems}
+            selectedValues={massages}
+            onToggle={toggleMassage}
+          />
         </TabsContent>
         <TabsContent className="mt-4" value="bdsm">
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-3 p-4">
-            {[bdsmCol1, bdsmCol2, bdsmCol3].map((column, i) => (
-              <div key={i} className="space-y-3 flex flex-col">
-                {column.map((item, j) => (
-                  <span
-                    onClick={() => {
-                      toggleBdsm(item.name);
-                    }}
-                    key={j}
-                    className={cn(
-                      "bg-gray-1  cursor-pointer data-active:bg-primary font-medium text-white  text-center rounded-full p-2.5 line-clamp-2 break-words",
-                      bdsm.includes(item.name) ? "bg-primary" : "bg-gray-1",
-                    )}
-                  >
-                    {formatPracticeName(item.name)}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
+          <ServiceChips
+            items={bdsmItems}
+            selectedValues={bdsm}
+            onToggle={toggleBdsm}
+            breakClassName="break-words"
+          />
         </TabsContent>
       </Tabs>
       {/* // select categories */}
