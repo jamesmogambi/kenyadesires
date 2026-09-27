@@ -181,7 +181,8 @@ export async function getPractices(params?: Record<string, any>) {
 type ServiceLookupTable =
   | "lookup_practices"
   | "lookup_bdsm"
-  | "lookup_massage";
+  | "lookup_massage"
+  | "lookup_categories";
 
 async function getServiceLookupNames(
   table: ServiceLookupTable,
@@ -207,4 +208,8 @@ export async function getMassageTypes(): Promise<string[]> {
 
 export async function getBdsmPractices(): Promise<string[]> {
   return getServiceLookupNames("lookup_bdsm");
+}
+
+export async function getCategoryLookup(): Promise<string[]> {
+  return getServiceLookupNames("lookup_categories");
 }

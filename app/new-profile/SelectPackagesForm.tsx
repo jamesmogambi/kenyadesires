@@ -17,6 +17,7 @@ import {
   getPracticesLookup,
   getMassageTypes,
   getBdsmPractices,
+  getCategoryLookup,
 } from "@/server-actions/lookup.action";
 
 const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
@@ -98,6 +99,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   const [dbPractices, setDbPractices] = useState<string[]>([]);
   const [dbMassages, setDbMassages] = useState<string[]>([]);
   const [dbBdsm, setDbBdsm] = useState<string[]>([]);
+  const [dbCategories, setDbCategories] = useState<string[]>([]);
 
   const {
     massages,
@@ -119,26 +121,32 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     let cancelled = false;
 
     async function loadOptions() {
-      const [practiceRes, massageRes, bdsmRes] = await Promise.all([
-        getPracticesLookup().catch((err) => {
-          console.error("Failed to load practices from DB:", err);
-          return [];
-        }),
-        getMassageTypes().catch((err) => {
-          console.error("Failed to load massage types from DB:", err);
-          return [];
-        }),
-        getBdsmPractices().catch((err) => {
-          console.error("Failed to load bdsm practices from DB:", err);
-          return [];
-        }),
-      ]);
+      const [practiceRes, massageRes, bdsmRes, categoryRes] =
+        await Promise.all([
+          getPracticesLookup().catch((err) => {
+            console.error("Failed to load practices from DB:", err);
+            return [];
+          }),
+          getMassageTypes().catch((err) => {
+            console.error("Failed to load massage types from DB:", err);
+            return [];
+          }),
+          getBdsmPractices().catch((err) => {
+            console.error("Failed to load bdsm practices from DB:", err);
+            return [];
+          }),
+          getCategoryLookup().catch((err) => {
+            console.error("Failed to load categories from DB:", err);
+            return [];
+          }),
+        ]);
 
       if (cancelled) return;
 
       setDbPractices(toNames(practiceRes));
       setDbMassages(toNames(massageRes));
       setDbBdsm(toNames(bdsmRes));
+      setDbCategories(toNames(categoryRes));
     }
 
     loadOptions();
@@ -165,6 +173,11 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     [dbBdsm, variantSettings.bdsm],
   );
 
+  const categoryOptions = useMemo(
+    () => (dbCategories.length ? dbCategories : toNames(variantSettings.categories)),
+    [dbCategories, variantSettings.categories],
+  );
+
   // Values already saved on the profile are appended to the lookup lists so an
   // existing selection is always visible and highlighted, even when it is no
   // longer present in the `lookup_*` catalogue.
@@ -181,6 +194,13 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   const bdsmItems = useMemo(
     () => withSelected(bdsmOptions, bdsm),
     [bdsmOptions, bdsm],
+  );
+
+  // Categories the profile already has stay visible even if the
+  // `lookup_categories` catalogue no longer lists them.
+  const categoryItems = useMemo(
+    () => withSelected(categoryOptions, categories),
+    [categoryOptions, categories],
   );
 
   return (
@@ -243,28 +263,24 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
           Categories where I want to appear:
         </span>
 
-        {variantSettings.categories.map((cat: any) => {
-          const catName = typeof cat === "string" ? cat : cat.name;
-          const catKey = typeof cat === "string" ? cat : (cat.id ?? cat.name);
-          return (
-            <div key={catKey} className="flex items-center mx-4 gap-2">
-              <Checkbox
-                id={String(catKey)}
-                className="size-6 bg-white border-primary"
-                checked={categories.includes(catName)}
-                onCheckedChange={(checked) =>
-                  setCategory(catName, checked === true)
-                }
-              />
-              <label
-                className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
-                htmlFor={String(catKey)}
-              >
-                {catName}
-              </label>
-            </div>
-          );
-        })}
+        {categoryItems.map((catName) => (
+          <div key={catName} className="flex items-center mx-4 gap-2">
+            <Checkbox
+              id={catName}
+              className="size-6 bg-white border-primary"
+              checked={categories.includes(catName)}
+              onCheckedChange={(checked) =>
+                setCategory(catName, checked === true)
+              }
+            />
+            <label
+              className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
+              htmlFor={catName}
+            >
+              {catName}
+            </label>
+          </div>
+        ))}
       </div>
 
       {/* languages */}
