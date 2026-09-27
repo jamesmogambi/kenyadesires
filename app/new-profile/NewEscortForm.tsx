@@ -252,8 +252,11 @@ const NewEscortForm = ({
   // Prepopulate email from Clerk user on create
   useEffect(() => {
     if (mode !== "create" || !isLoaded || !user) return;
+    // Girls added by an agency get their own email, not the agency owner's, so the
+    // field stays blank for them (DEFAULT_VALUES already seeds it as "").
+    if (agencyId) return;
     setValue("email", user.primaryEmailAddress?.emailAddress || "");
-  }, [mode, isLoaded, user, setValue]);
+  }, [mode, isLoaded, user, setValue, agencyId]);
 
   // Prepopulate form and stores when editing
   useEffect(() => {
