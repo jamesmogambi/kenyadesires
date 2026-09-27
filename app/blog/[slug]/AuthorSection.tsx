@@ -32,7 +32,9 @@ const AuthorSection = ({ author, className }: Prop) => {
           alt={name}
           fill // This makes the image fill the parent container
           className="object-cover" // This ensures the image covers the area
-          sizes="100vw" // Tell Next.js this image is full width
+          // The avatar is `basis-full` on mobile but only `md:basis-1/5` from
+          // md up, so 100vw made Next fetch a ~5x oversized image.
+          sizes="(min-width: 768px) 20vw, 100vw"
           priority // Optional: if it's above the fold
           quality={90}
         />

@@ -11,7 +11,11 @@ const nextConfig = {
   },
 
   images: {
-    qualities: [50, 75],
+    // 90 is requested by app/contact/BottomSection.tsx,
+    // app/blog/[slug]/AuthorSection.tsx and components/blog/WhyProfile.tsx.
+    // Next 16 only serves qualities listed here, so omitting it makes those
+    // images fall back to the default and log an unconfigured-quality warning.
+    qualities: [50, 75, 90],
     remotePatterns: [
       // Adult content
       {
