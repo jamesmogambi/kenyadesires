@@ -413,10 +413,42 @@ export async function saveNewEscortProfile(
     const values: any[] = [];
     let paramIndex = 1;
 
+    // These columns hold JSON in MySQL. mysql2's `query()` inlines values into
+    // the statement text rather than binding them, and its array/object
+    // formatting is not SQL: `[]` renders as nothing (yielding `VALUES (,...`
+    // and a syntax error), a populated array expands to N separate values
+    // (shifting the rest of the tuple), and an object renders as
+    // `'[object Object]'`. Encoding these columns as JSON text first is what
+    // keeps the generated statement well-formed and the stored data valid JSON.
+    const JSON_COLUMNS = new Set([
+      "availability",
+      "languages",
+      "regions",
+      "practices",
+      "bdsm",
+      "massage",
+      "extra_services",
+      "categories",
+      "images",
+      "videos",
+      "locations",
+      "plan_features",
+      "opening_hours",
+      "rates",
+      "labels",
+      "cleaned_images",
+    ]);
+
     const addField = (column: string, value: any) => {
       if (value === undefined) return;
       columns.push(column);
-      values.push(value);
+      values.push(
+        JSON_COLUMNS.has(column)
+          ? typeof value === "string"
+            ? value
+            : JSON.stringify(value)
+          : value,
+      );
       paramIndex++;
     };
 
@@ -487,7 +519,11 @@ export async function saveNewEscortProfile(
     addField("registration_date", data.registration_date || now.toISOString());
 
     const placeholders = values.map((_, i) => `$${i + 1}`).join(", ");
-    const query = `INSERT INTO escorts (${columns.join(", ")}) VALUES (${placeholders})`;
+    // Identifiers are backtick-quoted because some column names are MySQL
+    // reserved words (e.g. `character`), which otherwise makes the statement a
+    // syntax error.
+    const quotedColumns = columns.map((column) => `\`${column}\``).join(", ");
+    const query = `INSERT INTO escorts (${quotedColumns}) VALUES (${placeholders})`;
 
     await executeQuery(query, values);
 
