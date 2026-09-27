@@ -106,6 +106,8 @@ export interface Escort {
   street?: string;
   workType: string;
   breastSize?: string;
+  height?: string;
+  breasts?: string;
   ageCategory?: string;
   character?: string;
   hairColor?: string;
@@ -189,6 +191,8 @@ function convertRowToEscort(row: any): Escort {
     bustSize: row.bust_size,
     breastSize: row.bust_size,
     weight: row.weight,
+    height: row.height,
+    breasts: row.breasts,
     zodiacSign: row.zodiac_sign,
     sexualOrientation: row.sexual_orientation,
     gender: row.gender,
@@ -675,6 +679,8 @@ export async function updateEscort(
     if (updates.breastSize !== undefined)
       setField("breast_size", updates.breastSize);
     if (updates.weight !== undefined) setField("weight", updates.weight);
+    if (updates.height !== undefined) setField("height", updates.height);
+    if (updates.breasts !== undefined) setField("breasts", updates.breasts);
     if (updates.nationality !== undefined)
       setField("nationality", updates.nationality);
     if (updates.practices !== undefined)

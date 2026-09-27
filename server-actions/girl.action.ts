@@ -436,6 +436,8 @@ export async function saveNewEscortProfile(
     addField("nationality", data.nationality || "");
     addField("bust_size", data.bustSize || data.breasts || "");
     addField("weight", data.weight || "");
+    addField("height", data.height || "");
+    addField("breasts", data.breasts || "");
     addField("gender", "girl");
     addField("languages", data.languages || []);
     addField("regions", data.regions && data.regions.length > 0 ? data.regions : data.region ? [data.region] : []);

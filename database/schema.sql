@@ -80,6 +80,8 @@ CREATE TABLE IF NOT EXISTS escorts (
     nationality             TEXT DEFAULT '',
     bust_size               TEXT,
     weight                  TEXT,
+    height                  TEXT DEFAULT '',
+    breasts                 TEXT DEFAULT '',
     zodiac_sign             TEXT,
     sexual_orientation      TEXT,
     gender                  TEXT DEFAULT 'girl',

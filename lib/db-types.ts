@@ -23,6 +23,8 @@ export interface DbEscort {
   nationality: string;
   bust_size: string;
   weight: string;
+  height: string;
+  breasts: string;
   zodiac_sign: string;
   sexual_orientation: string;
   gender: string;
