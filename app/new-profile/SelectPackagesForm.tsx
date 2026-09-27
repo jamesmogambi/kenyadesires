@@ -258,29 +258,31 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
         </TabsContent>
       </Tabs>
       {/* // select categories */}
-      <div className="mt-6 px-2 lg:px-4 flex  flex-wrap">
+      <div className="mt-6 px-2 lg:px-4 flex flex-col gap-4">
         <span className="text-primary text-xl text-nowrap  font-bold  lg:text-2xl">
           Categories where I want to appear:
         </span>
 
-        {categoryItems.map((catName) => (
-          <div key={catName} className="flex items-center mx-4 gap-2">
-            <Checkbox
-              id={catName}
-              className="size-6 bg-white border-primary"
-              checked={categories.includes(catName)}
-              onCheckedChange={(checked) =>
-                setCategory(catName, checked === true)
-              }
-            />
-            <label
-              className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
-              htmlFor={catName}
-            >
-              {catName}
-            </label>
-          </div>
-        ))}
+        <div className="flex flex-wrap">
+          {categoryItems.map((catName) => (
+            <div key={catName} className="flex items-center mx-4 gap-2">
+              <Checkbox
+                id={catName}
+                className="size-6 bg-white border-primary"
+                checked={categories.includes(catName)}
+                onCheckedChange={(checked) =>
+                  setCategory(catName, checked === true)
+                }
+              />
+              <label
+                className="lg:text-2xl text-xl text-primary font-bold line-clamp-2"
+                htmlFor={catName}
+              >
+                {catName}
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* languages */}
