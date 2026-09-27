@@ -127,6 +127,7 @@ export interface GetEscortsParams {
   category?: string;
   categories?: string[];
   nationality?: string;
+  gender?: string;
   countyCode?: string;
   minAge?: number;
   maxAge?: number;
@@ -135,6 +136,7 @@ export interface GetEscortsParams {
   isFeatured?: boolean;
   search?: string;
   minRating?: number;
+  hasCleanedImages?: boolean;
   sortBy?:
     | "createdAt"
     | "updatedAt"
@@ -282,6 +284,28 @@ function convertRowToEscort(row: any): Escort {
   };
 }
 
+/**
+ * JSON columns are matched with LIKE against their lowercased text rather than with
+ * `JSON_TABLE`.
+ *
+ * `JSON_TABLE` in a *correlated* subquery does not correlate on MySQL 8.0.46: the
+ * same predicate written as a JOIN extracts 24,160 rows from `escorts`, but the
+ * `EXISTS (SELECT 1 FROM JSON_TABLE(e.practices, ...))` form silently matches
+ * nothing. Every service/region filter was built on that form, so it returned an
+ * empty result set instead of an error.
+ *
+ * `JSON_SEARCH` does work but compares case-sensitively here (`'%OWO%'` matches 742
+ * rows, `'%owo%'` matches 0), which is too fragile for user-supplied terms.
+ *
+ * `-` and `_` fold to spaces so a stored slug like `nairobi_kilimani` matches the
+ * display name "Kilimani".
+ */
+function normalizedJsonLike(column: string, placeholder: number): string {
+  return `REPLACE(REPLACE(LOWER(COALESCE(${column}, '')), '-', ' '), '_', ' ') LIKE $${placeholder}`;
+}
+
+const SERVICE_COLUMNS = ["practices", "bdsm", "massage", "extra_services"];
+
 function buildWhereClause(
   params: GetEscortsParams,
   paramIndex: number,
@@ -334,27 +358,100 @@ function buildWhereClause(
     params_arr.push(params.minRating);
     paramIndex++;
   }
-  if (params.practice && params.practice !== "all") {
-    conditions.push(`EXISTS (SELECT 1 FROM JSON_TABLE(practices, '$[*]' COLUMNS (p VARCHAR(255) PATH '$')) AS jt WHERE LOWER(jt.p) = LOWER($${paramIndex}))`);
-    params_arr.push(params.practice);
+  if (params.gender && params.gender !== "all") {
+    conditions.push(`LOWER(gender) = $${paramIndex}`);
+    params_arr.push(params.gender.toLowerCase().trim());
     paramIndex++;
   }
+  if (params.hasCleanedImages !== undefined) {
+    conditions.push(`has_cleaned_images = $${paramIndex}`);
+    params_arr.push(params.hasCleanedImages);
+    paramIndex++;
+  }
+  // `regions` holds slugs ("nairobi_kilimani") while `primary_region` holds the
+  // display name ("Kilimani") and `locations` holds per-place town/estate, so all
+  // three are searched for a region or town term.
+  if (params.region && params.region !== "all") {
+    const term = `%${params.region.toLowerCase().trim()}%`;
+    const columns = ["primary_region", "regions", "locations"];
+    const clauses: string[] = [];
+    for (const column of columns) {
+      clauses.push(normalizedJsonLike(column, paramIndex));
+      params_arr.push(term);
+      paramIndex++;
+    }
+    conditions.push(`(${clauses.join(" OR ")})`);
+  }
+  if (params.town && params.town !== "all") {
+    conditions.push(normalizedJsonLike("locations", paramIndex));
+    params_arr.push(`%${params.town.toLowerCase().trim()}%`);
+    paramIndex++;
+  }
+  if (params.estate && params.estate !== "all") {
+    conditions.push(normalizedJsonLike("locations", paramIndex));
+    params_arr.push(`%${params.estate.toLowerCase().trim()}%`);
+    paramIndex++;
+  }
+  if (params.practice && params.practice !== "all") {
+    const term = `%${params.practice.toLowerCase().trim()}%`;
+    const clauses: string[] = [];
+    for (const column of SERVICE_COLUMNS) {
+      clauses.push(normalizedJsonLike(column, paramIndex));
+      params_arr.push(term);
+      paramIndex++;
+    }
+    conditions.push(`(${clauses.join(" OR ")})`);
+  }
   if (params.practices && params.practices.length > 0) {
-    conditions.push(`JSON_OVERLAPS(practices, $${paramIndex})`);
-    params_arr.push(JSON.stringify(params.practices));
+    // Every requested service must be present, in any of the service columns
+    for (const practice of params.practices) {
+      if (!practice || practice === "all") continue;
+      const term = `%${practice.toLowerCase().trim()}%`;
+      const clauses: string[] = [];
+      for (const column of SERVICE_COLUMNS) {
+        clauses.push(normalizedJsonLike(column, paramIndex));
+        params_arr.push(term);
+        paramIndex++;
+      }
+      conditions.push(`(${clauses.join(" OR ")})`);
+    }
+  }
+  if (params.category && params.category !== "all") {
+    conditions.push(normalizedJsonLike("categories", paramIndex));
+    params_arr.push(`%${params.category.toLowerCase().trim()}%`);
     paramIndex++;
   }
   if (params.categories && params.categories.length > 0) {
-    conditions.push(`JSON_OVERLAPS(categories, $${paramIndex})`);
-    params_arr.push(JSON.stringify(params.categories));
-    paramIndex++;
+    for (const category of params.categories) {
+      if (!category || category === "all") continue;
+      conditions.push(normalizedJsonLike("categories", paramIndex));
+      params_arr.push(`%${category.toLowerCase().trim()}%`);
+      paramIndex++;
+    }
   }
   if (params.search) {
-    const searchTerm = `%${params.search.toLowerCase()}%`;
-    conditions.push(
-      `(LOWER(name) LIKE $${paramIndex} OR LOWER(username) LIKE $${paramIndex} OR LOWER(about) LIKE $${paramIndex})`,
-    );
-    params_arr.push(searchTerm, searchTerm, searchTerm);
+    // Free text spans the profile copy *and* the location columns, so searching
+    // "nairobi" returns the escorts in Nairobi rather than only the handful whose
+    // name or about happens to contain the word.
+    const searchTerm = `%${params.search.toLowerCase().trim()}%`;
+    const columns = [
+      "name",
+      "username",
+      "about",
+      "county",
+      "county_code",
+      "nationality",
+      "primary_region",
+      "regions",
+      "locations",
+    ];
+    const clauses: string[] = [];
+    for (const column of columns) {
+      clauses.push(normalizedJsonLike(column, paramIndex));
+      params_arr.push(searchTerm);
+      paramIndex++;
+    }
+    conditions.push(`(${clauses.join(" OR ")})`);
   }
 
   return {
@@ -408,16 +505,16 @@ async function getEscorts(params: GetEscortsParams = {}): Promise<GetEscortsResp
   const { page = 1, limit = 20 } = params;
   const validPage = Math.max(1, page);
   const validLimit = Math.min(100, Math.max(1, limit));
-  const startIndex = (validPage - 1) * validLimit;
-  const endIndex = Math.min(startIndex + validLimit, total);
-  const paginated = rows.slice(startIndex, endIndex);
 
+  // `getEscortsBase` already applied LIMIT/OFFSET for this page. Slicing `rows`
+  // again with the same offset dropped every row from page 2 onwards: page 2
+  // received 20 rows and then took rows.slice(20, 40), which is empty.
   return {
-    escorts: paginated.map(convertRowToEscort),
+    escorts: rows.map(convertRowToEscort),
     total,
     page: validPage,
     totalPages: Math.max(1, Math.ceil(total / validLimit)),
-    hasMore: endIndex < total,
+    hasMore: validPage * validLimit < total,
   };
 }
 

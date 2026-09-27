@@ -8,10 +8,18 @@ interface SearchEscortsOptions {
   query: string;
   limit?: number;
   page?: number;
+  sortBy?: GetEscortsParams["sortBy"];
+  sortOrder?: GetEscortsParams["sortOrder"];
   filters?: {
     county?: string;
     region?: string;
     gender?: string;
+    town?: string;
+    practice?: string;
+    category?: string;
+    minAge?: number;
+    maxAge?: number;
+    nationality?: string;
   };
 }
 
@@ -33,7 +41,7 @@ export async function searchEscorts(
   error?: string;
 }> {
   try {
-    const { query, limit = 20, page = 1, filters = {} } = options;
+    const { query, limit = 20, page = 1, sortBy, sortOrder, filters = {} } = options;
     const validPage = Math.max(1, page);
     const validLimit = Math.min(100, Math.max(1, limit));
 
@@ -42,8 +50,20 @@ export async function searchEscorts(
       limit: validLimit,
       county: filters.county,
       region: filters.region,
+      town: filters.town,
+      practice: filters.practice,
+      category: filters.category,
+      nationality: filters.nationality,
+      gender: filters.gender,
+      minAge: filters.minAge,
+      maxAge: filters.maxAge,
       isActive: true,
     };
+
+    if (sortBy) {
+      params.sortBy = sortBy;
+      params.sortOrder = sortOrder === "asc" ? "asc" : "desc";
+    }
 
     if (query?.trim()) {
       params.search = query.trim();

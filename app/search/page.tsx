@@ -15,9 +15,37 @@ interface SearchPageProps {
         county?: string;
         region?: string;
         gender?: string;
+        town?: string;
+        practice?: string;
+        category?: string;
+        nationality?: string;
+        minAge?: string;
+        maxAge?: string;
         sort?: string;
+        order?: string;
     }>;
 }
+
+// The whitelist in getValidSortField, plus the defaults the listing uses
+const SORT_FIELDS = [
+    "createdAt",
+    "updatedAt",
+    "age",
+    "totalViews",
+    "rating",
+    "totalBookings",
+] as const;
+
+type SortField = (typeof SORT_FIELDS)[number];
+
+const toSortField = (value?: string): SortField =>
+    SORT_FIELDS.includes(value as SortField) ? (value as SortField) : "createdAt";
+
+const toNumber = (value?: string): number | undefined => {
+    if (!value) return undefined;
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? undefined : parsed;
+};
 
 export async function generateMetadata({
                                            searchParams,
@@ -51,7 +79,14 @@ export default async function SearchPage({searchParams}: SearchPageProps) {
         county,
         region,
         gender,
-        sort = "relevance",
+        town,
+        practice,
+        category,
+        nationality,
+        minAge,
+        maxAge,
+        sort,
+        order,
     } = params;
 
     const pageNumber = parseInt(page) || 1;
@@ -67,10 +102,18 @@ export default async function SearchPage({searchParams}: SearchPageProps) {
         query: q.trim(),
         page: pageNumber,
         limit,
+        sortBy: toSortField(sort),
+        sortOrder: order === "asc" ? "asc" : "desc",
         filters: {
             county: county || undefined,
             region: region || undefined,
             gender: gender || undefined,
+            town: town || undefined,
+            practice: practice || undefined,
+            category: category || undefined,
+            nationality: nationality || undefined,
+            minAge: toNumber(minAge),
+            maxAge: toNumber(maxAge),
         },
     });
 

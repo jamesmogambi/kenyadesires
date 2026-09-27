@@ -112,6 +112,16 @@ const nextConfig = {
         hostname: "storage.googleapis.com",
         pathname: "/**",
       },
+      {
+        // Firebase Storage *download* host. The entry above only covers the
+        // `storage.googleapis.com` API path, but image URLs stored in
+        // `escorts.images` / `escorts.cleaned_images` are served from
+        // firebasestorage.googleapis.com/v0/b/<bucket>/o/<path>?alt=media&token=…
+        // which is the most common host in the data (3,812 references).
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+        pathname: "/v0/b/**",
+      },
 
       // Local development
       {
