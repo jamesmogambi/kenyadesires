@@ -11,42 +11,27 @@
 -- which are the cup-size options selected in SettingsForm.
 --
 -- MySQL/MariaDB dialect (runtime DB is MySQL, see lib/db.ts).
--- Safe to run multiple times: the guards check for the column first
--- because CREATE TABLE IF NOT EXISTS does not help for ALTER TABLE.
+--
+-- VARCHAR(191), not TEXT: MySQL rejects a DEFAULT on TEXT/BLOB/JSON
+-- columns (error 1101), and VARCHAR(191) is already what the other
+-- scalar text columns on `escorts` use (`bust_size`, `weight`,
+-- `street`).
+--
+-- Applying this: MySQL WorkBench reports "0 rows affected" for DDL,
+-- which is expected — ALTER TABLE changes no rows. Confirm with the
+-- verification query at the bottom.
+--
+-- Re-running raises "Duplicate column name". That is the intended
+-- signal, not a failure: if a column is already present, skip it.
 -- ============================================================
 
-SET @column_exists := (
-  SELECT COUNT(*)
-  FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'escorts'
-    AND COLUMN_NAME = 'height'
-);
+ALTER TABLE `escorts` ADD COLUMN `height` VARCHAR(191) NOT NULL DEFAULT '';
 
-SET @ddl := IF(
-  @column_exists = 0,
-  'ALTER TABLE `escorts` ADD COLUMN `height` TEXT DEFAULT ''''',
-  'SELECT 1'
-);
+ALTER TABLE `escorts` ADD COLUMN `breasts` VARCHAR(191) NOT NULL DEFAULT '';
 
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @column_exists := (
-  SELECT COUNT(*)
-  FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'escorts'
-    AND COLUMN_NAME = 'breasts'
-);
-
-SET @ddl := IF(
-  @column_exists = 0,
-  'ALTER TABLE `escorts` ADD COLUMN `breasts` TEXT DEFAULT ''''',
-  'SELECT 1'
-);
-
-PREPARE stmt FROM @ddl;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- Verification (expect two rows: height, breasts):
+--   SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+--   FROM information_schema.COLUMNS
+--   WHERE TABLE_SCHEMA = DATABASE()
+--     AND TABLE_NAME = 'escorts'
+--     AND COLUMN_NAME IN ('height', 'breasts');
