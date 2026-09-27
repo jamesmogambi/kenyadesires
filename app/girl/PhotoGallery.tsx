@@ -7,7 +7,8 @@ import "swiper/css/pagination";
 import { Swiper, SwiperSlide } from "swiper/react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import ImageLightbox from "@/components/ImageLightbox";
 
 interface Prop {
   photos: string[];
@@ -18,6 +19,8 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mainSwiper, setMainSwiper] = useState<any>(null);
   const thumbSwiperRef = useRef<any | null>(null);
+  // null means the full-screen viewer is closed
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Sync thumbnails when main slide changes
   const handleMainSlideChange = (swiper: any) => {
@@ -66,14 +69,21 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           pagination={{ clickable: true }}
           scrollbar={{ draggable: true }}
           loop={photos.length > 1}
-          onSwiper={setMainSwiper}
+          onSwiper={(instance: any) => {
+            setMainSwiper(instance);
+            // `tap` only fires when the pointer did not travel past the drag
+            // threshold, so swiping between slides never opens the viewer.
+            instance.on("tap", () => setLightboxIndex(instance.activeIndex));
+          }}
           onSlideChange={handleMainSlideChange}
           className="w-full h-full"
         >
           {photos.map((src, index) => (
             <SwiperSlide key={index}>
               <div className="relative w-full h-full bg-transparent">
-                <div className="absolute inset-0 pb-1.25">
+                {/* cursor-zoom-in signals the tap target; the tap itself is handled
+                    by the swiper's `tap` event so a swipe does not open the viewer */}
+                <div className="absolute inset-0 pb-1.25 cursor-zoom-in">
                   <Image
                     src={src}
                     alt={`${title} - Image ${index + 1}`}
@@ -120,6 +130,16 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
         <div className="absolute top-4 hidden right-4 z-10 bg-black/60 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm">
           {currentIndex + 1} / {photos.length}
         </div>
+
+        {/* Expand hint — opens the full-screen viewer for the current slide */}
+        <button
+          type="button"
+          onClick={() => setLightboxIndex(currentIndex)}
+          aria-label="View current image full screen"
+          className="absolute bottom-6 right-4 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-primary"
+        >
+          <Maximize2 size={18} />
+        </button>
       </div>
 
       {/* Thumbnail Navigation */}
@@ -169,6 +189,19 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           </Swiper>
         </div>
       )}
+
+      {/* Full-screen viewer */}
+      <ImageLightbox
+        images={photos}
+        index={lightboxIndex}
+        onClose={() => setLightboxIndex(null)}
+        onIndexChange={(next) => {
+          setCurrentIndex(next);
+          mainSwiper?.slideTo(next);
+          thumbSwiperRef.current?.slideTo(next);
+        }}
+        title={title}
+      />
 
       {/* Custom Styles */}
       <style jsx global>{`
