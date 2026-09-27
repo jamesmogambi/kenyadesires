@@ -96,19 +96,35 @@ export async function getCachedAgencyBySlug(slug: string) {
   try {
     console.log(`🔄 Fetching agency by slug from Neon DB: ${slug}`);
 
+    const columns = AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ");
+
+    // Match the slug first, then fall back to the id. The route is /agencies/[slug]
+    // but links, emails and bookmarks are not consistent about which one they use,
+    // and a mismatch previously surfaced as a 404 because the page cannot tell a
+    // wrong identifier from a missing row.
     const rows: any[] = await executeQuery(
-      `SELECT ${AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ")} FROM agencies WHERE slug = $1 AND is_active = TRUE LIMIT 1`,
+      `SELECT ${columns} FROM agencies WHERE slug = $1 AND is_active = TRUE LIMIT 1`,
       [slug],
     );
 
-    if (rows.length === 0) {
+    let agencyRow = rows[0];
+
+    if (!agencyRow) {
+      const fallback: any[] = await executeQuery(
+        `SELECT ${columns} FROM agencies WHERE id = $1 AND is_active = TRUE LIMIT 1`,
+        [slug],
+      );
+      agencyRow = fallback[0];
+    }
+
+    if (!agencyRow) {
       return {
         success: false,
         data: null,
       };
     }
 
-    const agency = mapDbRowToAgency(rows[0]);
+    const agency = mapDbRowToAgency(agencyRow);
 
     return {
       success: true,

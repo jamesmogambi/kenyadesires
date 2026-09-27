@@ -146,7 +146,7 @@ EscortSwiper.displayName = "EscortSwiper";
 
 // ✅ Main component
 export default function AgencyListItem({ agency, className }: Prop) {
-  const { name, coverImage, contactPhone, id } = agency;
+  const { name, coverImage, contactPhone, id, slug } = agency;
 
   // ✅ Initialize state from server-provided escorts to avoid hydration mismatch
   const initialEscorts =
@@ -223,7 +223,7 @@ export default function AgencyListItem({ agency, className }: Prop) {
       {/* Box 1 - Cover Image */}
       <div className="w-full h-150 lg:h-full lg:w-1/2 flex flex-col relative z-20 pointer-events-none">
         <Link
-          href={`/agencies/${id}`}
+          href={`/agencies/${slug || id}`}
           className="absolute inset-0 z-0 pointer-events-auto"
           onClick={(e) => {
             const target = e.target as HTMLElement;
@@ -267,7 +267,7 @@ export default function AgencyListItem({ agency, className }: Prop) {
         {/* Agency Name and Contact */}
         <div className="flex flex-col gap-2 mb-6">
           <Link
-            href={`/agencies/${id}`}
+            href={`/agencies/${slug || id}`}
             className="inline-block pointer-events-auto"
           >
             <h3 className="text-3xl text-primary font-bold">{name}</h3>

@@ -24,7 +24,17 @@ mysqlPool.getConnection()
   .then((conn) => {
     console.log(`\n✅ [${env.toUpperCase()}] MySQL connected successfully`);
     console.log(`   Thread ID: ${conn.threadId}`);
-    console.log(`   Pool: ${mysqlPool._allConnections.length}/${mysqlPool.config.connectionLimit} connections`);
+    // `mysql2/promise` pools wrap the real pool in `.pool`; `_allConnections` and
+    // `.config` only exist on that inner object. Reading them off the promise
+    // wrapper threw a TypeError *inside* this handler, which the `.catch()` below
+    // then reported as "MySQL connection failed" for a connection that had just
+    // succeeded.
+    const inner = (mysqlPool as any).pool ?? mysqlPool;
+    const open = inner._allConnections?.length;
+    const limit = inner.config?.connectionLimit;
+    console.log(
+      `   Pool: ${typeof open === 'number' ? `${open}/${limit}` : `${limit ?? '?'} max`} connections`,
+    );
     conn.release();
   })
   .catch((err) => {
