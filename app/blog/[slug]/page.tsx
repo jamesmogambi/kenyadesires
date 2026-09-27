@@ -25,9 +25,12 @@ export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata,
 ): Promise<Metadata> {
-  try {
-    const { slug } = await params;
+  // `params` must be awaited outside any try/catch. During static generation it
+  // rejects as a request-time bailout, and swallowing that rejection turns a
+  // normal "render on demand" signal into a build error.
+  const { slug } = await params;
 
+  try {
     const post = await getCachedBlogPost(slug);
 
     if (!post) {
@@ -51,9 +54,11 @@ export async function generateMetadata(
 // PAGE COMPONENT
 // ============================================
 const Page = async ({ params }: Props) => {
-  try {
-    const { slug } = await params;
+  // See the note in generateMetadata: awaiting `params` inside the try/catch
+  // would swallow the prerender bailout and report a bogus build failure.
+  const { slug } = await params;
 
+  try {
     const post = await getCachedBlogPost(slug);
 
     if (!post) {

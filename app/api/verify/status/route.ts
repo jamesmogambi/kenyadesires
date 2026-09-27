@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { executeQuery } from "@/lib/neon";
 
@@ -46,6 +46,9 @@ function toUiStatus(
 }
 
 export async function GET() {
+  // Request-time only: stops static generation from invoking this handler.
+  await connection();
+
   try {
     const { userId } = await auth();
     if (!userId) {

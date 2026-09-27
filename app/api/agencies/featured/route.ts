@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { connection, NextRequest, NextResponse } from "next/server";
 import AgencyService from "@/lib/services/agency.service";
 
 export async function GET(request: NextRequest) {
+  // Request-time only: stops static generation from invoking this handler.
+  await connection();
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get("limit") || "10");

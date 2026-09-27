@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { getBlogPostsCountForSitemap } from "@/lib/sanity/queries";
 
 export async function GET() {
+  // Request-time only: stops static generation from invoking this handler.
+  await connection();
+
   try {
     // Check blog posts
     const blogCount = await getBlogPostsCountForSitemap();

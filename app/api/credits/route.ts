@@ -1,9 +1,12 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getCreditRewardRecord } from "@/server-actions/credit-rewards.action";
 import { executeQuery } from "@/lib/neon";
 
 export async function GET(req: Request) {
+  // Request-time only: stops static generation from invoking this handler.
+  await connection();
+
   try {
     const { userId } = await auth();
     if (!userId) {

@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { connection, NextRequest, NextResponse } from "next/server";
 import { getZohoAccessToken } from "@/lib/zoho/auth";
 import { zohoFetch } from "@/lib/zoho/client";
 
 export async function GET(request: NextRequest) {
+  // Request-time only: stops static generation from invoking this handler.
+  await connection();
+
   try {
     const tokenData = await getZohoAccessToken();
 

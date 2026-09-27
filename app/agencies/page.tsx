@@ -1,6 +1,5 @@
 // app/agencies/page.tsx
 import React, { Suspense } from "react";
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
   Breadcrumb,
@@ -288,125 +287,122 @@ export async function generateMetadata(
 // MAIN PAGE COMPONENT
 // ============================================
 const AgenciesPage = async ({ searchParams }: Props) => {
-  try {
-    // ✅ Await searchParams
-    const params = await searchParams;
-    const filterParams = extractFilterParams(params);
-    const currentPage = parsePageNumber(filterParams.page);
+  // `searchParams` must be awaited outside any try/catch. During static
+  // generation it rejects as a request-time bailout, and swallowing that
+  // rejection turns a normal "render on demand" signal into a build error.
+  const params = await searchParams;
+  const filterParams = extractFilterParams(params);
+  const currentPage = parsePageNumber(filterParams.page);
 
-    // ✅ Start the agencies fetch immediately as a promise (enables streaming)
-    // Filters are now applied server-side via Neon DB + field selection
-    // Each agency includes its first 10 escorts pre-loaded for the Swiper
-    const agenciesPromise = getAgenciesWithEscortsFromNeon({
-      page: currentPage,
-      limit: ITEMS_PER_PAGE,
-      county: filterParams.county,
-      region: filterParams.region,
-      business: filterParams.business,
-      verified: filterParams.verified,
-      featured: filterParams.featured,
-      search: filterParams.search,
-    });
+  // ✅ Start the agencies fetch immediately as a promise (enables streaming)
+  // Filters are now applied server-side via Neon DB + field selection
+  // Each agency includes its first 10 escorts pre-loaded for the Swiper
+  const agenciesPromise = getAgenciesWithEscortsFromNeon({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    county: filterParams.county,
+    region: filterParams.region,
+    business: filterParams.business,
+    verified: filterParams.verified,
+    featured: filterParams.featured,
+    search: filterParams.search,
+  });
 
-    // Build title parts for display
-    const { practice, location } = buildTitleParts(filterParams);
+  // Build title parts for display
+  const { practice, location } = buildTitleParts(filterParams);
 
-    const displayTitleParts = [];
-    if (practice) {
-      displayTitleParts.push(practice);
-    } else {
-      displayTitleParts.push("Erotic Businesses");
-    }
-
-    if (location) {
-      displayTitleParts.push(`in ${location}`);
-    } else {
-      displayTitleParts.push("in Kenya");
-    }
-
-    const displayTitle = displayTitleParts.join(" ");
-
-    return (
-      <>
-        {/* Hidden SEO elements */}
-        <div className="sr-only">
-          <h1>
-            {displayTitle} | {SITE_NAME}
-          </h1>
-          <p>
-            Find verified erotic businesses and adult entertainment venues
-            across Kenya. Discreet, professional, and safe environments.
-          </p>
-        </div>
-
-        <div className="min-h-screen bg-transparent">
-          {/* Header Section — renders immediately, no data needed */}
-          <header className="w-full -mt-4 bg-black">
-            <div className="container max-w-2/3 mx-auto px-4 py-6">
-              <AgencyFilterInput className="border-0" />
-            </div>
-          </header>
-
-          {/* Main Content */}
-          <main className="container mx-auto px-4 py-8">
-            {/* Breadcrumb Navigation — renders immediately */}
-            <nav aria-label="Breadcrumb" className="mb-6">
-              <Breadcrumb>
-                <BreadcrumbList className="text-white">
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link
-                        href="/"
-                        className="text-primary hover:text-primary/80 text-lg font-bold"
-                      >
-                        Introduction
-                      </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="text-white">
-                    -
-                  </BreadcrumbSeparator>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link
-                        href="/agencies"
-                        className="text-white hover:text-white/80 text-lg font-bold"
-                      >
-                        Erotic private rooms
-                      </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-            </nav>
-
-            {/* Agency List — streamed via Suspense while data fetches */}
-            <Suspense
-              fallback={
-                <AgenciesLoadingSkeleton
-                  title={displayTitle}
-                  itemCount={ITEMS_PER_PAGE}
-                />
-              }
-            >
-              <AgenciesContent
-                agenciesPromise={agenciesPromise}
-                displayTitle={displayTitle}
-                currentPage={currentPage}
-                itemsPerPage={ITEMS_PER_PAGE}
-              />
-            </Suspense>
-
-            {/* SEO Section — renders immediately */}
-            <SectionArticle />
-          </main>
-        </div>
-      </>
-    );
-  } catch (error) {
-    console.error("Error in AgenciesPage:", error);
-    return notFound();
+  const displayTitleParts = [];
+  if (practice) {
+    displayTitleParts.push(practice);
+  } else {
+    displayTitleParts.push("Erotic Businesses");
   }
+
+  if (location) {
+    displayTitleParts.push(`in ${location}`);
+  } else {
+    displayTitleParts.push("in Kenya");
+  }
+
+  const displayTitle = displayTitleParts.join(" ");
+
+  return (
+    <>
+      {/* Hidden SEO elements */}
+      <div className="sr-only">
+        <h1>
+          {displayTitle} | {SITE_NAME}
+        </h1>
+        <p>
+          Find verified erotic businesses and adult entertainment venues
+          across Kenya. Discreet, professional, and safe environments.
+        </p>
+      </div>
+
+      <div className="min-h-screen bg-transparent">
+        {/* Header Section — renders immediately, no data needed */}
+        <header className="w-full -mt-4 bg-black">
+          <div className="container max-w-2/3 mx-auto px-4 py-6">
+            <AgencyFilterInput className="border-0" />
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          {/* Breadcrumb Navigation — renders immediately */}
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <Breadcrumb>
+              <BreadcrumbList className="text-white">
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      href="/"
+                      className="text-primary hover:text-primary/80 text-lg font-bold"
+                    >
+                      Introduction
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="text-white">
+                  -
+                </BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      href="/agencies"
+                      className="text-white hover:text-white/80 text-lg font-bold"
+                    >
+                      Erotic private rooms
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </nav>
+
+          {/* Agency List — streamed via Suspense while data fetches */}
+          <Suspense
+            fallback={
+              <AgenciesLoadingSkeleton
+                title={displayTitle}
+                itemCount={ITEMS_PER_PAGE}
+              />
+            }
+          >
+            <AgenciesContent
+              agenciesPromise={agenciesPromise}
+              displayTitle={displayTitle}
+              currentPage={currentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
+            />
+          </Suspense>
+
+          {/* SEO Section — renders immediately */}
+          <SectionArticle />
+        </main>
+      </div>
+    </>
+  );
 };
 
 export default AgenciesPage;

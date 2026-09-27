@@ -1,8 +1,11 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 
 
 export async function GET(req: Request) {
+  // Request-time only: stops static generation from invoking this handler.
+  await connection();
+
   try {
     const { userId } = await auth();
     if (!userId) {
