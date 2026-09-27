@@ -9,6 +9,11 @@ import {
 import ReactCountryFlag from "react-country-flag";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 // import { variantSettings } from "@/fixtures/setting";
 import { useSettingStore } from "@/store/settingStore";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -346,33 +351,37 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
 
         <div className="flex-1 flex ">
           {languageItems.map((lang) => (
-            <div
-              key={lang.name}
-              className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
-            >
-              <Checkbox
-                id={lang.name}
-                className="size-6  bg-white border-primary"
-                checked={languages.includes(lang.name)}
-                onCheckedChange={(checked) =>
-                  setLanguage(lang.name, checked === true)
-                }
-              />
-              <label className="lg:hidden line-clamp-2">{lang.name}</label>
-              <label className="hidden lg:inline-block">
-                <ReactCountryFlag
-                  countryCode={
-                    lang.countryCode ||
-                    LANGUAGE_COUNTRY_CODES[lang.name.toLowerCase()] ||
-                    "GB"
-                  }
-                  style={{
-                    fontSize: "2em",
-                  }}
-                  svg
-                />
-              </label>
-            </div>
+            <Tooltip key={lang.name}>
+              <TooltipTrigger asChild>
+                <div className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1">
+                  <Checkbox
+                    id={lang.name}
+                    className="size-6  bg-white border-primary"
+                    checked={languages.includes(lang.name)}
+                    onCheckedChange={(checked) =>
+                      setLanguage(lang.name, checked === true)
+                    }
+                  />
+                  <label className="lg:hidden line-clamp-2">
+                    {lang.name}
+                  </label>
+                  <label className="hidden lg:inline-block">
+                    <ReactCountryFlag
+                      countryCode={
+                        lang.countryCode ||
+                        LANGUAGE_COUNTRY_CODES[lang.name.toLowerCase()] ||
+                        "GB"
+                      }
+                      style={{
+                        fontSize: "2em",
+                      }}
+                      svg
+                    />
+                  </label>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="py-2">{lang.name}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
       </div>
