@@ -18,7 +18,9 @@ import {
   getMassageTypes,
   getBdsmPractices,
   getCategoryLookup,
+  getLanguageLookup,
 } from "@/server-actions/lookup.action";
+import type { LanguageLookupItem } from "@/server-actions/lookup.action";
 
 const LANGUAGE_COUNTRY_CODES: Record<string, string> = {
   english: "GB",
@@ -47,6 +49,35 @@ const withSelected = (options: string[], selectedValues: string[]) =>
   options.concat(
     toNames(selectedValues).filter((name) => !options.includes(name)),
   );
+
+const toLanguageItems = (items: any): LanguageLookupItem[] => {
+  if (!Array.isArray(items)) return [];
+  const seen = new Set<string>();
+  const languages: LanguageLookupItem[] = [];
+  for (const item of items) {
+    const name =
+      typeof item === "string"
+        ? item
+        : ((item?.name ?? "") as string).trim();
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    languages.push({
+      name,
+      slug:
+        (typeof item === "object" ? (item?.slug ?? "") : "")
+          .toString()
+          .trim() || name.toLowerCase().replace(/\s+/g, "-"),
+      countryCode:
+        typeof item === "object"
+          ? (item?.countryCode ?? item?.country_code ?? "")
+              .toString()
+              .trim()
+              .toUpperCase()
+          : (LANGUAGE_COUNTRY_CODES[name.toLowerCase()] ?? ""),
+    });
+  }
+  return languages;
+};
 
 interface ServiceChipsProps {
   items: string[];
@@ -100,6 +131,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
   const [dbMassages, setDbMassages] = useState<string[]>([]);
   const [dbBdsm, setDbBdsm] = useState<string[]>([]);
   const [dbCategories, setDbCategories] = useState<string[]>([]);
+  const [dbLanguages, setDbLanguages] = useState<LanguageLookupItem[]>([]);
 
   const {
     massages,
@@ -121,7 +153,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     let cancelled = false;
 
     async function loadOptions() {
-      const [practiceRes, massageRes, bdsmRes, categoryRes] =
+      const [practiceRes, massageRes, bdsmRes, categoryRes, languageRes] =
         await Promise.all([
           getPracticesLookup().catch((err) => {
             console.error("Failed to load practices from DB:", err);
@@ -139,6 +171,10 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
             console.error("Failed to load categories from DB:", err);
             return [];
           }),
+          getLanguageLookup().catch((err) => {
+            console.error("Failed to load languages from DB:", err);
+            return [];
+          }),
         ]);
 
       if (cancelled) return;
@@ -147,6 +183,7 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
       setDbMassages(toNames(massageRes));
       setDbBdsm(toNames(bdsmRes));
       setDbCategories(toNames(categoryRes));
+      setDbLanguages(toLanguageItems(languageRes));
     }
 
     loadOptions();
@@ -178,6 +215,14 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     [dbCategories, variantSettings.categories],
   );
 
+  const languageOptions = useMemo(
+    () =>
+      dbLanguages.length
+        ? dbLanguages
+        : toLanguageItems(variantSettings.languages),
+    [dbLanguages, variantSettings.languages],
+  );
+
   // Values already saved on the profile are appended to the lookup lists so an
   // existing selection is always visible and highlighted, even when it is no
   // longer present in the `lookup_*` catalogue.
@@ -202,6 +247,16 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
     () => withSelected(categoryOptions, categories),
     [categoryOptions, categories],
   );
+
+  // Languages already saved on the profile stay visible even if the
+  // `lookup_languages` catalogue no longer lists them.
+  const languageItems = useMemo(() => {
+    const known = new Set(languageOptions.map((l) => l.name));
+    const extras = toLanguageItems(
+      languages.filter((name) => !known.has(name)),
+    );
+    return languageOptions.concat(extras);
+  }, [languageOptions, languages]);
 
   return (
     <section className={cn("w-full ", className)}>
@@ -290,40 +345,35 @@ const SelectPackagesForm = ({ form, className }: Prop) => {
         <span className="text-white/50 font-bold  text-lg">Languages:</span>
 
         <div className="flex-1 flex ">
-          {variantSettings.languages
-            .filter((lang: any) =>
-              ["english", "swahili", "arabic"].includes(
-                (lang.name || "").toLowerCase(),
-              ),
-            )
-            .map((lang: any) => (
-              <div
-                key={lang.name}
-                className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
-              >
-                <Checkbox
-                  id={lang.name}
-                  className="size-6  bg-white border-primary"
-                  checked={languages.includes(lang.name)}
-                  onCheckedChange={(checked) =>
-                    setLanguage(lang.name, checked === true)
+          {languageItems.map((lang) => (
+            <div
+              key={lang.name}
+              className="flex flex-row flex-wrap lg:flex-nowrap items-center mx-4 mr-6 lg:gap-2 gap-1"
+            >
+              <Checkbox
+                id={lang.name}
+                className="size-6  bg-white border-primary"
+                checked={languages.includes(lang.name)}
+                onCheckedChange={(checked) =>
+                  setLanguage(lang.name, checked === true)
+                }
+              />
+              <label className="lg:hidden line-clamp-2">{lang.name}</label>
+              <label className="hidden lg:inline-block">
+                <ReactCountryFlag
+                  countryCode={
+                    lang.countryCode ||
+                    LANGUAGE_COUNTRY_CODES[lang.name.toLowerCase()] ||
+                    "GB"
                   }
+                  style={{
+                    fontSize: "2em",
+                  }}
+                  svg
                 />
-                <label className="lg:hidden line-clamp-2">{lang.name}</label>
-                <label className="hidden lg:inline-block">
-                  <ReactCountryFlag
-                    countryCode={
-                      LANGUAGE_COUNTRY_CODES[(lang.name || "").toLowerCase()] ||
-                      "GB"
-                    }
-                    style={{
-                      fontSize: "2em",
-                    }}
-                    svg
-                  />
-                </label>
-              </div>
-            ))}
+              </label>
+            </div>
+          ))}
         </div>
       </div>
     </section>

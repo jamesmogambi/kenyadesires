@@ -213,3 +213,27 @@ export async function getBdsmPractices(): Promise<string[]> {
 export async function getCategoryLookup(): Promise<string[]> {
   return getServiceLookupNames("lookup_categories");
 }
+
+export interface LanguageLookupItem {
+  name: string;
+  slug: string;
+  countryCode: string;
+}
+
+export async function getLanguageLookup(): Promise<LanguageLookupItem[]> {
+  try {
+    const rows = await executeQuery(
+      "SELECT name, slug, country_code FROM lookup_languages ORDER BY sort_order ASC, name ASC",
+    );
+    return rows
+      .map((r: any) => ({
+        name: (r?.name || "").trim(),
+        slug: (r?.slug || "").trim(),
+        countryCode: (r?.country_code || "").trim().toUpperCase(),
+      }))
+      .filter((r) => r.name);
+  } catch (error) {
+    console.error("Error fetching lookup_languages:", error);
+    return [];
+  }
+}

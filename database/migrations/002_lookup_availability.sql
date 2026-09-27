@@ -3,8 +3,11 @@
 -- Canonical availability options offered by the availability
 -- dropdown (app/new-profile/IntroSection.tsx). Seeded with
 -- Incall / outcall / Both so the dropdown is prepopulated.
--- MySQL dialect (runtime DB is MySQL, see lib/db.ts).
--- Safe to run multiple times (IF NOT EXISTS / ON DUPLICATE KEY).
+-- MySQL/MariaDB dialect (runtime DB is MySQL, see lib/db.ts).
+-- Safe to run multiple times: `IF NOT EXISTS` for the table, `INSERT IGNORE`
+-- for the seed. `INSERT IGNORE` rather than `ON DUPLICATE KEY UPDATE` because
+-- the `VALUES (...) AS new` row-alias form is MySQL 8.0.19+ only and is a
+-- syntax error on MariaDB. Re-running will not overwrite edited seed rows.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS `lookup_availability` (
@@ -16,11 +19,8 @@ CREATE TABLE IF NOT EXISTS `lookup_availability` (
   UNIQUE KEY `lookup_availability_slug_key` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `lookup_availability` (`name`, `slug`, `sort_order`)
+INSERT IGNORE INTO `lookup_availability` (`name`, `slug`, `sort_order`)
 VALUES
   ('Incall', 'incall', 1),
   ('outcall', 'outcall', 2),
-  ('Both', 'both', 3) AS new
-ON DUPLICATE KEY UPDATE
-  `name` = new.`name`,
-  `sort_order` = new.`sort_order`;
+  ('Both', 'both', 3);

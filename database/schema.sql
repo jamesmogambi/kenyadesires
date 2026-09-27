@@ -504,6 +504,14 @@ CREATE TABLE IF NOT EXISTS lookup_massage (
     slug    TEXT UNIQUE NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS lookup_languages (
+    id           TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+    name         TEXT NOT NULL,
+    slug         TEXT UNIQUE NOT NULL,
+    country_code TEXT,
+    sort_order   INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS lookup_extra_services (
     id      TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
     name    TEXT NOT NULL,
