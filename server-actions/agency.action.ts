@@ -2,6 +2,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
@@ -173,6 +174,53 @@ export async function getAgencyByOwnerId(
     return mapDbRowToAgency(rows[0]);
   } catch (error) {
     console.error("Error fetching agency by owner:", error);
+    return null;
+  }
+}
+
+/** True when the signed-in Clerk user has an admin role */
+export const isAdminUser = async (): Promise<boolean> => {
+  try {
+    const { userId } = await auth();
+    if (!userId) return false;
+
+    const user = await currentUser();
+    const metadataRole = user?.unsafeMetadata?.role as string | undefined;
+
+    if (metadataRole === "admin" || metadataRole === "superadmin") {
+      return true;
+    }
+
+    const rows: any[] = await executeQuery(
+      `SELECT role FROM users WHERE clerk_user_id = $1 OR id = $1 LIMIT 1`,
+      [userId],
+    );
+
+    const role = rows[0]?.role as string | undefined;
+
+    return role === "admin" || role === "superadmin";
+  } catch {
+    return false;
+  }
+};
+
+// ============================================
+// GET AGENCY BY ID
+// ============================================
+export async function getAgencyById(id: string): Promise<IAgency | null> {
+  try {
+    if (!id) return null;
+
+    const rows: any[] = await executeQuery(
+      `SELECT ${AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ")} FROM agencies WHERE id = $1 LIMIT 1`,
+      [id],
+    );
+
+    if (rows.length === 0) return null;
+
+    return mapDbRowToAgency(rows[0]);
+  } catch (error) {
+    console.error("Error fetching agency by id:", error);
     return null;
   }
 }
@@ -496,10 +544,14 @@ export async function updateAgency(
     }
 
     if (existing.owner_id !== data.ownerId) {
-      return {
-        success: false,
-        error: "You are not allowed to edit this agency",
-      };
+      const callerIsAdmin = await isAdminUser();
+
+      if (!callerIsAdmin) {
+        return {
+          success: false,
+          error: "You are not allowed to edit this agency",
+        };
+      }
     }
 
     const { ownerId, planType, openingHours, socialMedia, ...rest } = data as any;
