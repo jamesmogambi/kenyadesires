@@ -91,15 +91,27 @@ function getStatusConfig(status: VerificationStatus) {
 export default function VerifyDonePage() {
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStatus() {
       try {
-        const res = await fetch("/api/verify/status");
+        const res = await fetch("/api/verify/status", { cache: "no-store" });
         const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || `Request failed (${res.status})`);
+        }
+
         setResult(data);
       } catch (err) {
+        // Surface why the lookup failed instead of silently rendering
+        // "Unknown Status", which is indistinguishable from a genuinely
+        // unrecognised DB value.
         console.error("Failed to fetch verification status:", err);
+        setFetchError(
+          err instanceof Error ? err.message : "Could not load verification status",
+        );
         setResult({
           status: "unknown",
           decision: null,
@@ -177,6 +189,11 @@ export default function VerifyDonePage() {
               {config.title}
             </h1>
             <p className="text-white/70 mb-6">{config.message}</p>
+            {fetchError && (
+              <p className="text-red-400 text-sm mb-6">
+                Could not load your verification status: {fetchError}
+              </p>
+            )}
             {config.showCredits && (
               <div className="bg-primary/10 rounded-lg p-4 mb-6">
                 <p className="text-primary font-semibold text-lg">

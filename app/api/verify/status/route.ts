@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { executeQuery } from "@/lib/neon";
 
-export const dynamic = "force-dynamic";
-
 /**
  * Statuses the verification UI in app/verify/done/page.tsx knows how to render.
  * The `escorts.verification_status` column stores a smaller vocabulary
@@ -60,11 +58,17 @@ export async function GET() {
     // `submitEscortVerification` takes an escortId, and profiles have been
     // created with the Clerk id or only an email, so try both the same way
     // app/adjustment/page.tsx does.
+    //
+    // Each `$n` must appear exactly once: executeQuery's `convertParams` rewrites
+    // every `$n` to its own `?`, so repeating an index yields more placeholders
+    // than values and mysql2 emits a bare `?` (a syntax error). A null email is
+    // safe here without an `IS NOT NULL` guard because `email = NULL` is never
+    // true.
     const rows: any[] = await executeQuery(
       `SELECT id, verification_status, is_verified, verification_documents, updated_at
        FROM escorts
        WHERE clerk_user_id = $1
-          OR ($2 IS NOT NULL AND email = $2)
+          OR email = $2
        ORDER BY updated_at DESC
        LIMIT 1`,
       [userId, email],
