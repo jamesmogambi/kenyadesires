@@ -73,12 +73,23 @@ const isPublicRoute = createRouteMatcher([
   '/api/verify/(.*)',
 ]);
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
-  return NextResponse.next();
-});
+// Signed-out visitors hitting a protected route land on our own registration
+// page instead of Clerk's hosted sign-in screen. `auth.protect()` only
+// redirects page navigations (`Sec-Fetch-Dest: document` / `Accept: text/html`)
+// to this URL; API and fetch requests keep returning 401/404 JSON, so client
+// fetchers are unaffected. Clerk still appends `redirect_url`, so a user who
+// signs in from here returns to the page they originally asked for.
+const UNAUTHENTICATED_LANDING = '/private-escort-record';
+
+export default clerkMiddleware(
+  async (auth, request) => {
+    if (!isPublicRoute(request)) {
+      await auth.protect();
+    }
+    return NextResponse.next();
+  },
+  { signInUrl: UNAUTHENTICATED_LANDING },
+);
 
 export const config = {
   matcher: [
