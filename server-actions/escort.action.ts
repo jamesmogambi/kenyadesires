@@ -88,8 +88,7 @@ export interface Escort {
   };
   isFeatured: boolean;
   plan: Plan;
-  totalBookings: number;
-  totalReviews: number;
+  totalBookings: number;  totalReviews: number;
   rating: number;
   totalViews: number;
   credits?: number;
@@ -170,6 +169,39 @@ function normalizeArray(val: any): string[] {
   return [String(val)];
 }
 
+/**
+ * `escorts.verification_documents` exists in two shapes in the wild:
+ * `submitEscortVerification` writes snake_case (`id_proof`), while older rows
+ * carry camelCase (`idProof`). Consumers such as EscortVerificationForm read the
+ * camelCase form declared on `Escort`, so normalise here rather than letting the
+ * raw column leak through and silently fail to prepopulate.
+ *
+ * A JSON column can also arrive as a string depending on driver settings, so
+ * parse defensively.
+ */
+function normalizeVerificationDocuments(raw: any): Escort["verificationDocuments"] {
+  if (!raw) return undefined;
+
+  let docs: any = raw;
+  if (typeof raw === "string") {
+    try {
+      docs = JSON.parse(raw);
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof docs !== "object" || docs === null) return undefined;
+
+  const str = (v: any) => (typeof v === "string" && v.trim() ? v : undefined);
+
+  return {
+    idProof: str(docs.idProof) ?? str(docs.id_proof),
+    idBack: str(docs.idBack) ?? str(docs.id_back),
+    selfieWithId: str(docs.selfieWithId) ?? str(docs.selfie_with_id),
+    policeClearance: str(docs.policeClearance) ?? str(docs.police_clearance),
+  };
+}
+
 function convertRowToEscort(row: any): Escort {
   return {
     id: row.id,
@@ -225,7 +257,9 @@ function convertRowToEscort(row: any): Escort {
     // `0 && <X/>` in a render tree emits a literal "0" into the HTML.
     isVerified: Boolean(row.is_verified),
     verificationStatus: row.verification_status,
-    verificationDocuments: row.verification_documents,
+    verificationDocuments: normalizeVerificationDocuments(
+      row.verification_documents,
+    ),
     isFeatured: row.is_featured,
     plan: row.plan,
     totalBookings: row.total_bookings,
