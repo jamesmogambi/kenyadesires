@@ -82,9 +82,3 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_agency_credit_rewards_unique
     ON agency_credit_rewards (agency_id, reward_type);
 
 CREATE INDEX IF NOT EXISTS idx_agency_credit_rewards_agency ON agency_credit_rewards (agency_id);
-
--- ============================================================
--- 4. TRIGGERS for auto updated_at
--- ============================================================
-CREATE TRIGGER IF NOT EXISTS trigger_agency_leads_updated_at
-    BEFORE UPDATE ON agency_leads FOR EACH ROW EXECUTE FUNCTION update_updated_at();

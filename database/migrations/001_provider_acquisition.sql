@@ -135,18 +135,3 @@ CREATE TABLE IF NOT EXISTS provider_events (
 
 CREATE INDEX IF NOT EXISTS idx_provider_events_lead ON provider_events (provider_lead_id);
 CREATE INDEX IF NOT EXISTS idx_provider_events_type ON provider_events (event_type);
-
--- ============================================================
--- 6. TRIGGERS for auto updated_at
--- ============================================================
-CREATE TRIGGER IF NOT EXISTS trigger_provider_leads_updated_at
-    BEFORE UPDATE ON provider_leads FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER IF NOT EXISTS trigger_ts_postbacks_updated_at
-    BEFORE UPDATE ON trafficstars_postbacks FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER IF NOT EXISTS trigger_zoho_sync_queue_updated_at
-    BEFORE UPDATE ON zoho_sync_queue FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-
-CREATE TRIGGER IF NOT EXISTS trigger_provider_referrals_updated_at
-    BEFORE UPDATE ON provider_referrals FOR EACH ROW EXECUTE FUNCTION update_updated_at();
