@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 // has a UNIQUE constraint on (agency_id, reward_type) so the same
 // reward can never be awarded twice even on duplicate calls.
 
-export const AGENCY_CREDIT_REWARDS = {
+const AGENCY_CREDIT_REWARDS = {
   REGISTRATION: {
     type: "agency_registration_reward",
     credits: 100,
@@ -35,7 +35,7 @@ export const AGENCY_CREDIT_REWARDS = {
   },
 } as const;
 
-export type AgencyRewardType = "agency_registration_reward" | "agency_verification_reward";
+type AgencyRewardType = "agency_registration_reward" | "agency_verification_reward";
 
 interface AgencyCreditRewardRow {
   id: string;
