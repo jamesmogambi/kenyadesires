@@ -17,7 +17,13 @@ import {
   awardAccountCreationCredits,
   checkAndAwardProfileCompletion,
   awardVerificationCredits,
+  awardAgencyRegistrationCredits,
+  awardAgencyVerificationCredits,
 } from "./credit-rewards.action";
+import { createAgencyLead, updateAgencyLeadZohoStatus, findAgencyLeadByAgencyId } from "@/lib/db/agency-leads";
+import { createAgencyEvent } from "@/lib/db/agency-events";
+import { createZohoAgencyLead, updateZohoAgencyLead } from "@/lib/zoho/agency-leads";
+import { buildDescription } from "@/lib/provider-acquisition/utils";
 
 interface GetAgenciesServerParams {
   page?: number;
@@ -480,6 +486,95 @@ export async function createAgency(
       `INSERT INTO agencies (${quotedColumns}) VALUES (${placeholders})`,
       params,
     );
+
+    // Campaign 02: Award agency registration credits (+100)
+    await awardAgencyRegistrationCredits(
+      id,
+      data.name,
+      data.contactEmail,
+    );
+
+    // Campaign 02: Create agency lead for CRM sync
+    const agencyLead = await createAgencyLead({
+      agency_id: id,
+      agency_name: data.name,
+      contact_person: data.name,
+      email: data.contactEmail,
+      phone: data.contactPhone || data.whatsappPhone || "",
+      location: data.county,
+      utm_source: data.utm_source,
+      utm_medium: data.utm_medium,
+      utm_campaign: data.utm_campaign,
+      utm_content: data.utm_content,
+      utm_term: data.utm_term,
+      landing_page: data.landing_page,
+      campaign: "agency_acquisition",
+      first_touch_at: data.first_touch_at ? new Date(data.first_touch_at) : undefined,
+    });
+
+    // Campaign 02: Sync to Zoho CRM (NEW AGENCY LEAD stage)
+    try {
+      const zohoLead = await createZohoAgencyLead({
+        First_Name: data.name,
+        Last_Name: "Agency",
+        Company: data.name,
+        Email: data.contactEmail,
+        Phone: data.contactPhone || undefined,
+        Mobile: data.whatsappPhone || undefined,
+        City: data.county,
+        Country: "Kenya",
+        Lead_Source: "Website",
+        Lead_Status: "NEW AGENCY LEAD",
+        Description: buildDescription({
+          utm_source: data.utm_source,
+          utm_medium: data.utm_medium,
+          utm_campaign: data.utm_campaign,
+          click_id: null,
+          referral_code: null,
+          ga_client_id: null,
+          consent_whatsapp: false,
+          consent_email: false,
+          consent_date: null,
+          age_confirmed: true,
+          landing_url: data.landing_page || "/join-agency",
+          tier: "Agency",
+          extra: `CAMPAIGN: Agency Acquisition 02 | AGENCY_ID: ${id}`,
+        }),
+      });
+
+      await updateAgencyLeadZohoStatus(
+        agencyLead.id,
+        zohoLead.id,
+        "synced",
+      );
+
+      // Update agency lead with zoho id
+      await executeQuery(
+        `UPDATE agency_leads SET zoho_lead_id = $1, zoho_status = 'synced', updated_at = NOW() WHERE id = $2`,
+        [zohoLead.id, agencyLead.id],
+      );
+
+      // Campaign 02: Create audit event
+      await createAgencyEvent({
+        agency_lead_id: agencyLead.id,
+        zoho_entity_id: zohoLead.id,
+        agency_id: id,
+        event_type: "registration",
+        event_data: {
+          agency_name: data.name,
+          email: data.contactEmail,
+          zoho_lead_id: zohoLead.id,
+        },
+      });
+    } catch (zohoError: any) {
+      console.error("Zoho CRM sync failed for agency lead:", zohoError);
+      await updateAgencyLeadZohoStatus(
+        agencyLead.id,
+        "",
+        "failed",
+        zohoError?.message || "Zoho sync failed",
+      );
+    }
 
     await awardAccountCreationCredits(
       data.ownerId,

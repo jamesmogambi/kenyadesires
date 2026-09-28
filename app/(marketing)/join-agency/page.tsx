@@ -30,6 +30,8 @@ import {
   Target,
   Building2,
   ChevronDown,
+  Star,
+  CreditCard,
 } from "lucide-react";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -116,14 +118,14 @@ const page = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="max-w-2xl">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Manage Your Agency Profiles.{" "}
-                <span className="text-primary">Grow Your Business.</span>
+                Grow Your Agency's Online Presence.{" "}
+                <span className="text-primary">Manage Multiple Profiles.</span>
               </h1>
               <p className="text-lg md:text-xl text-white/70 mb-8 leading-relaxed">
-                Create a KenyaDesires agency account and manage multiple provider
-                profiles from one centralized platform. Build your portfolio,
-                improve your online presence and create more opportunities to
-                grow your agency and increase your earning potential.
+                Manage multiple profiles from one KenyaDesires agency account.
+                Build your portfolio, improve your online presence and create
+                more opportunities to grow your agency and increase your earning
+                potential.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Button
@@ -134,9 +136,12 @@ const page = () => {
                   <PreserveParamsLink
                     href={AGENCY_ROUTES.REGISTER}
                     trackEvent={AGENCY_EVENTS.CTA_CLICK}
-                    ctaLocation={AGENCY_CTA_LOCATIONS.HERO}
+                    trackEventProperties={{
+                      cta_location: AGENCY_CTA_LOCATIONS.HERO,
+                      cta_text: "JOIN AS AN AGENCY",
+                    }}
                   >
-                    Create Agency Account
+                    JOIN AS AN AGENCY
                     <ArrowRight className="ml-2 size-5" />
                   </PreserveParamsLink>
                 </Button>
@@ -148,10 +153,13 @@ const page = () => {
                 >
                   <PreserveParamsLink
                     href="#how-it-works"
-                    trackEvent={AGENCY_EVENTS.HOW_IT_WORKS_VIEW}
-                    ctaLocation={AGENCY_CTA_LOCATIONS.HERO}
+                    trackEvent={AGENCY_EVENTS.HOW_IT_WORKS_CLICK}
+                    trackEventProperties={{
+                      cta_location: AGENCY_CTA_LOCATIONS.HERO,
+                      cta_text: "LEARN HOW IT WORKS",
+                    }}
                   >
-                    See How It Works
+                    LEARN HOW IT WORKS
                   </PreserveParamsLink>
                 </Button>
               </div>
@@ -395,7 +403,10 @@ const page = () => {
               <PreserveParamsLink
                 href={AGENCY_ROUTES.REGISTER}
                 trackEvent={AGENCY_EVENTS.CTA_CLICK}
-                ctaLocation={AGENCY_CTA_LOCATIONS.EARNING_POTENTIAL}
+                trackEventProperties={{
+                  cta_location: AGENCY_CTA_LOCATIONS.EARNING_POTENTIAL,
+                  cta_text: "Start Growing Your Agency",
+                }}
               >
                 Start Growing Your Agency
                 <ArrowRight className="ml-2 size-5" />
@@ -462,8 +473,11 @@ const page = () => {
             >
               <PreserveParamsLink
                 href={AGENCY_ROUTES.REGISTER}
-                trackEvent={AGENCY_EVENTS.REGISTRATION_START}
-                ctaLocation={AGENCY_CTA_LOCATIONS.HOW_IT_WORKS}
+                trackEvent={AGENCY_EVENTS.CTA_CLICK}
+                trackEventProperties={{
+                  cta_location: AGENCY_CTA_LOCATIONS.HOW_IT_WORKS,
+                  cta_text: "Create Agency Account",
+                }}
               >
                 Create Agency Account
                 <ArrowRight className="ml-2 size-5" />
@@ -669,7 +683,10 @@ const page = () => {
                   <PreserveParamsLink
                     href={AGENCY_ROUTES.REGISTER}
                     trackEvent={AGENCY_EVENTS.CTA_CLICK}
-                    ctaLocation={AGENCY_CTA_LOCATIONS.BENEFITS}
+                    trackEventProperties={{
+                      cta_location: AGENCY_CTA_LOCATIONS.BENEFITS,
+                      cta_text: persona.cta,
+                    }}
                   >
                     {persona.cta}
                   </PreserveParamsLink>
@@ -798,7 +815,10 @@ const page = () => {
               <PreserveParamsLink
                 href={AGENCY_ROUTES.REGISTER}
                 trackEvent={AGENCY_EVENTS.CTA_CLICK}
-                ctaLocation={AGENCY_CTA_LOCATIONS.FINAL_CTA}
+                trackEventProperties={{
+                  cta_location: AGENCY_CTA_LOCATIONS.FINAL_CTA,
+                  cta_text: "Create Agency Account",
+                }}
               >
                 Create Agency Account
                 <ArrowRight className="ml-2 size-5" />
@@ -813,7 +833,10 @@ const page = () => {
               <PreserveParamsLink
                 href={AGENCY_ROUTES.LOGIN}
                 trackEvent={AGENCY_EVENTS.CTA_CLICK}
-                ctaLocation={AGENCY_CTA_LOCATIONS.FINAL_CTA}
+                trackEventProperties={{
+                  cta_location: AGENCY_CTA_LOCATIONS.FINAL_CTA,
+                  cta_text: "Already Have an Account? Log In",
+                }}
               >
                 Already Have an Account? Log In
               </PreserveParamsLink>

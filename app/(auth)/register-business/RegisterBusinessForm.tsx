@@ -1,7 +1,7 @@
 "use client";
 import SectionCard from "@/components/SectionCard";
 import { cn } from "@/lib/utils";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -17,10 +17,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSignUp } from "@clerk/nextjs";
 import { Eye, EyeOff } from "lucide-react";
 import { sendRegistrationEmails } from "@/server-actions/email";
+import { trackAgency } from "@/lib/agency-analytics";
+import { getStoredUtms } from "@/lib/utm";
 import Link from "next/link";
 
 interface Prop {
@@ -66,12 +68,21 @@ export const registrationSchema = z
 
 const RegisterBusinessForm = ({ className }: Prop) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [loading, setLoader] = useState(false);
   const [error, setError] = useState<any>(null);
   const [message, setMessage] = useState<any>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const registrationStartedRef = useRef(false);
+
+  const handleFirstInputFocus = () => {
+    if (registrationStartedRef.current) return;
+    registrationStartedRef.current = true;
+    trackAgency("registration_start", { ...getStoredUtms() });
+  };
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof registrationSchema>>({
@@ -89,7 +100,7 @@ const RegisterBusinessForm = ({ className }: Prop) => {
   const { isLoaded, signUp, setActive } = useSignUp();
 
   // 2. Define a submit handler.
-  // TODO:// HANDLE ESCORT REGISRATION
+  // TODO:// HANDLE AGENCY REGISTRATION
   async function onSubmit(values: z.infer<typeof registrationSchema>) {
     setError(null);
 
@@ -137,6 +148,12 @@ const RegisterBusinessForm = ({ className }: Prop) => {
 
         // Set the session as active
         await setActive({ session: sessionId });
+
+        // Track registration completion (Campaign 02)
+        trackAgency("registration_complete", {
+          provider_id: clerkUserId,
+          ...getStoredUtms(),
+        });
 
         // Send welcome and admin emails (server action)
         await sendRegistrationEmails({

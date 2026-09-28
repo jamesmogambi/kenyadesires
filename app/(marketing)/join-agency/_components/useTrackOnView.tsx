@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AGENCY_EVENTS } from "../constants";
 import { usePostHog } from "posthog-js/react";
+import { trackAgency } from "@/lib/agency-analytics";
 
 export function useTrackOnView(events: string[]) {
   const ref = useRef<HTMLDivElement>(null);
@@ -18,9 +18,12 @@ export function useTrackOnView(events: string[]) {
           if (entry.isIntersecting && !hasTracked.current) {
             hasTracked.current = true;
             events.forEach((event) => {
+              // Fire PostHog (existing tracking)
               if (posthog) {
                 posthog.capture(event);
               }
+              // Fire GA4/GTM via dataLayer (Campaign 02)
+              trackAgency(event as any);
             });
             observer.disconnect();
           }

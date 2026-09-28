@@ -3,7 +3,11 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { sendVerificationNotificationEmail } from "@/server-actions/email";
 import { awardVerificationCredits } from "@/server-actions/credit-rewards.action";
+import { awardAgencyVerificationCredits } from "@/server-actions/credit-rewards.action";
 import { executeQuery } from "@/lib/neon";
+import { createAgencyEvent } from "@/lib/db/agency-events";
+import { findAgencyLeadByAgencyId, updateAgencyLeadZohoStatus } from "@/lib/db/agency-leads";
+import { updateZohoAgencyLead } from "@/lib/zoho/agency-leads";
 
 export async function POST(req: Request) {
   try {
@@ -104,15 +108,54 @@ export async function POST(req: Request) {
     let awardedCredits = 0;
 
     if (status === "verified" && clerkUserId) {
-      const result = await awardVerificationCredits(
-        clerkUserId,
-        email || "",
-        phone,
-        type,
-        id,
-      );
-      if (result.awarded) {
-        awardedCredits = 50;
+      if (type === "agency") {
+        // Campaign 02: Award agency verification credits (+200)
+        const agencyResult = await awardAgencyVerificationCredits(
+          id,
+          existingData.name || "",
+          email || "",
+        );
+        if (agencyResult.awarded) {
+          awardedCredits = 200;
+        }
+
+        // Campaign 02: Sync to Zoho CRM (VERIFIED stage)
+        try {
+          const agencyLead = await findAgencyLeadByAgencyId(id);
+          if (agencyLead?.zoho_lead_id) {
+            await updateZohoAgencyLead(agencyLead.zoho_lead_id, {
+              Lead_Status: "VERIFIED",
+              Description: (agencyLead.zoho_lead_id
+                ? `CAMPAIGN: Agency Acquisition 02 | AGENCY_ID: ${id} | VERIFIED_AT: ${new Date().toISOString()}`
+                : `CAMPAIGN: Agency Acquisition 02 | AGENCY_ID: ${id} | VERIFIED_AT: ${new Date().toISOString()}`),
+            });
+          }
+
+          // Campaign 02: Create audit event
+          await createAgencyEvent({
+            agency_lead_id: agencyLead?.id,
+            agency_id: id,
+            event_type: "verification_complete",
+            event_data: {
+              agency_name: existingData.name,
+              verified_at: new Date().toISOString(),
+              zoho_lead_id: agencyLead?.zoho_lead_id,
+            },
+          });
+        } catch (zohoError: any) {
+          console.error("Zoho CRM sync failed for agency verification:", zohoError);
+        }
+      } else {
+        const result = await awardVerificationCredits(
+          clerkUserId,
+          email || "",
+          phone,
+          type,
+          id,
+        );
+        if (result.awarded) {
+          awardedCredits = 50;
+        }
       }
     }
 

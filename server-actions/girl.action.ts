@@ -21,6 +21,9 @@ import {
   checkAndAwardProfileCompletion,
   awardVerificationCredits,
 } from "./credit-rewards.action";
+import { createAgencyEvent } from "@/lib/db/agency-events";
+import { findAgencyLeadByAgencyId } from "@/lib/db/agency-leads";
+import { updateZohoAgencyLead } from "@/lib/zoho/agency-leads";
 
 async function fetchEscortByIdInternal(id: string): Promise<Escort | null> {
   try {
@@ -536,6 +539,11 @@ export async function saveNewEscortProfile(
       id,
     );
 
+    // Campaign 02: Track agency profile milestones if this is an agency-owned escort
+    if (data.agencyId) {
+      await trackAgencyProfileMilestones(data.agencyId, id, data.name);
+    }
+
     if (data.email) {
       await sendWelcomeEmail(data.email, data.name, "user", 10);
     }
@@ -553,6 +561,135 @@ export async function saveNewEscortProfile(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to save profile",
+    };
+  }
+}
+
+/**
+ * Campaign 02: Track agency profile milestones (3, 5, 10 profiles).
+ * Fires only when the agency actually reaches the milestone.
+ * Uses actual profile count from the backend/database.
+ */
+export async function trackAgencyProfileMilestones(
+  agencyId: string,
+  profileId: string,
+  profileName: string,
+): Promise<void> {
+  try {
+    // Get actual profile count from database
+    const countResult: any[] = await executeQuery(
+      `SELECT COUNT(*) as count FROM escorts WHERE agency_id = $1 AND is_active = TRUE`,
+      [agencyId],
+    );
+    const profileCount = parseInt(countResult[0]?.count || "0", 10);
+
+    // Track profile_added event
+    await createAgencyEvent({
+      agency_id: agencyId,
+      event_type: "profile_added",
+      event_data: {
+        profile_id: profileId,
+        profile_name: profileName,
+        profile_count: profileCount,
+      },
+    });
+
+    // Check milestones (3, 5, 10)
+    const milestones = [3, 5, 10];
+    for (const milestone of milestones) {
+      if (profileCount === milestone) {
+        await createAgencyEvent({
+          agency_id: agencyId,
+          event_type: `profile_${milestone}` as any,
+          event_data: {
+            profile_id: profileId,
+            profile_name: profileName,
+            profile_count: profileCount,
+            milestone_reached: milestone,
+          },
+        });
+
+        // Sync to Zoho CRM
+        try {
+          const agencyLead = await findAgencyLeadByAgencyId(agencyId);
+          if (agencyLead?.zoho_lead_id) {
+            const stageMap: Record<number, string> = {
+              3: "3+ PROFILES",
+              5: "3+ PROFILES",
+              10: "3+ PROFILES",
+            };
+            await updateZohoAgencyLead(agencyLead.zoho_lead_id, {
+              Lead_Status: stageMap[milestone] || "3+ PROFILES",
+            });
+          }
+        } catch (zohoError: any) {
+          console.error("Zoho CRM sync failed for agency milestone:", zohoError);
+        }
+      }
+    }
+  } catch (error: any) {
+    console.error("Error tracking agency profile milestones:", error);
+  }
+}
+
+/**
+ * Campaign 02: Publish an agency-managed profile.
+ * Fires agency_profile_published only when the profile actually becomes published/active.
+ */
+export async function publishAgencyProfile(
+  agencyId: string,
+  profileId: string,
+  profileName: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Verify the profile belongs to this agency
+    const rows: any[] = await executeQuery(
+      `SELECT * FROM escorts WHERE id = $1 AND agency_id = $2 LIMIT 1`,
+      [profileId, agencyId],
+    );
+
+    if (rows.length === 0) {
+      return { success: false, error: "Profile not found or not owned by agency" };
+    }
+
+    // Update profile to published
+    await executeQuery(
+      `UPDATE escorts SET is_active = TRUE, updated_at = NOW() WHERE id = $1`,
+      [profileId],
+    );
+
+    // Track the published event
+    await createAgencyEvent({
+      agency_id: agencyId,
+      event_type: "profile_published",
+      event_data: {
+        profile_id: profileId,
+        profile_name: profileName,
+        published_at: new Date().toISOString(),
+      },
+    });
+
+    // Sync to Zoho CRM (FIRST PROFILE stage)
+    try {
+      const agencyLead = await findAgencyLeadByAgencyId(agencyId);
+      if (agencyLead?.zoho_lead_id) {
+        await updateZohoAgencyLead(agencyLead.zoho_lead_id, {
+          Lead_Status: "FIRST PROFILE",
+        });
+      }
+    } catch (zohoError: any) {
+      console.error("Zoho CRM sync failed for agency profile publish:", zohoError);
+    }
+
+    revalidatePath("/administration");
+    revalidatePath(`/girl/${profileId}`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error publishing agency profile:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to publish profile",
     };
   }
 }
