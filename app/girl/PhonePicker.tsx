@@ -1,3 +1,5 @@
+"use client";
+
 import { cn, convertToLocalPhone, formatKenyanPhoneNumber } from "@/lib/utils";
 import { PhoneCall } from "lucide-react";
 import React from "react";
