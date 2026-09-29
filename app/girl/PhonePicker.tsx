@@ -5,16 +5,17 @@ import React from "react";
 interface Prop {
   className?: string;
   phone: string | null;
+  onClick?: () => void;
 }
 
-const app = null;
-const PhonePicker = ({ phone, className }: Prop) => {
+const PhonePicker = ({ phone, className, onClick }: Prop) => {
   return (
     <div
       className={cn(
         "bg-primary flex p-2 cursor-pointer overflow-ellipsis  items-center gap-3  text-white w-full rounded-full",
         className,
       )}
+      onClick={onClick}
     >
       <div className="rounded-full p-3 bg-white text-primary">
         <PhoneCall className="lg:h-7 lg:w-7 h-5 w-5" />

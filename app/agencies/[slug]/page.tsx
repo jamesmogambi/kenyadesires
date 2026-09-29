@@ -1,11 +1,12 @@
 // app/agencies/[slug]/page.tsx
 import { notFound } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 import { Metadata, ResolvingMetadata } from "next";
 import Header from "./Header";
 import AgencyProfile from "./AgencyDetailCard";
 import { IAgency } from "@/types/agency.types";
 import { getCachedAgencyBySlug } from "@/server-actions/agency.action";
+import { handleProfileView } from "@/lib/customer-analytics";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -147,6 +148,14 @@ const BusinessPage = async ({ params }: PageProps) => {
 
     const agency: IAgency = result.data;
     console.log("Agency data fetched successfully:", agency);
+
+    const location = agency.region || agency.county || "Kenya";
+    const locationSlug = agency.region || agency.county || "kenya";
+
+    // Track agency profile view
+    useEffect(() => {
+      handleProfileView(agency.id, "agency", location, locationSlug);
+    }, [agency.id, location, locationSlug]);
 
     return (
       <div className="w-full lg:max-w-7xl mx-auto p-4 md:p-8 lg:p-12">

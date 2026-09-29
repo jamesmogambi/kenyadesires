@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import GirlFilterInput from "./GirlFIlterInput";
 import ListHeader from "@/components/ListHeader";
 import GirlList from "@/components/GirlList";
@@ -16,6 +16,7 @@ import {
 } from "@/lib/metadata-helper";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 import type { Escort } from "@/server-actions/escort.action";
+import { trackViewLocation } from "@/lib/customer-analytics";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -201,6 +202,14 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
   };
 
   const title = getDynamicTitle();
+
+  useEffect(() => {
+    const location = formattedRegion || formattedCounty || "Kenya";
+    const locationSlug = params.region || params.county || "kenya";
+    if (location !== "Kenya") {
+      trackViewLocation(location, locationSlug, "provider");
+    }
+  }, [formattedRegion, formattedCounty, params.region, params.county]);
 
   let escorts: Escort[] = [];
   let total = 0;

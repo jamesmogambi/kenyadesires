@@ -5,6 +5,7 @@ import AboutTabs from "./AboutTabs";
 import Link from "next/link";
 import { formatSlugToTitle, normalizeArray } from "@/lib/utils";
 import { Escort } from "@/server-actions/escort.action";
+import { trackClickContact, trackClickWhatsApp, determineProfileType } from "@/lib/customer-analytics";
 
 interface Prop {
   girl: Escort;
@@ -20,6 +21,10 @@ const BioSection = ({ girl }: Prop) => {
     primaryRegion,
     regions,
   } = girl;
+
+  const profileId = girl.id;
+  const profileType = determineProfileType(girl);
+  const location = primaryRegion || girl.locations?.[0]?.region || county || "Kenya";
 
   const getDisplayAddress = (): string => {
     const uniqueRegions = new Set<string>();
@@ -52,12 +57,21 @@ const BioSection = ({ girl }: Prop) => {
   const displayAddress = getDisplayAddress();
   const hasAddress = displayAddress !== "Location not specified";
 
+  const handlePhoneClick = () => {
+    trackClickContact(profileId, profileType, location, "phone");
+  };
+
+  const handleWhatsAppClick = () => {
+    trackClickContact(profileId, profileType, location, "whatsapp");
+    trackClickWhatsApp(profileId, profileType, location);
+  };
+
   return (
     <div>
       {about && <RenderEditorContent html={about} />}
 
       <div>
-        <PhonePicker phone={telephone || whatsappPhone} className="my-6" />
+        <PhonePicker phone={telephone || whatsappPhone} className="my-6" onClick={handlePhoneClick} />
       </div>
 
       <div className="flex items-center justify-between">
@@ -78,6 +92,7 @@ const BioSection = ({ girl }: Prop) => {
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 rounded-full cursor-pointer bg-[#40C351] shrink-0 ml-4"
+            onClick={handleWhatsAppClick}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

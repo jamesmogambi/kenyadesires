@@ -1,5 +1,5 @@
 // app/girl/[slug]/page.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import { notFound } from "next/navigation";
 import {
   Breadcrumb,
@@ -13,6 +13,7 @@ import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
 import { getEscortByIdentifier } from "@/server-actions/girl.action";
+import { trackViewProfile, determineProfileType, handleProfileView } from "@/lib/customer-analytics";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -244,6 +245,13 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
   );
   const location =
     escort.primaryRegion || escort.locations?.[0]?.region || "Kenya";
+  const locationSlug = escort.primaryRegion || escort.county || "kenya";
+
+  // Track profile view with proper profile_type detection
+  useEffect(() => {
+    const profileType = determineProfileType(escort);
+    handleProfileView(escort.id || slug, profileType, location, locationSlug);
+  }, [escort.id, slug, escort.isAgencyOwned, escort.agencyId, location, locationSlug]);
 
   // Helper to get cleaned images
   const getCleanedImages = () => {
