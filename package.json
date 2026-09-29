@@ -1,6 +1,6 @@
 {
   "name": "kenyadesires-app",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev ",
@@ -39,7 +39,6 @@
     "@mux/mux-node": "^12.7.0",
     "@mux/mux-player": "^3.5.3",
     "@mux/mux-player-react": "^3.5.3",
-    "@neondatabase/serverless": "^1.0.1",
     "@next/third-parties": "^16.3.4",
     "@portabletext/react": "^6.2.0",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -56,9 +55,7 @@
     "@sanity/image-url": "^2.1.1",
     "@tiptap/react": "^3.3.0",
     "@tiptap/starter-kit": "^3.3.0",
-    "@types/mongoose": "^5.11.97",
     "@types/quill": "^2.0.14",
-    "@vercel/analytics": "^2.0.1",
     "axios": "^1.18.1",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
@@ -77,7 +74,6 @@
     "next-themes": "^0.4.6",
     "node-fetch": "^3.3.2",
     "nodemailer": "^9.0.3",
-    "pg": "^8.23.0",
     "posthog-js": "^1.398.3",
     "posthog-node": "^5.21.2",
     "quill": "^2.0.2",
