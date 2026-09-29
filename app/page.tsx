@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { useEffect } from "react";
 import PassionateMoments from "@/components/blog/PassionateMoments";
 import WhyProfile from "@/components/blog/WhyProfile";
 import GirlList from "@/components/GirlList";
@@ -9,7 +8,7 @@ import YouTargetsAd from "@/components/YouTargetsAd";
 import { ITEMS_PER_PAGE } from "@/constants";
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 import type { Escort } from "@/server-actions/escort.action";
-import { trackViewHomepage } from "@/lib/customer-analytics";
+import HomepageTracker from "@/components/analytics/HomepageTracker";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -55,12 +54,9 @@ export default async function Home({ searchParams }: PageProps) {
     console.error("Error loading home page girls:", error);
   }
 
-  useEffect(() => {
-    trackViewHomepage();
-  }, []);
-
   return (
     <>
+      <HomepageTracker />
       {/* YouTargets Ad - 300x250 medium rectangle */}
       {/* <div className="flex justify-center">
         <YouTargetsAd />

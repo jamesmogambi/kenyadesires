@@ -1,5 +1,5 @@
 // app/agencies/page.tsx
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import {
   Breadcrumb,
@@ -19,7 +19,7 @@ import {
   getAgenciesCountFromNeon,
   getFirstAgencyFromNeon,
 } from "@/server-actions/agency-listing.action";
-import { trackViewLocation } from "@/lib/customer-analytics";
+import LocationTracker from "@/components/analytics/LocationTracker";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -295,18 +295,12 @@ const AgenciesPage = async ({ searchParams }: Props) => {
   const filterParams = extractFilterParams(params);
   const currentPage = parsePageNumber(filterParams.page);
 
-  // Track location view
-  useEffect(() => {
-    const location = filterParams.region
-      ? formatLocationName(filterParams.region)
-      : filterParams.county
-        ? formatLocationName(filterParams.county)
-        : "Kenya";
-    const locationSlug = filterParams.region || filterParams.county || "kenya";
-    if (location !== "Kenya") {
-      trackViewLocation(location, locationSlug, "agency");
-    }
-  }, [filterParams.region, filterParams.county]);
+  const trackerLocation = filterParams.region
+    ? formatLocationName(filterParams.region)
+    : filterParams.county
+      ? formatLocationName(filterParams.county)
+      : "Kenya";
+  const locationSlug = filterParams.region || filterParams.county || "kenya";
 
   // ✅ Start the agencies fetch immediately as a promise (enables streaming)
   // Filters are now applied server-side via Neon DB + field selection
@@ -342,6 +336,11 @@ const AgenciesPage = async ({ searchParams }: Props) => {
 
   return (
     <>
+      <LocationTracker
+        location={trackerLocation}
+        locationSlug={locationSlug}
+        profileType="agency"
+      />
       {/* Hidden SEO elements */}
       <div className="sr-only">
         <h1>
