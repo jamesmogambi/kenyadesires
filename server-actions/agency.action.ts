@@ -1338,3 +1338,14 @@ export const getAgencyEscorts = getAgencyEscortsFromNeon;
 export const getAgencies = getCachedAgencies;
 export const getAgenciesCountOptimized = getAgenciesCountFromNeon;
 export const getFirstAgencyOptimized = getFirstAgencyFromNeon;
+
+export async function incrementAgencyViews(agencyId: string): Promise<void> {
+  try {
+    await executeQuery(
+      "UPDATE agencies SET total_views = total_views + 1 WHERE id = $1",
+      [agencyId],
+    );
+  } catch (error) {
+    console.error("Error incrementing agency views:", error);
+  }
+}

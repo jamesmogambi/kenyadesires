@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { handleProfileView, determineProfileType } from "@/lib/customer-analytics";
+import { incrementEscortViews } from "@/server-actions/girl.action";
 import type { Escort } from "@/server-actions/escort.action";
 
 interface ProfileTrackerProps {
@@ -15,6 +16,9 @@ export default function ProfileTracker({ profileId, escort }: ProfileTrackerProp
     const locationSlug = escort.primaryRegion || escort.county || "kenya";
     const profileType = determineProfileType(escort);
     handleProfileView(profileId, profileType, location, locationSlug);
+
+    // Increment database view count
+    incrementEscortViews(profileId).catch(console.error);
   }, [profileId, escort.id, escort.isAgencyOwned, escort.agencyId, escort.primaryRegion, escort.county, escort.locations]);
 
   return null;

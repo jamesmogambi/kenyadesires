@@ -778,3 +778,14 @@ export async function submitEscortVerification(
     };
   }
 }
+
+export async function incrementEscortViews(escortId: string): Promise<void> {
+  try {
+    await executeQuery(
+      "UPDATE escorts SET total_views = total_views + 1 WHERE id = $1",
+      [escortId],
+    );
+  } catch (error) {
+    console.error("Error incrementing escort views:", error);
+  }
+}
