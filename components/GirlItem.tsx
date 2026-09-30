@@ -31,6 +31,7 @@ const GirlItem = ({
 }: GirlItemProps) => {
   const {
     images,
+    previewPhoto,
     name,
     slug,
     primaryRegion,
@@ -87,6 +88,14 @@ const GirlItem = ({
     }
     if (result.length === 0) {
       result = normalizeArray(images);
+    }
+    // `images` is frequently empty for escorts created by an agency: the only
+    // stored photo lives in `preview_photo`. The profile page already falls
+    // back to it (app/girl/GirlProfile.tsx builds [previewPhoto, ...images]),
+    // so the card must too — otherwise these listings render
+    // "No images available" while the profile page shows a photo.
+    if (result.length === 0 && previewPhoto) {
+      result = [previewPhoto];
     }
     return result.filter(
       (img): img is string => typeof img === "string" && img.length > 0,
@@ -235,7 +244,7 @@ const GirlItem = ({
           <div className="hidden lg:flex items-center font-semibold rounded-br-lg gap-2 p-2.5 px-4 bg-stone-300/50 text-black/60">
             <Images className="h-6 w-7" />
             <span className="text-base">
-              {displayImages.length > 0 ? displayImages.length : 1}
+              {displayImages.length}
               <span className="text-xs uppercase ml-0.5">x</span>
             </span>
           </div>
