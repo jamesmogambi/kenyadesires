@@ -6,6 +6,7 @@ import {
   PesapalError,
 } from "@/lib/pesapal";
 import { updateOrderStatus } from "@/lib/pesapal-orders";
+import { sendPaymentConfirmationEmail } from "@/server-actions/email";
 
 /**
  * GET /api/pesapal/callback
@@ -49,9 +50,27 @@ export async function GET(req: NextRequest) {
 
     // Best-effort local update (idempotent) so the DB is in sync even if the
     // IPN is delayed.
-    await updateOrderStatus(orderTrackingId, status, orderMerchantReference, tx);
+    const updateResult = await updateOrderStatus(orderTrackingId, status, orderMerchantReference, tx);
 
     const completed = isPaymentCompleted(tx.payment_status_description);
+
+    // Send payment confirmation email on first completion
+    if (completed && updateResult.updated && updateResult.previous !== "completed") {
+      try {
+        await sendPaymentConfirmationEmail({
+          to: tx.billing_address?.email_address || "",
+          name: `${tx.billing_address?.first_name || ""} ${tx.billing_address?.last_name || ""}`.trim() || "Customer",
+          amount: tx.amount || 0,
+          receiptNumber: tx.merchant_reference || "",
+          packageName: tx.description || "Boost Package",
+          transactionId: orderTrackingId,
+          date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),
+          phoneNumber: tx.billing_address?.phone_number || "N/A",
+        });
+      } catch (emailErr) {
+        console.error("[Pesapal/callback] Failed to send confirmation email:", emailErr);
+      }
+    }
 
     if (isIframe) {
       return NextResponse.json({

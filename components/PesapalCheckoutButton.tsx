@@ -57,9 +57,9 @@ export function PesapalCheckoutButton({
         setIframeSrc(null);
         setOrderTrackingId(null);
         if (event.data.status === "completed") {
-          window.location.href = `/payment/callback?orderTrackingId=${event.data.orderTrackingId}&status=completed`;
+          window.location.href = `/payment/success?orderTrackingId=${event.data.orderTrackingId}&reference=${event.data.merchantReference || ""}`;
         } else {
-          window.location.href = `/payment/callback?orderTrackingId=${event.data.orderTrackingId}&status=failed`;
+          window.location.href = `/payment/failed?orderTrackingId=${event.data.orderTrackingId}&error=${event.data.error || "Payment failed"}`;
         }
       }
     };

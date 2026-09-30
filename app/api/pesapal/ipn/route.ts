@@ -5,6 +5,9 @@ import {
   PesapalError,
 } from "@/lib/pesapal";
 import { getOrder, safeEqual, updateOrderStatus } from "@/lib/pesapal-orders";
+import { sendPaymentConfirmationEmail } from "@/server-actions/email";
+import { executeQuery } from "@/lib/neon";
+import { getAdPackageById } from "@/lib/constants/packages";
 
 /**
  * GET|POST /api/pesapal/ipn
@@ -17,7 +20,8 @@ import { getOrder, safeEqual, updateOrderStatus } from "@/lib/pesapal-orders";
  *   1. Read the OrderTrackingId (from query on GET, from JSON body on POST).
  *   2. Call getTransactionStatus() to VERIFY the real status server-to-server.
  *   3. Update the local order idempotently.
- *   4. Respond with the exact shape Pesapal requires:
+ *   4. Award credits to the user on successful payment.
+ *   5. Respond with the exact shape Pesapal requires:
  *      { orderNotificationType, orderTrackingId, orderMerchantReference, status: 200 }
  */
 export async function GET(req: NextRequest) {
@@ -83,13 +87,53 @@ async function handleIPN(
     );
     console.log(`[Pesapal/IPN] order ${orderTrackingId} → ${status} (prev=${result.previous})`);
 
-    if (status === "completed") {
-      // TODO: award credits / activate the escort/agency boost package here.
-      //       e.g. await rewardCreditsForOrder(orderTrackingId);
-      //       Keep this non-blocking / queued in production.
+    // 4. Handle completion: award credits + send email
+    if (status === "completed" && result.updated && result.previous !== "completed") {
+      // 4a. Award credits for the purchased package
+      if (existing?.package_id && existing?.user_id) {
+        try {
+          const adPackage = getAdPackageById(existing.package_id);
+          if (adPackage && adPackage.credits > 0) {
+            // Increment user credits (works for both escorts and agencies)
+            await executeQuery(
+              `UPDATE escorts SET credits = COALESCE(credits, 0) + $1, updated_at = NOW() WHERE clerk_user_id = $2`,
+              [adPackage.credits, existing.user_id],
+            );
+            const escortResult = await executeQuery(
+              `SELECT credits FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
+              [existing.user_id],
+            );
+            if (escortResult.length === 0) {
+              await executeQuery(
+                `UPDATE agencies SET credits = COALESCE(credits, 0) + $1, updated_at = NOW() WHERE owner_id = $2`,
+                [adPackage.credits, existing.user_id],
+              );
+            }
+            console.log(`[Pesapal/IPN] Awarded ${adPackage.credits} credits to user ${existing.user_id} for package ${existing.package_id}`);
+          }
+        } catch (creditErr) {
+          console.error("[Pesapal/IPN] Failed to award credits:", creditErr);
+        }
+      }
+
+      // 4b. Send payment confirmation email
+      try {
+        await sendPaymentConfirmationEmail({
+          to: tx.billing_address?.email_address || "",
+          name: `${tx.billing_address?.first_name || ""} ${tx.billing_address?.last_name || ""}`.trim() || "Customer",
+          amount: tx.amount || 0,
+          receiptNumber: tx.merchant_reference || "",
+          packageName: tx.description || "Boost Package",
+          transactionId: orderTrackingId,
+          date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),
+          phoneNumber: tx.billing_address?.phone_number || "N/A",
+        });
+      } catch (emailErr) {
+        console.error("[Pesapal/IPN] Failed to send confirmation email:", emailErr);
+      }
     }
 
-    // 4. Exact acknowledgement shape required by Pesapal.
+    // 5. Exact acknowledgement shape required by Pesapal.
     return NextResponse.json(
       {
         orderNotificationType: orderNotificationType || "IPNCHANGE",
