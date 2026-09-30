@@ -17,6 +17,7 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { isValidPhoneNumber } from "@/lib/phone";
 import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
@@ -73,8 +74,12 @@ const AdvertisingPriceLIst = ({
     userProfile?.phone &&
     userProfile?.email &&
     userProfile?.phone.length > 0 &&
-    userProfile?.email.length > 0
+    userProfile?.email.length > 0 &&
+    isValidPhoneNumber(userProfile.phone)
   );
+
+  // Debug log
+  console.log("[AdvertisingPriceLIst] userProfile:", userProfile, "canUsePesapal:", canUsePesapal);
   const firstName = userProfile?.name
     ? userProfile.name.split(" ")[0] || "Customer"
     : "Customer";
@@ -448,6 +453,9 @@ const AdvertisingPriceLIst = ({
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
                         <p className="text-amber-700 font-medium">
                           Please complete your profile with a valid phone number and email to use Pesapal payments.
+                        </p>
+                        <p className="text-xs text-amber-600 mt-1">
+                          Debug: phone={userProfile?.phone ? "set" : "missing"} email={userProfile?.email ? "set" : "missing"} validPhone={userProfile?.phone ? isValidPhoneNumber(userProfile.phone) : false}
                         </p>
                       </div>
                     )}
