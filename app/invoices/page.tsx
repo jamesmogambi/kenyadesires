@@ -56,7 +56,8 @@ export default function InvoicesPage() {
     const rows = [
       ["Field", "Value"],
       ["Invoice ID", tx.id],
-      ["Date", tx.createdAt?._seconds ? new Date(tx.createdAt._seconds * 1000).toLocaleString() : ""],
+      // createdAt is a MySQL DATETIME string, not a Firestore timestamp.
+      ["Date", tx.createdAt ? new Date(tx.createdAt).toLocaleString() : ""],
       ["Type", tx.type],
       ["Status", tx.status],
       ["Description", tx.transactionDesc || tx.accountReference || ""],
@@ -79,10 +80,13 @@ export default function InvoicesPage() {
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return "—";
-    if (timestamp._seconds) {
+    // MySQL DATETIME string. The Firestore _seconds shape is retained only for
+    // any legacy row that still carries it.
+    if (typeof timestamp === "object" && timestamp._seconds) {
       return new Date(timestamp._seconds * 1000).toLocaleDateString();
     }
-    return new Date(timestamp).toLocaleDateString();
+    const parsed = new Date(timestamp);
+    return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString();
   };
 
   if (loading) {

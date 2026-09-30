@@ -29,9 +29,22 @@ export async function GET(
     }
 
     const placeholders = allProfileIds.map((_, i) => `$${i + 2}`).join(", ");
-    
+
+    // The path param is matched against BOTH keys on purpose.
+    //
+    // /invoices links with the transaction's own `id` (a UUID), while older
+    // rows and the Pesapal flows use the identical id and
+    // checkout_request_id. Credit purchases in purchaseAdPackage generate
+    // checkout_request_id = `AD-<timestamp>`, so a lookup on
+    // checkout_request_id alone returns 404 for every one of them and
+    // /payment-status polls forever on "Processing Payment".
+    // Ownership is still enforced by the profile id check below.
+    //
+    // The key is bound twice ($1 and $2) rather than reused as $1: convertParams
+    // in lib/neon.ts rewrites every $N to `?` positionally without
+    // deduplicating, so a repeated $1 shifts every later parameter by one.
     const query = `
-      SELECT 
+      SELECT
         id,
         checkout_request_id,
         user_id,
@@ -46,12 +59,18 @@ export async function GET(
         created_at,
         updated_at
       FROM transactions
-      WHERE checkout_request_id = $1
+      WHERE (id = $1 OR checkout_request_id = $2)
         AND (escort_id IN (${placeholders}) OR agency_id IN (${placeholders}))
+      ORDER BY created_at DESC
       LIMIT 1
     `;
 
-    const transactions = await executeQuery(query, [checkoutRequestId, ...allProfileIds]);
+    const transactions = await executeQuery(query, [
+      checkoutRequestId,
+      checkoutRequestId,
+      ...allProfileIds,
+      ...allProfileIds,
+    ]);
 
     if (transactions.length === 0) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });

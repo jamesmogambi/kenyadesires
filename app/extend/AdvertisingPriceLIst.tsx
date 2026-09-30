@@ -119,7 +119,7 @@ const AdvertisingPriceLIst = ({
     const refresh = () => {
       loadBoost();
     };
-    window.addEventEvent("packages-updated", refresh);
+    window.addEventListener("packages-updated", refresh);
     window.addEventListener("credits-updated", refresh);
     return () => {
       window.removeEventListener("packages-updated", refresh);

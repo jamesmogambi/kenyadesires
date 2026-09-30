@@ -7,7 +7,10 @@ import { CheckCircle, XCircle, Loader2, ArrowRight, Download } from "lucide-reac
 import Link from "next/link";
 import FloatingFlowers from "./FloatingFlowers";
 
-type Status = "pending" | "completed" | "failed" | "not_found";
+type Status = "pending" | "completed" | "failed" | "not_found" | "timeout";
+
+/** Give up polling after this long rather than spinning forever. */
+const MAX_POLL_MS = 60_000;
 
 export default function PaymentStatusPage() {
   const searchParams = useSearchParams();
@@ -42,7 +45,10 @@ export default function PaymentStatusPage() {
       return;
     }
 
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval> | undefined;
+    // Hard stop so a persistent failure can never leave the user on an
+    // indefinite "Processing Payment" spinner.
+    const deadline = Date.now() + MAX_POLL_MS;
 
     const poll = async () => {
       try {
@@ -52,30 +58,56 @@ export default function PaymentStatusPage() {
           setTransaction(data);
           if (data.status === "completed" || data.status === "failed") {
             setStatus(data.status as Status);
-            clearInterval(interval);
+            if (interval) clearInterval(interval);
+            return;
           }
         } else if (res.status === 404) {
           setStatus("not_found");
           setError("Transaction not found");
-          clearInterval(interval);
+          if (interval) clearInterval(interval);
+          return;
+        } else if (res.status === 401) {
+          setStatus("not_found");
+          setError("Please log in to view this transaction");
+          if (interval) clearInterval(interval);
+          return;
+        }
+
+        if (Date.now() > deadline) {
+          setStatus("timeout");
+          setError("We could not confirm this payment in time. It may still complete — check your invoices shortly.");
+          if (interval) clearInterval(interval);
         }
       } catch (e) {
         console.error("Polling error:", e);
+        if (Date.now() > deadline) {
+          setStatus("timeout");
+          setError("We could not reach the server to confirm this payment. Check your invoices shortly.");
+          if (interval) clearInterval(interval);
+        }
       }
     };
 
     poll();
     interval = setInterval(poll, 2000);
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [checkoutRequestId]);
 
   const handleDownloadInvoice = () => {
     if (!transaction) return;
+    // createdAt is a MySQL DATETIME, not a Firestore timestamp — the
+    // _seconds shape never existed here and always produced an empty date.
+    const createdAt = transaction.createdAt
+      ? new Date(transaction.createdAt).toLocaleString()
+      : "";
     const csv = [
       ["Field", "Value"],
       ["Invoice ID", transaction.id],
-      ["Date", transaction.createdAt?._seconds ? new Date(transaction.createdAt._seconds * 1000).toLocaleString() : ""],
+      ["Reference", transaction.checkoutRequestId || ""],
+      ["Date", createdAt],
       ["Status", transaction.status],
       ["Amount", transaction.amount ? `KSH ${transaction.amount}` : ""],
       ["Phone", transaction.phoneNumber || ""],
@@ -111,6 +143,23 @@ export default function PaymentStatusPage() {
     );
   }
 
+  if (status === "timeout") {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-stone-100 rounded-lg p-6 md:p-8 shadow-md text-center">
+          <XCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+          <h1 className="text-2xl md:text-3xl font-bold text-stone-800 mb-2">
+            Still Confirming
+          </h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button asChild className="bg-red-700 hover:bg-red-800 text-white">
+            <Link href="/invoices">View My Invoices</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (status === "failed") {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
@@ -133,9 +182,18 @@ export default function PaymentStatusPage() {
     );
   }
 
-  if (status === "completed") {
+  // Fire the refresh events from an effect, not during render: dispatching in
+  // the render body runs on every re-render and re-triggers the listeners this
+  // event exists to notify.
+  const [announced, setAnnounced] = useState(false);
+  useEffect(() => {
+    if (status !== "completed" || announced) return;
+    setAnnounced(true);
     window.dispatchEvent(new Event("credits-updated"));
     window.dispatchEvent(new Event("packages-updated"));
+  }, [status, announced]);
+
+  if (status === "completed") {
     return (
       <div className="relative min-h-screen bg-white flex items-center justify-center p-4 overflow-hidden">
         <FloatingFlowers />
@@ -176,8 +234,8 @@ export default function PaymentStatusPage() {
               <span className="font-semibold text-gray-800">
                 {transaction?.transactionDate
                   ? new Date(transaction.transactionDate).toLocaleString()
-                  : transaction?.completedAt?._seconds
-                    ? new Date(transaction.completedAt._seconds * 1000).toLocaleString()
+                  : transaction?.createdAt
+                    ? new Date(transaction.createdAt).toLocaleString()
                     : "—"}
               </span>
             </div>

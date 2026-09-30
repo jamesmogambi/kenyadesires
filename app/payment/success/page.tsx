@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PaymentSuccessEvents from "./PaymentSuccessEvents";
 
 interface SuccessPageProps {
   searchParams: Promise<{ orderTrackingId?: string; reference?: string; type?: string }>;
@@ -15,7 +16,7 @@ export default async function PaymentSuccessPage({ searchParams }: SuccessPagePr
   // Notify the rest of the app that credits / packages may have changed.
   return (
     <>
-      <ScriptTriggerEvents />
+      <PaymentSuccessEvents />
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="max-w-lg w-full bg-stone-100 rounded-lg p-6 md:p-8 shadow-md text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
@@ -53,24 +54,5 @@ export default async function PaymentSuccessPage({ searchParams }: SuccessPagePr
         </div>
       </div>
     </>
-  );
-}
-
-/**
- * Client boundary that fires storage/Clerk refresh events so the rest of the
- * app (credits balance, packages, listing boost) picks up the new payment.
- */
-function ScriptTriggerEvents() {
-  return (
-    <script
-      dangerouslySetInnerHTML={{
-        __html: `
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new Event('credits-updated'));
-            window.dispatchEvent(new Event('packages-updated'));
-          }
-        `,
-      }}
-    />
   );
 }
