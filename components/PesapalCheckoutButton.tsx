@@ -13,6 +13,30 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
+/**
+ * The iframe checkout only works reliably on larger viewports.
+ *
+ * /api/pesapal/initiate submits the order with redirect_mode "PARENT_WINDOW",
+ * so after payment Pesapal navigates the TOP window from inside the iframe.
+ * That requires the sandbox to allow top-level navigation, which is
+ * inconsistently supported on mobile browsers — the payment completes but the
+ * redirect never lands, leaving the dialog spinning forever.
+ *
+ * So on small screens we skip the iframe and do a full-page navigation to
+ * Pesapal instead. /payment/callback already handles the non-iframe case
+ * (`isInIframe === false`) and forwards to /api/pesapal/callback, which
+ * verifies the payment server-side and redirects to the success/failed page.
+ */
+const MOBILE_BREAKPOINT = 768;
+
+function prefersFullPageCheckout(): boolean {
+  if (typeof window === "undefined") return false;
+  const isSmallViewport = window.innerWidth < MOBILE_BREAKPOINT;
+  // Coarse pointer covers phones and tablets; desktop browsers never match.
+  const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+  return isSmallViewport || isTouchDevice;
+}
+
 export interface PesapalCheckoutButtonProps {
   orderId: string;
   amount: number;
@@ -101,6 +125,15 @@ export function PesapalCheckoutButton({
       }
 
       setOrderTrackingId(data.order_tracking_id);
+
+      // Mobile: full-page navigation. The iframe sandbox cannot reliably
+      // perform the PARENT_WINDOW redirect Pesapal needs, which is what left
+      // phones stuck on a spinner.
+      if (prefersFullPageCheckout()) {
+        window.location.href = data.redirect_url;
+        return;
+      }
+
       setIframeSrc(data.redirect_url);
       setOpen(true);
     } catch (e: any) {
@@ -165,7 +198,7 @@ export function PesapalCheckoutButton({
                 src={iframeSrc}
                 className="w-full h-full border-0"
                 allow="payment *"
-                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-top-navigation allow-payment"
                 title="Pesapal Secure Payment"
               />
               <div className="absolute inset-0 bg-white/80 flex items-center justify-center pointer-events-none" style={{ display: "none" }}>

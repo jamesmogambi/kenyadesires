@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,14 +19,12 @@ import { cn } from "@/lib/utils";
 import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
-import { getBoostStatus, purchaseAdPackage } from "@/server-actions/payment.action";
-import Link from "next/link";
 import {
-  Loader2,
-  CheckCircle,
-  XCircle,
-  ChevronDown,
-} from "lucide-react";
+  getBoostStatus,
+  purchaseAdPackage,
+} from "@/server-actions/payment.action";
+import Link from "next/link";
+import { Loader2, CheckCircle, XCircle, ChevronDown } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -103,6 +101,9 @@ const AdvertisingPriceLIst = ({
   >("idle");
   const [message, setMessage] = useState("");
   const [boost, setBoost] = useState<BoostOverview | null>(null);
+  const termsRowRef = useRef<HTMLDivElement | null>(null);
+  const termsCheckboxRef = useRef<HTMLButtonElement | null>(null);
+  const [termsError, setTermsError] = useState(false);
 
   const loadBoost = async () => {
     const result = await getBoostStatus();
@@ -127,10 +128,7 @@ const AdvertisingPriceLIst = ({
     };
   }, []);
 
-  const profileValid = !!(
-    userProfile?.email &&
-    userProfile?.email.length > 0
-  );
+  const profileValid = !!(userProfile?.email && userProfile?.email.length > 0);
 
   const firstName = userProfile?.name
     ? userProfile.name.split(" ")[0] || "Customer"
@@ -148,7 +146,9 @@ const AdvertisingPriceLIst = ({
     try {
       const result = await purchaseAdPackage(selectedPackage);
       if (result.success) {
-        const view = boost?.packages.find((p) => p.packageId === selectedPackage);
+        const view = boost?.packages.find(
+          (p) => p.packageId === selectedPackage,
+        );
         setStatus("success");
         setMessage(
           view?.status === "extend"
@@ -166,7 +166,9 @@ const AdvertisingPriceLIst = ({
           setSelectedPackage(null);
           setStatus("idle");
           setMessage("");
-          router.push(`/payment/success?reference=${encodeURIComponent(result.transactionId || "")}&type=credits`);
+          router.push(
+            `/payment/success?reference=${encodeURIComponent(result.transactionId || "")}&type=credits`,
+          );
         }, 1500);
       } else {
         setStatus("error");
@@ -180,13 +182,16 @@ const AdvertisingPriceLIst = ({
     } finally {
       setLoading(false);
     }
-};
+  };
 
   const selectedPkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
   const selectedPkgName = selectedPkg?.name || "Boost package";
-  const selectedView = boost?.packages.find((p) => p.packageId === selectedPackage);
+  const selectedView = boost?.packages.find(
+    (p) => p.packageId === selectedPackage,
+  );
   const selectedStatus: PackageStatus = selectedView?.status ?? "available";
-  const selectedNetCredits = selectedView?.netCredits ?? selectedPkg?.credits ?? 0;
+  const selectedNetCredits =
+    selectedView?.netCredits ?? selectedPkg?.credits ?? 0;
   const canAffordCredits = selectedPkg
     ? userCredits >= selectedNetCredits
     : false;
@@ -312,29 +317,50 @@ const AdvertisingPriceLIst = ({
             </div>
           )}
 
-          <div className="flex flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
-            <Checkbox
-              className="bg-white size-6 border-2 border-blue-300 md:size-8 shrink-0"
-              id="acceptTerms"
-              checked={termsAccepted}
-              onCheckedChange={(checked) =>
-                setTermsAccepted(checked as boolean)
-              }
-            />
-            <Label
-              htmlFor="terms"
-              className="text-gray-800 font-semibold text-wrap text-base"
-            >
-              <p className="">
-                {" "}
-                I agree to the{" "}
-                <Link href="/terms" className="text-primary">
-                  terms and conditions.
-                </Link>{" "}
-                and to the provision of the service before the expiry of the
-                withdrawal period in accordance with § 1834 of the Civil Code.
+          <div
+            ref={termsRowRef}
+            className="flex flex-col mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3"
+          >
+            <div className="flex flex-row items-start sm:items-center gap-3">
+              <Checkbox
+                ref={termsCheckboxRef}
+                className={cn(
+                  "bg-white size-6 border-2  border-blue-300 md:size-8 shrink-0",
+                  termsError &&
+                    !termsAccepted &&
+                    "border-red-600 ring-2 ring-red-200",
+                )}
+                id="acceptTerms"
+                aria-invalid={termsError && !termsAccepted}
+                checked={termsAccepted}
+                onCheckedChange={(checked) => {
+                  setTermsAccepted(checked as boolean);
+                  if (checked) setTermsError(false);
+                }}
+              />
+              <Label
+                htmlFor="acceptTerms"
+                className="text-gray-800 font-semibold text-wrap text-base"
+              >
+                <p className="">
+                  {" "}
+                  I agree to the{" "}
+                  <Link href="/terms" className="text-primary">
+                    terms and conditions.
+                  </Link>{" "}
+                  and to the provision of the service before the expiry of the
+                  withdrawal period in accordance with § 1834 of the Civil Code.
+                </p>
+              </Label>
+            </div>
+            {termsError && !termsAccepted && (
+              <p
+                role="alert"
+                className="text-sm font-medium text-red-700 md:text-base"
+              >
+                Please accept the terms and conditions to continue.
               </p>
-            </Label>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -344,150 +370,170 @@ const AdvertisingPriceLIst = ({
               const isBlocked = pkgStatus === "blocked";
               const displayPrice = view?.price ?? pkg.credits * 10;
               const displayCredits =
-                pkgStatus === "upgrade" ? view?.netCredits ?? pkg.credits : pkg.credits;
+                pkgStatus === "upgrade"
+                  ? (view?.netCredits ?? pkg.credits)
+                  : pkg.credits;
 
               return (
-              <div
-                key={pkg.id}
-                className={cn(
-                  "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
-                  (pkg as any).bestValue
-                    ? "bg-red-700 text-white"
-                    : "bg-stone-100",
-                  isBlocked && "opacity-60",
-                )}
-              >
-                {(pkg as any).popular && (
-                  <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-green-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
-                    Popular
-                  </div>
-                )}
-                {(pkg as any).recommended && (
-                  <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-blue-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
-                    Recommended
-                  </div>
-                )}
-                {(pkg as any).bestValue && (
-                  <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-purple-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
-                    Best Value
-                  </div>
-                )}
-                {pkgStatus !== "available" && (
-                  <div
-                    className={cn(
-                      "absolute -top-2 md:-top-3 left-2 md:left-4 text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md",
-                      pkgStatus === "blocked"
-                        ? "bg-stone-500 text-white"
-                        : pkgStatus === "upgrade"
-                          ? "bg-blue-500 text-white"
-                          : "bg-green-500 text-white",
-                    )}
-                  >
-                    {STATUS_LABEL[pkgStatus]}
-                  </div>
-                )}
-
-                {pkg.type === "boost" && (
-                  <div className="mt-3 md:mt-4 mb-6 md:mb-8">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="4em"
-                      height="4em"
-                      viewBox="0 0 24 24"
-                      className="md:w-5em md:h-5em"
-                    >
-                      <path d="M0 0h24v24H0z" fill="none" />
-                      <g
-                        fill="none"
-                        stroke={(pkg as any).bestValue ? "#ffffff" : "#c7c7c7"}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.5"
-                      >
-                        <path d="M4.58 8.607L2 8.454C3.849 3.704 9.158 1 14.333 2.344c5.513 1.433 8.788 6.918 7.314 12.25c-1.219 4.411-5.304 7.337-9.8 7.406" />
-                        <path
-                          strokeDasharray=".5 3"
-                          d="M12 22C6.5 22 2 17 2 11"
-                        />
-                        <path d="M13.604 9.722c-.352-.37-1.213-1.237-2.575-.62c-1.361.615-1.577 2.596.482 2.807c.93.095 1.537-.11 2.093.47c.556.582.659 2.198-.761 2.634s-2.341-.284-2.588-.509m1.653-6.484v.79m0 6.337v.873" />
-                      </g>
-                    </svg>
-                  </div>
-                )}
-                <div className="mt-6 md:mt-8">
-                  <h5
-                    className={cn(
-                      "text-3xl md:text-4xl mt-4 font-bold text-center",
-                      (pkg as any).bestValue ? "text-white" : "text-red-700",
-                    )}
-                  >
-                    {pkg.name}
-                  </h5>
-                </div>
-
-                <div className="mt-6 md:mt-8 flex items-center justify-center flex-col gap-2 md:gap-3">
-                  <span
-                    className={cn(
-                      "font-bold text-base md:text-lg text-center",
-                      (pkg as any).bestValue ? "text-white" : "text-black",
-                    )}
-                  >
-                    Price
-                  </span>
-                  <span
-                    className={cn(
-                      "text-2xl md:text-3xl font-bold",
-                      (pkg as any).bestValue ? "text-white" : "text-black",
-                    )}
-                  >
-                    KSH {displayPrice.toLocaleString()}
-                  </span>
-                  <span
-                    className={cn(
-                      "text-sm md:text-base font-bold",
-                      (pkg as any).bestValue ? "text-white/90" : "text-black",
-                    )}
-                  >
-                    Active for {pkg.durationDays} {pkg.durationDays === 1 ? "day" : "days"}
-                  </span>
-                  {pkgStatus === "upgrade" && (
-                    <span
+                <div
+                  key={pkg.id}
+                  className={cn(
+                    "rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300 w-full max-w-[360px] flex items-center justify-center flex-col h-fit p-4 md:p-6 relative",
+                    (pkg as any).bestValue
+                      ? "bg-red-700 text-white"
+                      : "bg-stone-100",
+                    isBlocked && "opacity-60",
+                  )}
+                >
+                  {(pkg as any).popular && (
+                    <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-green-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
+                      Popular
+                    </div>
+                  )}
+                  {(pkg as any).recommended && (
+                    <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-blue-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
+                      Recommended
+                    </div>
+                  )}
+                  {(pkg as any).bestValue && (
+                    <div className="absolute -top-2 md:-top-3 right-2 md:right-4 bg-purple-500 text-white text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md">
+                      Best Value
+                    </div>
+                  )}
+                  {pkgStatus !== "available" && (
+                    <div
                       className={cn(
-                        "text-xs md:text-sm",
-                        (pkg as any).bestValue ? "text-white/90" : "text-blue-600",
+                        "absolute -top-2 md:-top-3 left-2 md:left-4 text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md",
+                        pkgStatus === "blocked"
+                          ? "bg-stone-500 text-white"
+                          : pkgStatus === "upgrade"
+                            ? "bg-blue-500 text-white"
+                            : "bg-green-500 text-white",
                       )}
                     >
-                      {displayCredits} credits after {view?.proratedCredits} credit
-                      proration
-                    </span>
+                      {STATUS_LABEL[pkgStatus]}
+                    </div>
                   )}
-                </div>
 
-                <Button
-                  type="button"
-                  disabled={isBlocked}
-                  className={cn(
-                    "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
-                    (pkg as any).bestValue
-                      ? "bg-white text-red-700 hover:bg-white/90"
-                      : "bg-red-800 hover:bg-red-700",
+                  {pkg.type === "boost" && (
+                    <div className="mt-3 md:mt-4 mb-6 md:mb-8">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="4em"
+                        height="4em"
+                        viewBox="0 0 24 24"
+                        className="md:w-5em md:h-5em"
+                      >
+                        <path d="M0 0h24v24H0z" fill="none" />
+                        <g
+                          fill="none"
+                          stroke={
+                            (pkg as any).bestValue ? "#ffffff" : "#c7c7c7"
+                          }
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M4.58 8.607L2 8.454C3.849 3.704 9.158 1 14.333 2.344c5.513 1.433 8.788 6.918 7.314 12.25c-1.219 4.411-5.304 7.337-9.8 7.406" />
+                          <path
+                            strokeDasharray=".5 3"
+                            d="M12 22C6.5 22 2 17 2 11"
+                          />
+                          <path d="M13.604 9.722c-.352-.37-1.213-1.237-2.575-.62c-1.361.615-1.577 2.596.482 2.807c.93.095 1.537-.11 2.093.47c.556.582.659 2.198-.761 2.634s-2.341-.284-2.588-.509m1.653-6.484v.79m0 6.337v.873" />
+                        </g>
+                      </svg>
+                    </div>
                   )}
-                  onClick={() => {
-                    if (!termsAccepted) {
-                      toast.error("Please accept the terms and conditions first");
-                      return;
-                    }
-                    setSelectedPackage(pkg.id);
-                    setOpen(true);
-                    setStatus("idle");
-                    setMessage("");
-                  }}
-                >
-                  {isBlocked
-                    ? `Complete ${activeBoost?.packageName} first`
-                    : `${STATUS_LABEL[pkgStatus]} ${pkg.name}`}
-                </Button>
-              </div>
+                  <div className="mt-6 md:mt-8">
+                    <h5
+                      className={cn(
+                        "text-3xl md:text-4xl mt-4 font-bold text-center",
+                        (pkg as any).bestValue ? "text-white" : "text-red-700",
+                      )}
+                    >
+                      {pkg.name}
+                    </h5>
+                  </div>
+
+                  <div className="mt-6 md:mt-8 flex items-center justify-center flex-col gap-2 md:gap-3">
+                    <span
+                      className={cn(
+                        "font-bold text-base md:text-lg text-center",
+                        (pkg as any).bestValue ? "text-white" : "text-black",
+                      )}
+                    >
+                      Price
+                    </span>
+                    <span
+                      className={cn(
+                        "text-2xl md:text-3xl font-bold",
+                        (pkg as any).bestValue ? "text-white" : "text-black",
+                      )}
+                    >
+                      KSH {displayPrice.toLocaleString()}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm md:text-base font-bold",
+                        (pkg as any).bestValue ? "text-white/90" : "text-black",
+                      )}
+                    >
+                      Active for {pkg.durationDays}{" "}
+                      {pkg.durationDays === 1 ? "day" : "days"}
+                    </span>
+                    {pkgStatus === "upgrade" && (
+                      <span
+                        className={cn(
+                          "text-xs md:text-sm",
+                          (pkg as any).bestValue
+                            ? "text-white/90"
+                            : "text-blue-600",
+                        )}
+                      >
+                        {displayCredits} credits after {view?.proratedCredits}{" "}
+                        credit proration
+                      </span>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    disabled={isBlocked}
+                    className={cn(
+                      "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
+                      (pkg as any).bestValue
+                        ? "bg-white text-red-700 hover:bg-white/90"
+                        : "bg-red-800 hover:bg-red-700",
+                    )}
+                    onClick={() => {
+                      if (!termsAccepted) {
+                        toast.error(
+                          "Please accept the terms and conditions first",
+                        );
+                        setTermsError(true);
+                        // The package grid sits below the consent row, so on a
+                        // long page the checkbox is usually off-screen when the
+                        // toast appears. Scroll it into view and focus it so the
+                        // user can tick it without hunting for it.
+                        termsRowRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        });
+                        termsCheckboxRef.current?.focus();
+                        return;
+                      }
+                      setTermsError(false);
+                      setSelectedPackage(pkg.id);
+                      setOpen(true);
+                      setStatus("idle");
+                      setMessage("");
+                    }}
+                  >
+                    {isBlocked
+                      ? `Complete ${activeBoost?.packageName} first`
+                      : `${STATUS_LABEL[pkgStatus]} ${pkg.name}`}
+                  </Button>
+                </div>
               );
             })}
           </div>
@@ -518,8 +564,12 @@ const AdvertisingPriceLIst = ({
                 <DialogDescription className="text-base md:text-lg">
                   {selectedPkg?.description}. This package costs{" "}
                   {selectedNetCredits} credits (KSH{" "}
-                  {(selectedView?.price ?? (selectedPkg?.credits || 0) * 10).toLocaleString()}
-                  {selectedStatus === "extend" && ", which extends your current boost"}.
+                  {(
+                    selectedView?.price ?? (selectedPkg?.credits || 0) * 10
+                  ).toLocaleString()}
+                  {selectedStatus === "extend" &&
+                    ", which extends your current boost"}
+                  .
                   {selectedStatus === "upgrade" &&
                     `, ${selectedView?.proratedCredits} credits are credited back from your running boost`}
                   .
@@ -581,40 +631,49 @@ const AdvertisingPriceLIst = ({
                       )}
                     </Button>
 
-                    {selectedPkg && profileValid && selectedStatus !== "blocked" && (
-                      <PesapalCheckoutButton
-                        orderId={`AD-${selectedPkg.id}-${Date.now()}`}
-                        amount={selectedView?.price ?? selectedPkg.credits * 10}
-                        email={userProfile?.email || ""}
-                        phone={userPhone}
-                        firstName={firstName}
-                        lastName={lastName}
-                        description={`${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} boost package`}
-                        packageId={selectedPkg.id}
-                        packageName={selectedPkg.name}
-                        idType={userProfile?.idType || undefined}
-                        className="w-full"
-                        onPaymentComplete={(status) => {
-                          if (status === "completed") {
-                            setOpen(false);
-                            setSelectedPackage(null);
-                            setStatus("idle");
-                            setMessage("");
-                            onPurchaseSuccess?.();
-                            window.dispatchEvent(new Event("credits-updated"));
-                            window.dispatchEvent(new Event("packages-updated"));
+                    {selectedPkg &&
+                      profileValid &&
+                      selectedStatus !== "blocked" && (
+                        <PesapalCheckoutButton
+                          orderId={`AD-${selectedPkg.id}-${Date.now()}`}
+                          amount={
+                            selectedView?.price ?? selectedPkg.credits * 10
                           }
-                        }}
-                      >
-                        {selectedStatus === "available"
-                          ? `Purchase ${selectedPkg.name} Now`
-                          : `${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} Now`}
-                      </PesapalCheckoutButton>
-                    )}
+                          email={userProfile?.email || ""}
+                          phone={userPhone}
+                          firstName={firstName}
+                          lastName={lastName}
+                          description={`${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} boost package`}
+                          packageId={selectedPkg.id}
+                          packageName={selectedPkg.name}
+                          idType={userProfile?.idType || undefined}
+                          className="w-full"
+                          onPaymentComplete={(status) => {
+                            if (status === "completed") {
+                              setOpen(false);
+                              setSelectedPackage(null);
+                              setStatus("idle");
+                              setMessage("");
+                              onPurchaseSuccess?.();
+                              window.dispatchEvent(
+                                new Event("credits-updated"),
+                              );
+                              window.dispatchEvent(
+                                new Event("packages-updated"),
+                              );
+                            }
+                          }}
+                        >
+                          {selectedStatus === "available"
+                            ? `Purchase ${selectedPkg.name} Now`
+                            : `${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} Now`}
+                        </PesapalCheckoutButton>
+                      )}
 
                     {selectedPkg && !profileValid && (
                       <p className="text-sm text-amber-600 text-center">
-                        Please complete your profile with email to use Pesapal payments.
+                        Please complete your profile with email to use Pesapal
+                        payments.
                       </p>
                     )}
                   </div>
@@ -671,7 +730,10 @@ const AdvertisingPriceLIst = ({
                         {pkg.name}
                       </span>
                       <span className="text-sm text-gray-600">
-                        KSH {(viewFor(pkg.id)?.price ?? pkg.credits * 10).toLocaleString()}
+                        KSH{" "}
+                        {(
+                          viewFor(pkg.id)?.price ?? pkg.credits * 10
+                        ).toLocaleString()}
                       </span>
                     </div>
                     <ChevronDown className="size-5 text-gray-500 collapsible-chevron" />

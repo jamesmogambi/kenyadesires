@@ -17,10 +17,22 @@ export default function PesapalCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "completed" | "failed">("loading");
   const [orderTrackingId, setOrderTrackingId] = useState<string | null>(null);
-
-  const isInIframe = window.self !== window.top;
+  // Starts false and is resolved in the effect: reading window.self during
+  // render is unreliable on mobile Safari, where the value can differ between
+  // the server HTML and the hydrated client. Deciding the flow before the
+  // effect runs sends mobile down the iframe branch it can never complete.
+  const [isInIframe, setIsInIframe] = useState<boolean | null>(null);
 
   useEffect(() => {
+    setIsInIframe(window.self !== window.top);
+  }, []);
+
+  useEffect(() => {
+    // Wait until the frame check above has resolved. Deciding the flow earlier
+    // sends a real iframe down the full-page branch, which would navigate the
+    // embedded document away from Pesapal.
+    if (isInIframe === null) return;
+
     const orderTrackingIdParam = searchParams.get("OrderTrackingId");
     if (!orderTrackingIdParam) {
       setError("Missing OrderTrackingId — the payment reference was not provided.");
@@ -72,7 +84,7 @@ export default function PesapalCallbackPage() {
     }
   }, [searchParams, isInIframe]);
 
-  if (isInIframe) {
+  if (isInIframe === true) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-stone-100 rounded-lg p-6 md:p-8 shadow-md text-center">
