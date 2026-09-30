@@ -5,7 +5,7 @@ import {
   normalizePesapalStatus,
   PesapalError,
 } from "@/lib/pesapal";
-import { updateOrderStatus } from "@/lib/pesapal-orders";
+import { updateOrderStatus, getOrder } from "@/lib/pesapal-orders";
 import { sendPaymentConfirmationEmail } from "@/server-actions/email";
 
 /**
@@ -57,15 +57,17 @@ export async function GET(req: NextRequest) {
     // Send payment confirmation email on first completion
     if (completed && updateResult.updated && updateResult.previous !== "completed") {
       try {
+        // Get billing details from stored order
+        const storedOrder = await getOrder(orderTrackingId);
         await sendPaymentConfirmationEmail({
-          to: tx.billing_address?.email_address || "",
-          name: `${tx.billing_address?.first_name || ""} ${tx.billing_address?.last_name || ""}`.trim() || "Customer",
-          amount: tx.amount || 0,
+          to: storedOrder?.email || tx.merchant_reference?.includes("@") ? "" : "",
+          name: `${storedOrder?.email?.split("@")[0] || "Customer"}`,
+          amount: Number(tx.amount) || 0,
           receiptNumber: tx.merchant_reference || "",
           packageName: tx.description || "Boost Package",
           transactionId: orderTrackingId,
           date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),
-          phoneNumber: tx.billing_address?.phone_number || "N/A",
+          phoneNumber: storedOrder?.phone_number || "N/A",
         });
       } catch (emailErr) {
         console.error("[Pesapal/callback] Failed to send confirmation email:", emailErr);

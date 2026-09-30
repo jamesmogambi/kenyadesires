@@ -119,14 +119,14 @@ async function handleIPN(
       // 4b. Send payment confirmation email
       try {
         await sendPaymentConfirmationEmail({
-          to: tx.billing_address?.email_address || "",
-          name: `${tx.billing_address?.first_name || ""} ${tx.billing_address?.last_name || ""}`.trim() || "Customer",
-          amount: tx.amount || 0,
+          to: existing?.email || "",
+          name: `${existing?.email?.split("@")[0] || "Customer"}`,
+          amount: Number(tx.amount) || 0,
           receiptNumber: tx.merchant_reference || "",
           packageName: tx.description || "Boost Package",
           transactionId: orderTrackingId,
           date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),
-          phoneNumber: tx.billing_address?.phone_number || "N/A",
+          phoneNumber: existing?.phone_number || "N/A",
         });
       } catch (emailErr) {
         console.error("[Pesapal/IPN] Failed to send confirmation email:", emailErr);
