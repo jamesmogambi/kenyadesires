@@ -201,3 +201,66 @@ export async function incrementUserCredits(userId: string, credits: number) {
     return { success: false, error: error.message };
   }
 }
+
+export interface UserProfile {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  idType: "escort" | "agency" | null;
+}
+
+/**
+ * Returns the billing contact (name, email, phone, role) for the current
+ * Clerk user, looking at both the `escorts` and `agencies` tables.
+ * Used to pre-fill the Pesapal billing_address so the customer doesn't have to
+ * re-enter their details on the /extend checkout.
+ */
+export async function getUserProfile(): Promise<{
+  success: boolean;
+  profile?: UserProfile;
+  error?: string;
+}> {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const escortResult: any[] = await executeQuery(
+      `SELECT name, email, whatsapp_phone FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
+      [userId],
+    );
+    if (escortResult.length > 0) {
+      return {
+        success: true,
+        profile: {
+          name: escortResult[0].name || null,
+          email: escortResult[0].email || null,
+          phone: escortResult[0].whatsapp_phone || null,
+          idType: "escort",
+        },
+      };
+    }
+
+    const agencyResult: any[] = await executeQuery(
+      `SELECT name, contact_email AS email, whatsapp_phone AS phone FROM agencies WHERE owner_id = $1 LIMIT 1`,
+      [userId],
+    );
+    if (agencyResult.length > 0) {
+      return {
+        success: true,
+        profile: {
+          name: agencyResult[0].name || null,
+          email: agencyResult[0].email || null,
+          idType: "agency",
+          phone: agencyResult[0].phone || null,
+        },
+      };
+    }
+
+    return { success: true, profile: { name: null, email: null, phone: null, idType: null } };
+  } catch (error: any) {
+    console.error("Error fetching user profile:", error);
+    return { success: false, error: error.message };
+  }
+}

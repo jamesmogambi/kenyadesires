@@ -17,6 +17,8 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { isValidPhoneNumber } from "@/lib/phone";
+import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
 import { purchaseAdPackage, getUserActivePackages } from "@/server-actions/payment.action";
@@ -41,6 +43,12 @@ interface Prop {
   onPurchaseError?: (error: string) => void;
   userCredits?: number;
   userPhone?: string;
+  userProfile?: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    idType: "escort" | "agency" | null;
+  };
 }
 
 const AdvertisingPriceLIst = ({
@@ -49,6 +57,7 @@ const AdvertisingPriceLIst = ({
   onPurchaseError,
   userCredits = 0,
   userPhone = "",
+  userProfile,
 }: Prop) => {
   const router = useRouter();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
@@ -63,6 +72,20 @@ const AdvertisingPriceLIst = ({
   const [message, setMessage] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const phoneInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Pesapal checkout is offered directly on the card when we have a valid
+  // billing contact on file for the current girl/agency.
+  const canUsePesapal = !!(
+    userProfile?.phone &&
+    userProfile?.email &&
+    isValidPhoneNumber(userProfile.phone)
+  );
+  const firstName = userProfile?.name
+    ? userProfile.name.split(" ")[0] || "Customer"
+    : "Customer";
+  const lastName = userProfile?.name
+    ? userProfile.name.split(" ").slice(1).join(" ") || "Customer"
+    : "Customer";
 
   const formatPhoneForDisplay = (digits: string): string => {
     if (!digits) return "";
@@ -200,9 +223,9 @@ const AdvertisingPriceLIst = ({
 
     try {
       const activeResult = await getUserActivePackages();
-      if (activeResult.success && activeResult.packages.length > 0) {
+      if (activeResult.success && (activeResult.packages?.length ?? 0) > 0) {
         const pkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
-        const hasActiveSameType = activeResult.packages.some(
+        const hasActiveSameType = activeResult.packages?.some(
           (p: any) => p.packageId === selectedPackage && p.status === "active",
         );
 
@@ -530,10 +553,28 @@ const AdvertisingPriceLIst = ({
                       setPhoneError(null);
                     }}
                   >
-                    Buy {pkg.name}
-                  </Button>
-              </div>
-            ))}
+                     Buy {pkg.name}
+                   </Button>
+
+                   {canUsePesapal && (
+                     <PesapalCheckoutButton
+                       className="mt-2 h-10 text-sm font-semibold"
+                       orderId={`${pkg.id}-${Date.now()}`}
+                       amount={pkg.credits * 10}
+                       email={userProfile!.email as string}
+                       phone={userProfile!.phone as string}
+                       firstName={firstName}
+                       lastName={lastName}
+                       description={`Boost: ${pkg.name}`}
+                       packageId={pkg.id}
+                       packageName={pkg.name}
+                       idType={userProfile!.idType as "escort" | "agency"}
+                     >
+                       Pay KSH {(pkg.credits * 10).toLocaleString()} with Pesapal
+                     </PesapalCheckoutButton>
+                   )}
+               </div>
+             ))}
           </div>
 
           {selectedPackage && (

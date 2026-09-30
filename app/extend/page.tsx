@@ -7,23 +7,28 @@ import { PurchaseInfoSection } from "./PurchaseInfoSection";
 import AdvertisingPriceLIst from "./AdvertisingPriceLIst";
 import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
-import { getUserCredits } from "@/server-actions/payment.action";
+import { getUserCredits, getUserProfile } from "@/server-actions/payment.action";
 import { useRouter } from "next/navigation";
 
 const ExtendPage = () => {
   const [credits, setCredits] = useState<number>(0);
+  const [profile, setProfile] = useState<
+    Awaited<ReturnType<typeof getUserProfile>>["profile"]
+  >();
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   React.useEffect(() => {
-    async function fetchCredits() {
+    async function fetchData() {
       const result = await getUserCredits();
-      if (result.success) {
-        setCredits(result.credits);
-      }
+      if (result.success) setCredits(result.credits ?? 0);
+
+      const profileResult = await getUserProfile();
+      if (profileResult.success) setProfile(profileResult.profile);
+
       setLoading(false);
     }
-    fetchCredits();
+    fetchData();
   }, []);
 
   return (
@@ -53,6 +58,8 @@ const ExtendPage = () => {
         <PurchaseInfoSection className="mt-8 lg:mt-20" />
         <AdvertisingPriceLIst
           userCredits={credits}
+          userProfile={profile}
+          userPhone={profile?.phone || ""}
           onPurchaseSuccess={() => router.refresh()}
         />
       </div>
