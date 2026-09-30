@@ -6,10 +6,26 @@
 -- row itself, so listing sorts can read the priority without a join, and
 -- boost_history keeps an audit trail of every purchase/extend/upgrade.
 --
--- ⚠️ Apply this against the MySQL the app actually reads (MYSQL_* env, see
+-- STATUS: applied and verified against the dev MySQL on 2026-09-30.
+--   - 6 boost columns on `escorts` and 6 on `agencies` — confirmed via
+--     information_schema (12 rows).
+--   - idx_escorts_boost and idx_agencies_boost present on
+--     (boost_until, boost_priority) — confirmed via SHOW INDEX.
+--   - boost_history present with 16 columns — confirmed via
+--     information_schema.
+--   Re-running this file against that database is expected to report 1060
+--   (duplicate column), 1061 (duplicate key), and a 1050 warning for
+--   boost_history. All three are harmless no-ops; see "Re-running" below.
+--
+-- ⚠️ Apply against the MySQL the app actually reads (MYSQL_* env, see
 -- lib/db.ts), e.g. via WorkBench or the CLI. `npm run migrate` (scripts/
 -- run-migrations.ts) connects with `pg` to DATABASE_URL (Neon/Postgres), which
 -- is not the database this app queries, and 004-006 are already MySQL dialect.
+--
+-- ORDER MATTERS: run section 1 and 2 (columns) before section 3 (indexes).
+-- Creating an index on a column that does not exist yet fails with
+-- "1072 Key column 'boost_until' doesn't exist in table". Section 4
+-- (boost_history) is independent of the profile columns and can run any time.
 --
 -- MySQL dialect notes (runtime DB is MySQL, see lib/db.ts):
 --   - TIMESTAMPTZ -> DATETIME; NOW() is already local to the server.
@@ -17,33 +33,41 @@
 --     gen_random_uuid() dependency.
 --   - NO partial indexes: expiry is decided in the ORDER BY instead
 --     (lib/boost.ts `boostOrderBy`).
---   - NO "ADD COLUMN IF NOT EXISTS" and NO "CREATE INDEX IF NOT EXISTS":
---     neither exists in MySQL (the first is MariaDB-only), so a combined
---     ALTER with those clauses is a 1064 syntax error.
---   - Therefore this migration is NOT idempotent. Re-running reports
---     "Duplicate column name" (1060) or "Duplicate key name" (1061); that is
---     the expected signal, not a failure — skip the statement and continue.
---     Run the verification query at the bottom to confirm the end state.
+--   - NO "ADD COLUMN IF NOT EXISTS" and NO "CREATE INDEX IF NOT EXISTS".
+--     Neither exists in MySQL — the first is MariaDB-only — so a combined
+--     ALTER carrying those clauses is a 1064 syntax error. This is why the
+--     columns below are one statement per column.
 --
--- Verification (expect 6 new columns per profile table + boost_history):
+-- Re-running:
+--   - ALTER TABLE ... ADD COLUMN  -> 1060 "Duplicate column name" if present.
+--   - CREATE INDEX               -> 1061 "Duplicate key name" if present.
+--   - CREATE TABLE IF NOT EXISTS -> 1050 warning, statement is a no-op.
+--   All three are the expected signal, not a failure: skip the statement and
+--   continue. Use the verification queries at the bottom to confirm the end
+--   state instead of relying on the statements succeeding.
+--
+-- Verification 1 — profile columns (expect 12 rows, 6 per table):
 --   SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.COLUMNS
 --   WHERE TABLE_SCHEMA = DATABASE()
 --     AND TABLE_NAME IN ('escorts', 'agencies')
---     AND COLUMN_NAME LIKE '%boost%';
+--     AND COLUMN_NAME LIKE '%boost%'
+--   ORDER BY TABLE_NAME, COLUMN_NAME;
 --
--- Re-run safety: statement 4 uses CREATE TABLE IF NOT EXISTS, so a re-run
--- reports "1050 Table 'boost_history' already exists" as a warning and is a
--- no-op. That is correct ONLY if the existing table has the expected columns —
--- verify with:
+-- Verification 2 — indexes (expect 2 rows each, boost_until then boost_priority):
+--   SHOW INDEX FROM escorts   WHERE Key_name = 'idx_escorts_boost';
+--   SHOW INDEX FROM agencies  WHERE Key_name = 'idx_agencies_boost';
+--
+-- Verification 3 — boost_history shape (expect 16 columns):
 --   SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
 --   FROM information_schema.COLUMNS
 --   WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'boost_history'
 --   ORDER BY ORDINAL_POSITION;
--- A table left over from an earlier shape must be dropped and recreated, or
--- ALTERed to add the missing columns, before the boost purchase path works.
+--   A table left over from an earlier shape must be dropped and recreated, or
+--   ALTERed to add the missing columns, before the boost purchase path works.
 -- ============================================================
 
--- 1. Escort boost columns (one statement per column; see re-run note above)
+-- 1. Escort boost columns (one statement per column; MySQL has no
+--    ADD COLUMN IF NOT EXISTS, see the dialect notes above).
 ALTER TABLE `escorts` ADD COLUMN `boost_until` DATETIME NULL;
 ALTER TABLE `escorts` ADD COLUMN `boost_priority` INT NOT NULL DEFAULT 0;
 ALTER TABLE `escorts` ADD COLUMN `active_boost_package_id` VARCHAR(64) NULL;
@@ -59,16 +83,18 @@ ALTER TABLE `agencies` ADD COLUMN `boost_credits_spent` INT NOT NULL DEFAULT 0;
 ALTER TABLE `agencies` ADD COLUMN `boost_activated_at` DATETIME NULL;
 ALTER TABLE `agencies` ADD COLUMN `last_boost_ended_at` DATETIME NULL;
 
--- 3. Listing sort index. The active-boost read is `boost_until > NOW()`
---    ordered by boost_priority, so boost_until leads the index and the CASE
---    in ORDER BY can use it directly.
+-- 3. Listing sort index. Run only after sections 1-2. The active-boost read is
+--    `boost_until > NOW()` ordered by boost_priority, so boost_until leads the
+--    index and the CASE in ORDER BY can use it directly.
 CREATE INDEX `idx_escorts_boost` ON `escorts` (`boost_until`, `boost_priority`);
 CREATE INDEX `idx_agencies_boost` ON `agencies` (`boost_until`, `boost_priority`);
 
 -- 4. Boost audit trail.
 --    end_reason is set when a row stops being the running boost:
 --    'expired' | 'replaced' | 'extended' | 'cancelled'.
---    Rows with ended_at IS NULL are the currently running boosts.
+--    Rows with ended_at IS NULL are the currently running boosts; a row is
+--    closed when it is replaced, or by scripts/cleanup-expired-boosts.ts once
+--    DATE_ADD(started_at, INTERVAL duration_days DAY) has passed.
 CREATE TABLE IF NOT EXISTS `boost_history` (
   `id`               CHAR(36)     NOT NULL,
   `user_id`          VARCHAR(191) NOT NULL,
@@ -95,5 +121,6 @@ CREATE TABLE IF NOT EXISTS `boost_history` (
 
 -- 5. Transaction lookups used by /extend and the invoices page.
 --    database/schema.sql already declares idx_transactions_user, _escort,
---    _checkout and _status, so only the agency lookup is added here.
+--    _checkout and _status, so only the agency lookup is added here. Left
+--    commented because it was not part of the verified run.
 --    CREATE INDEX `idx_transactions_agency` ON `transactions` (`agency_id`);
