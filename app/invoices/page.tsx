@@ -4,26 +4,22 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import { downloadInvoice, InvoiceTransaction } from "@/lib/invoice/invoice";
 
-type Transaction = {
-  id: string;
-  type: string;
+// Mirrors the flattened shape from /api/transactions — the invoice reads the
+// package name, currency, credits and payment method off it.
+type Transaction = InvoiceTransaction & {
+  type?: string | null;
   packageId?: string | null;
-  phoneNumber?: string;
-  amount?: number;
-  accountReference?: string;
-  transactionDesc?: string;
-  status: string;
-  resultCode?: number;
-  resultDesc?: string;
-  receiptNumber?: string;
-  transactionDate?: number;
-  createdAt?: any;
-  completedAt?: any;
+  resultCode?: number | null;
+  transactionDate?: number | null;
+  completedAt?: string | Date | null;
 };
 
 export default function InvoicesPage() {
+  const { user } = useUser();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,30 +48,15 @@ export default function InvoicesPage() {
     fetchTransactions();
   }, []);
 
+  // Was a flat Field/Value CSV. Now a branded, printable PDF invoice.
   const handleDownload = (tx: Transaction) => {
-    const rows = [
-      ["Field", "Value"],
-      ["Invoice ID", tx.id],
-      // createdAt is a MySQL DATETIME string, not a Firestore timestamp.
-      ["Date", tx.createdAt ? new Date(tx.createdAt).toLocaleString() : ""],
-      ["Type", tx.type],
-      ["Status", tx.status],
-      ["Description", tx.transactionDesc || tx.accountReference || ""],
-      ["Amount", tx.amount ? `KSH ${tx.amount}` : ""],
-      ["Phone", tx.phoneNumber || ""],
-      ["Receipt", tx.receiptNumber || ""],
-      ["Result", tx.resultDesc || ""],
-    ]
-      .map((row) => `"${row[0]}","${row[1]}"`)
-      .join("\n");
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
 
-    const blob = new Blob([rows], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoice-${tx.id}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadInvoice(tx, {
+      name: fullName || null,
+      email: user?.primaryEmailAddress?.emailAddress || null,
+      phone: tx.phoneNumber || null,
+    });
   };
 
   const formatDate = (timestamp: any) => {

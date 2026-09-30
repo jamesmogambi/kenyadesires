@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Loader2, ArrowRight, Download } from "lucide-react";
 import Link from "next/link";
 import FloatingFlowers from "./FloatingFlowers";
+import { useUser } from "@clerk/nextjs";
+import {
+  downloadInvoice,
+  InvoiceTransaction,
+} from "@/lib/invoice/invoice";
 
 type Status = "pending" | "completed" | "failed" | "not_found" | "timeout";
 
@@ -13,6 +18,7 @@ type Status = "pending" | "completed" | "failed" | "not_found" | "timeout";
 const MAX_POLL_MS = 60_000;
 
 export default function PaymentStatusPage() {
+  const { user } = useUser();
   const searchParams = useSearchParams();
   const router = useRouter();
   const checkoutRequestId = searchParams.get("checkoutRequestId");
@@ -96,34 +102,18 @@ export default function PaymentStatusPage() {
     };
   }, [checkoutRequestId]);
 
+  // Was a CSV built with unquoted rows, so any description containing a comma
+  // (or a quote) produced a malformed file. Now a branded PDF invoice.
   const handleDownloadInvoice = () => {
     if (!transaction) return;
-    // createdAt is a MySQL DATETIME, not a Firestore timestamp — the
-    // _seconds shape never existed here and always produced an empty date.
-    const createdAt = transaction.createdAt
-      ? new Date(transaction.createdAt).toLocaleString()
-      : "";
-    const csv = [
-      ["Field", "Value"],
-      ["Invoice ID", transaction.id],
-      ["Reference", transaction.checkoutRequestId || ""],
-      ["Date", createdAt],
-      ["Status", transaction.status],
-      ["Amount", transaction.amount ? `KSH ${transaction.amount}` : ""],
-      ["Phone", transaction.phoneNumber || ""],
-      ["Receipt", transaction.receiptNumber || ""],
-      ["Result", transaction.resultDesc || ""],
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `invoice-${transaction.id}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
+
+    downloadInvoice(transaction as InvoiceTransaction, {
+      name: fullName || null,
+      email: user?.primaryEmailAddress?.emailAddress || null,
+      phone: transaction.phoneNumber || null,
+    });
   };
 
   if (status === "not_found") {
