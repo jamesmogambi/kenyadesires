@@ -30,7 +30,8 @@
     "migrate:export:ignore": "tsx scripts/migrate/6-export.ts --insert-ignore",
     "migrate:import": "tsx scripts/migrate/7-import.ts",
     "zoho-campaigns": "tsx scripts/create-zoho-campaigns.ts",
-    "zoho-retry": "tsx scripts/zoho-sync-retry.ts"
+    "zoho-retry": "tsx scripts/zoho-sync-retry.ts",
+    "indexnow": "tsx scripts/indexnow-submit.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
