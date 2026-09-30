@@ -17,6 +17,14 @@ import { AD_PACKAGES, CREDIT_VALUE_KSH, getAdPackageById } from "@/lib/constants
 
 export const BOOST_COOLDOWN_HOURS = 1;
 
+/**
+ * Shown when a signed-in account has neither an escort nor an agency row yet.
+ * A boost ranks a profile, so there is nothing to boost until one exists — say
+ * what to do about it instead of "User profile not found".
+ */
+export const NO_PROFILE_REASON =
+  "You don't have a profile on this site yet. Create an escort or agency profile first, then come back to buy a boost.";
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export type BoostUserType = "escort" | "agency";
@@ -379,7 +387,11 @@ export async function checkBoostEligibility(
 
   const target = await getBoostTarget(userId, query);
   if (!target) {
-    return { eligible: false, status: "blocked", reason: "User profile not found" };
+    return {
+      eligible: false,
+      status: "blocked",
+      reason: NO_PROFILE_REASON,
+    };
   }
 
   if (!target.profile.isActive) {
@@ -758,7 +770,7 @@ export async function getBoostOverview(userId: string): Promise<BoostOverview> {
         netCredits: pkg.credits,
         proratedCredits: 0,
         price: pkg.credits * CREDIT_VALUE_KSH,
-        reason: "User profile not found",
+        reason: NO_PROFILE_REASON,
       })),
     };
   }

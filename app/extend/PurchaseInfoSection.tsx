@@ -24,7 +24,7 @@ export const PurchaseInfoSection = ({ className }: Prop) => {
         <li className="flex gap-2 md:gap-3">
           <Check className="text-red-700 size-4 md:size-5 shrink-0 mt-0.5" />
           <p className="text-black font-semibold text-base md:text-xl">
-            Use existing credits or buy credits via M-Pesa
+            Use existing credits or buy credits to get more leads
           </p>
         </li>
         <li className="flex gap-2 md:gap-3">

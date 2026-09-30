@@ -530,9 +530,21 @@ const AdvertisingPriceLIst = ({
                     }}
                   >
                     {isBlocked
-                      ? `Complete ${activeBoost?.packageName} first`
+                      ? activeBoost?.packageName
+                        ? `Complete ${activeBoost.packageName} first`
+                        : "Create profile first"
                       : `${STATUS_LABEL[pkgStatus]} ${pkg.name}`}
                   </Button>
+
+                  {/* `blocked` is also returned when the account has no
+                      escort/agency row at all (getBoostOverview → no target), in
+                      which case there is no activeBoost to name. The server's
+                      reason says what to do about it. */}
+                  {isBlocked && view?.reason && (
+                    <p className="mt-2 text-center text-xs text-stone-200">
+                      {view.reason}
+                    </p>
+                  )}
                 </div>
               );
             })}

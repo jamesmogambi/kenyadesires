@@ -29,7 +29,11 @@ export const metadata: Metadata = {
 
 const page = async () => {
   const { userId } = await auth();
-  const user = await currentUser();
+  // currentUser() calls the Clerk Backend API on every render; a failed call
+  // throws ClerkAPIResponseError ("no message was provided") and took the whole
+  // page down with a 500. The role only selects which profile to load, so a
+  // failed lookup degrades to "no role" instead of crashing the route.
+  const user = await currentUser().catch(() => null);
 
   const role = user?.unsafeMetadata?.role as string;
 

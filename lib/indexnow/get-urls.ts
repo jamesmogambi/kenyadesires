@@ -8,21 +8,48 @@ export interface SitemapFetchResult {
 }
 
 async function fetchXml(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "KenyaDesires IndexNow Bot",
-        Accept: "application/xml, text/xml",
-      },
-      next: { revalidate: 0 },
-    });
-    if (!res.ok) {
-      return null;
+  // Node's undici fetch gives up on the TCP connect after 10s, and
+  // /sitemap.xml is generated per request and regularly takes ~18s end to
+  // end, so the default fetch threw "Connect Timeout Error" and the submission
+  // silently found 0 URLs. Budget well past the slow path and retry.
+  const TIMEOUT_MS = 90_000;
+  const ATTEMPTS = 3;
+
+  let lastError = "unknown error";
+
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "KenyaDesires IndexNow Bot",
+          Accept: "application/xml, text/xml",
+        },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        next: { revalidate: 0 },
+      });
+
+      if (res.ok) {
+        return await res.text();
+      }
+      lastError = `HTTP ${res.status} ${res.statusText}`;
+    } catch (err: any) {
+      lastError = err?.cause?.code
+        ? `${err?.cause?.code} (${err?.cause?.message || err?.message})`
+        : err?.message || String(err);
     }
-    return await res.text();
-  } catch {
-    return null;
+
+    if (attempt < ATTEMPTS) {
+      console.warn(
+        `[IndexNow] Attempt ${attempt}/${ATTEMPTS} failed for ${url}: ${lastError}. Retrying...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+    }
   }
+
+  console.warn(
+    `[IndexNow] Giving up on ${url} after ${ATTEMPTS} attempts: ${lastError}`,
+  );
+  return null;
 }
 
 function parseSitemap(xml: string): string[] {
@@ -60,7 +87,10 @@ export async function getUrlsFromSitemap(baseUrl: string): Promise<SitemapFetchR
 
   const xml = await fetchXml(sitemapUrl);
   if (!xml) {
-    return { urls: [], errors: [`Failed to fetch sitemap: ${sitemapUrl}`] };
+    return {
+      urls: [],
+      errors: [`Failed to fetch sitemap: ${sitemapUrl} (see warnings above for the cause)`],
+    };
   }
 
   const isSitemapIndex = xml.includes("<sitemapindex") || xml.includes("<sitemapindex ");
