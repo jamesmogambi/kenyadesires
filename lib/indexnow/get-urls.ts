@@ -1,4 +1,5 @@
-import { SitemapUrl } from "./indexnow";
+import { get as httpGet } from "node:http";
+import { get as httpsGet } from "node:https";
 
 const SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
@@ -7,11 +8,14 @@ export interface SitemapFetchResult {
   errors: string[];
 }
 
+/**
+ * Fetched with node:http(s) rather than global fetch on purpose: undici
+ * (behind fetch) aborts the TCP connect after a hard 10s, and DNS for this
+ * host regularly takes ~15s, so every submission failed with
+ * "Connect Timeout Error" and reported 0 URLs. node:https has no such cap;
+ * the `timeout` option below is the only bound we apply.
+ */
 async function fetchXml(url: string): Promise<string | null> {
-  // Node's undici fetch gives up on the TCP connect after 10s, and
-  // /sitemap.xml is generated per request and regularly takes ~18s end to
-  // end, so the default fetch threw "Connect Timeout Error" and the submission
-  // silently found 0 URLs. Budget well past the slow path and retry.
   const TIMEOUT_MS = 90_000;
   const ATTEMPTS = 3;
 
@@ -19,22 +23,15 @@ async function fetchXml(url: string): Promise<string | null> {
 
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     try {
-      const res = await fetch(url, {
-        headers: {
-          "User-Agent": "KenyaDesires IndexNow Bot",
-          Accept: "application/xml, text/xml",
-        },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-        next: { revalidate: 0 },
-      });
+      const { statusCode, body } = await fetchText(url, TIMEOUT_MS);
 
-      if (res.ok) {
-        return await res.text();
+      if (statusCode >= 200 && statusCode < 300) {
+        return body;
       }
-      lastError = `HTTP ${res.status} ${res.statusText}`;
+      lastError = `HTTP ${statusCode}`;
     } catch (err: any) {
-      lastError = err?.cause?.code
-        ? `${err?.cause?.code} (${err?.cause?.message || err?.message})`
+      lastError = err?.code
+        ? `${err.code} (${err.message})`
         : err?.message || String(err);
     }
 
@@ -50,6 +47,45 @@ async function fetchXml(url: string): Promise<string | null> {
     `[IndexNow] Giving up on ${url} after ${ATTEMPTS} attempts: ${lastError}`,
   );
   return null;
+}
+
+function fetchText(
+  url: string,
+  timeoutMs: number,
+): Promise<{ statusCode: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const isHttps = url.startsWith("https:");
+    const request = (isHttps ? httpsGet : httpGet)(
+      url,
+      {
+        headers: {
+          "User-Agent": "KenyaDesires IndexNow Bot",
+          Accept: "application/xml, text/xml",
+        },
+        timeout: timeoutMs,
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+        res.on("end", () =>
+          resolve({
+            statusCode: res.statusCode ?? 0,
+            body: Buffer.concat(chunks).toString("utf8"),
+          }),
+        );
+        res.on("error", reject);
+      },
+    );
+
+    request.on("timeout", () => {
+      request.destroy(
+        Object.assign(new Error(`No response within ${timeoutMs}ms`), {
+          code: "ETIMEDOUT",
+        }),
+      );
+    });
+    request.on("error", reject);
+  });
 }
 
 function parseSitemap(xml: string): string[] {

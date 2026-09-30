@@ -1,13 +1,24 @@
 #!/usr/bin/env tsx
 
-import { getAllIndexNowUrls } from "../lib/indexnow/get-urls";
-import { submitUrlsToIndexNow } from "../lib/indexnow";
+import { config as loadEnv } from "dotenv";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
-// Allow override for local testing: INDEXNOW_TEST_URL=http://localhost:3000
-const TEST_URL = process.env.INDEXNOW_TEST_URL;
+// The IndexNow settings live in the same env files as the rest of the app, but
+// `tsx` does not load them (only Next.js does). Loaded before the modules
+// below are imported because lib/indexnow.ts reads process.env at module scope.
+const nodeEnv = process.env.NODE_ENV || "development";
+loadEnv({ path: `.env.${nodeEnv}` });
+loadEnv();
 
 async function main() {
+  // Imported here, not at the top: `lib/indexnow.ts` snapshots
+  // INDEXNOW_KEY / INDEXNOW_HOST when it is first evaluated.
+  const { getAllIndexNowUrls } = await import("../lib/indexnow/get-urls");
+  const { submitUrlsToIndexNow } = await import("../lib/indexnow");
+
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+  // Allow override for local testing: INDEXNOW_TEST_URL=http://localhost:3000
+  const TEST_URL = process.env.INDEXNOW_TEST_URL;
+
   const targetUrl = TEST_URL || BASE_URL;
   console.log(`[IndexNow] Starting manual submission for ${targetUrl}`);
   console.log(`[IndexNow] NODE_ENV: ${process.env.NODE_ENV}`);
