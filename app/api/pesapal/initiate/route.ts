@@ -28,14 +28,42 @@ function getCarrier(phone: string): "safaricom" | "airtel" | "unknown" {
   return "unknown";
 }
 
+async function isAuthenticated(req: Request): Promise<{ userId: string } | null> {
+  try {
+    const { userId } = await auth();
+    if (userId) return { userId };
+  } catch {
+    /* fall through to API-key check */
+  }
+
+  // For Request (not NextRequest), we need to get headers differently
+  const headers = new Headers(req.headers);
+  const provided = headers.get("x-api-key");
+  const expected = process.env.INTERNAL_API_KEY;
+  if (!provided || !expected) return null;
+
+  // constant-time comparison
+  let diff = 0;
+  const a = provided;
+  const b = expected;
+  const len = Math.min(a.length, b.length);
+  diff |= a.length ^ b.length;
+  for (let i = 0; i < len; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  if (diff === 0) {
+    return { userId: "internal-api" };
+  }
+  return null;
+}
+
 export async function POST(req: Request) {
   await connection();
 
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    const authResult = await isAuthenticated(req);
+    if (!authResult) {
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
+    const { userId } = authResult;
 
     const cfg = validatePesapalConfig();
     if (!cfg.valid) {
@@ -87,16 +115,14 @@ export async function POST(req: Request) {
     if (!email || !EMAIL_REGEX.test(String(email))) {
       errors.push("A valid email address is required");
     }
-    if (!phone) {
-      errors.push("Phone number is required");
-    } else {
+    if (phone) {
       const phoneStr = String(phone);
       const normalized = phoneStr.replace(/\s+/g, "");
       
-      // Validate Kenyan mobile format
-      if (!KENYAN_MOBILE_REGEX.test(normalized)) {
+      // Validate Kenyan mobile format if provided
+      if (normalized && !KENYAN_MOBILE_REGEX.test(normalized)) {
         errors.push("Invalid Kenyan phone number. Use format: 07XXXXXXXX, +2547XXXXXXXX, or 2547XXXXXXXX");
-      } else {
+      } else if (normalized) {
         // Detect carrier for logging/debugging
         const carrier = getCarrier(phoneStr);
         console.log(`[Pesapal] Detected carrier: ${carrier} for phone: ${phoneStr}`);
@@ -119,7 +145,6 @@ export async function POST(req: Request) {
       );
     }
 
-    const e164Phone = formatPhoneNumber(String(phone), { format: "e164" });
     const baseAmount = numericAmount;
 
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/$/, "");
@@ -137,14 +162,14 @@ export async function POST(req: Request) {
       amount: baseAmount,
       description: String(description).slice(0, 100),
       callback_url: `${appUrl}/payment/callback`,
-      redirect_mode: "TOP_WINDOW",
+      redirect_mode: "PARENT_WINDOW",
       notification_id: process.env.PESAPAL_IPN_ID!,
       billing_address: {
         email_address: String(email),
-        phone_number: e164Phone,
         country_code: "KE",
         first_name: String(firstName),
         last_name: String(lastName),
+        ...(phone ? { phone_number: formatPhoneNumber(String(phone), { format: "e164" }) } : {}),
       },
     };
 
@@ -163,6 +188,7 @@ export async function POST(req: Request) {
     // TODO: Adapt `createOrder` in lib/pesapal-orders.ts to your exact schema.
     //       It currently inserts into the `pesapal_orders` MySQL table (see the
     //       CREATE TABLE in its header). Map columns/renames as your DB requires.
+    const e164Phone = phone ? formatPhoneNumber(String(phone), { format: "e164" }) : undefined;
     await createOrder({
       orderTrackingId: order.order_tracking_id,
       merchantReference: String(orderId),

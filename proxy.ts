@@ -39,6 +39,8 @@ const isPublicRoute = createRouteMatcher([
    '/api/pesapal/ipn/(.*)',
    '/api/pesapal/callback',
    '/api/pesapal/callback/(.*)',
+   '/api/pesapal/register-ipn',
+   '/api/pesapal/initiate',
    '/api/mux/(.*)',
   '/api/cron/(.*)',
   '/api/sitemap-status',

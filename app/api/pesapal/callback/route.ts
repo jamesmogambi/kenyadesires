@@ -11,18 +11,24 @@ import { updateOrderStatus } from "@/lib/pesapal-orders";
  * GET /api/pesapal/callback
  *
  * Pesapal redirects the customer's browser here (callback_url) after payment.
- * Returns a fresh, server-side-verified status of the payment and redirects the
- * customer to /payment/success or /payment/failed.
+ * Returns a fresh, server-side-verified status of the payment.
  *
- * The redirect is issued as an HTTP 302 so it works even if JavaScript is
- * disabled. The loading page at /payment/callback forwards here.
+ * - Full-page flow (default): issues HTTP 302 redirect to /payment/success or /payment/failed
+ * - Iframe flow (iframe=true): returns JSON { status, ... } for parent window postMessage
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const orderTrackingId = searchParams.get("OrderTrackingId");
   const orderMerchantReference = searchParams.get("OrderMerchantReference");
+  const isIframe = searchParams.get("iframe") === "true";
 
   if (!orderTrackingId) {
+    if (isIframe) {
+      return NextResponse.json(
+        { error: "Missing OrderTrackingId", status: "failed" },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
       { error: "Missing OrderTrackingId" },
       { status: 400 },
@@ -46,16 +52,33 @@ export async function GET(req: NextRequest) {
     await updateOrderStatus(orderTrackingId, status, orderMerchantReference, tx);
 
     const completed = isPaymentCompleted(tx.payment_status_description);
+
+    if (isIframe) {
+      return NextResponse.json({
+        status: completed ? "completed" : "failed",
+        orderTrackingId,
+        merchantReference: tx.merchant_reference,
+        paymentStatus: tx.payment_status_description,
+      });
+    }
+
     return NextResponse.redirect(
       completed ? successTarget(tx.merchant_reference) : failedTarget(status),
     );
   } catch (err: any) {
     console.error("[Pesapal/callback] error:", err?.message || err);
-    // Verification failed — send them to the failed page with the reason.
     const detail =
       err instanceof PesapalError
         ? err.message
         : err?.message || "verification_failed";
+
+    if (isIframe) {
+      return NextResponse.json(
+        { error: detail, status: "failed", orderTrackingId },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.redirect(failedTarget(detail));
   }
 }
