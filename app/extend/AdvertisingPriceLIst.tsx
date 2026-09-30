@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +17,6 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { isValidPhoneNumber } from "@/lib/phone";
 import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
@@ -27,7 +26,6 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  AlertCircle,
   CheckCircle,
   XCircle,
 } from "lucide-react";
@@ -62,23 +60,20 @@ const AdvertisingPriceLIst = ({
   const router = useRouter();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [displayPhone, setDisplayPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [status, setStatus] = useState<
     "idle" | "pending" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
-  const [phoneError, setPhoneError] = useState<string | null>(null);
-  const phoneInputRef = useRef<HTMLInputElement | null>(null);
 
   // Pesapal checkout is offered directly on the card when we have a valid
   // billing contact on file for the current girl/agency.
   const canUsePesapal = !!(
     userProfile?.phone &&
     userProfile?.email &&
-    isValidPhoneNumber(userProfile.phone)
+    userProfile?.phone.length > 0 &&
+    userProfile?.email.length > 0
   );
   const firstName = userProfile?.name
     ? userProfile.name.split(" ")[0] || "Customer"
@@ -86,77 +81,6 @@ const AdvertisingPriceLIst = ({
   const lastName = userProfile?.name
     ? userProfile.name.split(" ").slice(1).join(" ") || "Customer"
     : "Customer";
-
-  const formatPhoneForDisplay = (digits: string): string => {
-    if (!digits) return "";
-    if (digits.startsWith("254")) {
-      return `+${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-    }
-    if (digits.startsWith("0")) {
-      return `${digits.slice(0, 1)}${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
-    }
-    if (digits.length <= 9) {
-      return digits;
-    }
-    return `0${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
-  };
-
-  const validatePhoneNumber = (phone: string): boolean => {
-    const digits = phone.replace(/\D/g, "");
-
-    if (digits.length === 0) {
-      setPhoneError("Phone number is required");
-      return false;
-    }
-
-    const normalized = digits.startsWith("254")
-      ? `+${digits}`
-      : digits.length === 10 && digits.startsWith("07")
-        ? digits
-        : digits.length === 9 && digits.startsWith("7")
-          ? `0${digits}`
-          : digits;
-
-    const finalDigits = normalized.replace(/\D/g, "");
-
-    const isValid =
-      (finalDigits.length === 10 && finalDigits.startsWith("07")) ||
-      (finalDigits.length === 12 && finalDigits.startsWith("2547"));
-
-    if (!isValid) {
-      setPhoneError(
-        "Please enter a valid Kenyan phone number (e.g., 0712345678 or +254 712 345 678)",
-      );
-      return false;
-    }
-
-    setPhoneError(null);
-    return true;
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const digits = raw.replace(/\D/g, "");
-    setPhoneNumber(digits);
-    setDisplayPhone(raw);
-    if (phoneError) setPhoneError(null);
-  };
-
-  const handlePhoneBlur = () => {
-    if (phoneNumber) {
-      setDisplayPhone(formatPhoneForDisplay(phoneNumber));
-      validatePhoneNumber(phoneNumber);
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text");
-    const digits = pasted.replace(/\D/g, "");
-    setPhoneNumber(digits);
-    setDisplayPhone(formatPhoneForDisplay(digits));
-    if (phoneError) setPhoneError(null);
-  };
 
   const handleUseCredits = async () => {
     if (!selectedPackage) return;
@@ -194,139 +118,7 @@ const AdvertisingPriceLIst = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBuyWithMpesa = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-
-    if (!selectedPackage) {
-      setStatus("error");
-      setMessage("Please select a package first");
-      return;
-    }
-
-    if (!validatePhoneNumber(phoneNumber)) {
-      setStatus("error");
-      setMessage(phoneError || "Please enter a valid phone number");
-      return;
-    }
-
-    if (!termsAccepted) {
-      setStatus("error");
-      setMessage("Please accept the terms and conditions");
-      return;
-    }
-
-    setLoading(true);
-    setStatus("pending");
-    setMessage("Initiating payment...");
-
-    try {
-      const activeResult = await getUserActivePackages();
-      if (activeResult.success && (activeResult.packages?.length ?? 0) > 0) {
-        const pkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
-        const hasActiveSameType = activeResult.packages?.some(
-          (p: any) => p.packageId === selectedPackage && p.status === "active",
-        );
-
-        if (hasActiveSameType) {
-          setStatus("error");
-          setMessage(
-            `You already have an active ${pkg?.name || "package"}. Please wait for it to expire before purchasing again.`,
-          );
-          setLoading(false);
-          return;
-        }
-      }
-
-      const pkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
-      if (!pkg) throw new Error("Package not found");
-
-      const amount = pkg.credits * 10;
-      const cleanPhone = phoneNumber.replace(/\s/g, "").replace(/^\+/, "");
-
-      const response = await fetch("/api/mpesa/stk-push", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phoneNumber: cleanPhone,
-          amount,
-          accountReference: `Ad-${pkg.name}-${Date.now()}`,
-          transactionDesc: `Buy ${pkg.name} ad package`,
-          packageId: pkg.id,
-          type: "ad_purchase",
-        }),
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      const text = await response.text();
-      let data: any = {};
-
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { raw: text };
-      }
-
-      if (!response.ok || data.error) {
-        const detail = data.detail ? `: ${data.detail}` : "";
-        const raw = data.raw ? ` | raw: ${data.raw}` : "";
-        throw new Error(`${data.error || "Failed to initiate payment"}${detail}${raw}`);
-      }
-
-      if (data.success && data.checkoutRequestId) {
-        setStatus("success");
-        setMessage(
-          `✅ Payment initiated! Check your phone (${phoneNumber}) and enter PIN. Redirecting...`,
-        );
-        onPurchaseSuccess?.();
-        setTimeout(() => {
-          setOpen(false);
-          setSelectedPackage(null);
-          setStatus("idle");
-          setMessage("");
-          router.push(
-            `/payment-status?checkoutRequestId=${encodeURIComponent(data.checkoutRequestId)}`,
-          );
-        }, 1500);
-      } else {
-        throw new Error(data.error || "Failed to initiate payment");
-      }
-    } catch (error: any) {
-      const errorMessage = error?.message || "An error occurred";
-      setStatus("error");
-      setMessage(`M-Pesa Error: ${errorMessage}`);
-      onPurchaseError?.(errorMessage);
-      console.error("M-Pesa payment error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (open) {
-      setTimeout(() => {
-        phoneInputRef.current?.focus();
-      }, 300);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
-      setStatus("idle");
-      setMessage("");
-      setPhoneError(null);
-      setPhoneNumber("");
-      setDisplayPhone("");
-    } else if (open && userPhone) {
-      const digits = userPhone.replace(/\D/g, "");
-      setPhoneNumber(digits);
-      setDisplayPhone(formatPhoneForDisplay(digits));
-    }
-  }, [open, userPhone]);
+};
 
   const selectedPkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
   const canAffordCredits = selectedPkg
@@ -550,29 +342,10 @@ const AdvertisingPriceLIst = ({
                       setOpen(true);
                       setStatus("idle");
                       setMessage("");
-                      setPhoneError(null);
                     }}
                   >
                      Buy {pkg.name}
                    </Button>
-
-                   {canUsePesapal && (
-                     <PesapalCheckoutButton
-                       className="mt-2 h-10 text-sm font-semibold"
-                       orderId={`${pkg.id}-${Date.now()}`}
-                       amount={pkg.credits * 10}
-                       email={userProfile!.email as string}
-                       phone={userProfile!.phone as string}
-                       firstName={firstName}
-                       lastName={lastName}
-                       description={`Boost: ${pkg.name}`}
-                       packageId={pkg.id}
-                       packageName={pkg.name}
-                       idType={userProfile!.idType as "escort" | "agency"}
-                     >
-                       Pay KSH {(pkg.credits * 10).toLocaleString()} with Pesapal
-                     </PesapalCheckoutButton>
-                   )}
                </div>
              ))}
           </div>
@@ -624,7 +397,7 @@ const AdvertisingPriceLIst = ({
                   {selectedPkg && userCredits < selectedPkg.credits && (
                     <p className="text-sm text-orange-600 mt-2">
                       You need {selectedPkg.credits - userCredits} more credits.
-                      Purchase with M-Pesa below.
+                      Purchase with Pesapal below.
                     </p>
                   )}
                 </div>
@@ -653,84 +426,31 @@ const AdvertisingPriceLIst = ({
                       )}
                     </Button>
 
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-sm uppercase">
-                        <span className="bg-white px-3 text-gray-500">Or</span>
-                      </div>
-                    </div>
-
-                    <form
-                      onSubmit={handleBuyWithMpesa}
-                      className="flex flex-col gap-3"
-                    >
-                      <div>
-                        <Label
-                          htmlFor="phone"
-                          className="text-base md:text-lg font-semibold"
-                        >
-                          M-Pesa Phone Number
-                        </Label>
-                        <div className="mt-2">
-                          <input
-                            ref={phoneInputRef}
-                            id="phone"
-                            type="tel"
-                            name="phone"
-                            autoComplete="tel"
-                            inputMode="numeric"
-                            pattern="[0-9+ ]*"
-                            placeholder="0712 345 678"
-                            value={displayPhone}
-                            onChange={handlePhoneChange}
-                            onBlur={handlePhoneBlur}
-                            onPaste={handlePaste}
-                            disabled={status === "pending"}
-                            className={cn(
-                              "w-full h-12 md:h-14 text-black/70 rounded-md border px-3 py-2 text-base md:text-lg shadow-sm",
-                              phoneError
-                                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                                : "border-gray-300 focus:border-red-700 focus:ring-red-700",
-                              "focus:outline-none focus:ring-2",
-                              status === "pending" &&
-                                "opacity-50 cursor-not-allowed bg-gray-100",
-                            )}
-                          />
-                          {phoneError && (
-                            <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                              <AlertCircle className="w-4 h-4" />
-                              {phoneError}
-                            </p>
-                          )}
-                          <p className="text-sm text-gray-500 mt-1">
-                            Enter a valid Kenyan number. Example: 0712 345 678
-                          </p>
-                        </div>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={
-                          loading ||
-                          !phoneNumber ||
-                          !termsAccepted ||
-                          status === "pending" ||
-                          !!phoneError
-                        }
-                        className="w-full bg-green-600 hover:bg-green-700 h-12 md:h-14 text-base md:text-lg"
+                    {canUsePesapal && selectedPkg && (
+                      <PesapalCheckoutButton
+                        orderId={`AD-${selectedPkg.id}-${Date.now()}`}
+                        amount={selectedPkg.credits * 10}
+                        email={userProfile?.email || ""}
+                        phone={userProfile?.phone || ""}
+                        firstName={firstName}
+                        lastName={lastName}
+                        description={`Purchase ${selectedPkg.name} boost package`}
+                        packageId={selectedPkg.id}
+                        packageName={selectedPkg.name}
+                        idType={userProfile?.idType || undefined}
+                        className="w-full"
                       >
-                        {loading && status === "pending" ? (
-                          <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          `Buy ${selectedPkg?.name} with M-Pesa`
-                        )}
-                      </Button>
-                    </form>
+                        Pay with Pesapal (M-Pesa / Airtel Money / Card)
+                      </PesapalCheckoutButton>
+                    )}
+
+                    {!canUsePesapal && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                        <p className="text-amber-700 font-medium">
+                          Please complete your profile with a valid phone number and email to use Pesapal payments.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
