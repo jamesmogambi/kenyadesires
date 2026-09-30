@@ -96,6 +96,28 @@ export async function getCachedAgencies(
 }
 
 // ============================================
+// GET AGENCIES FOR SITEMAP (all active agencies, no pagination)
+// ============================================
+export async function getAgenciesForSitemap(): Promise<IAgency[]> {
+  try {
+    console.log(`🔄 Fetching all agencies for sitemap...`);
+
+    const columns = AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ");
+
+    const rows: any[] = await executeQuery(
+      `SELECT ${columns} FROM agencies WHERE is_active = TRUE ORDER BY agencies.created_at DESC, agencies.name ASC`,
+    );
+
+    const agencies: IAgency[] = rows.map(mapDbRowToAgency);
+    console.log(`✅ Found ${agencies.length} agencies for sitemap`);
+    return agencies;
+  } catch (error) {
+    console.error("Error fetching agencies for sitemap:", error);
+    return [];
+  }
+}
+
+// ============================================
 // GET AGENCY BY SLUG
 // ============================================
 export async function getCachedAgencyBySlug(slug: string) {

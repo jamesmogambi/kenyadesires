@@ -147,7 +147,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
 
-    // ==================== 5. COUNTY-FILTERED GIRLS PAGES ====================
+    // ==================== 3. AGENCY PROFILES ====================
+    let agencyEntries: MetadataRoute.Sitemap = [];
+
+    try {
+      const { getAgenciesForSitemap } = await import("@/server-actions/agency.action");
+      const agencies = await getAgenciesForSitemap();
+
+      if (agencies && agencies.length > 0) {
+        agencyEntries = agencies
+          .filter((agency: any) => agency?.id)
+          .map((agency: any) => ({
+            url: sanitizeUrl(baseUrl, `agencies/${agency.id}`),
+            lastModified: agency.updatedAt
+              ? new Date(agency.updatedAt)
+              : new Date(),
+            changeFrequency: "weekly" as const,
+            priority: 0.8,
+          }));
+
+        console.log(`✅ Added ${agencyEntries.length} agency profiles to sitemap`);
+      } else {
+        console.warn(`⚠️ No agencies found for sitemap`);
+      }
+    } catch (error) {
+      console.error(`❌ Error fetching agencies for sitemap:`, error);
+    }
+
+    // ==================== 4. COUNTY-FILTERED GIRLS PAGES ====================
     let countyEntries: MetadataRoute.Sitemap = [];
 
     try {
@@ -233,6 +260,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const allEntries = [
       ...staticEntries,
       ...blogEntries,
+      ...agencyEntries,
       ...countyEntries,
       ...practiceEntries,
       ...comboEntries,
@@ -249,6 +277,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const categories = {
       static: staticEntries.length,
       blog: blogEntries.length,
+      agencies: agencyEntries.length,
       counties: countyEntries.length,
       practices: practiceEntries.length,
       combos: comboEntries.length,

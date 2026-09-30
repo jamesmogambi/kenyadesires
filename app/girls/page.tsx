@@ -105,7 +105,18 @@ export async function generateMetadata(
 
   const title = buildTitle();
   const description = buildDescription();
-  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/girls`;
+
+  // Build canonical URL with query parameters
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+  const canonicalParams = new URLSearchParams();
+  if (county && county !== "all") canonicalParams.set("county", county);
+  if (region && region !== "all") canonicalParams.set("region", region);
+  if (practice && practice !== "all") canonicalParams.set("practice", practice);
+  if (sort) canonicalParams.set("sort", sort);
+  if (order) canonicalParams.set("order", order);
+  if (pageNumber > 1) canonicalParams.set("page", pageNumber.toString());
+
+  const canonicalUrl = `${baseUrl}/girls${canonicalParams.toString() ? `?${canonicalParams.toString()}` : ""}`;
 
   return {
     title,

@@ -81,7 +81,7 @@ export async function generateMetadata(
         siteName: "KenyaDesires",
         title: `${displayName} - Premium Adult Entertainment in ${location}`,
         description: buildDescription(),
-        url: `${siteUrl}/agency/${slug}`,
+        url: `${siteUrl}/agencies/${slug}`,
         images: [
           {
             url: imageUrl,
@@ -112,7 +112,7 @@ export async function generateMetadata(
         },
       },
       alternates: {
-        canonical: `${siteUrl}/agency/${slug}`,
+        canonical: `${siteUrl}/agencies/${slug}`,
       },
       category: "Adult Entertainment",
       other: {
