@@ -9,6 +9,24 @@ import { isValidPhoneNumber, formatPhoneNumber } from "@/lib/phone";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Pesapal `id` charset: alphanumeric + - _ . : (<=50 chars).
 const REFERENCE_REGEX = /^[A-Za-z0-9\-_ .:]{1,50}$/;
+// Kenyan mobile regex: Safaricom (07xx, 011x) and Airtel (073x, 078x)
+const KENYAN_MOBILE_REGEX = /^(?:\+?254|0)(7\d{8}|1\d{8})$/;
+
+function getCarrier(phone: string): "safaricom" | "airtel" | "unknown" {
+  const digits = phone.replace(/\D/g, "");
+  let national = "";
+  if (digits.startsWith("254")) {
+    national = "0" + digits.slice(3);
+  } else if (digits.startsWith("0")) {
+    national = digits;
+  } else if (digits.length === 9 && (digits.startsWith("7") || digits.startsWith("1"))) {
+    national = "0" + digits;
+  }
+  
+  if (national.startsWith("07") || national.startsWith("011")) return "safaricom";
+  if (national.startsWith("073") || national.startsWith("078")) return "airtel";
+  return "unknown";
+}
 
 export async function POST(req: Request) {
   await connection();
@@ -69,8 +87,21 @@ export async function POST(req: Request) {
     if (!email || !EMAIL_REGEX.test(String(email))) {
       errors.push("A valid email address is required");
     }
-    if (!phone || !isValidPhoneNumber(String(phone))) {
-      errors.push("A valid Kenyan phone number is required (e.g. +254712345678)");
+    if (!phone) {
+      errors.push("Phone number is required");
+    } else {
+      const phoneStr = String(phone);
+      const normalized = phoneStr.replace(/\s+/g, "");
+      
+      // Validate Kenyan mobile format
+      if (!KENYAN_MOBILE_REGEX.test(normalized)) {
+        errors.push("Invalid Kenyan phone number. Use format: 07XXXXXXXX, +2547XXXXXXXX, or 2547XXXXXXXX");
+      } else {
+        // Detect carrier for logging/debugging
+        const carrier = getCarrier(phoneStr);
+        console.log(`[Pesapal] Detected carrier: ${carrier} for phone: ${phoneStr}`);
+        // TODO: Extend for Telkom (077x) / Equitel (076x) if needed
+      }
     }
     if (!firstName || String(firstName).trim().length === 0) {
       errors.push("firstName is required");

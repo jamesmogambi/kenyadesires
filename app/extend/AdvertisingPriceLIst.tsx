@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { isValidPhoneNumber } from "@/lib/phone";
 import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
+import { PhoneInput } from "@/components/PhoneInput";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
 import { purchaseAdPackage, getUserActivePackages } from "@/server-actions/payment.action";
@@ -67,19 +68,24 @@ const AdvertisingPriceLIst = ({
     "idle" | "pending" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
+  const [manualPhone, setManualPhone] = useState("");
+  const [useManualPhone, setUseManualPhone] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Pesapal checkout is offered directly on the card when we have a valid
   // billing contact on file for the current girl/agency.
-  const canUsePesapal = !!(
+  const profilePhoneValid = !!(
     userProfile?.phone &&
     userProfile?.email &&
     userProfile?.phone.length > 0 &&
     userProfile?.email.length > 0 &&
     isValidPhoneNumber(userProfile.phone)
   );
+  
+  const canUsePesapal = profilePhoneValid || useManualPhone;
 
   // Debug log
-  console.log("[AdvertisingPriceLIst] userProfile:", userProfile, "canUsePesapal:", canUsePesapal);
+  console.log("[AdvertisingPriceLIst] userProfile:", userProfile, "profilePhoneValid:", profilePhoneValid, "useManualPhone:", useManualPhone);
   const firstName = userProfile?.name
     ? userProfile.name.split(" ")[0] || "Customer"
     : "Customer";
@@ -431,33 +437,80 @@ const AdvertisingPriceLIst = ({
                       )}
                     </Button>
 
-                    {canUsePesapal && selectedPkg && (
-                      <PesapalCheckoutButton
-                        orderId={`AD-${selectedPkg.id}-${Date.now()}`}
-                        amount={selectedPkg.credits * 10}
-                        email={userProfile?.email || ""}
-                        phone={userProfile?.phone || ""}
-                        firstName={firstName}
-                        lastName={lastName}
-                        description={`Purchase ${selectedPkg.name} boost package`}
-                        packageId={selectedPkg.id}
-                        packageName={selectedPkg.name}
-                        idType={userProfile?.idType || undefined}
-                        className="w-full"
-                      >
-                        Pay with Pesapal (M-Pesa / Airtel Money / Card)
-                      </PesapalCheckoutButton>
+                    {selectedPkg && (
+                      <>
+                        {!profilePhoneValid && (
+                          <PhoneInput
+                            value={manualPhone}
+                            onChange={(val) => {
+                              setManualPhone(val);
+                              setPhoneError(null);
+                              if (val && isValidPhoneNumber(val)) {
+                                setUseManualPhone(true);
+                              } else if (!val) {
+                                setUseManualPhone(false);
+                              }
+                            }}
+                            error={phoneError}
+                            disabled={status === "pending"}
+                            onUseDifferent={() => {
+                              setManualPhone("");
+                              setUseManualPhone(false);
+                              setPhoneError(null);
+                            }}
+                          />
+                        )}
+                        
+                        {profilePhoneValid && (
+                          <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                              <span className="text-sm text-green-700">
+                                Using profile phone: <span className="font-medium">{userProfile?.phone}</span>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setUseManualPhone(true)}
+                              className="text-sm text-red-700 hover:text-red-800 underline"
+                            >
+                              Use a different number
+                            </button>
+                          </div>
+                        )}
+                        
+                        {(profilePhoneValid || (useManualPhone && manualPhone && isValidPhoneNumber(manualPhone))) && (
+                          <PesapalCheckoutButton
+                            orderId={`AD-${selectedPkg.id}-${Date.now()}`}
+                            amount={selectedPkg.credits * 10}
+                            email={userProfile?.email || ""}
+                            phone={useManualPhone ? manualPhone : (userProfile?.phone || "")}
+                            firstName={firstName}
+                            lastName={lastName}
+                            description={`Purchase ${selectedPkg.name} boost package`}
+                            packageId={selectedPkg.id}
+                            packageName={selectedPkg.name}
+                            idType={userProfile?.idType || undefined}
+                            className="w-full"
+                          >
+                            Pay with Pesapal (M-Pesa / Airtel Money / Card)
+                          </PesapalCheckoutButton>
+                        )}
+                      </>
                     )}
 
-                    {!canUsePesapal && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
-                        <p className="text-amber-700 font-medium">
-                          Please complete your profile with a valid phone number and email to use Pesapal payments.
-                        </p>
-                        <p className="text-xs text-amber-600 mt-1">
-                          Debug: phone={userProfile?.phone ? "set" : "missing"} email={userProfile?.email ? "set" : "missing"} validPhone={userProfile?.phone ? isValidPhoneNumber(userProfile.phone) : false}
-                        </p>
-                      </div>
+                    {!profilePhoneValid && !useManualPhone && (
+                      <p className="text-sm text-amber-600 text-center">
+                        Enter your M-Pesa / Airtel phone number above to use Pesapal payments.
+                      </p>
+                    )}
+
+                    {useManualPhone && manualPhone && !isValidPhoneNumber(manualPhone) && (
+                      <p className="text-sm text-red-600 text-center">
+                        Please enter a valid Kenyan mobile number to proceed.
+                      </p>
                     )}
                   </div>
                 )}
