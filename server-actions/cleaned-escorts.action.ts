@@ -11,6 +11,7 @@ import {
   normalizedJsonLike,
 } from "@/lib/escort-filters";
 import { Escort, GetEscortsParams, GetEscortsResponse, convertQueryDocToEscort } from "./escort.action";
+import { boostOrderBy } from "@/lib/boost";
 
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
@@ -23,6 +24,8 @@ const LISTING_COLUMNS = [
   "is_featured", "has_cleaned_images", "cleaned_images",
   "created_at", "updated_at", "total_views", "rating", "total_bookings",
   "bdsm", "massage", "extra_services", "work_type", "gender",
+  // Boost state (migration 008) — read for the badge and the boosted sort.
+  "boost_until", "boost_priority", "active_boost_package_id",
 ];
 
 function getEscortListingSelect(): string {
@@ -172,14 +175,19 @@ async function getCleanedEscortsBase(
   const validSortFields = ["created_at", "updated_at", "age", "total_views", "rating", "total_bookings"];
   const safeSort = validSortFields.includes(sortField) ? sortField : "created_at";
 
+  // Live boosts rank first; the caller's sort decides the rest. Expired boosts
+  // fall back to priority 0 inside the CASE, so ranking is always correct
+  // without a cleanup job having run.
+  const orderBy = boostOrderBy("escorts", `escorts.${safeSort}`, sortOrder);
+
   let rows: any[] = [];
   if (paginateInSql) {
     const offset = (validPage - 1) * validLimit;
-    const dataQuery = `SELECT ${getEscortListingSelect()} FROM escorts ${where} ORDER BY ${safeSort} ${sortOrder}, escorts.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    const dataQuery = `SELECT ${getEscortListingSelect()} FROM escorts ${where} ORDER BY ${orderBy}, escorts.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     const dataParams = [...params_arr, validLimit, offset];
     rows = await executeQuery(dataQuery, dataParams);
   } else {
-    const dataQuery = `SELECT ${getEscortListingSelect()} FROM escorts ${where} ORDER BY ${safeSort} ${sortOrder}, escorts.created_at DESC`;
+    const dataQuery = `SELECT ${getEscortListingSelect()} FROM escorts ${where} ORDER BY ${orderBy}, escorts.created_at DESC`;
     rows = await executeQuery(dataQuery, params_arr);
   }
 

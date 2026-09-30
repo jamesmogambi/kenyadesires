@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
-import { purchaseAdPackage } from "@/server-actions/payment.action";
+import { getBoostStatus, purchaseAdPackage } from "@/server-actions/payment.action";
 import Link from "next/link";
 import {
   Loader2,
@@ -33,11 +33,43 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
+type PackageStatus = "available" | "extend" | "upgrade" | "blocked";
+
+interface PackageStatusView {
+  packageId: string;
+  status: PackageStatus;
+  credits: number;
+  netCredits: number;
+  proratedCredits: number;
+  price: number;
+  reason?: string;
+}
+
+/**
+ * Server actions cross the network boundary, so Date fields arrive as ISO
+ * strings. Kept in sync with `BoostOverview` in lib/boost.ts.
+ */
+interface BoostOverview {
+  userType: "escort" | "agency" | null;
+  activeBoost: {
+    packageId: string;
+    packageName: string;
+    priority: number;
+    boostUntil: string | Date;
+    daysRemaining: number;
+  } | null;
+  cooldown: { minutesRemaining: number; endsAt: string | Date } | null;
+  credits: number;
+  packages: PackageStatusView[];
+}
+
 interface Prop {
   className?: string;
   onPurchaseSuccess?: () => void;
   onPurchaseError?: (error: string) => void;
   userCredits?: number;
+  /** Kenyan mobile number, required by Pesapal to confirm an M-Pesa payment. */
+  userPhone?: string;
   userProfile?: {
     name: string | null;
     email: string | null;
@@ -46,11 +78,19 @@ interface Prop {
   };
 }
 
+const STATUS_LABEL: Record<PackageStatus, string> = {
+  available: "Buy",
+  extend: "Extend",
+  upgrade: "Upgrade",
+  blocked: "Unavailable",
+};
+
 const AdvertisingPriceLIst = ({
   className,
   onPurchaseSuccess,
   onPurchaseError,
   userCredits = 0,
+  userPhone = "",
   userProfile,
 }: Prop) => {
   const router = useRouter();
@@ -62,6 +102,30 @@ const AdvertisingPriceLIst = ({
     "idle" | "pending" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
+  const [boost, setBoost] = useState<BoostOverview | null>(null);
+
+  const loadBoost = async () => {
+    const result = await getBoostStatus();
+    if (result.success && result.overview) {
+      setBoost(result.overview as unknown as BoostOverview);
+    }
+  };
+
+  useEffect(() => {
+    loadBoost();
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      loadBoost();
+    };
+    window.addEventEvent("packages-updated", refresh);
+    window.addEventListener("credits-updated", refresh);
+    return () => {
+      window.removeEventListener("packages-updated", refresh);
+      window.removeEventListener("credits-updated", refresh);
+    };
+  }, []);
 
   const profileValid = !!(
     userProfile?.email &&
@@ -84,8 +148,16 @@ const AdvertisingPriceLIst = ({
     try {
       const result = await purchaseAdPackage(selectedPackage);
       if (result.success) {
+        const view = boost?.packages.find((p) => p.packageId === selectedPackage);
         setStatus("success");
-        setMessage("Ad package purchased successfully with credits!");
+        setMessage(
+          view?.status === "extend"
+            ? `${selectedPkgName} extended. Your boost is now longer.`
+            : view?.status === "upgrade"
+              ? `Upgraded to ${selectedPkgName}.`
+              : `${selectedPkgName} activated.`,
+        );
+        await loadBoost();
         onPurchaseSuccess?.();
         window.dispatchEvent(new Event("packages-updated"));
         window.dispatchEvent(new Event("credits-updated"));
@@ -94,11 +166,8 @@ const AdvertisingPriceLIst = ({
           setSelectedPackage(null);
           setStatus("idle");
           setMessage("");
+          router.push(`/payment/success?reference=${encodeURIComponent(result.transactionId || "")}&type=credits`);
         }, 1500);
-
-        if (result.transactionId) {
-          router.push(`/payment-status?checkoutRequestId=${encodeURIComponent(result.transactionId)}`);
-        }
       } else {
         setStatus("error");
         setMessage(result.error || "Failed to purchase package");
@@ -114,9 +183,16 @@ const AdvertisingPriceLIst = ({
 };
 
   const selectedPkg = AD_PACKAGES.find((p) => p.id === selectedPackage);
+  const selectedPkgName = selectedPkg?.name || "Boost package";
+  const selectedView = boost?.packages.find((p) => p.packageId === selectedPackage);
+  const selectedStatus: PackageStatus = selectedView?.status ?? "available";
+  const selectedNetCredits = selectedView?.netCredits ?? selectedPkg?.credits ?? 0;
   const canAffordCredits = selectedPkg
-    ? userCredits >= selectedPkg.credits
+    ? userCredits >= selectedNetCredits
     : false;
+
+  const viewFor = (pkgId: string): PackageStatusView | undefined =>
+    boost?.packages.find((p) => p.packageId === pkgId);
 
   const packageDetails: Record<string, { features: string[]; badge?: string }> =
     {
@@ -151,6 +227,16 @@ const AdvertisingPriceLIst = ({
         ],
       },
     };
+
+  const activeBoost = boost?.activeBoost ?? null;
+  const cooldown = boost?.cooldown ?? null;
+
+  useEffect(() => {
+    if (activeBoost && activeBoost.boostUntil) {
+      const remaining = new Date(activeBoost.boostUntil).getTime() - Date.now();
+      if (remaining <= 0) loadBoost();
+    }
+  }, [activeBoost?.boostUntil]);
 
   const StatusIndicator = () => {
     if (status === "idle") return null;
@@ -202,6 +288,30 @@ const AdvertisingPriceLIst = ({
             </h6>
           </div>
 
+          {activeBoost && (
+            <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4 text-left">
+              <p className="text-green-800 font-semibold">
+                {activeBoost.packageName} active
+              </p>
+              <p className="text-sm text-green-700 mt-1">
+                {activeBoost.daysRemaining}{" "}
+                {activeBoost.daysRemaining === 1 ? "day" : "days"} remaining
+                {" · "}
+                Priority {activeBoost.priority}
+              </p>
+            </div>
+          )}
+
+          {!activeBoost && cooldown && (
+            <div className="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4 text-left">
+              <p className="text-amber-800 text-sm">
+                Your last boost just ended. You can purchase a new one in{" "}
+                {cooldown.minutesRemaining} minute
+                {cooldown.minutesRemaining === 1 ? "" : "s"}.
+              </p>
+            </div>
+          )}
+
           <div className="flex flex-row mt-6 mb-10 md:mb-12 items-start sm:items-center gap-3">
             <Checkbox
               className="bg-white size-6 border-2 border-blue-300 md:size-8 shrink-0"
@@ -228,7 +338,15 @@ const AdvertisingPriceLIst = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {AD_PACKAGES.map((pkg) => (
+            {AD_PACKAGES.map((pkg) => {
+              const view = viewFor(pkg.id);
+              const pkgStatus: PackageStatus = view?.status ?? "available";
+              const isBlocked = pkgStatus === "blocked";
+              const displayPrice = view?.price ?? pkg.credits * 10;
+              const displayCredits =
+                pkgStatus === "upgrade" ? view?.netCredits ?? pkg.credits : pkg.credits;
+
+              return (
               <div
                 key={pkg.id}
                 className={cn(
@@ -236,6 +354,7 @@ const AdvertisingPriceLIst = ({
                   (pkg as any).bestValue
                     ? "bg-red-700 text-white"
                     : "bg-stone-100",
+                  isBlocked && "opacity-60",
                 )}
               >
                 {(pkg as any).popular && (
@@ -253,6 +372,21 @@ const AdvertisingPriceLIst = ({
                     Best Value
                   </div>
                 )}
+                {pkgStatus !== "available" && (
+                  <div
+                    className={cn(
+                      "absolute -top-2 md:-top-3 left-2 md:left-4 text-xs md:text-sm font-bold px-2 md:px-3 py-1 rounded-full shadow-md",
+                      pkgStatus === "blocked"
+                        ? "bg-stone-500 text-white"
+                        : pkgStatus === "upgrade"
+                          ? "bg-blue-500 text-white"
+                          : "bg-green-500 text-white",
+                    )}
+                  >
+                    {STATUS_LABEL[pkgStatus]}
+                  </div>
+                )}
+
                 {pkg.type === "boost" && (
                   <div className="mt-3 md:mt-4 mb-6 md:mb-8">
                     <svg
@@ -306,7 +440,7 @@ const AdvertisingPriceLIst = ({
                       (pkg as any).bestValue ? "text-white" : "text-black",
                     )}
                   >
-                    KSH {(pkg.credits * 10).toLocaleString()}
+                    KSH {displayPrice.toLocaleString()}
                   </span>
                   <span
                     className={cn(
@@ -316,31 +450,46 @@ const AdvertisingPriceLIst = ({
                   >
                     Active for {pkg.durationDays} {pkg.durationDays === 1 ? "day" : "days"}
                   </span>
+                  {pkgStatus === "upgrade" && (
+                    <span
+                      className={cn(
+                        "text-xs md:text-sm",
+                        (pkg as any).bestValue ? "text-white/90" : "text-blue-600",
+                      )}
+                    >
+                      {displayCredits} credits after {view?.proratedCredits} credit
+                      proration
+                    </span>
+                  )}
                 </div>
 
-                  <Button
-                    type="button"
-                    className={cn(
-                      "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
-                      (pkg as any).bestValue
-                        ? "bg-white text-red-700 hover:bg-white/90"
-                        : "bg-red-800 hover:bg-red-700",
-                    )}
-                    onClick={() => {
-                      if (!termsAccepted) {
-                        toast.error("Please accept the terms and conditions first");
-                        return;
-                      }
-                      setSelectedPackage(pkg.id);
-                      setOpen(true);
-                      setStatus("idle");
-                      setMessage("");
-                    }}
-                  >
-                     Buy {pkg.name}
-                   </Button>
-               </div>
-             ))}
+                <Button
+                  type="button"
+                  disabled={isBlocked}
+                  className={cn(
+                    "mt-6 md:mt-8 h-10 md:h-12 w-full text-white font-semibold text-lg md:text-2xl",
+                    (pkg as any).bestValue
+                      ? "bg-white text-red-700 hover:bg-white/90"
+                      : "bg-red-800 hover:bg-red-700",
+                  )}
+                  onClick={() => {
+                    if (!termsAccepted) {
+                      toast.error("Please accept the terms and conditions first");
+                      return;
+                    }
+                    setSelectedPackage(pkg.id);
+                    setOpen(true);
+                    setStatus("idle");
+                    setMessage("");
+                  }}
+                >
+                  {isBlocked
+                    ? `Complete ${activeBoost?.packageName} first`
+                    : `${STATUS_LABEL[pkgStatus]} ${pkg.name}`}
+                </Button>
+              </div>
+              );
+            })}
           </div>
 
           {selectedPackage && (
@@ -361,19 +510,29 @@ const AdvertisingPriceLIst = ({
             >
               <DialogHeader>
                 <DialogTitle className="text-2xl md:text-3xl flex items-center gap-2">
-                  Buy {selectedPkg?.name}
+                  {STATUS_LABEL[selectedStatus]} {selectedPkg?.name}
                   {status === "pending" && (
                     <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
                   )}
                 </DialogTitle>
                 <DialogDescription className="text-base md:text-lg">
                   {selectedPkg?.description}. This package costs{" "}
-                  {selectedPkg?.credits} credits (KSH{" "}
-                  {((selectedPkg?.credits || 0) * 10).toLocaleString()}).
+                  {selectedNetCredits} credits (KSH{" "}
+                  {(selectedView?.price ?? (selectedPkg?.credits || 0) * 10).toLocaleString()}
+                  {selectedStatus === "extend" && ", which extends your current boost"}.
+                  {selectedStatus === "upgrade" &&
+                    `, ${selectedView?.proratedCredits} credits are credited back from your running boost`}
+                  .
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-5 py-5">
+                {selectedView?.reason && selectedStatus !== "extend" && (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    {selectedView.reason}
+                  </p>
+                )}
+
                 <div className="bg-stone-100 p-4 rounded-lg">
                   <p className="text-base md:text-lg text-gray-600">
                     Your Credits:{" "}
@@ -384,12 +543,12 @@ const AdvertisingPriceLIst = ({
                   <p className="text-base md:text-lg text-gray-600">
                     Required:{" "}
                     <span className="font-bold text-red-700 text-lg md:text-xl">
-                      {selectedPkg?.credits} credits
+                      {selectedNetCredits} credits
                     </span>
                   </p>
-                  {selectedPkg && userCredits < selectedPkg.credits && (
+                  {selectedPkg && userCredits < selectedNetCredits && (
                     <p className="text-sm text-orange-600 mt-2">
-                      You need {selectedPkg.credits - userCredits} more credits.
+                      You need {selectedNetCredits - userCredits} more credits.
                       Purchase with Pesapal below.
                     </p>
                   )}
@@ -402,7 +561,10 @@ const AdvertisingPriceLIst = ({
                     <Button
                       onClick={handleUseCredits}
                       disabled={
-                        loading || !canAffordCredits || status === "pending"
+                        loading ||
+                        !canAffordCredits ||
+                        status === "pending" ||
+                        selectedStatus === "blocked"
                       }
                       className="w-full h-12 md:h-14 text-base md:text-lg"
                       variant={canAffordCredits ? "default" : "secondary"}
@@ -413,21 +575,21 @@ const AdvertisingPriceLIst = ({
                           Processing...
                         </>
                       ) : canAffordCredits ? (
-                        `Use ${selectedPkg?.credits} Credits`
+                        `Use ${selectedNetCredits} Credits`
                       ) : (
                         "Insufficient Credits"
                       )}
                     </Button>
 
-                    {selectedPkg && profileValid && (
+                    {selectedPkg && profileValid && selectedStatus !== "blocked" && (
                       <PesapalCheckoutButton
                         orderId={`AD-${selectedPkg.id}-${Date.now()}`}
-                        amount={selectedPkg.credits * 10}
+                        amount={selectedView?.price ?? selectedPkg.credits * 10}
                         email={userProfile?.email || ""}
-                        phone=""
+                        phone={userPhone}
                         firstName={firstName}
                         lastName={lastName}
-                        description={`Purchase ${selectedPkg.name} boost package`}
+                        description={`${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} boost package`}
                         packageId={selectedPkg.id}
                         packageName={selectedPkg.name}
                         idType={userProfile?.idType || undefined}
@@ -444,7 +606,9 @@ const AdvertisingPriceLIst = ({
                           }
                         }}
                       >
-                        Purchase {selectedPkg.name} Now
+                        {selectedStatus === "available"
+                          ? `Purchase ${selectedPkg.name} Now`
+                          : `${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} Now`}
                       </PesapalCheckoutButton>
                     )}
 
@@ -507,7 +671,7 @@ const AdvertisingPriceLIst = ({
                         {pkg.name}
                       </span>
                       <span className="text-sm text-gray-600">
-                        KSH {(pkg.credits * 10).toLocaleString()}
+                        KSH {(viewFor(pkg.id)?.price ?? pkg.credits * 10).toLocaleString()}
                       </span>
                     </div>
                     <ChevronDown className="size-5 text-gray-500 collapsible-chevron" />

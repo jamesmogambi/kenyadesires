@@ -7,6 +7,7 @@ import { slugify } from "@/lib/utils";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
 import { executeQuery, encodeJsonColumn } from "@/lib/neon";
+import { boostOrderBy } from "@/lib/boost";
 import { notifyAdminOfAgencyVerification } from "./agency-verification-email";
 import {
   sendWelcomeEmail,
@@ -64,7 +65,7 @@ export async function getCachedAgencies(
     const total = parseInt(countResult[0]?.count || "0", 10);
 
     const rows: any[] = await executeQuery(
-      `SELECT ${AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ")} FROM agencies WHERE is_active = TRUE ORDER BY agencies.created_at DESC, agencies.name ASC LIMIT $${1} OFFSET $${2}`,
+      `SELECT ${AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ")} FROM agencies WHERE is_active = TRUE ORDER BY ${boostOrderBy("agencies", "agencies.created_at", "DESC")}, agencies.name ASC LIMIT $${1} OFFSET $${2}`,
       [validLimit, offset],
     );
 
@@ -105,7 +106,7 @@ export async function getAgenciesForSitemap(): Promise<IAgency[]> {
     const columns = AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ");
 
     const rows: any[] = await executeQuery(
-      `SELECT ${columns} FROM agencies WHERE is_active = TRUE ORDER BY agencies.created_at DESC, agencies.name ASC`,
+      `SELECT ${columns} FROM agencies WHERE is_active = TRUE ORDER BY ${boostOrderBy("agencies", "agencies.created_at", "DESC")}, agencies.name ASC`,
     );
 
     const agencies: IAgency[] = rows.map(mapDbRowToAgency);
@@ -944,6 +945,9 @@ function mapDbRowToAgency(row: any): IAgency {
     totalBookings: Number(row.total_bookings || 0),
     totalViews: Number(row.total_views || 0),
     credits: row.credits,
+    boostUntil: row.boost_until || null,
+    boostPriority: Number(row.boost_priority) || 0,
+    boostPackageId: row.active_boost_package_id || null,
     featuredEmployeesCount: Number(row.featured_employees_count || 0),
     isActive: row.is_active !== undefined ? row.is_active : true,
     isFeatured: row.is_featured || false,
@@ -976,6 +980,8 @@ const AGENCY_NEON_COLUMNS = [
   "is_featured", "utm_source", "utm_medium", "utm_campaign", "utm_content",
   "utm_term", "utm_id", "utm_source_platform", "landing_page", "first_touch_at",
   "registration_date", "created_at", "updated_at",
+  // Boost state (migration 008) — read for the badge and the boosted sort.
+  "boost_until", "boost_priority", "active_boost_package_id",
 ];
 
 async function fetchAgenciesFromNeon(
@@ -1039,7 +1045,7 @@ async function fetchAgenciesFromNeon(
 
   const offset = (validPage - 1) * validLimit;
   const rows: any[] = await executeQuery(
-    `SELECT ${AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ")} FROM agencies ${where} ORDER BY agencies.created_at DESC, agencies.name ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+    `SELECT ${AGENCY_NEON_COLUMNS.map((c) => `agencies.${c}`).join(", ")} FROM agencies ${where} ORDER BY ${boostOrderBy("agencies", "agencies.created_at", "DESC")}, agencies.name ASC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
     [...params_arr, validLimit, offset],
   );
 

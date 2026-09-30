@@ -3,6 +3,7 @@
 import { executeQuery } from "@/lib/neon";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
+import { boostOrderBy } from "@/lib/boost";
 
 const AGENCY_LISTING_COLUMNS = [
   "id", "name", "slug", "description", "contact_email", "contact_phone",
@@ -18,6 +19,8 @@ const AGENCY_LISTING_COLUMNS = [
   "is_featured", "utm_source", "utm_medium", "utm_campaign", "utm_content",
   "utm_term", "utm_id", "utm_source_platform", "landing_page", "first_touch_at",
   "registration_date", "created_at", "updated_at",
+  // Boost state (migration 008) — read for the badge and the boosted sort.
+  "boost_until", "boost_priority", "active_boost_package_id",
 ];
 
 const AGENCY_SELECT = AGENCY_LISTING_COLUMNS.map((c) => `agencies.${c}`).join(", ");
@@ -82,6 +85,9 @@ function mapDbRowToAgency(row: any): IAgency {
     totalBookings: Number(row.total_bookings || 0),
     totalViews: Number(row.total_views || 0),
     credits: row.credits,
+    boostUntil: row.boost_until || null,
+    boostPriority: Number(row.boost_priority) || 0,
+    boostPackageId: row.active_boost_package_id || null,
     featuredEmployeesCount: Number(row.featured_employees_count || 0),
     isActive: row.is_active !== undefined ? row.is_active : true,
     isFeatured: row.is_featured || false,
@@ -234,7 +240,9 @@ export async function getAgenciesFromNeon(params: {
     );
     const total = parseInt(totalResult[0]?.count || "0", 10);
 
-    const dataQuery = `SELECT ${AGENCY_SELECT} FROM agencies ${where} ORDER BY agencies.created_at DESC, agencies.name ASC LIMIT $${params_arr.length + 1} OFFSET $${params_arr.length + 2}`;
+    // Live agency boosts rank first; expired boosts fall to priority 0 in the
+    // CASE, so this is correct even before the cleanup script has run.
+    const dataQuery = `SELECT ${AGENCY_SELECT} FROM agencies ${where} ORDER BY ${boostOrderBy("agencies", "agencies.created_at", "DESC")}, agencies.name ASC LIMIT $${params_arr.length + 1} OFFSET $${params_arr.length + 2}`;
     const rows: any[] = await executeQuery(dataQuery, [...params_arr, validLimit, offset]);
 
     return {

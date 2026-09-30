@@ -90,6 +90,10 @@ export interface IAgency {
   totalBookings: number;
   totalViews: number;
   credits?: number;
+  /** Boost state (migration 008). `boostUntil` past now = boost expired. */
+  boostUntil?: string | Date | null;
+  boostPriority?: number;
+  boostPackageId?: string | null;
   featuredEmployeesCount: number;
 
   // Status

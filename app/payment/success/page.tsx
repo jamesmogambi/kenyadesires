@@ -3,13 +3,14 @@ import { CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SuccessPageProps {
-  searchParams: Promise<{ orderTrackingId?: string; reference?: string }>;
+  searchParams: Promise<{ orderTrackingId?: string; reference?: string; type?: string }>;
 }
 
 export default async function PaymentSuccessPage({ searchParams }: SuccessPageProps) {
   const params = await searchParams;
   const orderTrackingId = params.orderTrackingId;
   const reference = params.reference;
+  const type = params.type;
 
   // Notify the rest of the app that credits / packages may have changed.
   return (
@@ -19,25 +20,28 @@ export default async function PaymentSuccessPage({ searchParams }: SuccessPagePr
         <div className="max-w-lg w-full bg-stone-100 rounded-lg p-6 md:p-8 shadow-md text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl md:text-3xl font-bold text-green-700 mb-2">
-            Payment Successful!
+            {type === "credits" ? "Purchase Successful!" : "Payment Successful!"}
           </h1>
           <p className="text-gray-600 mb-6">
-            Your payment has been received and processed successfully. The boost
-            package will be activated shortly.
+            {type === "credits"
+              ? "Your boost package has been purchased successfully with credits and activated."
+              : "Your payment has been received and processed successfully. The boost package will be activated shortly."}
           </p>
 
           <div className="bg-white rounded-lg p-4 md:p-6 shadow-sm text-left space-y-2 mb-6">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Order Tracking ID</span>
-              <span className="font-semibold text-gray-800 break-all">
-                {orderTrackingId || "—"}
-              </span>
-            </div>
             {reference && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Reference</span>
+                <span className="text-gray-600">Transaction ID</span>
                 <span className="font-semibold text-gray-800 break-all">
                   {reference}
+                </span>
+              </div>
+            )}
+            {orderTrackingId && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Order Tracking ID</span>
+                <span className="font-semibold text-gray-800 break-all">
+                  {orderTrackingId}
                 </span>
               </div>
             )}

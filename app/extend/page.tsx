@@ -7,7 +7,7 @@ import { PurchaseInfoSection } from "./PurchaseInfoSection";
 import AdvertisingPriceLIst from "./AdvertisingPriceLIst";
 import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
-import { getUserCredits, getUserProfile } from "@/server-actions/payment.action";
+import { getBoostPurchaseHistory, getUserCredits, getUserProfile } from "@/server-actions/payment.action";
 import { useRouter } from "next/navigation";
 
 const ExtendPage = () => {
@@ -77,6 +77,61 @@ const ExtendPage = () => {
         You can then use your credits to purchase a boost package and increase
         your visibility.
       </p>
+
+      <BoostHistorySection />
+    </div>
+  );
+};
+
+/**
+ * Purchase log for the signed-in profile, read from boost_history
+ * (migration 008). Rendered client-side so a purchase made on this page shows
+ * up without a full route revalidation.
+ */
+const BoostHistorySection = () => {
+  const [history, setHistory] = useState<
+    Awaited<ReturnType<typeof getBoostPurchaseHistory>>["history"]
+  >([]);
+
+  useEffect(() => {
+    getBoostPurchaseHistory().then((result) => {
+      if (result.success && result.history) setHistory(result.history);
+    });
+  }, []);
+
+  if (!history || history.length === 0) return null;
+
+  return (
+    <div className="w-full lg:max-w-200 mx-auto px-4 pb-16">
+      <h4 className="text-xl md:text-2xl text-center text-red-700 font-bold mb-4">
+        Boost history
+      </h4>
+      <div className="bg-stone-100 rounded-lg shadow-md divide-y divide-stone-200">
+        {history.slice(0, 10).map((entry) => (
+          <div
+            key={entry.id}
+            className="flex flex-wrap items-center justify-between gap-2 p-4"
+          >
+            <div>
+              <p className="font-semibold text-stone-800">{entry.packageName}</p>
+              <p className="text-sm text-stone-600">
+                {new Date(entry.startedAt).toLocaleDateString("en-KE", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}{" "}
+                · {entry.actionType}
+                {entry.proratedCredits > 0
+                  ? ` · ${entry.proratedCredits} credits prorated`
+                  : ""}
+              </p>
+            </div>
+            <span className="text-sm text-stone-600">
+              {entry.creditsSpent} credits · priority {entry.priority}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

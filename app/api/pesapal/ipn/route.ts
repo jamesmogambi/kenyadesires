@@ -6,8 +6,9 @@ import {
 } from "@/lib/pesapal";
 import { getOrder, safeEqual, updateOrderStatus } from "@/lib/pesapal-orders";
 import { sendPaymentConfirmationEmail } from "@/server-actions/email";
-import { executeQuery } from "@/lib/neon";
-import { getAdPackageById } from "@/lib/constants/packages";
+import { encodeJsonColumn, executeQuery, executeTransaction } from "@/lib/neon";
+import { getAdPackageById, getCreditPackageById } from "@/lib/constants/packages";
+import { applyBoostPurchase, asQueryRunner } from "@/lib/boost";
 
 /**
  * GET|POST /api/pesapal/ipn
@@ -87,32 +88,107 @@ async function handleIPN(
     );
     console.log(`[Pesapal/IPN] order ${orderTrackingId} → ${status} (prev=${result.previous})`);
 
-    // 4. Handle completion: award credits + send email
+    // 4. Handle completion: activate the boost + record the transaction
     if (status === "completed" && result.updated && result.previous !== "completed") {
-      // 4a. Award credits for the purchased package
-      if (existing?.package_id && existing?.user_id) {
+      const packageId = existing?.package_id || null;
+      const adPackage = packageId ? getAdPackageById(packageId) : undefined;
+      const creditPackage = packageId ? getCreditPackageById(packageId) : undefined;
+
+      if (existing?.user_id && packageId) {
         try {
-          const adPackage = getAdPackageById(existing.package_id);
-          if (adPackage && adPackage.credits > 0) {
-            // Increment user credits (works for both escorts and agencies)
+          if (adPackage && adPackage.type === "boost") {
+            // Guardrails live in applyBoostPurchase; `paid` skips the credit
+            // deduction because Pesapal already collected the cash.
+            const applied = await executeTransaction(async (client) => {
+              const result = await applyBoostPurchase(asQueryRunner(client), {
+                userId: existing.user_id as string,
+                packageId,
+                paid: true,
+                orderTrackingId,
+              });
+              if (!result.success) return result;
+
+              // The boost target resolved to a profile; point the invoice row
+              // at that same profile so /extend lists it.
+              const [escortRows, agencyRows] = await Promise.all([
+                client.query(
+                  `SELECT id FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
+                  [existing.user_id],
+                ),
+                client.query(
+                  `SELECT id FROM agencies WHERE owner_id = $1 LIMIT 1`,
+                  [existing.user_id],
+                ),
+              ]);
+              const escortId = escortRows[0]?.[0]?.id || null;
+              const agencyId = escortId ? null : agencyRows[0]?.[0]?.id || null;
+
+              await client.query(
+                `INSERT INTO transactions
+                   (id, checkout_request_id, user_id, escort_id, agency_id, amount, currency,
+                    status, payment_method, phone_number, metadata, created_at, updated_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, 'KES', 'completed', $7, $8, $9, NOW(), NOW())`,
+                [
+                  crypto.randomUUID(),
+                  orderTrackingId,
+                  existing.user_id,
+                  escortId,
+                  agencyId,
+                  Number(existing.amount) || Number(tx.amount) || 0,
+                  tx.payment_method || "pesapal",
+                  existing.phone_number || "",
+                  encodeJsonColumn(
+                    "metadata",
+                    JSON.stringify({
+                      type: "ad_purchase",
+                      packageId,
+                      packageName: adPackage.name,
+                      creditsUsed: result.creditsSpent,
+                      proratedCredits: result.proratedCredits,
+                      boostAction: result.action,
+                      orderTrackingId,
+                      receiptNumber: tx.merchant_reference || "",
+                    }),
+                  ),
+                ],
+              );
+
+              return result;
+            });
+
+            if (applied.success) {
+              console.log(
+                `[Pesapal/IPN] Boost ${applied.action} applied for user ${existing.user_id} ` +
+                  `package ${packageId} until ${applied.boostUntil?.toISOString()}`,
+              );
+            } else {
+              console.error(
+                `[Pesapal/IPN] Boost NOT applied for user ${existing.user_id} ` +
+                  `package ${packageId}: ${applied.error} (${applied.code})`,
+              );
+            }
+          } else if (creditPackage) {
+            // Credit top-up: works for both escorts and agencies.
             await executeQuery(
               `UPDATE escorts SET credits = COALESCE(credits, 0) + $1, updated_at = NOW() WHERE clerk_user_id = $2`,
-              [adPackage.credits, existing.user_id],
+              [creditPackage.credits, existing.user_id],
             );
             const escortResult = await executeQuery(
-              `SELECT credits FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
+              `SELECT id FROM escorts WHERE clerk_user_id = $1 LIMIT 1`,
               [existing.user_id],
             );
             if (escortResult.length === 0) {
               await executeQuery(
                 `UPDATE agencies SET credits = COALESCE(credits, 0) + $1, updated_at = NOW() WHERE owner_id = $2`,
-                [adPackage.credits, existing.user_id],
+                [creditPackage.credits, existing.user_id],
               );
             }
-            console.log(`[Pesapal/IPN] Awarded ${adPackage.credits} credits to user ${existing.user_id} for package ${existing.package_id}`);
+            console.log(
+              `[Pesapal/IPN] Awarded ${creditPackage.credits} credits to user ${existing.user_id} for package ${packageId}`,
+            );
           }
-        } catch (creditErr) {
-          console.error("[Pesapal/IPN] Failed to award credits:", creditErr);
+        } catch (boostErr) {
+          console.error("[Pesapal/IPN] Failed to apply purchase:", boostErr);
         }
       }
 

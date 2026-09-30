@@ -12,6 +12,7 @@ import Link from "next/link";
 import { IAgency } from "@/types/agency.types";
 import { getAgencyEscorts } from "@/server-actions/agency.action";
 import { Escort } from "@/server-actions/escort.action";
+import { Zap } from "lucide-react";
 
 interface Prop {
   className?: string;
@@ -148,6 +149,13 @@ EscortSwiper.displayName = "EscortSwiper";
 export default function AgencyListItem({ agency, className }: Prop) {
   const { name, coverImage, contactPhone, id, slug } = agency;
 
+  // Boost state (migration 008). Expired boosts must not show a badge.
+  const boostActive = Boolean(
+    agency.boostUntil &&
+      new Date(agency.boostUntil).getTime() > Date.now() &&
+      (agency.boostPriority ?? 0) > 0,
+  );
+
   // ✅ Initialize state from server-provided escorts to avoid hydration mismatch
   const initialEscorts =
     agency.escorts && Array.isArray(agency.escorts) && agency.escorts.length > 0
@@ -272,6 +280,12 @@ export default function AgencyListItem({ agency, className }: Prop) {
           >
             <h3 className="text-3xl text-primary font-bold">{name}</h3>
           </Link>
+          {boostActive && (
+            <div className="inline-flex items-center gap-1.5 self-start rounded-full bg-red-700 px-3 py-1 text-sm font-semibold text-white pointer-events-auto">
+              <Zap className="size-4 fill-white" />
+              Boosted — priority {agency.boostPriority}
+            </div>
+          )}
           {contactPhone && (
             <div className="flex items-center gap-2 text-white/80 pointer-events-auto">
               <svg

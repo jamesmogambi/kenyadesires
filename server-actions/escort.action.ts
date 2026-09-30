@@ -100,6 +100,10 @@ export interface Escort {
   rating: number;
   totalViews: number;
   credits?: number;
+  /** Boost state (migration 008). `boostUntil` past now = boost expired. */
+  boostUntil?: string | Date | null;
+  boostPriority?: number;
+  boostPackageId?: string | null;
   cleanedImages?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -277,6 +281,9 @@ function convertRowToEscort(row: any): Escort {
     rating: row.rating,
     totalViews: row.total_views,
     credits: row.credits,
+    boostUntil: row.boost_until || null,
+    boostPriority: Number(row.boost_priority) || 0,
+    boostPackageId: row.active_boost_package_id || null,
     cleanedImages: normalizeArray(row.cleaned_images),
     createdAt: row.created_at,
     updatedAt: row.updated_at,

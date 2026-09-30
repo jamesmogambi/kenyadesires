@@ -18,6 +18,7 @@
     "upload-images": "tsx scripts/upload-escort-images-to-cloudinary.ts",
     "map-cleaned-images": "tsx scripts/map-cleaned-images-to-escorts.ts",
     "migrate": "tsx scripts/run-migrations.ts",
+    "boost:cleanup": "tsx scripts/cleanup-expired-boosts.ts",
     "migrate:introspect": "tsx scripts/migrate/1-introspect.ts",
     "migrate:translate": "tsx scripts/migrate/2-translate.ts",
     "migrate:create": "tsx scripts/migrate/3-create-tables.ts",

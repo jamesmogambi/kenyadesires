@@ -4,7 +4,7 @@ import { cn, formatSlugToTitle, normalizeArray } from "@/lib/utils";
 import Link from "next/link";
 import React from "react";
 import GirlImageSwiper from "./GirlImageSwiper";
-import { Images, BadgeCheck, MapPin } from "lucide-react";
+import { Images, BadgeCheck, MapPin, Zap } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phone";
 import { Escort } from "@/server-actions/escort.action";
 import {
@@ -44,7 +44,15 @@ const GirlItem = ({
     isVerified,
     regions,
     cleanedImages,
+    boostUntil,
+    boostPriority,
   } = girl;
+
+  // Boost state (migration 008). Expired boosts read as priority 0 in the
+  // listing sort and must not show a badge here either.
+  const boostActive = Boolean(
+    boostUntil && new Date(boostUntil).getTime() > Date.now() && (boostPriority ?? 0) > 0,
+  );
 
   // ✅ Ensure we have a valid ID - use slug or username as fallback
   const getEscortIdentifier = (): string => {
@@ -144,6 +152,21 @@ const GirlItem = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p>Verified</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        {boostActive && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="absolute top-2 left-2 z-20 bg-red-700 rounded-full p-1.5 shadow-lg">
+                  <Zap className="size-5 text-white fill-white" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Boosted listing — priority {boostPriority}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

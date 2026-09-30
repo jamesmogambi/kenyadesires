@@ -3,7 +3,8 @@
 import { getAdPackageById, getCreditPackageById } from "@/lib/constants/packages";
 import { auth } from "@clerk/nextjs/server";
 import { sendPaymentConfirmationEmail } from "./email";
-import { executeQuery, executeTransaction } from "@/lib/neon";
+import { encodeJsonColumn, executeQuery, executeTransaction } from "@/lib/neon";
+import { applyBoostPurchase, asQueryRunner, getBoostHistory, getBoostOverview } from "@/lib/boost";
 
 export async function getUserCredits() {
   try {
@@ -67,6 +68,54 @@ export async function getUserActivePackages() {
   }
 }
 
+/**
+ * Thrown inside the purchase transaction so a guardrail rejection rolls the
+ * credit deduction back instead of charging for a boost that was never applied.
+ */
+class BoostPurchaseError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = "BoostPurchaseError";
+    this.code = code;
+  }
+}
+
+export async function getBoostStatus() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+    return { success: true, overview: await getBoostOverview(userId) };
+  } catch (error: any) {
+    console.error("Error fetching boost status:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getBoostPurchaseHistory() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized" };
+    }
+    return { success: true, history: await getBoostHistory(userId) };
+  } catch (error: any) {
+    console.error("Error fetching boost history:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Buys an AD_PACKAGES entry with credits.
+ *
+ * All boost guardrails live in `applyBoostPurchase` (lib/boost.ts): one active
+ * boost per profile, same package extends, higher priority upgrades with a
+ * prorated credit, lower/equal priority is blocked, and a 1h cooldown applies
+ * after a boost expires. Credits and the boost row are written in one
+ * transaction so a failure cannot charge without boosting.
+ */
 export async function purchaseAdPackage(packageId: string) {
   try {
     const { userId } = await auth();
@@ -106,21 +155,16 @@ export async function purchaseAdPackage(packageId: string) {
       return { success: false, error: "User profile not found" };
     }
 
-    const currentCredits = Number(user.credits) || 0;
-    if (currentCredits < adPackage.credits) {
-      return {
-        success: false,
-        error: `Insufficient credits. You need ${adPackage.credits} credits but have ${currentCredits}`,
-      };
-    }
-
     const checkoutRequestId = `AD-${Date.now()}`;
 
-    await executeTransaction(async (client) => {
-      await client.query(
-        `UPDATE ${userTable} SET credits = credits - $1, updated_at = NOW() WHERE id = $2`,
-        [adPackage.credits, user.id],
-      );
+    const result = await executeTransaction(async (client) => {
+      const boost = await applyBoostPurchase(asQueryRunner(client), {
+        userId,
+        packageId,
+      });
+      if (!boost.success) {
+        throw new BoostPurchaseError(boost.error || "Failed to apply boost", boost.code);
+      }
 
       const transactionId = crypto.randomUUID();
       await client.query(
@@ -131,39 +175,49 @@ export async function purchaseAdPackage(packageId: string) {
           checkoutRequestId,
           userId,
           user.id,
-          adPackage.credits * 10,
+          (boost.creditsSpent || 0) * 10,
           "KES",
           "completed",
           "credits",
           user.whatsapp_phone || "",
-          JSON.stringify({
-            type: "ad_purchase",
-            packageId: packageId,
-            packageName: adPackage.name,
-            creditsUsed: adPackage.credits,
-            accountReference: `Ad-${adPackage.name}-${Date.now()}`,
-            transactionDesc: `Buy ${adPackage.name} ad package`,
-          }),
+          encodeJsonColumn(
+            "metadata",
+            JSON.stringify({
+              type: "ad_purchase",
+              packageId: packageId,
+              packageName: adPackage.name,
+              creditsUsed: boost.creditsSpent,
+              proratedCredits: boost.proratedCredits,
+              boostAction: boost.action,
+              accountReference: `Ad-${adPackage.name}-${Date.now()}`,
+              transactionDesc: `Buy ${adPackage.name} ad package`,
+            }),
+          ),
         ],
       );
+
+      return boost;
     });
 
     if (user.email) {
       sendPaymentConfirmationEmail({
         to: user.email,
         name: user.name || "Valued Customer",
-        amount: adPackage.credits * 10,
+        amount: (result.creditsSpent || 0) * 10,
         receiptNumber: `CREDIT-${Date.now()}`,
         packageName: adPackage.name,
         transactionId: checkoutRequestId,
         date: new Date().toLocaleString(),
         phoneNumber: user.whatsapp_phone || "",
-        credits: adPackage.credits,
+        credits: result.creditsSpent || 0,
       }).catch((err) => console.error("Background email send failed:", err));
     }
 
     return { success: true, transactionId: checkoutRequestId };
   } catch (error: any) {
+    if (error instanceof BoostPurchaseError) {
+      return { success: false, error: error.message, code: error.code };
+    }
     console.error("Error purchasing ad package:", error);
     return { success: false, error: error.message };
   }
