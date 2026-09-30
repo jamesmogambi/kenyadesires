@@ -432,6 +432,17 @@ const AdvertisingPriceLIst = ({
                         packageName={selectedPkg.name}
                         idType={userProfile?.idType || undefined}
                         className="w-full"
+                        onPaymentComplete={(status) => {
+                          if (status === "completed") {
+                            setOpen(false);
+                            setSelectedPackage(null);
+                            setStatus("idle");
+                            setMessage("");
+                            onPurchaseSuccess?.();
+                            window.dispatchEvent(new Event("credits-updated"));
+                            window.dispatchEvent(new Event("packages-updated"));
+                          }
+                        }}
                       >
                         Purchase {selectedPkg.name} Now
                       </PesapalCheckoutButton>

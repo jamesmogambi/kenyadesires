@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InfoAlert from "./InfoAlert";
 import MessageAlert from "./MessageAlert";
 import { PurchaseInfoSection } from "./PurchaseInfoSection";
@@ -18,17 +18,26 @@ const ExtendPage = () => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const fetchData = async () => {
+    const result = await getUserCredits();
+    if (result.success) setCredits(result.credits ?? 0);
+
+    const profileResult = await getUserProfile();
+    if (profileResult.success) setProfile(profileResult.profile);
+
+    setLoading(false);
+  };
+
   React.useEffect(() => {
-    async function fetchData() {
-      const result = await getUserCredits();
-      if (result.success) setCredits(result.credits ?? 0);
-
-      const profileResult = await getUserProfile();
-      if (profileResult.success) setProfile(profileResult.profile);
-
-      setLoading(false);
-    }
     fetchData();
+  }, []);
+
+  React.useEffect(() => {
+    const handler = () => {
+      fetchData();
+    };
+    window.addEventListener("credits-updated", handler);
+    return () => window.removeEventListener("credits-updated", handler);
   }, []);
 
   return (

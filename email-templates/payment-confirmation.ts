@@ -7,6 +7,7 @@ export function paymentConfirmationEmail(data: {
   date: string;
   phoneNumber: string;
   credits?: number;
+  paymentMethod?: string;
 }) {
   const subject = `Payment Confirmed - ${data.packageName} | KenyaDesires`;
 
@@ -99,6 +100,16 @@ export function paymentConfirmationEmail(data: {
                       </td>
                     </tr>
                     <tr>
+                      <td style="padding:15px; border-bottom:1px solid #eeeeee;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="color:#888888; font-size:13px; padding:4px 0;">Payment Method</td>
+                            <td style="color:#333333; font-size:14px; font-weight:bold; text-align:right;">${data.paymentMethod || "N/A"}</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
                       <td style="padding:15px;">
                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                           <tr>
@@ -150,6 +161,7 @@ Invoice ID: ${data.transactionId}
 Package: ${data.packageName}
 Amount Paid: KSH ${data.amount.toLocaleString()}
 ${data.credits ? `Credits Added: ${data.credits} credits (KSH ${(data.credits * 10).toLocaleString()})\n` : ""}M-Pesa Receipt: ${data.receiptNumber || "N/A"}
+Payment Method: ${data.paymentMethod || "N/A"}
 Phone Number: ${data.phoneNumber}
 Date: ${data.date}
 

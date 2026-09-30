@@ -127,6 +127,7 @@ async function handleIPN(
           transactionId: orderTrackingId,
           date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),
           phoneNumber: existing?.phone_number || "N/A",
+          paymentMethod: tx.payment_method || "Pesapal (M-Pesa / Airtel Money / Card)",
         });
       } catch (emailErr) {
         console.error("[Pesapal/IPN] Failed to send confirmation email:", emailErr);

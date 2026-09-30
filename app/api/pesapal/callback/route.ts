@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
           transactionId: orderTrackingId,
           date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),
           phoneNumber: storedOrder?.phone_number || "N/A",
+          paymentMethod: tx.payment_method || "Pesapal (M-Pesa / Airtel Money / Card)",
         });
       } catch (emailErr) {
         console.error("[Pesapal/callback] Failed to send confirmation email:", emailErr);

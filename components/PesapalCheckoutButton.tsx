@@ -26,6 +26,7 @@ export interface PesapalCheckoutButtonProps {
   idType?: "escort" | "agency";
   className?: string;
   children?: ReactNode;
+  onPaymentComplete?: (status: "completed" | "failed", orderTrackingId: string) => void;
 }
 
 export function PesapalCheckoutButton({
@@ -41,6 +42,7 @@ export function PesapalCheckoutButton({
   idType,
   className,
   children,
+  onPaymentComplete,
 }: PesapalCheckoutButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,17 +58,20 @@ export function PesapalCheckoutButton({
         setOpen(false);
         setIframeSrc(null);
         setOrderTrackingId(null);
-        if (event.data.status === "completed") {
-          window.location.href = `/payment/success?orderTrackingId=${event.data.orderTrackingId}&reference=${event.data.merchantReference || ""}`;
+        const status = event.data.status as "completed" | "failed";
+        const orderTrackingId = event.data.orderTrackingId;
+        onPaymentComplete?.(status, orderTrackingId);
+        if (status === "completed") {
+          window.location.href = `/payment/success?orderTrackingId=${orderTrackingId}&reference=${event.data.merchantReference || ""}`;
         } else {
-          window.location.href = `/payment/failed?orderTrackingId=${event.data.orderTrackingId}&error=${event.data.error || "Payment failed"}`;
+          window.location.href = `/payment/failed?orderTrackingId=${orderTrackingId}&error=${event.data.error || "Payment failed"}`;
         }
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [onPaymentComplete]);
 
   const handleCheckout = async () => {
     setLoading(true);
