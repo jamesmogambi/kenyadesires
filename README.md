@@ -155,6 +155,7 @@ MySQL 8.0+ functions are used for efficient querying:
 | `escorts` | Escort profiles, rates, photos, credits, verification status |
 | `agencies` | Agency profiles, locations, business types |
 | `transactions` | User credit purchases and payment records |
+| `pesapal_orders` | Pesapal payment orders (order_tracking_id, status, amount, …) |
 | `zoho_connections` | Zoho OAuth tokens (access/refresh) |
 | `provider_leads` | Leads acquired via TrafficStars and other ad providers |
 | `provider_events` | Provider event audit log |
@@ -167,6 +168,115 @@ MySQL 8.0+ functions are used for efficient querying:
 
 - TODO: Add automated tests (found `@playwright/test` in dependencies, but no config file yet).
 
+## 🇰🇪 Pesapal Payments (M-Pesa / Airtel / Cards)
+
+The app integrates **Pesapal API 3.0 - JSON** for Kenyan payments. A custom
+`axios` wrapper (`lib/pesapal.ts`) is used instead of the unofficial
+`pesapal-v3` npm package because the community package does not cache/refresh
+tokens against Pesapal's `expiryDate`, and the codebase already follows a
+custom-client pattern (`lib/mpesa.ts`). `axios` (already a dependency) gives
+typed errors, timeouts and a single place for the 401 → refresh → retry logic.
+
+Merchant secrets (`PESAPAL_CONSUMER_SECRET`) live only in server env vars and
+are never sent to the client.
+
+### Flow
+1. **Register IPN once** → `POST /api/pesapal/register-ipn` returns an `ipn_id`
+   that you save to `PESAPAL_IPN_ID`.
+2. **Customer checks out** → `<PesapalCheckoutButton>` POSTs to
+   `POST /api/pesapal/initiate`, which validates input, calls Pesapal
+   `SubmitOrderRequest`, saves the order locally, and returns `redirect_url`.
+3. **Customer pays on Pesapal's hosted page**, then is redirected back to the
+   `callback_url` (`/payment/callback`).
+4. **`/payment/callback`** forwards the `OrderTrackingId` to
+   `GET /api/pesapal/callback`, which verifies the status with Pesapal's
+   `GetTransactionStatus` and redirects to `/payment/success` or `/payment/failed`.
+5. **Asynchronously**, Pesapal also hits your IPN
+   (`GET|POST /api/pesapal/ipn`), which verifies + updates the order
+   idempotently. Pesapal IPNs are never trusted on their own — the status is
+   always re-verified via `GetTransactionStatus`.
+
+### Files
+- `types/pesapal.ts` — Pesapal response/request type definitions.
+- `lib/pesapal.ts` — client: in-memory token cache (5-min TTL), `getAuthToken`,
+  `registerIPN`, `submitOrder`, `getTransactionStatus`, 401 refresh+retry (max 2
+  attempts), typed `PesapalError`.
+- `lib/pesapal-orders.ts` — MySQL order CRUD (insert/update idempotent, constant-
+  time `merchant_reference` check).
+- `app/api/pesapal/register-ipn/route.ts` — register the IPN.
+- `app/api/pesapal/initiate/route.ts` — validate + create order + submit to Pesapal.
+- `app/api/pesapal/ipn/route.ts` — GET|POST webhook; verifies & ack with the exact
+  `{ orderNotificationType, orderTrackingId, orderMerchantReference, status: 200 }` shape.
+- `app/api/pesapal/callback/route.ts` — GET; verifies & 302-redirects to success/fail.
+- `app/payment/callback/page.tsx` — loading page that hands off to the callback API.
+- `app/payment/success/page.tsx`, `app/payment/failed/page.tsx` — result pages.
+- `components/PesapalCheckoutButton.tsx` — reusable checkout button.
+
+### Database
+Add the `pesapal_orders` table (the `createOrder`/`updateOrderStatus` helpers in
+`lib/pesapal-orders.ts` document it; there is a `TODO` there to map the columns
+to your schema):
+
+```sql
+CREATE TABLE `pesapal_orders` (
+  `id`                 varchar(191) NOT NULL,            -- Pesapal order_tracking_id (PK)
+  `merchant_reference` varchar(191) DEFAULT NULL,        -- your `id` sent to Pesapal
+  `user_id`            varchar(191) DEFAULT NULL,        -- Clerk user id
+  `amount`             decimal(10,2) DEFAULT NULL,
+  `currency`           varchar(10) DEFAULT 'KES',
+  `description`        text,
+  `phone_number`         varchar(32) DEFAULT NULL,
+  `email`                varchar(255) DEFAULT NULL,
+  `status`               varchar(32) DEFAULT 'pending',  -- pending|completed|failed|reversed|invalid
+  `package_id`           varchar(64)  DEFAULT NULL,
+  `package_name`         varchar(128) DEFAULT NULL,
+  `id_type`              varchar(16)  DEFAULT NULL,
+  `metadata`             json         DEFAULT NULL,
+  `created_at`           datetime     DEFAULT CURRENT_TIMESTAMP,
+  `updated_at`           datetime     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+### Environment
+`.env.development` (sandbox) and `.env.production` — note `.env*` is gitignored.
+`.env.example` is the template (force-add with `git add -f .env.example`):
+
+```
+PESAPAL_ENV=sandbox
+PESAPAL_CONSUMER_KEY=<your key>
+PESAPAL_CONSUMER_SECRET=<your secret>
+PESAPAL_IPN_ID=<returned by register-ipn>
+NEXT_PUBLIC_APP_URL=https://<your-public-https-url>
+```
+
+### Sandbox: register the IPN & test end-to-end
+1. Start the dev server behind a public HTTPS URL (ngrok) and set
+   `NEXT_PUBLIC_APP_URL` to the tunnel URL.
+2. Get sandbox test credentials from <https://cybqa.pesapal.com>.
+3. Register the IPN (once):
+   ```bash
+   curl -X POST https://<your-ngrok>/api/pesapal/register-ipn \
+     -H "x-api-key: $INTERNAL_API_KEY"
+   ```
+   Copy the returned `ipn_id` into `PESAPAL_IPN_ID` (in `.env.local`).
+4. Hit an escort/agency page that renders `<PesapalCheckoutButton>`, pass the
+   boost package details, and complete the sandbox payment (test card / M-Pesa
+   stubs).
+5. Confirm the callback redirects to `/payment/success` and the IPN fires
+   `GET /api/pesapal/ipn` with a 200 ack. Verify the `pesapal_orders` row is
+   `completed`.
+
+### Switch to production
+1. Set `PESAPAL_ENV=production` and paste live `PESAPAL_CONSUMER_KEY` /
+   `PESAPAL_CONSUMER_SECRET` (from your Pesapal dashboard) into
+   `.env.production` / `.env.local`.
+2. Re-register the IPN against production (the `register-ipn` endpoint uses
+   `PESAPAL_ENV`, so it targets `pay.pesapal.com/v3` automatically). Save the
+   new `ipn_id` to `PESAPAL_IPN_ID`.
+3. Ensure `NEXT_PUBLIC_APP_URL` points to your live HTTPS domain and redeploy.
+4. Re-run the checkout against real M-Pesa / cards.
+
 ## 📄 License
 
-This project is licensed under the **MIT License**. See the `package.json` for details.
+This project is licensed under the **MIT License**. See `package.json` for details.
