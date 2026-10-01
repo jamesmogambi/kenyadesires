@@ -5,6 +5,7 @@ import mysqlPool from '@/lib/db';
 import {
   publishUrlNotification,
   sleep,
+  assertGoogleConfigured,
   SAFE_DAILY_QUOTA,
   type IndexingAction,
 } from '@/lib/google-indexing';
@@ -24,6 +25,26 @@ export const maxDuration = 300;
 const BATCH_LIMIT = 150;
 /** Google throttles bursts; publishing all 150 back-to-back invites 429s. */
 const REQUEST_DELAY_MS = 400;
+
+/**
+ * Rows are flushed to the database every N publishes so a request killed by the
+ * host or the scheduler cannot discard a whole batch of completed work.
+ */
+const CHECKPOINT_EVERY = 10;
+
+/**
+ * Wall-clock budget for one run. The sitemap fetch alone measured ~17s against
+ * production, and each publish costs the 400ms delay plus a Google round trip,
+ * so 150 URLs needs ~110s — longer than most scheduler timeouts. The run stops
+ * early and cleanly at this budget instead of being killed mid-flight, and the
+ * next run resumes with the remaining PENDING rows.
+ */
+const DEFAULT_RUN_BUDGET_MS = 45_000;
+
+function runBudgetMs(): number {
+  const raw = Number(process.env.GOOGLE_INDEXING_RUN_BUDGET_MS);
+  return Number.isFinite(raw) && raw > 0 ? raw : DEFAULT_RUN_BUDGET_MS;
+}
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -74,8 +95,28 @@ async function run(req: NextRequest) {
   const shouldRequeue = requeueParam !== '0' && requeueParam !== 'false';
 
   const conn = await mysqlPool.getConnection();
+  const startedAt = Date.now();
+  const budgetMs = runBudgetMs();
 
   try {
+    // Preflight the key before touching the queue. If the service account
+    // cannot be loaded, bailing out here is strictly better than requeueing 150
+    // URLs: those rows would sit PENDING forever and the run would report
+    // nothing useful about the actual cause.
+    try {
+      assertGoogleConfigured();
+    } catch (configError) {
+      console.error('[GoogleIndexing][cron] service account not usable:', configError);
+      return NextResponse.json(
+        {
+          error: 'Google service account is not configured correctly',
+          details: (configError as Error).message,
+          hint: 'Check GOOGLE_SERVICE_ACCOUNT_KEY_FILE points at an existing, readable JSON key, then restart the Node app so it picks up the variable.',
+        },
+        { status: 500 },
+      );
+    }
+
     // Prune before counting: removes settled history first, and its result is
     // reported even if the quota check below short-circuits the run.
     const pruned = await pruneOldRows(conn, retentionDays());
@@ -184,9 +225,28 @@ async function run(req: NextRequest) {
     const batch = pending.slice(0, headroom);
     const deferred = pending.slice(headroom);
 
+    // Checkpointing, not one write at the end. The scheduler (and cPanel
+    // Passenger) will kill a request that runs long, and a kill before the
+    // final UPDATE leaves every attempted row at PENDING. Because the batch is
+    // selected oldest-first, the next run then re-selects the exact same rows —
+    // the run repeats forever and never makes progress. Flushing every
+    // CHECKPOINT_EVERY rows bounds that loss to a partial chunk.
     const outcomes: Outcome[] = [];
+    const failures: Array<{ url: string; error: string | null }> = [];
+    let succeeded = 0;
+    let failed = 0;
+    let stoppedEarly = false;
 
     for (let i = 0; i < batch.length; i++) {
+      // Stop on elapsed time rather than letting the host kill us. Budget is
+      // measured from the start of the handler, so a slow sitemap fetch eats
+      // into it too — which is correct, since that time counts against the same
+      // request.
+      if (Date.now() - startedAt > budgetMs) {
+        stoppedEarly = true;
+        break;
+      }
+
       const row = batch[i];
       const error = await publishUrlNotification(row.url, row.action_type);
 
@@ -197,36 +257,54 @@ async function run(req: NextRequest) {
         error: error ? error.slice(0, 2000) : null,
       });
 
+      if (error) {
+        failed += 1;
+        failures.push({ url: row.url, error });
+      } else {
+        succeeded += 1;
+      }
+
+      if (outcomes.length >= CHECKPOINT_EVERY) {
+        await persistOutcomes(conn, outcomes);
+        outcomes.length = 0;
+      }
+
       if (i < batch.length - 1) {
         await sleep(REQUEST_DELAY_MS);
       }
     }
 
-    // One batched UPDATE, built from placeholders. The CASE expression maps each
-    // id to its own status and message, so a mixed success/failure batch stays
-    // one round trip instead of N statements inside a loop.
-    await persistOutcomes(conn, outcomes);
+    if (outcomes.length > 0) {
+      await persistOutcomes(conn, outcomes);
+      outcomes.length = 0;
+    }
 
-    const succeeded = outcomes.filter((o) => o.status === 'SUCCESS').length;
-    const failed = outcomes.filter((o) => o.status === 'FAILED').length;
+    const processed = succeeded + failed;
+    const stillQueued = Math.max(0, pending.length - processed);
 
     console.log(
-      `[GoogleIndexing][cron] batch=${batch.length} succeeded=${succeeded} failed=${failed} ` +
-        `deferred=${deferred.length} quotaUsed=${usedToday + succeeded}`,
+      `[GoogleIndexing][cron] batch=${batch.length} processed=${processed} ` +
+        `succeeded=${succeeded} failed=${failed} deferred=${deferred.length} ` +
+        `stillQueued=${stillQueued} stoppedEarly=${stoppedEarly} ` +
+        `elapsedMs=${Date.now() - startedAt} quotaUsed=${usedToday + succeeded}`,
     );
 
+    // 200 even when we stopped early on purpose: the run did what it was asked
+    // to do and left a clean, resumable queue. A non-2xx here reads as a failure
+    // in the scheduler's event log.
     return NextResponse.json({
-      processed: outcomes.length,
+      processed,
       succeeded,
       failed,
       deferred: deferred.length,
+      stillQueued,
+      stoppedEarly,
+      runBudgetMs: budgetMs,
       requeued: queue?.enqueued ?? 0,
       pruned,
       quota: { used: usedToday + succeeded, limit: SAFE_DAILY_QUOTA },
       queue,
-      failures: outcomes
-        .filter((o) => o.status === 'FAILED')
-        .map((o) => ({ url: o.url, error: o.error })),
+      failures,
     });
   } catch (error) {
     console.error('[GoogleIndexing][cron] failed:', error);

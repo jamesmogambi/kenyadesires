@@ -127,9 +127,14 @@ export async function publishUrlNotification(
   url: string,
   action: IndexingAction,
 ): Promise<string | null> {
-  const client = getIndexingClient();
-
   try {
+    // Client acquisition lives inside the try on purpose. Loading the key can
+    // itself throw (missing env var, wrong absolute path, malformed JSON), and
+    // doing it out here would abort the caller's whole publish loop — leaving
+    // every queued row stuck at PENDING with no error recorded anywhere. Here it
+    // becomes a normal per-URL failure that gets written to error_message.
+    const client = getIndexingClient();
+
     await client.urlNotifications.publish({
       requestBody: {
         url,
@@ -147,6 +152,15 @@ export async function publishUrlNotification(
     const code = err.code !== undefined ? ` (${err.code})` : '';
     return `${detail}${code}`;
   }
+}
+
+/**
+ * Loads and validates the key without calling Google. Routes call this up front
+ * so a misconfigured key fails loudly at the point of the mistake, instead of
+ * queueing 150 rows that can never be sent and leaving them PENDING.
+ */
+export function assertGoogleConfigured(): void {
+  getIndexingClient();
 }
 
 /** Google throttles bursts; sleep between sequential publishes. */
