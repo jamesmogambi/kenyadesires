@@ -119,7 +119,10 @@ const BlogArticle = async ({
                 <Link
                   key={post._id}
                   href={`/blog/${post.slug?.current}`}
-                  className="group"
+                  // Same reason as `BlogLIstItem`: titles wrap to their natural
+                  // height and `mt-auto` keeps them on one baseline across the
+                  // row instead of each card's title sitting wherever it landed.
+                  className="group flex h-full flex-col"
                 >
                   <div className="relative w-full h-48 bg-transparent mb-3">
                     <SanityImage
@@ -127,11 +130,11 @@ const BlogArticle = async ({
                       alt={post.mainImage?.alt || post.title || "Blog post image"}
                       fill
                       className="object-cover group-hover:opacity-80 transition-opacity"
-                      sizes="100vw"
+                      sizes="(min-width: 768px) 33vw, 100vw"
                       fallback="/og-default.jpg"
                     />
                   </div>
-                  <h4 className="text-lg text-center text-primary font-semibold group-hover:underline line-clamp-2">
+                  <h4 className="mt-auto line-clamp-2 overflow-hidden break-words text-lg text-center text-primary font-semibold group-hover:underline">
                     {post.title}
                   </h4>
                 </Link>
