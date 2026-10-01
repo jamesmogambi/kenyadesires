@@ -22,12 +22,21 @@ export type QueuePlan = {
 
 const DEFAULT_COOLDOWN_DAYS = 7;
 const DEFAULT_RETENTION_DAYS = 60;
+const DEFAULT_RETRY_BACKOFF_HOURS = 20;
 const INSERT_CHUNK = 100;
+/** Share of each daily budget reserved for retrying previously failed URLs. */
+const RETRY_SHARE = 0.25;
 
 /** How long a URL stays "recently notified" before it is queued again. */
 function cooldownDays(): number {
   const raw = Number(process.env.GOOGLE_INDEXING_COOLDOWN_DAYS);
   return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_COOLDOWN_DAYS;
+}
+
+/** Shorter wait after a failed attempt, so transient errors are retried soon. */
+function retryBackoffHours(): number {
+  const raw = Number(process.env.GOOGLE_INDEXING_RETRY_BACKOFF_HOURS);
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_RETRY_BACKOFF_HOURS;
 }
 
 function siteHost(): string {
@@ -50,9 +59,9 @@ function isOnSite(url: string, host: string): boolean {
 
 type UrlStateRow = RowDataPacket & {
   url: string;
+  last_status: 'PENDING' | 'SUCCESS' | 'FAILED';
   last_requested_at: Date | null;
   pending_count: number;
-  failure_count: number;
 };
 
 /**
@@ -60,10 +69,12 @@ type UrlStateRow = RowDataPacket & {
  *
  * The sitemap is far larger than the 200/day quota, so this cannot simply queue
  * everything. Selection order is deliberate:
- *   1. URLs never notified at all — they get the quota first, so no page is
+ *   1. URLs never notified at all — they get most of the quota, so no page is
  *      starved forever behind the top of the sitemap.
- *   2. URLs whose last attempt FAILED — retried before cold success is needed.
- *   3. URLs whose last SUCCESS has aged past the cooldown.
+ *   2. URLs whose last attempt FAILED — up to RETRY_SHARE of the budget, so a
+ *      transient error is retried promptly instead of waiting for the whole
+ *      sitemap to be notified once.
+ *   3. URLs whose last SUCCESS has aged past the cooldown — the remainder.
  *
  * URLs with a live PENDING row are skipped; the batch processor owns those.
  */
@@ -87,9 +98,10 @@ export async function buildQueuePlan(
 
   if (unique.length === 0 || limit <= 0) return plan;
 
-  // One grouped query per chunk of URLs: last attempt time plus whether a live
-  // PENDING row exists. `url IN (...)` is parameterized, so sitemap values are
-  // never interpolated into SQL text.
+  // One query per chunk of URLs: the most recent row for each (by id, which is
+  // monotonic and so breaks requested_at ties deterministically), plus a live
+  // PENDING count. `url IN (...)` is parameterized, so sitemap values are never
+  // interpolated into SQL text.
   const stateByUrl = new Map<string, UrlStateRow>();
 
   for (let i = 0; i < unique.length; i += 500) {
@@ -97,13 +109,18 @@ export async function buildQueuePlan(
     const placeholders = chunk.map(() => '?').join(', ');
 
     const [rows] = await conn.query<UrlStateRow[]>(
-      `SELECT url,
-              MAX(requested_at) AS last_requested_at,
-              SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) AS pending_count,
-              SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) AS failure_count
-         FROM google_indexing_logs
-        WHERE url IN (${placeholders})
-        GROUP BY url`,
+      `SELECT l.url,
+              l.status AS last_status,
+              l.requested_at AS last_requested_at,
+              (SELECT COUNT(*) FROM google_indexing_logs p
+                WHERE p.url = l.url AND p.status = 'PENDING') AS pending_count
+         FROM google_indexing_logs l
+         JOIN (
+           SELECT url, MAX(id) AS max_id
+             FROM google_indexing_logs
+            WHERE url IN (${placeholders})
+            GROUP BY url
+         ) newest ON newest.max_id = l.id`,
       chunk,
     );
 
@@ -111,6 +128,7 @@ export async function buildQueuePlan(
   }
 
   const cooldownMs = cooldownDays() * 24 * 60 * 60 * 1000;
+  const retryBackoffMs = retryBackoffHours() * 60 * 60 * 1000;
   const now = Date.now();
 
   const fresh: QueuePlanEntry[] = [];
@@ -131,14 +149,21 @@ export async function buildQueuePlan(
 
     const last = state.last_requested_at ? new Date(state.last_requested_at).getTime() : null;
 
-    if (last !== null && now - last < cooldownMs) {
+    // A failed attempt gets a short backoff, not the full cooldown. Most
+    // failures here are transient (Google 429/5xx, network), and holding them
+    // for the whole cooldown would strand a URL for a week. Successes keep the
+    // long cooldown so they are not re-notified daily.
+    const lastFailed = state.last_status === 'FAILED';
+    const waitMs = lastFailed ? retryBackoffMs : cooldownMs;
+
+    if (last !== null && now - last < waitMs) {
       plan.skipped.withinCooldown += 1;
       continue;
     }
 
     const entry: QueuePlanEntry = {
       url,
-      reason: Number(state.failure_count) > 0 ? 'retry' : 'stale',
+      reason: lastFailed ? 'retry' : 'stale',
       lastNotifiedAt: last !== null ? new Date(last).toISOString() : null,
     };
 
@@ -146,15 +171,29 @@ export async function buildQueuePlan(
     else fresh.push(entry);
   }
 
-  // Never-notified first, then retries, then stale successes; each group
-  // oldest-notified first so the rotation is fair rather than sitemap-ordered.
+  // Oldest-notified first within each group, so the rotation is fair rather
+  // than sitemap-ordered.
   const byOldest = (a: QueuePlanEntry, b: QueuePlanEntry) => {
     const at = a.lastNotifiedAt ? new Date(a.lastNotifiedAt).getTime() : 0;
     const bt = b.lastNotifiedAt ? new Date(b.lastNotifiedAt).getTime() : 0;
     return at - bt;
   };
 
-  plan.eligible = [...fresh.sort(byOldest), ...retries.sort(byOldest)].slice(0, limit);
+  const sortedFresh = fresh.sort(byOldest);
+  const sortedRetries = retries.sort(byOldest);
+
+  // Retries reserve a quarter of the budget. Appending them after the fresh
+  // list instead would starve them completely: while the sitemap holds any
+  // never-notified URL, a failed attempt would never be retried until every
+  // new page had been notified once, which on a 641-URL sitemap is days.
+  const retryBudget = Math.min(
+    sortedRetries.length,
+    Math.max(1, Math.floor(limit * RETRY_SHARE)),
+  );
+  const chosenRetries = sortedRetries.slice(0, retryBudget);
+  const chosenFresh = sortedFresh.slice(0, Math.max(0, limit - chosenRetries.length));
+
+  plan.eligible = [...chosenRetries, ...chosenFresh];
   return plan;
 }
 
