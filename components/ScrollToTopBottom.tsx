@@ -16,16 +16,25 @@ import { ArrowUp, ArrowDown } from "lucide-react";
  *   - Up appears once there is a meaningful amount of page above you.
  *   - Down appears once there is a meaningful amount of page below you.
  *
- * Both thresholds are deliberately smaller than the page height so the
- * controls react immediately instead of waiting for a hard edge, and both are
- * evaluated against the same cached layout metrics so they stay consistent
- * while the user scrolls.
+ * Sizes and insets are written in explicit pixels rather than `rem` units on
+ * purpose. `app/globals.css` sets `html { font-size: 12px }`, so every
+ * `rem`-based Tailwind size is 0.75x its nominal value: `h-11` (2.75rem)
+ * rendered as 33px, not the 44px it reads as. A 33px target is fine under a
+ * mouse and below the 44x44 minimum for a fingertip, which is why these
+ * controls were tappable on desktop and effectively dead on a phone.
  */
 
 // Show the up button once the user is this far down the page.
 const UP_REVEAL_OFFSET = 160;
 // Show the down button while at least this much of the page is still below.
 const DOWN_REVEAL_REMAINING = 320;
+
+// 48px clears the 44x44 minimum touch target guidance with room for the two
+// controls to sit side by side without a fat-finger mis-tap.
+const CONTROL_SIZE = 48;
+const CONTROL_GAP = 10;
+// Minimum inset from the screen edge, before safe-area insets are applied.
+const EDGE_INSET = 16;
 
 interface ScrollMetrics {
   canScrollUp: boolean;
@@ -36,11 +45,31 @@ const prefersReducedMotion = (): boolean =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/**
+ * How much of the page is hidden behind mobile browser chrome.
+ *
+ * On a phone the layout viewport (`innerHeight`) is taller than what is actually
+ * visible (`visualViewport.height`) whenever the address bar is showing. A
+ * `position: fixed` element anchored with a plain `bottom` value is placed
+ * against the layout viewport, so the controls end up underneath the address
+ * bar — visible in devtools, untappable in practice. Publishing the difference
+ * as a CSS variable lets the container push itself clear of the chrome.
+ */
+function readViewportChromeOffset(): number {
+  const vv = window.visualViewport;
+  if (!vv) return 0;
+  return Math.max(0, Math.round(window.innerHeight - (vv.height + vv.offsetTop)));
+}
+
 export default function ScrollToTopBottom() {
   const [metrics, setMetrics] = useState<ScrollMetrics>({
     canScrollUp: false,
     canScrollDown: false,
   });
+  // The chrome offset changes on every address-bar transition. Keep it in a ref
+  // and write it straight to a CSS variable instead of re-rendering: a
+  // re-render here would rebuild the buttons mid-gesture.
+  const chromeOffsetRef = useRef(0);
 
   // Scroll listeners fire far more often than React needs to re-render. Measure
   // on every event, but only commit to state when a threshold actually flips.
@@ -48,6 +77,16 @@ export default function ScrollToTopBottom() {
   const metricsRef = useRef<ScrollMetrics>({ ...metrics });
 
   useEffect(() => {
+    const applyChromeOffset = () => {
+      const offset = readViewportChromeOffset();
+      if (offset === chromeOffsetRef.current) return;
+      chromeOffsetRef.current = offset;
+      document.documentElement.style.setProperty(
+        "--scroll-controls-chrome-offset",
+        `${offset}px`,
+      );
+    };
+
     const measure = () => {
       frameRef.current = null;
 
@@ -82,9 +121,16 @@ export default function ScrollToTopBottom() {
     };
 
     measure();
+    applyChromeOffset();
 
     window.addEventListener("scroll", scheduleMeasure, { passive: true });
-    window.addEventListener("resize", scheduleMeasure);
+    // Bound to `window` as well as `visualViewport`: when the mobile browser
+    // chrome collapses, some engines only notify the layout viewport and some
+    // only the visual one. Listening on just one left the controls underneath
+    // the address bar on half the engines.
+    window.addEventListener("resize", applyChromeOffset);
+    window.visualViewport?.addEventListener("resize", applyChromeOffset);
+    window.visualViewport?.addEventListener("scroll", applyChromeOffset);
 
     // Images, ads and client fetches all land after mount and change the page
     // height without a scroll or resize event; ResizeObserver on the document
@@ -97,11 +143,17 @@ export default function ScrollToTopBottom() {
 
     return () => {
       window.removeEventListener("scroll", scheduleMeasure);
+      window.removeEventListener("resize", applyChromeOffset);
       window.removeEventListener("resize", scheduleMeasure);
+      window.visualViewport?.removeEventListener("resize", applyChromeOffset);
+      window.visualViewport?.removeEventListener("scroll", applyChromeOffset);
       observer.disconnect();
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
       }
+      document.documentElement.style.removeProperty(
+        "--scroll-controls-chrome-offset",
+      );
     };
   }, []);
 
@@ -117,12 +169,32 @@ export default function ScrollToTopBottom() {
   // Nothing to scroll to: don't render an empty control cluster.
   if (!canScrollUp && !canScrollDown) return null;
 
-  const baseClasses =
-    "flex h-11 w-11 items-center justify-center rounded-full bg-pink-600 text-white shadow-xl transition duration-200 ease-out hover:bg-pink-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black motion-safe:hover:scale-110";
+  const baseClasses = [
+    "flex items-center justify-center rounded-full",
+    "bg-pink-600 text-white shadow-xl",
+    "transition-[transform,background-color] duration-200 ease-out",
+    "hover:bg-pink-700 focus:outline-none",
+    "focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black",
+    // `manipulation` tells the browser this is a tap target, not a gesture
+    // surface: it removes the double-tap-zoom delay that otherwise makes taps
+    // on small fixed controls feel like they were dropped on a phone.
+    "[touch-action:manipulation]",
+    "[-webkit-tap-highlight-color:transparent]",
+    "motion-safe:hover:scale-110 motion-safe:active:scale-95",
+  ].join(" ");
 
   return (
     <div
-      className="fixed bottom-6 left-6 z-[10000] flex flex-col gap-2"
+      className="fixed left-0 z-[10000] flex flex-col"
+      style={{
+        // `env(safe-area-inset-*)` keeps the controls clear of the iPhone home
+        // indicator and Android's edge back-swipe zones; the `max()` falls back
+        // to the plain inset everywhere else. The second term lifts the cluster
+        // above mobile browser chrome whenever the address bar is showing.
+        left: `max(env(safe-area-inset-left), ${EDGE_INSET}px)`,
+        bottom: `calc(max(env(safe-area-inset-bottom), ${EDGE_INSET}px) + var(--scroll-controls-chrome-offset, 0px))`,
+        gap: CONTROL_GAP,
+      }}
     >
       {canScrollUp && (
         <button
@@ -130,9 +202,10 @@ export default function ScrollToTopBottom() {
           onClick={() => scrollTo(0)}
           aria-label="Scroll back to top"
           title="Back to top"
+          style={{ width: CONTROL_SIZE, height: CONTROL_SIZE }}
           className={`${baseClasses} motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2`}
         >
-          <ArrowUp size={20} aria-hidden="true" />
+          <ArrowUp size={22} aria-hidden="true" />
         </button>
       )}
 
@@ -142,9 +215,10 @@ export default function ScrollToTopBottom() {
           onClick={() => scrollTo(document.documentElement.scrollHeight)}
           aria-label="Scroll further down"
           title="Scroll down"
+          style={{ width: CONTROL_SIZE, height: CONTROL_SIZE }}
           className={`${baseClasses} motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2`}
         >
-          <ArrowDown size={20} aria-hidden="true" />
+          <ArrowDown size={22} aria-hidden="true" />
         </button>
       )}
     </div>

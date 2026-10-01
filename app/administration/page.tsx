@@ -10,7 +10,7 @@ import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import Link from "next/link";
 import AgencyGirls from "./AgencyGirls";
-import { getUserActivePackages, getUserCredits } from "@/server-actions/payment.action";
+import { getUserActivePackages, getUserCredits, type ActiveAdPackage } from "@/server-actions/payment.action";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Package, Check } from "lucide-react";
 import { PLAN_DETAILS } from "@/lib/constants/packages";
@@ -18,6 +18,28 @@ import { PLAN_DETAILS } from "@/lib/constants/packages";
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
+
+/**
+ * Fixed-locale expiry date, or `null` when the value is not a usable date.
+ *
+ * `toLocaleDateString()` with no locale renders differently per device, so the
+ * same boost read "10/7/2026" on one phone and "7 Oct 2026" on another. Pinning
+ * the locale makes the admin view consistent across devices.
+ *
+ * Returns `null` rather than "Invalid Date": that string is what this panel used
+ * to print for every row, because it asked the query for an `expiresAt` field
+ * that was never selected.
+ */
+const formatExpiryDate = (value: Date | string | null | undefined): string | null => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-KE", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 export const metadata: Metadata = {
   title: "Update Profile 💖 | kenyadesires.xyz",
@@ -61,7 +83,11 @@ const page = async () => {
   const packagesResult = userId ? await getUserActivePackages() : { success: true, packages: [] };
 
   const credits = creditsResult.success ? creditsResult.credits : 0;
-  const activePackages = packagesResult.success ? packagesResult.packages : [];
+  // The failure branch of the server action carries `error` and no `packages`,
+  // so this union needs a nullish fallback rather than a truthy check alone.
+  const activePackages: ActiveAdPackage[] = packagesResult.success
+    ? packagesResult.packages ?? []
+    : [];
 
   const planType = escort?.plan?.type || agency?.plan?.type || "free";
   const plan = PLAN_DETAILS[planType as keyof typeof PLAN_DETAILS] || PLAN_DETAILS.free;
@@ -93,20 +119,46 @@ const page = async () => {
             <div className="bg-stone-100 rounded-lg p-4 md:p-6 shadow-md">
               <h4 className="text-xl font-bold text-red-700 mb-4">Active Ad Packages</h4>
               <div className="space-y-3">
-                {activePackages.map((pkg: any) => (
-                  <div key={pkg.id} className="flex items-center justify-between bg-white p-3 rounded-md">
+                {activePackages.map((pkg: ActiveAdPackage) => {
+                  const expiresLabel = formatExpiryDate(pkg.expiresAt);
+                  const purchasedLabel = formatExpiryDate(pkg.purchasedAt);
+
+                  return (
+                  <div
+                    key={pkg.id}
+                    className="flex items-start sm:items-center justify-between gap-4 bg-white p-3 rounded-md"
+                  >
                     <div>
-                      <p className="font-semibold text-gray-800">{pkg.name || pkg.packageId}</p>
+                      <p className="font-semibold text-gray-800">
+                        {pkg.name || pkg.packageId}
+                      </p>
+                      {pkg.description && (
+                        <p className="text-sm text-gray-500">{pkg.description}</p>
+                      )}
                       <p className="text-sm text-gray-600">
-                        Expires: {new Date(pkg.expiresAt).toLocaleDateString()}
+                        {/* Guarded so a missing or malformed expiry degrades to
+                            readable text instead of "Invalid Date". */}
+                        {expiresLabel ? (
+                          <>
+                            {pkg.durationDays}-day package — Expires: {expiresLabel}
+                          </>
+                        ) : (
+                          "Expiry date unavailable"
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {pkg.daysRemaining} day
+                        {pkg.daysRemaining === 1 ? "" : "s"} remaining
+                        {purchasedLabel ? ` · started ${purchasedLabel}` : ""}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-green-600">
+                    <div className="flex items-center gap-2 text-green-600 shrink-0">
                       <Check className="size-4" />
                       <span className="font-semibold">Active</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

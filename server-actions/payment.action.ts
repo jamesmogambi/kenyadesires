@@ -36,6 +36,35 @@ export async function getUserCredits() {
   }
 }
 
+export interface ActiveAdPackage {
+  id: string;
+  packageId: string;
+  name: string;
+  description: string;
+  profileType: "escort" | "agency";
+  profileName: string | null;
+  durationDays: number;
+  purchasedAt: Date | null;
+  expiresAt: Date;
+  daysRemaining: number;
+  creditsSpent: number;
+}
+
+/**
+ * The boosts that are actually running right now.
+ *
+ * This used to read the `transactions` ledger, which records *payments* and
+ * carries no expiry at all, so every row rendered `Expires: Invalid Date` — the
+ * page asked for a field the query never selected. It also listed every historic
+ * purchase under a heading that says "Active", so five already-superseded
+ * purchases were shown alongside the one live boost.
+ *
+ * `escorts.boost_until` / `agencies.boost_until` are the authoritative record:
+ * `lib/boost.ts` writes them on purchase, extends them on re-purchase of the
+ * same package, and replaces them on upgrade, so `boost_until` is always the
+ * real expiry of the running boost. Filtering on `boost_until > NOW()` makes the
+ * list match its own heading.
+ */
 export async function getUserActivePackages() {
   try {
     const { userId } = await auth();
@@ -43,23 +72,55 @@ export async function getUserActivePackages() {
       return { success: false, error: "Unauthorized" };
     }
 
-    const transactions: any[] = await executeQuery(
-      `SELECT * FROM transactions WHERE user_id = $1 AND JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.type')) = 'ad_purchase' ORDER BY created_at DESC`,
+    // Both profile types: an agency owner can also hold an escort profile, and
+    // each carries its own boost. `boost_until > NOW()` is the same lazy
+    // expiry check the listing query uses, so this needs no cleanup job.
+    const rows: any[] = await executeQuery(
+      `SELECT 'escort' AS profile_type, id, name, boost_until, boost_activated_at,
+              boost_credits_spent, active_boost_package_id
+         FROM escorts
+        WHERE clerk_user_id = $1 AND boost_until > NOW()
+        UNION ALL
+       SELECT 'agency' AS profile_type, id, name, boost_until, boost_activated_at,
+              boost_credits_spent, active_boost_package_id
+         FROM agencies
+        WHERE owner_id = $1 AND boost_until > NOW()`,
       [userId],
     );
 
-    const packages = transactions.map((t: any) => {
-      const pkgId = t.metadata?.package_id || t.metadata?.packageId;
-      const adPkg = pkgId ? getAdPackageById(pkgId) : null;
+    const now = Date.now();
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+    const packages: ActiveAdPackage[] = (rows || []).map((row: any) => {
+      const packageId = row.active_boost_package_id;
+      const adPkg = packageId ? getAdPackageById(packageId) : null;
+
+      const expiresAt = new Date(row.boost_until);
+      const activatedAt = row.boost_activated_at ? new Date(row.boost_activated_at) : null;
+
+      // Prefer the package definition's duration. Fall back to the measured
+      // span for a package id that is no longer in AD_PACKAGES, so the UI still
+      // shows a real number instead of 0.
+      const measuredDays = activatedAt
+        ? Math.max(1, Math.round((expiresAt.getTime() - activatedAt.getTime()) / MS_PER_DAY))
+        : 0;
+
       return {
-        id: t.id,
-        packageId: pkgId,
-        name: adPkg?.name || pkgId || "Ad Package",
+        id: `${row.profile_type}:${row.id}`,
+        packageId: packageId || "unknown",
+        name: adPkg?.name || packageId || "Ad Package",
         description: adPkg?.description || "",
-        status: t.status,
-        purchasedAt: t.created_at,
+        profileType: row.profile_type,
+        profileName: row.name || null,
+        durationDays: adPkg?.durationDays || measuredDays,
+        purchasedAt: activatedAt,
+        expiresAt,
+        daysRemaining: Math.max(0, Math.ceil((expiresAt.getTime() - now) / MS_PER_DAY)),
+        creditsSpent: Number(row.boost_credits_spent) || 0,
       };
     });
+
+    packages.sort((a, b) => a.expiresAt.getTime() - b.expiresAt.getTime());
 
     return { success: true, packages };
   } catch (error: any) {
