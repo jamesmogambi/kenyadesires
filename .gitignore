@@ -48,3 +48,7 @@ next-env.d.ts
 
 # cpanel - Spaceship
 .httpaccess
+# google cloud service account keys (downloaded JSON, never commit)
+whatsapp-campaign-*.json
+*-service-account*.json
+service-account*.json

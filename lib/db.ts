@@ -2,18 +2,39 @@ import mysql from 'mysql2/promise';
 
 const env = process.env.NODE_ENV || 'development';
 
+// MYSQL_* is this project's established naming; DB_* is accepted as an alias so
+// generic/cPanel-oriented snippets work without a second pool.
+const DB_HOST = process.env.MYSQL_HOST || process.env.DB_HOST;
+const DB_USER = process.env.MYSQL_USER || process.env.DB_USER;
+const DB_PASSWORD = process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD;
+const DB_NAME = process.env.MYSQL_DATABASE || process.env.DB_NAME;
+const DB_PORT = process.env.MYSQL_PORT || process.env.DB_PORT || '3306';
+
+const missing = [
+  ['DB_HOST', DB_HOST],
+  ['DB_USER', DB_USER],
+  ['DB_NAME', DB_NAME],
+].filter(([, value]) => !value).map(([name]) => name);
+
+if (missing.length > 0) {
+  throw new Error(
+    `MySQL connection is missing environment variables: ${missing.join(', ')} ` +
+      `(checked MYSQL_* and DB_*)`,
+  );
+}
+
 console.log(`\n🗄️  [${env.toUpperCase()}] Initializing MySQL connection pool...`);
-console.log(`   Host: ${process.env.MYSQL_HOST}`);
-console.log(`   Database: ${process.env.MYSQL_DATABASE}`);
-console.log(`   User: ${process.env.MYSQL_USER}`);
-console.log(`   Port: ${process.env.MYSQL_PORT || 3306}`);
+console.log(`   Host: ${DB_HOST}`);
+console.log(`   Database: ${DB_NAME}`);
+console.log(`   User: ${DB_USER}`);
+console.log(`   Port: ${DB_PORT}`);
 
 const mysqlPool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: process.env.MYSQL_PORT ? Number(process.env.MYSQL_PORT) : 3306,
+  host: DB_HOST,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  port: Number(DB_PORT),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
