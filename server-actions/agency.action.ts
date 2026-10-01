@@ -1252,7 +1252,7 @@ export async function getAgencyEscortsFromNeon(
     const total = parseInt(countResult[0]?.count || "0", 10);
 
     const rows: any[] = await executeQuery(
-      `${ESCORT_NEON_COLUMNS.map((c) => `escorts.${c}`).join(", ")} FROM escorts WHERE agency_id = $1 AND is_active = TRUE ORDER BY escorts.created_at DESC LIMIT $${2} OFFSET $${3}`,
+      `SELECT ${ESCORT_NEON_COLUMNS.map((c) => `escorts.${c}`).join(", ")} FROM escorts WHERE agency_id = $1 AND is_active = TRUE ORDER BY escorts.created_at DESC LIMIT $${2} OFFSET $${3}`,
       [agencyId, validLimit, offset],
     );
 

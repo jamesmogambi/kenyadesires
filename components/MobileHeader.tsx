@@ -306,7 +306,7 @@ EditProfileItem.displayName = "EditProfileItem";
 const AddGirlItem = memo(({ onClose }: { onClose: () => void }) => (
   <DropdownMenuItem className="text-stone-800 group cursor-pointer">
     <Link
-      href="new-profile/?type=girl"
+      href="add-girl"
       className="flex items-center gap-2 w-full"
       onClick={onClose}
     >
