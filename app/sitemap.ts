@@ -7,6 +7,7 @@ import {
   getPriorityForContentType,
   getChangeFrequencyForContentType,
   createSitemapEntry,
+  escapeXmlEntities,
 } from "@/lib/sanity/sitemap-helper";
 import { buildListingHref } from "@/lib/utils";
 import {
@@ -309,7 +310,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`⏱️ Sitemap generated in ${duration}s`);
 
-    return valid;
+    // Escape last. Next.js writes `<loc>${item.url}</loc>` with no escaping of
+    // its own, and the county+region combo URLs built above carry a literal `&`
+    // from `buildListingHref`. Left bare, that makes the document invalid XML
+    // and a consumer stops reading at the first error, discarding every URL in
+    // the file — so this runs after validation and dedupe, which both need the
+    // real URL.
+    return valid.map((entry) => ({
+      ...entry,
+      url: escapeXmlEntities(entry.url),
+    }));
   } catch (error) {
     console.error(`💥 Fatal error generating sitemap:`, error);
 
@@ -333,6 +343,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "daily" as const,
         priority: 0.8,
       },
-    ];
+    ].map((entry) => ({ ...entry, url: escapeXmlEntities(entry.url) }));
   }
 }

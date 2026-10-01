@@ -26,13 +26,45 @@ export function firebaseTimestampToDate(timestamp: any): Date {
 }
 
 /**
- * Sanitize URL to ensure it's valid.
+ * Escape the five XML predefined entities.
  *
- * The `&` in a query string is deliberately left as a literal `&`. Next.js
- * escapes XML entities itself when it serialises `MetadataRoute.Sitemap` into
- * `<loc>`, so pre-escaping here produced `&amp;amp;` in the emitted XML — a
- * malformed URL that crawlers reject. Escaping is the serialiser's job, not the
- * URL builder's.
+ * This is required because Next.js does NOT escape. It serialises every entry
+ * with a raw template interpolation:
+ *
+ *   content += `<loc>${item.url}</loc>\n`;
+ *
+ * (next/dist/build/webpack/loaders/metadata/resolve-route-data.js). An earlier
+ * version of this file assumed Next handled the escaping and therefore kept the
+ * `&` literal. That assumption is wrong, and it produced a sitemap that no XML
+ * parser could read.
+ *
+ * The `&` is not hypothetical: `buildListingHref` joins filter parameters with
+ * `URLSearchParams`, so every county+region combo URL contains one, e.g.
+ * `https://kenyadesires.xyz/girls?county=nairobi&region=westlands`. A bare `&`
+ * starts an entity reference, so the parser fails with `EntityRef: expecting
+ * ';'` and — because a consumer stops at the first error — the entire file is
+ * discarded, taking every valid URL in it with it.
+ *
+ * This escapes for XML *source*, not for a URL. A parser decodes `&amp;` back
+ * to `&`, so the `<loc>` value a crawler actually reads is the intended URL.
+ * `&` must therefore be replaced first, or it would double-escape the
+ * ampersands introduced by the other four replacements.
+ */
+export function escapeXmlEntities(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/**
+ * Join a base URL and a path into a sitemap entry URL.
+ *
+ * Returns the URL unescaped. Escaping is applied once, at the very end, by
+ * `escapeXmlEntities` — see the note there on why validation and dedupe must
+ * see the real URL rather than the XML-escaped one.
  */
 export function sanitizeUrl(baseUrl: string, path: string): string {
   const cleanBase = baseUrl.replace(/\/+$/, "");
