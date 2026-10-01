@@ -283,6 +283,31 @@ export function formatDateShort(date: string): string {
   })
 }
 
+/**
+ * Format a date for display, or return null when it is not a usable date.
+ *
+ * Accepts a `Date` or a string because the same value can arrive either way: a
+ * server component keeps the `Date`, while anything crossing the server/client
+ * boundary receives a string.
+ *
+ * Returns null rather than the string "Invalid Date". `formatDate` and
+ * `formatDateShort` above will happily render "Invalid Date" for a malformed
+ * value, which is how the ad-package panel came to print that literal text on
+ * every row.
+ */
+export function formatExpiryDate(
+  value: Date | string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('en-KE', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 // export function slugify(text: string): string {
 //   return text
 //     .toLowerCase()

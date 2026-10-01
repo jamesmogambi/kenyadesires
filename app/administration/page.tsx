@@ -12,34 +12,14 @@ import Link from "next/link";
 import AgencyGirls from "./AgencyGirls";
 import { getUserActivePackages, getUserCredits, type ActiveAdPackage } from "@/server-actions/payment.action";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Package, Check } from "lucide-react";
+import { CreditCard, Package } from "lucide-react";
+import ActivePackagesSection from "./ActivePackagesSection";
 import { PLAN_DETAILS } from "@/lib/constants/packages";
+import { formatExpiryDate } from "@/lib/utils";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
-
-/**
- * Fixed-locale expiry date, or `null` when the value is not a usable date.
- *
- * `toLocaleDateString()` with no locale renders differently per device, so the
- * same boost read "10/7/2026" on one phone and "7 Oct 2026" on another. Pinning
- * the locale makes the admin view consistent across devices.
- *
- * Returns `null` rather than "Invalid Date": that string is what this panel used
- * to print for every row, because it asked the query for an `expiresAt` field
- * that was never selected.
- */
-const formatExpiryDate = (value: Date | string | null | undefined): string | null => {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-KE", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 export const metadata: Metadata = {
   title: "Update Profile 💖 | kenyadesires.xyz",
@@ -82,7 +62,7 @@ const page = async () => {
   const creditsResult = userId ? await getUserCredits() : { success: true, credits: 0 };
   const packagesResult = userId ? await getUserActivePackages() : { success: true, packages: [] };
 
-const credits = creditsResult.success ? creditsResult.credits : 0;
+  const credits = creditsResult.success ? creditsResult.credits : 0;
   // The failure branch of the server action carries `error` and no `packages`,
   // so this union needs a nullish fallback rather than a truthy check alone.
   const activePackages: ActiveAdPackage[] = packagesResult.success
@@ -98,7 +78,6 @@ const credits = creditsResult.success ? creditsResult.credits : 0;
     : "error" in packagesResult
       ? packagesResult.error
       : "Could not load your packages.";
-
 
   const planType = escort?.plan?.type || agency?.plan?.type || "free";
   const plan = PLAN_DETAILS[planType as keyof typeof PLAN_DETAILS] || PLAN_DETAILS.free;
@@ -124,7 +103,14 @@ const credits = creditsResult.success ? creditsResult.credits : 0;
         <TextSection />
 
         <div className="my-4 space-y-10 mt-8">
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
+          {/* `items-stretch` rather than `items-center`: with `items-center` each
+              card takes its own content height, so once the Current Plan card
+              grew a sub-line the Credits card sat visibly shorter beside it.
+              Stretch makes both fill the row's tallest height, and each card
+              keeps its own `items-center` so the icon stays vertically centred
+              in the taller box. It also gives the two cards one shared width on
+              mobile instead of each sizing to its own text. */}
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-stretch">
             <div className="bg-stone-100 rounded-lg p-4 md:p-6 flex items-center gap-3 shadow-md flex-1 max-w-md">
               <CreditCard className="size-6 md:size-8 text-red-700" />
               <div>
@@ -162,67 +148,10 @@ const credits = creditsResult.success ? creditsResult.credits : 0;
             </div>
           </div>
 
-          {(activePackages.length > 0 || packagesError) && (
-            <div className="bg-stone-100 rounded-lg p-4 md:p-6 shadow-md">
-              <h4 className="text-xl font-bold text-red-700 mb-4">Active Ad Packages</h4>
-
-              {packagesError && (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
-                  Could not load your ad packages right now. Please refresh in a
-                  moment.
-                </p>
-              )}
-
-              {!packagesError && activePackages.length === 0 && (
-                <p className="text-sm text-gray-600">
-                  You have no active ad packages.
-                </p>
-              )}
-
-              <div className="space-y-3">
-                {activePackages.map((pkg: ActiveAdPackage) => {
-                  const expiresLabel = formatExpiryDate(pkg.expiresAt);
-                  const purchasedLabel = formatExpiryDate(pkg.purchasedAt);
-
-                  return (
-                  <div
-                    key={pkg.id}
-                    className="flex items-start sm:items-center justify-between gap-4 bg-white p-3 rounded-md"
-                  >
-                    <div>
-                      <p className="font-semibold text-gray-800">
-                        {pkg.name || pkg.packageId}
-                      </p>
-                      {pkg.description && (
-                        <p className="text-sm text-gray-500">{pkg.description}</p>
-                      )}
-                      <p className="text-sm text-gray-600">
-                        {/* Guarded so a missing or malformed expiry degrades to
-                            readable text instead of "Invalid Date". */}
-                        {expiresLabel ? (
-                          <>
-                            {pkg.durationDays}-day package — Expires: {expiresLabel}
-                          </>
-                        ) : (
-                          "Expiry date unavailable"
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {pkg.daysRemaining} day
-                        {pkg.daysRemaining === 1 ? "" : "s"} remaining
-                        {purchasedLabel ? ` · started ${purchasedLabel}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-green-600 shrink-0">
-                      <Check className="size-4" />
-                      <span className="font-semibold">Active</span>
-                    </div>
-                  </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          <ActivePackagesSection
+            packages={activePackages}
+            error={packagesError}
+          />
 
           <InfoSection
             title="How to extend your listing?"
