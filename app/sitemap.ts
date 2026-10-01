@@ -1,12 +1,14 @@
 import { MetadataRoute } from "next";
 import {
   sanitizeUrl,
+  dedupeSitemapEntries,
   logSitemapStats,
   validateSitemapEntries,
   getPriorityForContentType,
   getChangeFrequencyForContentType,
   createSitemapEntry,
 } from "@/lib/sanity/sitemap-helper";
+import { buildListingHref } from "@/lib/utils";
 import {
   getBlogPostsCountForSitemap,
   getBlogPostsForSitemap,
@@ -187,7 +189,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .map((county: any) => ({
           url: sanitizeUrl(
             baseUrl,
-            `girls?county=${encodeURIComponent(county.name)}`,
+            buildListingHref("/girls", { county: county.name }),
           ),
           lastModified: new Date(),
           changeFrequency: "daily" as const,
@@ -213,9 +215,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       practiceEntries = (practices || [])
         .filter((p: any) => p?.practice)
         .map((p: any) => ({
+          // The practice name is a filter vocabulary, so it goes into the URL as
+          // a slug (`/girls?practice=couples-group-sex`) rather than the raw
+          // display text, which percent-encodes into `Couples%20(Group%20sex)`
+          // and puts parentheses, `&` and `%26` into the sitemap. `&page=1` was
+          // dropped for the same reason: page one of a filtered listing is the
+          // un-paginated URL, and listing both splits crawl budget across two
+          // addresses for one page of results.
           url: sanitizeUrl(
             baseUrl,
-            `girls?practice=${encodeURIComponent(p.practice)}&page=1`,
+            buildListingHref("/girls", { practice: p.practice }),
           ),
           lastModified: new Date(),
           changeFrequency: "daily" as const,
@@ -242,7 +251,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .map((r: any) => ({
           url: sanitizeUrl(
             baseUrl,
-            `girls?county=${encodeURIComponent(r.county)}&region=${encodeURIComponent(r.name)}`,
+            buildListingHref("/girls", { county: r.county, region: r.name }),
           ),
           lastModified: new Date(),
           changeFrequency: "daily" as const,
@@ -267,10 +276,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
 
     // Validate entries
-    const { valid, invalid } = validateSitemapEntries(allEntries);
+    const { valid: validBeforeDedupe, invalid } =
+      validateSitemapEntries(allEntries);
 
     if (invalid.length > 0) {
       console.warn(`⚠️ Found ${invalid.length} invalid sitemap entries`);
+    }
+
+    // Filter vocabularies overlap, so the same address can be produced by more
+    // than one source (e.g. a county page and a county+region combo that slug to
+    // the same URL). Keep one entry per URL.
+    const valid = dedupeSitemapEntries(validBeforeDedupe);
+
+    if (valid.length < validBeforeDedupe.length) {
+      console.log(
+        `🧹 Removed ${validBeforeDedupe.length - valid.length} duplicate URLs`,
+      );
     }
 
     // Log statistics

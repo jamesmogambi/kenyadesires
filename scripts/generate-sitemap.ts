@@ -1,6 +1,17 @@
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 
+// Sitemap entries carry raw, unescaped URLs. XML reserves `&`, so escape at
+// serialisation time — this mirrors what Next.js does when it renders
+// `MetadataRoute.Sitemap`, and keeps the two output paths byte-identical.
+const escapeXml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
 async function generateSitemap() {
   console.log("🔄 Generating sitemap via CLI...");
 
@@ -18,7 +29,7 @@ ${entries
   .map(
     (entry) => `
   <url>
-    <loc>${entry.url}</loc>
+    <loc>${escapeXml(entry.url)}</loc>
     <lastmod>${entry.lastModified instanceof Date ? entry.lastModified.toISOString() : entry.lastModified}</lastmod>
     <changefreq>${entry.changeFrequency}</changefreq>
     <priority>${entry.priority}</priority>

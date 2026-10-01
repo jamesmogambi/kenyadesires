@@ -26,13 +26,39 @@ export function firebaseTimestampToDate(timestamp: any): Date {
 }
 
 /**
- * Sanitize URL to ensure it's valid
+ * Sanitize URL to ensure it's valid.
+ *
+ * The `&` in a query string is deliberately left as a literal `&`. Next.js
+ * escapes XML entities itself when it serialises `MetadataRoute.Sitemap` into
+ * `<loc>`, so pre-escaping here produced `&amp;amp;` in the emitted XML — a
+ * malformed URL that crawlers reject. Escaping is the serialiser's job, not the
+ * URL builder's.
  */
 export function sanitizeUrl(baseUrl: string, path: string): string {
-  // Remove duplicate slashes
+  const cleanBase = baseUrl.replace(/\/+$/, "");
   const cleanPath = path.replace(/^\/+/, "");
-  const url = `${baseUrl}/${cleanPath}`;
-  return url.replace(/&/g, "&amp;");
+  return `${cleanBase}/${cleanPath}`;
+}
+
+/**
+ * Drop duplicate `<loc>` entries, keeping the first (highest priority) one.
+ *
+ * Filter vocabularies overlap: `?county=nairobi` and `?county=nairobi&region=`
+ * style collisions, or a county and a region that slug to the same string, would
+ * otherwise emit the same URL twice and waste crawl budget.
+ */
+export function dedupeSitemapEntries(
+  entries: MetadataRoute.Sitemap,
+): MetadataRoute.Sitemap {
+  const seen = new Set<string>();
+
+  return entries.filter((entry) => {
+    // Compare without the scheme so an http/https mix is treated as one URL.
+    const key = entry.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**
