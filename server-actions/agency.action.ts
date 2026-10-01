@@ -236,9 +236,14 @@ export const isAdminUser = async (): Promise<boolean> => {
       return true;
     }
 
+    // Two distinct placeholders, not a repeated $1: `convertParams` in lib/neon.ts
+    // rewrites every $n to a literal `?` and forwards the params array as-is, so
+    // reusing $1 left the second `?` unbound and MySQL rejected the statement.
+    // The `catch` below then turned that into a silent `false`, which made this
+    // role lookup incapable of ever returning true from the database.
     const rows: any[] = await executeQuery(
-      `SELECT role FROM users WHERE clerk_user_id = $1 OR id = $1 LIMIT 1`,
-      [userId],
+      `SELECT role FROM users WHERE clerk_user_id = $1 OR id = $2 LIMIT 1`,
+      [userId, userId],
     );
 
     const role = rows[0]?.role as string | undefined;

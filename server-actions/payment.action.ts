@@ -75,6 +75,13 @@ export async function getUserActivePackages() {
     // Both profile types: an agency owner can also hold an escort profile, and
     // each carries its own boost. `boost_until > NOW()` is the same lazy
     // expiry check the listing query uses, so this needs no cleanup job.
+    //
+    // The owner column needs its own placeholder ($2, not a repeated $1):
+    // `convertParams` in lib/neon.ts rewrites *every* $n to a literal `?` and
+    // passes the params array straight through, so reusing $1 here left the
+    // second `?` unbound. MySQL rejected the statement with ER_PARSE_ERROR, the
+    // action returned `{success:false}`, and the whole panel silently
+    // disappeared instead of rendering.
     const rows: any[] = await executeQuery(
       `SELECT 'escort' AS profile_type, id, name, boost_until, boost_activated_at,
               boost_credits_spent, active_boost_package_id
@@ -84,8 +91,8 @@ export async function getUserActivePackages() {
        SELECT 'agency' AS profile_type, id, name, boost_until, boost_activated_at,
               boost_credits_spent, active_boost_package_id
          FROM agencies
-        WHERE owner_id = $1 AND boost_until > NOW()`,
-      [userId],
+        WHERE owner_id = $2 AND boost_until > NOW()`,
+      [userId, userId],
     );
 
     const now = Date.now();

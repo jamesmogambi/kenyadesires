@@ -82,15 +82,41 @@ const page = async () => {
   const creditsResult = userId ? await getUserCredits() : { success: true, credits: 0 };
   const packagesResult = userId ? await getUserActivePackages() : { success: true, packages: [] };
 
-  const credits = creditsResult.success ? creditsResult.credits : 0;
+const credits = creditsResult.success ? creditsResult.credits : 0;
   // The failure branch of the server action carries `error` and no `packages`,
   // so this union needs a nullish fallback rather than a truthy check alone.
   const activePackages: ActiveAdPackage[] = packagesResult.success
     ? packagesResult.packages ?? []
     : [];
 
+  // Kept separate from the list because a failed query and "you have no active
+  // package" both produced zero rows, so the panel disappeared silently in both
+  // cases. That is how a SQL error in `getUserActivePackages` presented as
+  // "the packages stopped rendering" rather than as an error.
+  const packagesError = packagesResult.success
+    ? null
+    : "error" in packagesResult
+      ? packagesResult.error
+      : "Could not load your packages.";
+
+
   const planType = escort?.plan?.type || agency?.plan?.type || "free";
   const plan = PLAN_DETAILS[planType as keyof typeof PLAN_DETAILS] || PLAN_DETAILS.free;
+
+  // The card is titled "Current Plan", so it should reflect the boost that is
+  // actually running, not just the account tier. `plan` comes from
+  // `escorts.plan.type` / `agencies.plan.type`, which a boost purchase does not
+  // touch — so a user mid-boost was shown their old tier here while the real
+  // package sat unexplained further down the page.
+  //
+  // A user can hold a boost on an escort profile and an agency profile at once,
+  // so pick the one that dominates: the longest-running, then the latest expiry.
+  const currentPackage = [...activePackages].sort((a, b) => {
+    if (b.durationDays !== a.durationDays) return b.durationDays - a.durationDays;
+    return b.expiresAt.getTime() - a.expiresAt.getTime();
+  })[0];
+
+  const otherPackageCount = activePackages.length - (currentPackage ? 1 : 0);
 
   return (
     <div className="text-4xl ">
@@ -110,14 +136,49 @@ const page = async () => {
               <Package className="size-6 md:size-8 text-red-700" />
               <div>
                 <p className="text-sm text-gray-600">Current Plan</p>
-                <p className="text-2xl md:text-3xl font-bold text-red-700 capitalize">{plan.name}</p>
+                {/* The running ad package when there is one, otherwise the
+                    account tier. Both are labelled so the value is never
+                    ambiguous. */}
+                <p className="text-2xl md:text-3xl font-bold text-red-700 capitalize">
+                  {currentPackage ? currentPackage.name : plan.name}
+                </p>
+                {currentPackage ? (
+                  <p className="text-xs text-gray-600">
+                    {currentPackage.durationDays}-day package
+                    {currentPackage.expiresAt
+                      ? ` · expires ${formatExpiryDate(currentPackage.expiresAt)}`
+                      : ""}
+                    {` · ${currentPackage.daysRemaining} day${currentPackage.daysRemaining === 1 ? "" : "s"} left`}
+                    {otherPackageCount > 0
+                      ? ` · +${otherPackageCount} more active`
+                      : ""}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-600">
+                    No active ad package
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
-          {activePackages.length > 0 && (
+          {(activePackages.length > 0 || packagesError) && (
             <div className="bg-stone-100 rounded-lg p-4 md:p-6 shadow-md">
               <h4 className="text-xl font-bold text-red-700 mb-4">Active Ad Packages</h4>
+
+              {packagesError && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3">
+                  Could not load your ad packages right now. Please refresh in a
+                  moment.
+                </p>
+              )}
+
+              {!packagesError && activePackages.length === 0 && (
+                <p className="text-sm text-gray-600">
+                  You have no active ad packages.
+                </p>
+              )}
+
               <div className="space-y-3">
                 {activePackages.map((pkg: ActiveAdPackage) => {
                   const expiresLabel = formatExpiryDate(pkg.expiresAt);
