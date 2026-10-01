@@ -8,6 +8,12 @@ import {
   SAFE_DAILY_QUOTA,
   type IndexingAction,
 } from '@/lib/google-indexing';
+import {
+  enqueueUrls,
+  pruneOldRows,
+  requeueFromSitemap,
+  retentionDays,
+} from '@/lib/google-indexing-queue';
 
 // Segment config (`dynamic`/`runtime`) is rejected while nextConfig.cacheComponents
 // is on; `await connection()` inside each handler is this project's equivalent.
@@ -60,9 +66,94 @@ async function run(req: NextRequest) {
       ? Math.min(Math.floor(limitParam), BATCH_LIMIT)
       : BATCH_LIMIT;
 
+  // Requeueing is the default daily behaviour: pull the sitemap, pick the URLs
+  // that most deserve a notification, and insert them as PENDING. `?requeue=0`
+  // drains an existing queue without refilling it, which is the manual escape
+  // hatch when a bad URL set is stuck in the rotation.
+  const requeueParam = req.nextUrl.searchParams.get('requeue');
+  const shouldRequeue = requeueParam !== '0' && requeueParam !== 'false';
+
   const conn = await mysqlPool.getConnection();
 
   try {
+    // Prune before counting: removes settled history first, and its result is
+    // reported even if the quota check below short-circuits the run.
+    const pruned = await pruneOldRows(conn, retentionDays());
+
+    // Quota first: both the requeue slice and the publish batch are sized from
+    // today's remaining headroom, so a run can never overshoot the cap.
+    const [countRows] = await conn.query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS success_count
+         FROM google_indexing_logs
+        WHERE status = 'SUCCESS'
+          AND requested_at >= NOW() - INTERVAL 1 DAY`,
+    );
+    const usedToday = Number(countRows[0]?.success_count ?? 0);
+    const headroom = Math.max(0, SAFE_DAILY_QUOTA - usedToday);
+
+    if (headroom === 0) {
+      return NextResponse.json(
+        {
+          error: 'Google Indexing API daily quota exhausted; nothing queued or sent',
+          processed: 0,
+          pruned,
+          quota: { used: usedToday, limit: SAFE_DAILY_QUOTA },
+        },
+        { status: 429 },
+      );
+    }
+
+    let queue: {
+      total: number;
+      enqueued: number;
+      byReason: Record<string, number>;
+      skipped: { alreadyPending: number; withinCooldown: number; offHost: number };
+      errors: string[];
+    } | null = null;
+
+    if (shouldRequeue) {
+      // Refill only what this run can actually send. Sizing the enqueue by
+      // headroom alone lets the queue grow without bound: a run limited to 150
+      // would still insert 190 rows and leave them PENDING, and the next run
+      // would insert 190 more on top. Backlog first, then top up.
+      const [pendingRows] = await conn.query<RowDataPacket[]>(
+        `SELECT COUNT(*) AS pending_count
+           FROM google_indexing_logs
+          WHERE status = 'PENDING'`,
+      );
+      const pendingCount = Number(pendingRows[0]?.pending_count ?? 0);
+      const enqueueBudget = Math.max(0, Math.min(headroom, limit) - pendingCount);
+
+      if (enqueueBudget === 0) {
+        console.log(
+          `[GoogleIndexing][cron] no requeue needed: ${pendingCount} PENDING already ` +
+            `queued, headroom ${headroom}, limit ${limit}`,
+        );
+      } else {
+        const plan = await requeueFromSitemap(conn, enqueueBudget);
+        const enqueued = await enqueueUrls(conn, plan.eligible);
+        // The eligible list can be 150 URLs long; summarise it instead of
+        // putting half a kilobyte of sitemap into every cron response.
+        const byReason: Record<string, number> = {};
+        for (const entry of plan.eligible) {
+          byReason[entry.reason] = (byReason[entry.reason] ?? 0) + 1;
+        }
+        queue = {
+          total: plan.total,
+          enqueued,
+          byReason,
+          skipped: plan.skipped,
+          errors: plan.errors,
+        };
+        console.log(
+          `[GoogleIndexing][cron] requeued ${enqueued}/${plan.eligible.length} of ` +
+            `${plan.total} sitemap URLs ` +
+            `(skipped: ${plan.skipped.alreadyPending} pending, ` +
+            `${plan.skipped.withinCooldown} in cooldown, ${plan.skipped.offHost} off-host)`,
+        );
+      }
+    }
+
     // Oldest first: rows that have been waiting longest go out first, which also
     // stops a single URL from being retried on every run.
     const [rows] = await conn.query<RowDataPacket[]>(
@@ -81,29 +172,13 @@ async function run(req: NextRequest) {
         processed: 0,
         succeeded: 0,
         failed: 0,
-        message: 'No PENDING rows to process',
+        requeued: queue?.enqueued ?? 0,
+        pruned,
+        message: shouldRequeue
+          ? 'Queue drained; nothing left to send'
+          : 'No PENDING rows to process',
+        queue,
       });
-    }
-
-    // Stop before publishing if this batch would cross the self-imposed cap.
-    const [countRows] = await conn.query<RowDataPacket[]>(
-      `SELECT COUNT(*) AS success_count
-         FROM google_indexing_logs
-        WHERE status = 'SUCCESS'
-          AND requested_at >= NOW() - INTERVAL 1 DAY`,
-    );
-    const usedToday = Number(countRows[0]?.success_count ?? 0);
-    const headroom = Math.max(0, SAFE_DAILY_QUOTA - usedToday);
-
-    if (headroom === 0) {
-      return NextResponse.json(
-        {
-          error: 'Google Indexing API daily quota exhausted; leaving rows PENDING',
-          processed: 0,
-          quota: { used: usedToday, limit: SAFE_DAILY_QUOTA },
-        },
-        { status: 429 },
-      );
     }
 
     const batch = pending.slice(0, headroom);
@@ -145,7 +220,10 @@ async function run(req: NextRequest) {
       succeeded,
       failed,
       deferred: deferred.length,
+      requeued: queue?.enqueued ?? 0,
+      pruned,
       quota: { used: usedToday + succeeded, limit: SAFE_DAILY_QUOTA },
+      queue,
       failures: outcomes
         .filter((o) => o.status === 'FAILED')
         .map((o) => ({ url: o.url, error: o.error })),
