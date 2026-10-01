@@ -7,9 +7,15 @@ import SanityImage from "@/components/blog/SanityImage";
 interface Prop {
   blog: Post;
   className?: string;
+  /**
+   * Eagerly fetch the card image. Only true for the cards in the first row —
+   * see `BlogList`. Passing `priority` to every card made the preloader queue
+   * all of them and compete with the rest of the page.
+   */
+  priority?: boolean;
 }
 
-const BlogListItem = ({ blog, className }: Prop) => {
+const BlogListItem = ({ blog, className, priority = false }: Prop) => {
   return (
     <Link
       href={`/blog/${blog.slug?.current}`}
@@ -21,13 +27,13 @@ const BlogListItem = ({ blog, className }: Prop) => {
           alt={blog.mainImage?.alt || blog.title || "Blog post image"}
           fill
           className="object-cover"
-          sizes="100vw"
-          priority
+          sizes="(min-width: 768px) 33vw, 100vw"
+          priority={priority}
           fallback="/og-default.jpg"
         />
       </div>
 
-      <h4 className="mt-5 text-xl text-center text-primary font-semibold line-clamp-2">
+      <h4 className="mt-5 text-xl overflow-hidden text-center text-primary font-semibold line-clamp-2">
         {blog.title}
       </h4>
     </Link>

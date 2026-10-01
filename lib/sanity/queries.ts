@@ -1,25 +1,54 @@
 import { client } from "./client";
 import type { Category, Post } from "@/types/sanity";
 
-const SANITY_FETCH_TIMEOUT_MS = 5000;
+/**
+ * Ceiling for a single Sanity read.
+ *
+ * This has to cover the whole cost of the round trip, not just the query: a
+ * cold TLS handshake to `*.api.sanity.io` regularly takes 15s+ on this host's
+ * route to Google Cloud. The old 5s ceiling expired inside that window, so a
+ * perfectly healthy dataset returned `null` and the blog rendered as an empty
+ * page — that was the visible "blogs don't render" failure, not a GROQ bug.
+ *
+ * Kept slightly under the Sanity client's own 15s so this wrapper reports the
+ * timeout with a useful label instead of letting a raw client error escape.
+ */
+const SANITY_FETCH_TIMEOUT_MS = Number(
+  process.env.SANITY_FETCH_TIMEOUT_MS ?? 15000,
+);
 
+/**
+ * Bound a Sanity read so one slow query cannot hang a page render.
+ *
+ * Resolves to `null` on timeout or error, which callers translate into an empty
+ * result — callers must pair this with a cache that can serve a previous good
+ * value, otherwise a transient network fault shows up as missing content.
+ */
 async function fetchWithTimeout<T>(
   promise: Promise<T>,
   label: string,
 ): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
   try {
     return await Promise.race([
       promise,
-      new Promise<null>((resolve) =>
-        setTimeout(() => {
-          console.warn(`[Sanity] Timeout fetching ${label} after ${SANITY_FETCH_TIMEOUT_MS}ms`);
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => {
+          console.warn(
+            `[Sanity] Timeout fetching ${label} after ${SANITY_FETCH_TIMEOUT_MS}ms`,
+          );
           resolve(null);
-        }, SANITY_FETCH_TIMEOUT_MS),
-      ),
+        }, SANITY_FETCH_TIMEOUT_MS);
+      }),
     ]);
   } catch (error) {
     console.error(`[Sanity] Error fetching ${label}:`, error);
     return null;
+  } finally {
+    // Without this the timer outlives the race and holds the event loop open
+    // for the full window on every cached call.
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -220,6 +249,49 @@ export const POSTS_WITH_PAGINATION_QUERY = `*[_type == "post" && featured != tru
 
 export const POSTS_COUNT_QUERY = `count(*[_type == "post" && featured != true])`;
 
+/**
+ * Page slice and total for the non-featured feed in a single request.
+ *
+ * These were two parallel `client.fetch` calls. They were issued together, but
+ * every one of them pays the full DNS + TLS cost to `*.api.sanity.io`, so the
+ * page render was bounded by two handshakes instead of one. GROQ can return
+ * both values in a single document, so the count is folded in here and the
+ * second round trip disappears.
+ */
+export const POSTS_PAGINATED_WITH_COUNT_QUERY = `{
+  "posts": *[_type == "post" && featured != true] | order(_createdAt desc) {
+    _id,
+    title,
+    slug,
+    excerpt,
+    mainImage {
+      asset-> {
+        _id,
+        url
+      },
+      alt
+    },
+    _createdAt,
+    author-> {
+      name,
+      image {
+        asset-> {
+          _id,
+          url
+        }
+      }
+    },
+    categories[]-> {
+      _id,
+      name,
+      slug,
+      color,
+      icon
+    }
+  }[$start...$end],
+  "total": count(*[_type == "post" && featured != true])
+}`;
+
 export const ALL_POSTS_QUERY = `*[_type == "post"] | order(featured desc, _createdAt desc) {
   _id,
   title,
@@ -343,15 +415,24 @@ export async function getPostsWithPagination(
   const start = (page - 1) * limit;
   const end = start + limit;
 
-  const [posts, total] = await Promise.all([
-    client.fetch(POSTS_WITH_PAGINATION_QUERY, { start, end }),
-    client.fetch(POSTS_COUNT_QUERY),
-  ]);
+  // One request instead of two, and bounded by the same timeout guard as the
+  // other reads — an unguarded `client.fetch` here would have hung the render
+  // rather than degrading to an empty page.
+  const result = await fetchWithTimeout(
+    client.fetch(POSTS_PAGINATED_WITH_COUNT_QUERY, { start, end }),
+    `getPostsWithPagination(page=${page}, limit=${limit})`,
+  );
+
+  if (!result) {
+    return { posts: [], total: 0, totalPages: 0, currentPage: page };
+  }
+
+  const { posts, total } = result as { posts: Post[]; total: number };
 
   return {
-    posts,
-    total,
-    totalPages: Math.ceil(total / limit),
+    posts: posts || [],
+    total: total ?? 0,
+    totalPages: total ? Math.ceil(total / limit) : 0,
     currentPage: page,
   };
 }

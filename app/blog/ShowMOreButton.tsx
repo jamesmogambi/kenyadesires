@@ -1,8 +1,8 @@
 // Separate client component for the button
 // components/blog/ShowMoreButton.tsx
 "use client";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface ShowMoreButtonProps {
   nextPage: number;
@@ -16,7 +16,17 @@ export function ShowMoreButton({
   currentCount,
 }: ShowMoreButtonProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+
+  const activePage = searchParams.get("page") ?? "1";
+
+  // The navigation swaps in a new server-rendered page, but this component
+  // instance is reconciled rather than remounted. Without clearing the flag on
+  // the new `page` param the button stays stuck on "Loading..." forever.
+  useEffect(() => {
+    setLoading(false);
+  }, [activePage]);
 
   const handleClick = () => {
     setLoading(true);

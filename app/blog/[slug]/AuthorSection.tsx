@@ -1,7 +1,6 @@
-import { urlFor } from "@/lib/sanity/client";
 import { cn } from "@/lib/utils";
 import { Author } from "@/types/sanity";
-import Image from "next/image";
+import SanityImage from "@/components/blog/SanityImage";
 import React from "react";
 
 interface Prop {
@@ -9,8 +8,6 @@ interface Prop {
   author: Author;
 }
 const AuthorSection = ({ author, className }: Prop) => {
-  console.log("author==>", author);
-
   const { name, bio, _id, image } = author;
   return (
     <div
@@ -27,16 +24,19 @@ const AuthorSection = ({ author, className }: Prop) => {
       </div>
       {/* avatar */}
       <div className="relative basis-full h-42   md:basis-1/5  ">
-        <Image
-          src={image ? urlFor(image) : "/og-default.png"}
+        {/* Was `next/image` with a raw `urlFor()` src. That sent the avatar
+            through the optimizer, which re-fetches it from cdn.sanity.io
+            server-side — the same hop that timed out and left author photos
+            blank. `SanityImage` now serves CMS assets straight from the CDN. */}
+        <SanityImage
+          image={image}
+          fallback="/og-default.png"
           alt={name}
-          fill // This makes the image fill the parent container
-          className="object-cover" // This ensures the image covers the area
+          fill
           // The avatar is `basis-full` on mobile but only `md:basis-1/5` from
           // md up, so 100vw made Next fetch a ~5x oversized image.
           sizes="(min-width: 768px) 20vw, 100vw"
-          priority // Optional: if it's above the fold
-          quality={90}
+          priority
         />
       </div>
     </div>

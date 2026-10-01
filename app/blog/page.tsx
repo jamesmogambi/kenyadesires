@@ -9,10 +9,6 @@ import {
   getCachedBlogPosts,
 } from "@/lib/cache";
 import {
-  getAllCategories,
-  getFeaturedPostsWithLimit,
-} from "@/lib/sanity/queries";
-import {
   generateBlogListMetadata,
   generateBlogListJsonLd,
 } from "@/lib/blog-seo";
@@ -37,28 +33,27 @@ interface PageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
+const POSTS_PER_PAGE = 20;
+
 const page = async ({ searchParams }: PageProps) => {
   await connection();
   const params = await searchParams;
-  const currentPage = parseInt(params.page || "1");
-  const POSTS_PER_PAGE = 20;
+  // `?page=abc` or `?page=-3` both reach `parseInt` as NaN or a negative slice
+  // index; clamp so the GROQ range stays valid and the page still renders.
+  const parsedPage = parseInt(params.page || "1", 10);
+  const currentPage = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
-  let featuredPosts: any[] = [];
-  let categories = { featured: [], nonFeatured: [] };
+  // Three independent reads, issued together. They were awaited one after
+  // another, so a render cost the sum of every Sanity round trip; in parallel it
+  // costs the slowest one. All three sit behind the stale-while-revalidate cache
+  // in `lib/cache.ts`, so repeat traffic never reaches Sanity at all.
+  const [categories, featuredPosts, feed] = await Promise.all([
+    getCachedBlogCategories(),
+    getCachedFeaturedPosts(),
+    getCachedBlogPosts(currentPage, POSTS_PER_PAGE),
+  ]);
 
-  try {
-    console.log("[Blog Page] Fetching featured posts...");
-    const startFeatured = Date.now();
-    featuredPosts = await getCachedFeaturedPosts();
-    console.log(`[Blog Page] Featured posts fetched in ${Date.now() - startFeatured}ms, count: ${featuredPosts.length}`);
-
-    console.log("[Blog Page] Fetching categories...");
-    const startCategories = Date.now();
-    categories = await getAllCategories();
-    console.log(`[Blog Page] Categories fetched in ${Date.now() - startCategories}ms, featured: ${categories.featured.length}, nonFeatured: ${categories.nonFeatured.length}`);
-  } catch (error) {
-    console.error("[Blog Page] Failed to fetch blog data from Sanity:", error);
-  }
+  const { posts, total, totalPages } = feed;
 
   const jsonLdScript = generateBlogListJsonLd();
 
@@ -79,7 +74,25 @@ const page = async ({ searchParams }: PageProps) => {
         <div className="basis-full p-8 border-amber-300 lg:flex-1">
           {featuredPosts.length > 0 && (
             <div className="mb-8">
-              <BlogList blogList={featuredPosts} />
+              <BlogList blogList={featuredPosts} blogTitle="Featured" />
+            </div>
+          )}
+
+          {/* The non-featured feed. This was imported as `getCachedBlogPosts`
+              but never rendered, so every post without `featured == true` was
+              unreachable from the blog index regardless of pagination. */}
+          <BlogList
+            blogList={posts}
+            blogTitle={currentPage > 1 ? `Latest Posts - Page ${currentPage}` : "Latest Posts"}
+          />
+
+          {currentPage < totalPages && (
+            <div className="mt-10">
+              <ShowMoreButton
+                nextPage={currentPage + 1}
+                totalPosts={total}
+                currentCount={posts.length}
+              />
             </div>
           )}
         </div>

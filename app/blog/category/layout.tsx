@@ -1,9 +1,9 @@
 import React from "react";
 import CategorySection from "../CategorySection";
 import {
-  getAllCategories,
-  getFeaturedPostsWithLimit,
-} from "@/lib/sanity/queries";
+  getCachedBlogCategories,
+  getCachedFeaturedPosts,
+} from "@/lib/cache";
 import BreadCrumbHeader from "../[slug]/BreadCrumbHeader";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -19,11 +19,13 @@ const layout = async ({ children, params }: Prop) => {
   // Await the params promise
   const { slug } = await params;
 
-  // TODO:// get featured categories as well as non-featured categories
+  // These two reads used to call `lib/sanity/queries` directly, bypassing the
+  // cache entirely, so every category page render paid two more uncached Sanity
+  // round trips on top of the page's own fetches. They now share the same cached
+  // entries as the blog index, which makes the sidebar free on repeat traffic.
   const [categories, featuredPosts] = await Promise.all([
-    getAllCategories(),
-    getFeaturedPostsWithLimit(20),
-    // getPostsWithPagination(1, 6),
+    getCachedBlogCategories(),
+    getCachedFeaturedPosts(),
   ]);
 
   const { featured, nonFeatured } = categories;

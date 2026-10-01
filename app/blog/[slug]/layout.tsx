@@ -2,11 +2,10 @@ import React from "react";
 import CategorySection from "../CategorySection";
 import BreadCrumbHeader from "./BreadCrumbHeader";
 import {
-  getAllCategories,
-  getFeaturedPostsWithLimit,
-} from "@/lib/sanity/queries";
-import Head from "next/head";
-import { getCachedBlogPost } from "@/lib/cache";
+  getCachedBlogCategories,
+  getCachedFeaturedPosts,
+  getCachedBlogPost,
+} from "@/lib/cache";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -20,9 +19,13 @@ interface Prop {
 const layout = async ({ children, params }: Prop) => {
   const { slug } = await params;
 
+  // The sidebar reads came straight from `lib/sanity/queries`, so every blog post
+  // render paid two uncached Sanity round trips on top of the article fetch. All
+  // three now share the cached entries, so repeat views cost one map lookup
+  // each.
   const [categories, featuredPosts, post] = await Promise.all([
-    getAllCategories(),
-    getFeaturedPostsWithLimit(20),
+    getCachedBlogCategories(),
+    getCachedFeaturedPosts(),
     getCachedBlogPost(slug),
   ]);
 

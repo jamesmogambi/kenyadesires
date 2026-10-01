@@ -18,8 +18,9 @@ import {
 import { getAllRegions, getPopularCounties } from "@/server-actions/region.action";
 import { getAllLookupData } from "@/server-actions/lookup.action";
 import { getCommentsByPostSlug } from "@/server-actions/blog-comments.action";
-
-type CacheEntry<T> = { value: T; expires: number };
+import type { Category, Post } from "@/types/sanity";
+import { StaleWhileRevalidateCache } from "@/lib/stale-while-revalidate-cache";
+import type { CacheEntry } from "@/lib/stale-while-revalidate-cache";
 
 class TTLCache<T> {
   private store = new Map<string, CacheEntry<T>>();
@@ -54,6 +55,13 @@ class TTLCache<T> {
 
 const escortCache = new TTLCache<any>(60);
 
+// Blog content is editorial: it changes when someone publishes in the Studio,
+// not on a user-facing timer. A 60s fresh window keeps repeat traffic free of
+// network calls while still picking up new posts within a minute; the 10 minute
+// stale window means a Sanity outage degrades to slightly old posts rather than
+// to an empty page.
+const blogCache = new StaleWhileRevalidateCache(60_000, 10 * 60_000);
+
 function cacheKey(params: any): string {
   return JSON.stringify(params || {});
 }
@@ -87,28 +95,43 @@ export async function getCachedBDSMEscorts(params: any) {
 }
 
 export async function getCachedBlogCategories() {
-  console.log("🔄 Fetching fresh blog categories...");
-  return await getAllCategories();
+  return blogCache.resolve(
+    "blog:categories",
+    () => getAllCategories(),
+    { featured: [], nonFeatured: [] },
+  );
 }
 
 export async function getCachedFeaturedPosts(limit: number = 20) {
-  console.log(`🔄 Fetching fresh featured posts (limit: ${limit})...`);
-  return await getFeaturedPostsWithLimit(limit);
+  return blogCache.resolve(
+    `blog:featured:${limit}`,
+    () => getFeaturedPostsWithLimit(limit),
+    [] as Post[],
+  );
 }
 
 export async function getCachedBlogPosts(page: number, limit: number) {
-  console.log(`🔄 Fetching fresh blog posts (page: ${page})...`);
-  return await getPostsWithPagination(page, limit);
+  return blogCache.resolve(
+    `blog:posts:${page}:${limit}`,
+    () => getPostsWithPagination(page, limit),
+    { posts: [] as Post[], total: 0, totalPages: 0, currentPage: page },
+  );
 }
 
 export async function getCachedBlogPost(slug: string) {
-  console.log(`🔄 Fetching fresh blog post: ${slug}...`);
-  return await getBlogBySlug(slug);
+  return blogCache.resolve(
+    `blog:post:${slug}`,
+    () => getBlogBySlug(slug),
+    null as Post | null,
+  );
 }
 
 export async function getCachedAllBlogPosts() {
-  console.log("🔄 Fetching all blog posts for static params...");
-  return await getAllPosts();
+  return blogCache.resolve(
+    "blog:posts:all",
+    () => getAllPosts(),
+    [] as Post[],
+  );
 }
 
 export async function getCachedPopularCounties(limit?: number) {
@@ -130,18 +153,27 @@ export async function getCachedLookupData() {
 }
 
 export async function getCachedCategoryBySlug(slug: string) {
-  console.log(`🔄 Fetching fresh category: ${slug}...`);
-  return await getCategoryBySlug(slug);
+  return blogCache.resolve(
+    `blog:category:${slug}`,
+    () => getCategoryBySlug(slug),
+    null as Category | null,
+  );
 }
 
 export async function getCachedPostsByCategory(slug: string) {
-  console.log(`🔄 Fetching fresh posts for category: ${slug}...`);
-  return await getPostsByCategory(slug);
+  return blogCache.resolve(
+    `blog:category-posts:${slug}`,
+    () => getPostsByCategory(slug),
+    [] as Post[],
+  );
 }
 
 export async function getCachedRelatedPosts(categoryId: string, currentPostId: string, limit: number = 3) {
-  console.log(`🔄 Fetching fresh related posts for category: ${categoryId}...`);
-  return await getRelatedPosts(categoryId, currentPostId, limit);
+  return blogCache.resolve(
+    `blog:related:${categoryId}:${currentPostId}:${limit}`,
+    () => getRelatedPosts(categoryId, currentPostId, limit),
+    [] as Post[],
+  );
 }
 
 export async function getCachedCommentsByPostSlug(postSlug: string) {
