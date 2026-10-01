@@ -1,4 +1,5 @@
 import React from "react";
+import { connection } from "next/server";
 import CategorySection from "../CategorySection";
 import BreadCrumbHeader from "./BreadCrumbHeader";
 import {
@@ -17,6 +18,11 @@ interface Prop {
 }
 
 const layout = async ({ children, params }: Prop) => {
+  // Request-time opt-in, see app/blog/category/layout.tsx. The cache helpers
+  // read `Date.now()` for their TTL, which Cache Components refuses to evaluate
+  // during prerender.
+  await connection();
+
   const { slug } = await params;
 
   // The sidebar reads came straight from `lib/sanity/queries`, so every blog post
