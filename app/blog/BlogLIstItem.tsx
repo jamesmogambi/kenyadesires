@@ -27,7 +27,7 @@ const BlogListItem = ({ blog, className }: Prop) => {
         />
       </div>
 
-      <h4 className="mt-5 text-xl text-center text-primary font-semibold">
+      <h4 className="mt-5 text-xl text-center text-primary font-semibold line-clamp-2">
         {blog.title}
       </h4>
     </Link>

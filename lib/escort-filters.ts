@@ -49,19 +49,67 @@ export const SEARCHABLE_COLUMNS = [
   "locations",
 ];
 
-/** `column LIKE $n`, case-insensitive, with `-`/`_` folded to spaces. */
+/**
+ * SQL that lowercases and reduces every run of non-alphanumeric characters
+ * (`-`, `_`, spaces, parentheses, commas, `&`, `/`, emoji) to a single space.
+ *
+ * This is deliberately broader than folding only `-`/`_`. Real practice values in
+ * `escorts.practices` carry punctuation — 57 of 99 distinct values do, e.g.
+ * `"Erotic massage (incl. Nuru)"`, `"Anal/10k"`, `"CIM (Come in mouth)"` — and a
+ * slugified URL cannot reproduce those characters. Normalising *both* the column
+ * and the term is what makes `?practice=erotic-massage-incl-nuru` match the row
+ * that stores `"Erotic massage (incl. Nuru)"`.
+ *
+ * Requires MySQL 8.0+ (`REGEXP_REPLACE`); the project targets 8.0.46.
+ */
+function foldExpr(sqlExpr: string): string {
+  return `TRIM(REGEXP_REPLACE(LOWER(COALESCE(${sqlExpr}, '')), '[^a-z0-9]+', ' '))`;
+}
+
+/** `column LIKE $n`, case-insensitive, with punctuation and separators folded. */
 export function normalizedJsonLike(
   column: string,
   placeholder: number,
   prefix = "",
 ): string {
   const qualified = `${prefix}${column}`;
-  return `REPLACE(REPLACE(LOWER(COALESCE(${qualified}, '')), '-', ' '), '_', ' ') LIKE $${placeholder}`;
+  return `${foldExpr(qualified)} LIKE $${placeholder}`;
 }
 
-/** Wraps a term for LIKE matching. */
+/**
+ * Wraps a term for LIKE matching, folded with the same rule the column side uses.
+ *
+ * Folding the term too is what lets a slugified URL and the raw display name
+ * select the same rows — without it the slug's hyphens would never match a
+ * stored space.
+ */
 export function likeTerm(value: string): string {
-  return `%${value.toLowerCase().trim()}%`;
+  return `%${foldTerm(value)}%`;
+}
+
+/** Mirrors {@link foldExpr} in JS so params are pre-normalised. */
+export function foldTerm(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * `column = $n`, case-insensitive, folded on both sides.
+ *
+ * For the scalar columns where an exact match is correct (county, region,
+ * business type) but the stored form disagrees with the URL form — `escorts.county`
+ * holds `"Taita Taveta"` while the slug says `taita-taveta`, and `business_type` is
+ * underscore-separated (`massage_parlor`) while the URL carries `massage-parlor`.
+ */
+export function normalizedEquals(
+  column: string,
+  placeholder: number,
+  prefix = "",
+): string {
+  const qualified = `${prefix}${column}`;
+  return `${foldExpr(qualified)} = ${foldExpr(`$${placeholder}`)}`;
 }
 
 interface BuiltCondition {

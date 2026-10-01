@@ -1,5 +1,5 @@
 "use client";
-import { cn, formatSlugToTitle, buildFilterUrl } from "@/lib/utils";
+import { cn, formatSlugToTitle, buildFilterUrl, filterValuesMatch } from "@/lib/utils";
 import React, { useEffect, useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -54,10 +54,12 @@ const AgencyFilterInput = ({ className }: Prop) => {
   // Initialize from URL params on mount
   useEffect(() => {
     if (initialCountyCode && counties.length > 0) {
+      // `filterValuesMatch` folds the slug so `?county=taita-taveta` resolves to
+      // the `Taita Taveta` option.
       const foundCounty = counties.find(
         (c: ICounty) =>
           c.code?.toLowerCase() === initialCountyCode.toLowerCase() ||
-          c.name?.toLowerCase() === initialCountyCode.toLowerCase(),
+          filterValuesMatch(c.name, initialCountyCode),
       );
 
       if (foundCounty) {
@@ -73,15 +75,27 @@ const AgencyFilterInput = ({ className }: Prop) => {
       }
     }
 
-    if (initialRegionName && regions.length > 0) {
-      const foundRegion = regions.find(
-        (r) => r.name?.toLowerCase() === initialRegionName.toLowerCase(),
+    if (initialRegionName && fetchedRegions.length > 0) {
+      const foundRegion = fetchedRegions.find((r: IRegion) =>
+        filterValuesMatch(r.name, initialRegionName),
       );
       if (foundRegion) {
         setRegion(foundRegion);
       }
     }
   }, [counties, fetchedRegions, initialCountyCode, initialRegionName]);
+
+  // Resolve `?business=` back to its canonical value so the chip label and the
+  // emitted `business_type` stay in the vocabulary the table actually stores.
+  useEffect(() => {
+    if (!initialbusiness) return;
+    const match = BUSINESS_TYPES.find((item: any) =>
+      filterValuesMatch(item.value, initialbusiness),
+    );
+    if (match?.value && match.value !== business) {
+      setbusiness(match.value);
+    }
+  }, [initialbusiness]);
 
   // ✅ Update regions when county changes
   useEffect(() => {

@@ -1,5 +1,5 @@
 "use client";
-import { cn, formatSlugToTitle, buildFilterUrl } from "@/lib/utils";
+import { cn, formatSlugToTitle, buildFilterUrl, filterValuesMatch } from "@/lib/utils";
 import React, { useEffect, useState, useMemo } from "react";
 import {
   DropdownMenu,
@@ -76,11 +76,12 @@ const GirlFilterInput = ({ className }: Prop) => {
   // Initialize from URL params on mount
   useEffect(() => {
     if (initialCountyCode && counties.length > 0) {
-      // Find county by code (slug) or name
+      // Find county by code (slug) or name. `filterValuesMatch` folds the slug,
+      // so a `?county=taita-taveta` URL still resolves to the `Taita Taveta` option.
       const foundCounty = counties.find(
         (c: ICounty) =>
           c.code?.toLowerCase() === initialCountyCode.toLowerCase() ||
-          c.name?.toLowerCase() === initialCountyCode.toLowerCase(),
+          filterValuesMatch(c.name, initialCountyCode),
       );
 
       if (foundCounty) {
@@ -97,15 +98,28 @@ const GirlFilterInput = ({ className }: Prop) => {
       }
     }
 
-    if (initialRegionName && regions.length > 0) {
-      const foundRegion = regions.find(
-        (r) => r.name?.toLowerCase() === initialRegionName.toLowerCase(),
+    if (initialRegionName && fetchedRegions.length > 0) {
+      const foundRegion = fetchedRegions.find((r: IRegion) =>
+        filterValuesMatch(r.name, initialRegionName),
       );
       if (foundRegion) {
         setRegion(foundRegion);
       }
     }
   }, [counties, fetchedRegions, initialCountyCode, initialRegionName]);
+
+  // Resolve a `?practice=` param back to its display name once the option list
+  // loads, so the chip reads "Tantric body-to-body massage" rather than the raw
+  // slug. Runs for both the slugified and the legacy raw form of the param.
+  useEffect(() => {
+    if (!initialpractice || !variantPractices?.length) return;
+    const match = variantPractices.find((item: any) =>
+      filterValuesMatch(item.name, initialpractice),
+    );
+    if (match?.name && match.name !== practice) {
+      setPractice(match.name);
+    }
+  }, [variantPractices, initialpractice]);
 
   // Update regions when county changes (for the dropdown)
   useEffect(() => {

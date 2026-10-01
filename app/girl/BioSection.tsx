@@ -5,7 +5,7 @@ import RenderEditorContent from "./RenderEditorContent";
 import PhonePicker from "./PhonePicker";
 import AboutTabs from "./AboutTabs";
 import Link from "next/link";
-import { formatSlugToTitle, normalizeArray } from "@/lib/utils";
+import { formatSlugToTitle, normalizeArray, buildListingHref } from "@/lib/utils";
 import { Escort } from "@/server-actions/escort.action";
 import { trackClickContact, trackClickWhatsApp, determineProfileType } from "@/lib/customer-analytics";
 
@@ -123,7 +123,7 @@ const BioSection = ({ girl }: Prop) => {
         <div>
           {normalizeArray(categories).map((category: any, index: number) => (
             <Link
-              href={`/girls?practice=${category}`}
+              href={buildListingHref("/girls", { practice: category })}
               key={index}
               className="text-white/40"
             >

@@ -131,7 +131,7 @@ const BlogArticle = async ({
                       fallback="/og-default.jpg"
                     />
                   </div>
-                  <h4 className="text-lg text-center text-primary font-semibold group-hover:underline">
+                  <h4 className="text-lg text-center text-primary font-semibold group-hover:underline line-clamp-2">
                     {post.title}
                   </h4>
                 </Link>

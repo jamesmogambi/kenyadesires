@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import GirlFilterInput from "@/app/girls/GirlFIlterInput";
 import { getCachedPopularCounties } from "@/lib/cache";
+import { buildListingHref } from "@/lib/utils";
 
 const GirlRegions = async () => {
   // ✅ Use cached version
@@ -38,7 +39,7 @@ const GirlRegions = async () => {
             <Link
               key={county.code}
               className="text-primary uppercase font-bold text-base bg-gray-1/35 rounded-md p-1.5 px-5"
-              href={`/girls?county=${county?.name}`}
+              href={buildListingHref("/girls", { county: county?.name })}
             >
               sex {county.name}
             </Link>

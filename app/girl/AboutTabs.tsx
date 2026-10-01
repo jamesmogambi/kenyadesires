@@ -1,4 +1,4 @@
-import { cn, normalizeArray, slugify, splitIntoThreeColumns } from "@/lib/utils";
+import { cn, normalizeArray, slugify, splitIntoThreeColumns, buildListingHref } from "@/lib/utils";
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import About from "./About";
@@ -95,8 +95,7 @@ const AboutTabs = ({ girl, className }: Prop) => {
               <div key={i} className="space-y-3 flex flex-col">
                 {column.map((practice: any, j) => (
                   <Link
-                    href={`/girls?practice=${practice}`}
-                    // href={`/practices/${slugify(practice)}`}
+                    href={buildListingHref("/girls", { practice })}
                     key={j}
                     className="bg-primary font-medium text-white  text-center rounded-full p-2.5 "
                   >

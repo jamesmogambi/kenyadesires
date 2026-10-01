@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import GirlProfile from "../GirlProfile";
 import { Metadata, ResolvingMetadata } from "next";
-import { formatSlugToTitle } from "@/lib/utils";
+import { formatSlugToTitle, buildListingHref } from "@/lib/utils";
 import { generateEscortStructuredData } from "./utils";
 import { getEscortByIdentifier } from "@/server-actions/girl.action";
 import ProfileTracker from "@/components/analytics/ProfileTracker";
@@ -296,7 +296,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
               "@type": "ListItem",
               position: 3,
               name: `${escort.county || escort.primaryRegion} Escorts`,
-              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}/girls?region=${encodeURIComponent(escort.primaryRegion)}`,
+              item: `${process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz"}${buildListingHref("/girls", { region: escort.primaryRegion })}`,
             },
           ]
         : []),
@@ -404,7 +404,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
             <BreadcrumbItem>
               <Link
                 className="text-primary text-lg hover:text-primary/80 bg-transparent font-bold transition-colors whitespace-nowrap"
-                href={`/girls?region=${encodeURIComponent(escort.primaryRegion || "")}`}
+                href={buildListingHref("/girls", { region: escort.primaryRegion })}
                 aria-label={`${escort.county || escort.primaryRegion} Escorts`}
               >
                 <span className="text-white font-bold">sex</span>

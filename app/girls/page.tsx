@@ -17,6 +17,7 @@ import {
 import { getEscortsWithCleanedImages } from "@/server-actions/cleaned-escorts.action";
 import type { Escort } from "@/server-actions/escort.action";
 import LocationTracker from "@/components/analytics/LocationTracker";
+import { buildListingHref } from "@/lib/utils";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -106,17 +107,21 @@ export async function generateMetadata(
   const title = buildTitle();
   const description = buildDescription();
 
-  // Build canonical URL with query parameters
+  // Build canonical URL with query parameters.
+  // Filter values are slugified so every equivalent URL — the legacy raw form
+  // (`?practice=Tantric body-to-body massage`) and the slug — canonicalises to one
+  // address instead of splitting crawl budget across duplicates.
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
-  const canonicalParams = new URLSearchParams();
-  if (county && county !== "all") canonicalParams.set("county", county);
-  if (region && region !== "all") canonicalParams.set("region", region);
-  if (practice && practice !== "all") canonicalParams.set("practice", practice);
+  const canonicalPath = buildListingHref("/girls", { county, region, practice });
+  const canonicalParams = new URLSearchParams(
+    canonicalPath.includes("?") ? canonicalPath.split("?")[1] : "",
+  );
   if (sort) canonicalParams.set("sort", sort);
   if (order) canonicalParams.set("order", order);
   if (pageNumber > 1) canonicalParams.set("page", pageNumber.toString());
 
-  const canonicalUrl = `${baseUrl}/girls${canonicalParams.toString() ? `?${canonicalParams.toString()}` : ""}`;
+  const canonicalQuery = canonicalParams.toString();
+  const canonicalUrl = `${baseUrl}${canonicalPath.split("?")[0]}${canonicalQuery ? `?${canonicalQuery}` : ""}`;
 
   return {
     title,
@@ -272,7 +277,7 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
       ? [
           {
             name: `${formattedCounty} Escorts`,
-            url: `/girls?county=${params.county}`,
+            url: buildListingHref("/girls", { county: params.county }),
           },
         ]
       : []),
@@ -280,7 +285,7 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
       ? [
           {
             name: `${formattedRegion} Escorts`,
-            url: `/girls?region=${params.region}`,
+            url: buildListingHref("/girls", { region: params.region }),
           },
         ]
       : []),
@@ -288,7 +293,7 @@ const GirlsListingPage = async ({ searchParams }: PageProps) => {
       ? [
           {
             name: `${formattedPractice} Escorts`,
-            url: `/girls?practice=${params.practice}`,
+            url: buildListingHref("/girls", { practice: params.practice }),
           },
         ]
       : []),

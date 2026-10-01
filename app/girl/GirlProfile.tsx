@@ -3,7 +3,7 @@ import React from "react";
 import ProfileGallery from "./ProfileGallery";
 import BioSection from "./BioSection";
 import BackToListButton from "./BackToListButton";
-import { formatSlugToTitle, slugify } from "@/lib/utils";
+import { formatSlugToTitle, slugify, buildListingHref } from "@/lib/utils";
 import { Escort } from "@/server-actions/escort.action";
 
 interface Prop {
@@ -70,7 +70,7 @@ const GirlProfile = ({ girl, className }: Prop) => {
         </h3>
 
         <BackToListButton
-          fallbackHref={`/girls?region=${slugify(girl.primaryRegion)}`}
+          fallbackHref={buildListingHref("/girls", { region: girl.primaryRegion })}
         />
       </div>
 

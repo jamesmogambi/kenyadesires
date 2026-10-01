@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import { Minus, Plus } from "lucide-react";
 import { usePopularCounties } from "@/store/countyStore";
+import { buildListingHref } from "@/lib/utils";
 
 interface Props {
   onClose: () => void;
@@ -83,7 +84,7 @@ const MobileNavMenu = ({ onClose }: Props) => {
                 <Link
                   key={county.id}
                   className="text-primary my-2 text-lg font-semibold flex flex-col uppercase"
-                  href={`/girls?county=${county.name}`}
+                  href={buildListingHref("/girls", { county: county.name })}
                   onClick={handleLinkClick}
                 >
                   {`Sex ${county.name}`}

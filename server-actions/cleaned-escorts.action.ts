@@ -8,6 +8,7 @@ import {
   SERVICE_COLUMNS,
   buildAnyColumnCondition,
   likeTerm,
+  normalizedEquals,
   normalizedJsonLike,
 } from "@/lib/escort-filters";
 import { Escort, GetEscortsParams, GetEscortsResponse, convertQueryDocToEscort } from "./escort.action";
@@ -15,6 +16,13 @@ import { boostOrderBy } from "@/lib/boost";
 
 const normalize = (val?: string) => (val || "").toLowerCase().trim();
 const normalizeSlug = (val?: string) => normalize(val).replace(/[-_]/g, " ");
+
+/**
+ * Matches `normalizedEquals`/`likeTerm` on the SQL side: lowercased, with every
+ * run of non-alphanumerics reduced to a single space, so a slugified URL compares
+ * equal to the stored display name.
+ */
+const normalizeFilter = (val?: string) => normalize(val).replace(/[^a-z0-9]+/g, " ").trim();
 
 const LISTING_COLUMNS = [
   "id", "name", "username", "slug", "preview_photo", "images", "videos",
@@ -59,7 +67,9 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.county && params.county !== "all") {
-    conditions.push(`escorts.county = $${paramIndex}`);
+    // Folded both sides: the URL carries a slug (`taita-taveta`) but rows store
+    // the display name, which is `Taita Taveta` on this table.
+    conditions.push(normalizedEquals("county", paramIndex, "escorts."));
     params_arr.push(params.county);
     paramIndex++;
   }
@@ -198,44 +208,44 @@ function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort
   let filtered = escorts;
 
   if (params.county && params.county !== "all") {
-    const countyLower = normalize(params.county);
-    filtered = filtered.filter((e) => normalize(e.county) === countyLower);
+    const countyLower = normalizeFilter(params.county);
+    filtered = filtered.filter((e) => normalizeFilter(e.county) === countyLower);
   }
 
   if (params.region && params.region !== "all") {
-    const regionLower = normalize(params.region);
+    const regionLower = normalizeFilter(params.region);
     filtered = filtered.filter((e) =>
-      (e.regions || []).some((r) => normalize(r) === regionLower) ||
-      normalize(e.primaryRegion) === regionLower,
+      (e.regions || []).some((r) => normalizeFilter(r) === regionLower) ||
+      normalizeFilter(e.primaryRegion) === regionLower,
     );
   }
 
   if (params.town && params.town !== "all") {
-    const townLower = normalize(params.town);
+    const townLower = normalizeFilter(params.town);
     filtered = filtered.filter((e) =>
-      e.locations?.some((loc) => normalize(loc.town) === townLower),
+      e.locations?.some((loc) => normalizeFilter(loc.town) === townLower),
     );
   }
 
   if (params.estate && params.estate !== "all") {
-    const estateLower = normalize(params.estate);
+    const estateLower = normalizeFilter(params.estate);
     filtered = filtered.filter((e) =>
-      e.locations?.some((loc) => normalize(loc.estate) === estateLower),
+      e.locations?.some((loc) => normalizeFilter(loc.estate) === estateLower),
     );
   }
 
   if (params.practice && params.practice !== "all") {
-    const practiceLower = normalize(params.practice);
+    const practiceLower = normalizeFilter(params.practice);
     filtered = filtered.filter((e) =>
-      (e.practices || []).some((p) => normalize(p) === practiceLower) ||
-      (e.bdsm || []).some((p) => normalize(p) === practiceLower) ||
-      (e.massage || []).some((p) => normalize(p) === practiceLower) ||
-      (e.extraServices || []).some((p) => normalize(p) === practiceLower)
+      (e.practices || []).some((p) => normalizeFilter(p) === practiceLower) ||
+      (e.bdsm || []).some((p) => normalizeFilter(p) === practiceLower) ||
+      (e.massage || []).some((p) => normalizeFilter(p) === practiceLower) ||
+      (e.extraServices || []).some((p) => normalizeFilter(p) === practiceLower)
     );
   }
 
   if (params.practices && params.practices.length > 0) {
-    const practicesLower = params.practices.map(normalize);
+    const practicesLower = params.practices.map(normalizeFilter);
     filtered = filtered.filter((e) =>
       (e.practices || []).some((p) => practicesLower.includes(normalize(p))) ||
       (e.bdsm || []).some((p) => practicesLower.includes(normalize(p))) ||

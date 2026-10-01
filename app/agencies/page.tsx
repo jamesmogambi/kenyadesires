@@ -78,8 +78,15 @@ function formatLocationName(str?: string): string {
 function formatBusinessType(type?: string): string {
   if (!type || type === "all") return "";
 
+  // Keys must match `constants/index.js` BUSINESS_TYPES / the stored
+  // `agencies.business_type` vocabulary (`massage_parlor`, `brothel`, ...), so the
+  // heading renders the same label the filter dropdown shows. The legacy keys are
+  // still reachable from older links and rows.
   const businessTypes: Record<string, string> = {
     agency: "Agency",
+    spa: "Spa",
+    massage_parlor: "Massage Parlor",
+    brothel: "Brothel",
     private: "Private Room",
     hotel: "Hotel",
     massage: "Massage Parlor",
@@ -88,10 +95,14 @@ function formatBusinessType(type?: string): string {
     lounge: "Lounge",
   };
 
+  // URLs carry the hyphenated slug (`massage-parlor`); the table stores the
+  // underscored value, so normalise before the lookup.
+  const key = type.toLowerCase().replace(/-/g, "_");
+
   return (
-    businessTypes[type.toLowerCase()] ||
+    businessTypes[key] ||
     type
-      .split("-")
+      .split(/[-_]/)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ")
   );

@@ -1,6 +1,7 @@
 "use server";
 
 import { executeQuery } from "@/lib/neon";
+import { normalizedEquals } from "@/lib/escort-filters";
 import { IAgency } from "@/types/agency.types";
 import { Escort } from "./escort.action";
 import { boostOrderBy } from "@/lib/boost";
@@ -177,22 +178,28 @@ function buildWhereClause(params: {
   let paramIndex = 1;
 
   if (params.county && params.county !== "all") {
-    conditions.push(`agencies.county = $${paramIndex}`);
+    conditions.push(normalizedEquals("county", paramIndex, "agencies."));
     params_arr.push(params.county);
     paramIndex++;
   }
   if (params.region && params.region !== "all") {
-    conditions.push(`agencies.region = $${paramIndex}`);
+    conditions.push(normalizedEquals("region", paramIndex, "agencies."));
     params_arr.push(params.region);
     paramIndex++;
   }
   if (params.business && params.business !== "all") {
-    conditions.push(`agencies.business_type = $${paramIndex}`);
+    // `business_type` is underscore-separated on disk (`massage_parlor`), so the
+    // comparison folds `_` on both sides and a `massage-parlor` URL still matches.
+    conditions.push(normalizedEquals("business_type", paramIndex, "agencies."));
     params_arr.push(params.business);
     paramIndex++;
   }
    if (params.town && params.town !== "all") {
-     conditions.push(`EXISTS (SELECT 1 FROM JSON_TABLE(agencies.locations, '$[*]' COLUMNS (town VARCHAR(255) PATH '$.town')) AS jt WHERE LOWER(jt.town) = LOWER($${paramIndex}))`);
+     // Folded on both sides for the same reason as county/region/business: the
+     // URL carries a slug while `locations[].town` holds a display name.
+     conditions.push(
+       `EXISTS (SELECT 1 FROM JSON_TABLE(agencies.locations, '$[*]' COLUMNS (town VARCHAR(255) PATH '$.town')) AS jt WHERE TRIM(REGEXP_REPLACE(LOWER(COALESCE(jt.town, '')), '[^a-z0-9]+', ' ')) = TRIM(REGEXP_REPLACE(LOWER($${paramIndex}), '[^a-z0-9]+', ' ')))`,
+     );
      params_arr.push(params.town);
      paramIndex++;
    }

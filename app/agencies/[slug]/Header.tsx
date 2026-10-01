@@ -2,6 +2,7 @@ import React from "react";
 import {Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbSeparator,} from "@/components/ui/breadcrumb";
 
 import Link from "next/link";
+import { buildListingHref } from "@/lib/utils";
 
 interface HeaderProps {
     county?: string;
@@ -28,7 +29,7 @@ const Header = ({county, region, name = "Agency"}: HeaderProps) => {
                     <BreadcrumbItem>
                         <Link
                             className="text-primary hover:text-primary bg-transparent text-sm lg:text-lg font-bold"
-                            href={`/girls?region=${region}`}
+                            href={buildListingHref("/girls", { region })}
                         >
                             sex <span className="capitalize">{region}</span>
                         </Link>
