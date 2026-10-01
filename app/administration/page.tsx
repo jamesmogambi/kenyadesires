@@ -1,4 +1,3 @@
-
 import SectionCard from "@/components/SectionCard";
 import React from "react";
 import TextSection from "./TextSection";
@@ -10,7 +9,11 @@ import { getEscortByClerkUserId } from "@/server-actions/girl.action";
 import { getAgencyByOwnerId } from "@/server-actions/agency.action";
 import Link from "next/link";
 import AgencyGirls from "./AgencyGirls";
-import { getUserActivePackages, getUserCredits, type ActiveAdPackage } from "@/server-actions/payment.action";
+import {
+  getUserActivePackages,
+  getUserCredits,
+  type ActiveAdPackage,
+} from "@/server-actions/payment.action";
 import { Button } from "@/components/ui/button";
 import { CreditCard, Package } from "lucide-react";
 import ActivePackagesSection from "./ActivePackagesSection";
@@ -59,14 +62,18 @@ const page = async () => {
     buttonText = "Edit profile";
   }
 
-  const creditsResult = userId ? await getUserCredits() : { success: true, credits: 0 };
-  const packagesResult = userId ? await getUserActivePackages() : { success: true, packages: [] };
+  const creditsResult = userId
+    ? await getUserCredits()
+    : { success: true, credits: 0 };
+  const packagesResult = userId
+    ? await getUserActivePackages()
+    : { success: true, packages: [] };
 
   const credits = creditsResult.success ? creditsResult.credits : 0;
   // The failure branch of the server action carries `error` and no `packages`,
   // so this union needs a nullish fallback rather than a truthy check alone.
   const activePackages: ActiveAdPackage[] = packagesResult.success
-    ? packagesResult.packages ?? []
+    ? (packagesResult.packages ?? [])
     : [];
 
   // Kept separate from the list because a failed query and "you have no active
@@ -80,7 +87,8 @@ const page = async () => {
       : "Could not load your packages.";
 
   const planType = escort?.plan?.type || agency?.plan?.type || "free";
-  const plan = PLAN_DETAILS[planType as keyof typeof PLAN_DETAILS] || PLAN_DETAILS.free;
+  const plan =
+    PLAN_DETAILS[planType as keyof typeof PLAN_DETAILS] || PLAN_DETAILS.free;
 
   // The card is titled "Current Plan", so it should reflect the boost that is
   // actually running, not just the account tier. `plan` comes from
@@ -91,7 +99,8 @@ const page = async () => {
   // A user can hold a boost on an escort profile and an agency profile at once,
   // so pick the one that dominates: the longest-running, then the latest expiry.
   const currentPackage = [...activePackages].sort((a, b) => {
-    if (b.durationDays !== a.durationDays) return b.durationDays - a.durationDays;
+    if (b.durationDays !== a.durationDays)
+      return b.durationDays - a.durationDays;
     return b.expiresAt.getTime() - a.expiresAt.getTime();
   })[0];
 
@@ -111,11 +120,13 @@ const page = async () => {
               in the taller box. It also gives the two cards one shared width on
               mobile instead of each sizing to its own text. */}
           <div className="flex flex-col md:flex-row gap-4 justify-center items-stretch">
-            <div className="bg-stone-100 rounded-lg p-4 md:p-6 flex items-center gap-3 shadow-md flex-1 max-w-md">
+            <div className="bg-stone-100 rounded-lg p-4 md:p-6 flex items-center gap-3 shadow-md flex-1  max-w-md">
               <CreditCard className="size-6 md:size-8 text-red-700" />
               <div>
                 <p className="text-sm text-gray-600">Your Credits</p>
-                <p className="text-2xl md:text-3xl font-bold text-red-700">{credits}</p>
+                <p className="text-2xl md:text-3xl font-bold text-red-700">
+                  {credits}
+                </p>
               </div>
             </div>
             <div className="bg-stone-100 rounded-lg p-4 md:p-6 flex items-center gap-3 shadow-md flex-1 max-w-md">
@@ -140,9 +151,7 @@ const page = async () => {
                       : ""}
                   </p>
                 ) : (
-                  <p className="text-xs text-gray-600">
-                    No active ad package
-                  </p>
+                  <p className="text-xs text-gray-600">No active ad package</p>
                 )}
               </div>
             </div>
