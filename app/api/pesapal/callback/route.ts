@@ -3,7 +3,6 @@ import {
   getTransactionStatus,
   isPaymentCompleted,
   normalizePesapalStatus,
-  PesapalError,
 } from "@/lib/pesapal";
 import { updateOrderStatus, getOrder } from "@/lib/pesapal-orders";
 import { sendPaymentConfirmationEmail } from "@/server-actions/email";
@@ -81,11 +80,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Only a real decline is terminal.
+    //
+    // Pesapal reports INVALID (status_code 0) for an order that was never
+    // authorised — the customer closed the frame, or the M-Pesa STK push was
+    // never completed. That is a "not paid *yet*" state, not a decline, and
+    // lib/pesapal-orders.ts deliberately keeps `invalid` at the lowest upgrade
+    // priority (STATUS_PRIORITY) precisely so a later COMPLETED IPN still
+    // applies the package. Collapsing it into "failed" is what sent customers
+    // to /payment/failed for payments that could still settle.
+    const finalStatus = completed
+      ? "completed"
+      : status === "failed" || status === "reversed"
+        ? "failed"
+        : "pending";
+
     if (isIframe) {
       // Normalise the Pesapal status onto our own three-value vocabulary so
       // callers never have to guess: "pending" (keep waiting), "completed" or
       // "failed" (terminal).
-      const finalStatus = completed ? "completed" : status === "pending" ? "pending" : "failed";
       return NextResponse.json({
         status: finalStatus,
         orderTrackingId,
@@ -94,23 +107,40 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // The full-page flow has nowhere to park an unsettled order (the success
+    // page asserts "Payment Successful"), so it still leaves for /payment/failed
+    // — but with a code the page maps to safe copy instead of the raw upstream
+    // token, which is what rendered a bare "INVALID" on screen.
+    const reason = completed
+      ? undefined
+      : status === "failed"
+        ? "declined"
+        : status === "reversed"
+          ? "reversed"
+          : "unverified";
+
     return NextResponse.redirect(
-      completed ? successTarget(tx.merchant_reference) : failedTarget(status),
+      completed ? successTarget(tx.merchant_reference) : failedTarget(reason),
     );
   } catch (err: any) {
     console.error("[Pesapal/callback] error:", err?.message || err);
-    const detail =
-      err instanceof PesapalError
-        ? err.message
-        : err?.message || "verification_failed";
 
+    // `err.message` is assembled by PesapalError.fromAxios and carries the
+    // internal endpoint name, an HTTP status and raw upstream prose, e.g.
+    // "GetTransactionStatus (HTTP 401): <Pesapal message>". That stays in the
+    // server log; the browser only ever receives a fixed code, so no internals
+    // leak into the address bar, Referer or history.
     if (isIframe) {
       return NextResponse.json(
-        { error: detail, status: "failed", orderTrackingId },
+        {
+          error: "We could not reach Pesapal to verify this payment. Please try again.",
+          status: "failed",
+          orderTrackingId,
+        },
         { status: 500 },
       );
     }
 
-    return NextResponse.redirect(failedTarget(detail));
+    return NextResponse.redirect(failedTarget("unverified"));
   }
 }

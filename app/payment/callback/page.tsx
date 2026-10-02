@@ -90,12 +90,15 @@ export default function PesapalCallbackPage() {
               return;
             }
             if (data.status === "failed") {
-              notifyParent("failed", data.error || data.paymentStatus);
+              // Reason codes only — /payment/failed owns the wording. Passing
+              // `data.paymentStatus` through here is what put a raw "INVALID"
+              // in the URL and on the screen.
+              notifyParent("failed", "declined");
               return;
             }
             // Still settling — wait for Pesapal to catch up before judging it.
             if (attempts >= VERIFY_MAX_ATTEMPTS) {
-              notifyParent("failed", "Payment is taking longer than expected. Check your M-Pesa statement shortly.");
+              notifyParent("failed", "settling");
               return;
             }
             timer = setTimeout(verify, VERIFY_RETRY_MS);
@@ -103,7 +106,7 @@ export default function PesapalCallbackPage() {
           .catch(() => {
             if (cancelled) return;
             if (attempts >= VERIFY_MAX_ATTEMPTS) {
-              notifyParent("failed", "Could not verify the payment. Please try again.");
+              notifyParent("failed", "unverified");
               return;
             }
             timer = setTimeout(verify, VERIFY_RETRY_MS);

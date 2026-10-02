@@ -71,8 +71,15 @@ export function PesapalCheckoutButton({
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
   const [orderTrackingId, setOrderTrackingId] = useState<string | null>(null);
   const [finalizing, setFinalizing] = useState(false);
+  const [pollExpired, setPollExpired] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const onPaymentCompleteRef = useRef(onPaymentComplete);
+  // Both the postMessage fast path and the 4s poller can reach a terminal
+  // state, and the poller keeps running until the navigation actually lands.
+  // Without this, `settle` fires repeatedly: onPaymentComplete runs twice
+  // (double dispatch of credits-updated / packages-updated) and the redirect
+  // is re-issued mid-flight.
+  const settledRef = useRef(false);
 
   useEffect(() => {
     onPaymentCompleteRef.current = onPaymentComplete;
@@ -86,6 +93,8 @@ export function PesapalCheckoutButton({
    */
   const settle = useCallback(
     (status: "completed" | "failed", reference?: string, reason?: string) => {
+      if (settledRef.current) return;
+      settledRef.current = true;
       setFinalizing(true);
       onPaymentCompleteRef.current?.(status, orderTrackingId || "");
       const params = new URLSearchParams();
@@ -104,9 +113,26 @@ export function PesapalCheckoutButton({
   // Fast path: /payment/callback posts this when Pesapal's redirect does land
   // inside the iframe. Stays pending-aware so a slow settlement is not read as
   // a failure.
+  //
+  // The iframe navigates to NEXT_PUBLIC_APP_URL/payment/callback, which is not
+  // always the app's own origin: in development the app is served from
+  // localhost while the callback is reached through the ngrok tunnel, so a
+  // strict `origin === location.origin` test drops the message and the modal
+  // falls back to the slow poller. Both origins are ours, so allow either.
   useEffect(() => {
+    const allowedOrigins = new Set<string>([window.location.origin]);
+    const configured = (process.env.NEXT_PUBLIC_APP_URL || "").trim();
+    if (configured) {
+      try {
+        allowedOrigins.add(new URL(configured).origin);
+      } catch {
+        /* ignore an unparseable configured URL */
+      }
+    }
+
     const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== window.location.origin) return;
+      if (!allowedOrigins.has(event.origin)) return;
+      if (event.source !== iframeRef.current?.contentWindow) return;
       if (event.data?.type !== "PESAPAL_CLOSE") return;
       const status = event.data.status as "completed" | "failed";
       if (status !== "completed" && status !== "failed") return;
@@ -136,6 +162,13 @@ export function PesapalCheckoutButton({
           `/api/pesapal/callback?OrderTrackingId=${encodeURIComponent(orderTrackingId)}&iframe=true`,
           { method: "GET", credentials: "same-origin", cache: "no-store" },
         );
+
+        // A 5xx here means *we* could not reach Pesapal, not that the customer
+        // failed to pay. /api/pesapal/callback answers its catch block with
+        // { status: "failed" }, so honouring the body on a non-ok response
+        // would abandon a perfectly good payment on one transient timeout.
+        if (!res.ok) throw new Error(`status ${res.status}`);
+
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         if (data.status === "completed") {
@@ -143,15 +176,23 @@ export function PesapalCheckoutButton({
           return;
         }
         if (data.status === "failed") {
-          settle("failed", "", data.paymentStatus || "Payment failed");
+          // Send a code, not copy. `data.paymentStatus` is Pesapal's raw
+          // vocabulary ("INVALID", "FAILED", …); it used to land verbatim in
+          // /payment/failed?error=INVALID and render as a bare "INVALID".
+          // /payment/failed owns the wording for FAILURE_REASONS.
+          settle("failed", "", "declined");
           return;
         }
       } catch {
-        // Transient network failure — keep polling until the timeout.
+        // Transient network or upstream failure — keep polling until the
+        // timeout, then surface it rather than deciding the outcome.
       }
 
       if (cancelled) return;
-      if (Date.now() - startedAt > POLL_TIMEOUT_MS) return;
+      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+        setPollExpired(true);
+        return;
+      }
       timer = setTimeout(check, POLL_INTERVAL_MS);
     };
 
@@ -166,6 +207,8 @@ export function PesapalCheckoutButton({
     setLoading(true);
     setError(null);
     setFinalizing(false);
+    setPollExpired(false);
+    settledRef.current = false;
     try {
       const res = await fetch("/api/pesapal/initiate", {
         method: "POST",
@@ -201,13 +244,17 @@ export function PesapalCheckoutButton({
   };
 
   const handleClose = () => {
+    // Once settling has started we are about to navigate away. Closing here
+    // would unmount the dialog and strand the customer on a page whose
+    // payment state is unknown.
+    if (finalizing) return;
     if (iframeRef.current) {
       iframeRef.current.src = "about:blank";
     }
     setOpen(false);
     setIframeSrc(null);
     setOrderTrackingId(null);
-    setFinalizing(false);
+    setPollExpired(false);
   };
 
   return (
@@ -235,11 +282,28 @@ export function PesapalCheckoutButton({
       <Dialog open={open} onOpenChange={(next) => (next ? setOpen(true) : handleClose())}>
         <DialogContent
           showCloseButton={false}
-          // Full-bleed on phones (dvh, so mobile browser chrome can't crop the
-          // form), centred card from sm up. The frame area is flex-1/min-h-0
-          // rather than a fixed vh-minus-header math so it always fits the
-          // space it actually has, including landscape.
-          className="fixed inset-0 z-[100] flex h-[100dvh] max-h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[90dvh] sm:w-[90vw] sm:max-w-[90vw] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:border md:max-w-[800px] lg:max-w-[900px]"
+          onEscapeKeyDown={(e) => {
+            if (finalizing) e.preventDefault();
+          }}
+          onPointerDownOutside={(e) => {
+            if (finalizing) e.preventDefault();
+          }}
+          // Layout: full-bleed sheet on phones, centred card from sm up.
+          //
+          // The frame must be given a *definite* height, not `h-auto`. The
+          // DialogContent base class in components/ui/dialog.tsx contributes
+          // `grid`, and a grid/flex container with `height: auto` sizes its
+          // rows to content — the iframe then falls back to its 150px
+          // intrinsic default and the modal collapses to a header plus a
+          // letterbox on every viewport above sm. `sm:h-[min(92dvh,760px)]`
+          // gives the card a real height (capped so short laptop screens keep
+          // the page scrollable), and `flex-1 min-h-0` on the frame then
+          // resolves the remainder without a vh-minus-header calculation.
+          //
+          // `w-full` rather than `w-screen`: the element is already pinned by
+          // `inset-0`, and 100vw includes the scrollbar gutter, which pushes
+          // the card off-centre on desktop.
+          className="fixed inset-0 z-[100] flex h-[100dvh] max-h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[min(92dvh,760px)] sm:max-h-[92dvh] sm:w-[92vw] sm:max-w-[92vw] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border sm:shadow-2xl md:max-w-[760px] lg:max-w-[820px]"
         >
           <DialogHeader className="shrink-0 border-b bg-white px-4 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -253,26 +317,53 @@ export function PesapalCheckoutButton({
             <button
               type="button"
               onClick={handleClose}
-              className="shrink-0 p-2 -mr-2 hover:bg-gray-100 rounded-lg transition-colors"
+              disabled={finalizing}
+              className="shrink-0 p-2 -mr-2 rounded-lg transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               aria-label="Close payment modal"
             >
               <X className="h-5 w-5 text-gray-500" />
             </button>
           </DialogHeader>
           {iframeSrc && (
-            <div className="relative flex-1 min-h-0">
+            <div className="relative min-h-0 flex-1">
               <iframe
                 ref={iframeRef}
                 src={iframeSrc}
-                className="w-full h-full border-0"
+                className="h-full w-full border-0"
                 allow="payment *"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-top-navigation allow-payment"
                 title="Pesapal Secure Payment"
               />
               {finalizing && (
-                <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-3">
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80">
                   <Loader2 className="h-8 w-8 animate-spin text-red-700" />
                   <p className="text-sm text-gray-700">Confirming your payment…</p>
+                </div>
+              )}
+              {pollExpired && !finalizing && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/95 px-6 text-center">
+                  <p className="text-sm text-gray-700">
+                    We could not confirm this payment within 15 minutes.
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    If you completed the payment, it will still be applied —
+                    check your M-Pesa statement or your account balance shortly.
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center justify-center gap-3">
+                    <a
+                      href={`/payment/success?orderTrackingId=${encodeURIComponent(orderTrackingId || "")}`}
+                      className="text-sm font-semibold text-red-700 underline"
+                    >
+                      Check payment status
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="text-sm text-gray-600 underline"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
