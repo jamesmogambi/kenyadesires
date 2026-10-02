@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 
+const VERIFY_RETRY_MS = 3000;
+const VERIFY_MAX_ATTEMPTS = 20;
+
 /**
  * /payment/callback
  *
@@ -11,6 +14,11 @@ import { Loader2, CheckCircle, XCircle } from "lucide-react";
  * Handles both:
  *   - Full-page redirect (normal flow): forwards to server-side API for verification
  *   - Iframe embed (iframe flow): posts message to parent window with result
+ *
+ * Inside the iframe we keep re-checking while Pesapal still reports "pending".
+ * M-Pesa and Airtel Money settlement can lag the browser redirect by several
+ * seconds, and a single check would report the not-yet-settled payment as a
+ * failure and bounce the customer to /payment/failed.
  */
 export default function PesapalCallbackPage() {
   const searchParams = useSearchParams();
@@ -48,40 +56,70 @@ export default function PesapalCallbackPage() {
     if (ref) params.set("OrderMerchantReference", ref);
     if (notif) params.set("OrderNotificationType", notif);
 
+    const notifyParent = (finalStatus: "completed" | "failed", reason?: string) => {
+      setStatus(finalStatus);
+      window.parent.postMessage(
+        {
+          type: "PESAPAL_CLOSE",
+          status: finalStatus,
+          orderTrackingId: orderTrackingIdParam,
+          merchantReference: ref || "",
+          error: reason || "",
+        },
+        window.location.origin,
+      );
+    };
+
     if (isInIframe) {
-      // Iframe flow: call API with iframe=true, then postMessage to parent
-      fetch(`/api/pesapal/callback?${params.toString()}&iframe=true`, {
-        method: "GET",
-        credentials: "same-origin",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          const finalStatus = data.status === "completed" ? "completed" : "failed";
-          setStatus(finalStatus);
-          window.parent.postMessage(
-            {
-              type: "PESAPAL_CLOSE",
-              status: finalStatus,
-              orderTrackingId: orderTrackingIdParam,
-            },
-            window.location.origin
-          );
+      let cancelled = false;
+      let timer: ReturnType<typeof setTimeout>;
+      let attempts = 0;
+
+      const verify = () => {
+        attempts += 1;
+        fetch(`/api/pesapal/callback?${params.toString()}&iframe=true`, {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
         })
-        .catch(() => {
-          setStatus("failed");
-          window.parent.postMessage(
-            {
-              type: "PESAPAL_CLOSE",
-              status: "failed",
-              orderTrackingId: orderTrackingIdParam,
-            },
-            window.location.origin
-          );
-        });
-    } else {
-      // Full-page flow: redirect to server-side API which handles verification + redirect
-      window.location.href = `/api/pesapal/callback?${params.toString()}`;
+          .then((res) => res.json())
+          .then((data) => {
+            if (cancelled) return;
+            if (data.status === "completed") {
+              notifyParent("completed");
+              return;
+            }
+            if (data.status === "failed") {
+              notifyParent("failed", data.error || data.paymentStatus);
+              return;
+            }
+            // Still settling — wait for Pesapal to catch up before judging it.
+            if (attempts >= VERIFY_MAX_ATTEMPTS) {
+              notifyParent("failed", "Payment is taking longer than expected. Check your M-Pesa statement shortly.");
+              return;
+            }
+            timer = setTimeout(verify, VERIFY_RETRY_MS);
+          })
+          .catch(() => {
+            if (cancelled) return;
+            if (attempts >= VERIFY_MAX_ATTEMPTS) {
+              notifyParent("failed", "Could not verify the payment. Please try again.");
+              return;
+            }
+            timer = setTimeout(verify, VERIFY_RETRY_MS);
+          });
+      };
+
+      verify();
+
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
     }
+
+    // Full-page flow: redirect to server-side API which handles verification + redirect
+    window.location.href = `/api/pesapal/callback?${params.toString()}`;
   }, [searchParams, isInIframe]);
 
   if (isInIframe === true) {

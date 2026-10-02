@@ -16,6 +16,12 @@ import { sendPaymentConfirmationEmail } from "@/server-actions/email";
  *
  * - Full-page flow (default): issues HTTP 302 redirect to /payment/success or /payment/failed
  * - Iframe flow (iframe=true): returns JSON { status, ... } for parent window postMessage
+ *   and for the modal's status poller.
+ *
+ * The iframe response reports "pending" verbatim while the payment is still
+ * being settled. Collapsing that into "failed" is what made phones sit on a
+ * dead "Verifying payment" screen: the redirect back never completed, and the
+ * single non-pending-or-failed answer was treated as a hard failure.
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -60,7 +66,7 @@ export async function GET(req: NextRequest) {
         // Get billing details from stored order
         const storedOrder = await getOrder(orderTrackingId);
         await sendPaymentConfirmationEmail({
-          to: storedOrder?.email || tx.merchant_reference?.includes("@") ? "" : "",
+          to: storedOrder?.email || (tx.merchant_reference?.includes("@") ? tx.merchant_reference : ""),
           name: `${storedOrder?.email?.split("@")[0] || "Customer"}`,
           amount: Number(tx.amount) || 0,
           receiptNumber: tx.merchant_reference || "",
@@ -76,8 +82,12 @@ export async function GET(req: NextRequest) {
     }
 
     if (isIframe) {
+      // Normalise the Pesapal status onto our own three-value vocabulary so
+      // callers never have to guess: "pending" (keep waiting), "completed" or
+      // "failed" (terminal).
+      const finalStatus = completed ? "completed" : status === "pending" ? "pending" : "failed";
       return NextResponse.json({
-        status: completed ? "completed" : "failed",
+        status: finalStatus,
         orderTrackingId,
         merchantReference: tx.merchant_reference,
         paymentStatus: tx.payment_status_description,
