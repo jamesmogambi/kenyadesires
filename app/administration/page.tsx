@@ -54,20 +54,22 @@ const page = async ({ searchParams }: PageProps) => {
 
   const isBusiness = role === "business";
 
-  // An explicit ?type= wins over the Clerk role. The role is a single value on
-  // the account, so a user who is both an agency and a provider had no way to
-  // reach the other half of their own dashboard — the param is what makes the
-  // two views selectable.
+  // An explicit ?type= wins over the Clerk role, so a direct link
+  // (?type=agency / ?type=provider) still reaches a specific dashboard even
+  // though nothing in the UI writes the param any more.
   const view: AccountView =
     requestedView ?? (isBusiness ? "agency" : "provider");
 
-  // Put the resolved view in the address bar, so the URL is always the source of
-  // truth for which dashboard is open. Without this the bare /administration
-  // depends on a server-side role lookup that no client can see or reproduce:
-  // the switcher's "active" tab could not be derived from the URL, a bookmark of
-  // the page did not carry the view, and refreshing an inherited value looked
-  // arbitrary. Redirecting rather than rendering keeps one canonical URL per
-  // view instead of two URLs for the same screen.
+  // Put the resolved view in the address bar, so the URL always names the
+  // dashboard that is open. Without this the bare /administration depends on a
+  // server-side role lookup that no client can see or reproduce: a bookmark or a
+  // shared link would not carry which dashboard it was, and a hard refresh left
+  // the view looking arbitrary. Redirecting rather than rendering keeps one
+  // canonical URL per view instead of two URLs for the same screen.
+  //
+  // With the switcher gone this is also the only place the view is visible, so
+  // it is what makes `?type=` discoverable and debuggable. There is no UI that
+  // writes the param; the role does.
   //
   // Fires only when `type` is missing or unrecognised (resolveView returned
   // null), so a canonical URL is left alone and this cannot loop.
@@ -75,17 +77,16 @@ const page = async ({ searchParams }: PageProps) => {
     redirect(canonicalDashboardUrl(view, params));
   }
 
-  // Load only the profile this view is about. Gating on the role as well used
-  // to mean the param could not load its own profile, so the provider tab was
-  // empty for a business-role account.
+  // Load only the profile this view is about. Gating on the Clerk role as well
+  // would mean the param could not load its own profile, so `?type=provider`
+  // would render empty for a business-role account.
   const agency = view === "agency" && userId ? await getAgencyByOwnerId(userId) : null;
   const escort = view === "provider" && userId ? await getEscortByClerkUserId(userId) : null;
 
-  // Only the profile this view is about is loaded. The other tab stays a plain
-  // link: whether a profile of that type exists is answered the moment it is
-  // opened, by that view's own empty state. Probing for it here would mean two
-  // extra profile queries per render to decorate a tab label, which is not worth
-  // it on a route that renders on every dashboard visit.
+  // Only this view's profile is loaded. Loading the other one as well to show
+  // whether it exists would mean an extra profile query on every dashboard
+  // visit; the empty state below already answers that question when the URL is
+  // opened directly.
 
   let editProfileLink = "/adjustment";
   let buttonText = "Edit profile";
@@ -151,37 +152,10 @@ const page = async ({ searchParams }: PageProps) => {
         <TextSection />
 
         <div className="my-4 space-y-10 mt-8">
-          {/* View switcher. The Clerk role is a single value on the account, so
-              without this an account that is both an agency and a provider could
-              only ever see one of its two dashboards. Each link carries the param
-              explicitly rather than relying on the default, so the two states are
-              shareable/bookmarkable. */}
-          <div
-            role="tablist"
-            aria-label="Account type"
-            className="flex justify-center"
-          >
-            <div className="inline-flex rounded-lg bg-stone-100 p-1 gap-1">
-              {(["provider", "agency"] as const).map((tab) => {
-                const active = view === tab;
-                return (
-                  <Link
-                    key={tab}
-                    role="tab"
-                    aria-selected={active}
-                    href={`/administration?type=${tab}`}
-                    className={
-                      active
-                        ? "bg-red-700 text-white font-semibold uppercase px-6 py-2 rounded-md text-sm transition-colors"
-                        : "text-gray-700 hover:bg-white px-6 py-2 rounded-md text-sm font-medium transition-colors"
-                    }
-                  >
-                    {tab === "provider" ? "Provider" : "Agency"}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+          {/* No view switcher. The view is chosen by the Clerk role and then
+              written into the URL by the redirect above, so `?type=` is still
+              honoured for a direct link and the address bar still names the
+              dashboard — there is just no UI to flip between the two. */}
 
           {/* `items-stretch` rather than `items-center`: with `items-center` each
               card takes its own content height, so once the Current Plan card
@@ -259,8 +233,8 @@ const page = async ({ searchParams }: PageProps) => {
 
           {/* Provider view has no equivalent of the agency's girls grid — the
               provider *is* the profile — so it gets the profile's own state
-              instead. Without this the provider tab rendered credits and plans
-              for an account with nothing on it identifying the profile. */}
+              instead. Without this a provider account rendered credits and
+              plans with nothing identifying the profile it belongs to. */}
           {view === "provider" &&
             (escort ? (
               <div className="border-t-2 border-white py-8 my-4">
