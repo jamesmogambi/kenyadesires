@@ -288,22 +288,26 @@ export function PesapalCheckoutButton({
           onPointerDownOutside={(e) => {
             if (finalizing) e.preventDefault();
           }}
-          // Layout: full-bleed sheet on phones, centred card from sm up.
+          // Layout: a bottom sheet on phones, centred card from sm up.
           //
-          // The frame must be given a *definite* height, not `h-auto`. The
-          // DialogContent base class in components/ui/dialog.tsx contributes
-          // `grid`, and a grid/flex container with `height: auto` sizes its
-          // rows to content — the iframe then falls back to its 150px
-          // intrinsic default and the modal collapses to a header plus a
-          // letterbox on every viewport above sm. `sm:h-[min(92dvh,760px)]`
-          // gives the card a real height (capped so short laptop screens keep
-          // the page scrollable), and `flex-1 min-h-0` on the frame then
-          // resolves the remainder without a vh-minus-header calculation.
+          // Phones get `top-auto` + a fixed height so the sheet is anchored to
+          // the bottom edge — the app header and logo stay visible above it and
+          // the form is never letterboxed. `h-[88dvh]` is definite because
+          // DialogContent is a flex column now (it used to be `grid`, which
+          // silently beat this component's `flex` override in Tailwind's display
+          // layer and collapsed the frame to the iframe's 150px intrinsic
+          // height — that collapse is what made the Pesapal inputs unusable on
+          // mobile).
           //
-          // `w-full` rather than `w-screen`: the element is already pinned by
+          // `inset-0` still has to beat DialogContent's `top-[50%] left-[50%]`
+          // centring. It does, via shorthand-vs-longhand: `inset` is the
+          // shorthand, the base's `top`/`left` are longhands, and a longhand
+          // wins over a shorthand regardless of stylesheet order.
+          //
+          // `w-full` rather than `w-screen`: the sheet is already pinned by
           // `inset-0`, and 100vw includes the scrollbar gutter, which pushes
           // the card off-centre on desktop.
-          className="fixed inset-0 z-[100] flex h-[100dvh] max-h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none border-0 bg-white p-0 shadow-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[min(92dvh,760px)] sm:max-h-[92dvh] sm:w-[92vw] sm:max-w-[92vw] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border sm:shadow-2xl md:max-w-[760px] lg:max-w-[820px]"
+          className="fixed inset-0 top-auto z-[100] flex h-[88dvh] max-h-[88dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-t-2xl border-0 bg-white p-0 shadow-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:h-[min(92dvh,760px)] sm:max-h-[92dvh] sm:w-[92vw] sm:max-w-[92vw] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl sm:border sm:shadow-2xl md:max-w-[760px] lg:max-w-[820px]"
         >
           <DialogHeader className="shrink-0 border-b bg-white px-4 py-3 sm:px-4 sm:py-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -325,11 +329,17 @@ export function PesapalCheckoutButton({
             </button>
           </DialogHeader>
           {iframeSrc && (
-            <div className="relative min-h-0 flex-1">
+            // `overscroll-contain` stops the Pesapal document from scroll-chaining to the
+            // page behind the sheet once it reaches the end of its own content.
+            //
+            // The bottom inset keeps the last field of the Pesapal form clear of
+            // the iOS home indicator. Without it the phone number field — the
+            // one input every mobile payer needs — sits under the bar.
+            <div className="relative flex min-h-0 flex-1 flex-col overscroll-contain pb-[env(safe-area-inset-bottom)] sm:pb-0">
               <iframe
                 ref={iframeRef}
                 src={iframeSrc}
-                className="h-full w-full border-0"
+                className="h-full min-h-0 w-full border-0"
                 allow="payment *"
                 sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-top-navigation allow-payment"
                 title="Pesapal Secure Payment"

@@ -58,11 +58,19 @@ function DialogContent({
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
       <DialogPrimitive.Content
-        data-slot="dialog-content"
-        className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
-          className
-        )}
+data-slot="dialog-content"
+        // `flex flex-col`, not `grid`. Consumers routinely override the
+        // layout to make a full-screen sheet (ImageLightbox, PesapalCheckout-
+        // Button) and rely on `flex-1`/`min-h-0` on their children to give an
+        // embedded iframe a real height. Tailwind emits `.grid` *after* `.flex`
+        // in the display layer, so a base `grid` silently beat every one of
+        // those `flex` overrides — class order in the attribute is irrelevant,
+        // stylesheet order decides. flex-col preserves the vertical stacking
+        // and `gap-4` this base was written for.
+          className={cn(
+            "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
+            className
+          )}
         {...props}
       >
         {children}

@@ -94,7 +94,9 @@ const ImageLightbox = ({
         showCloseButton={false}
         // Neutralise DialogContent's centred-card defaults: no translate, full
         // width, no padding, and a viewport-height box (dvh for mobile browsers).
-        className="fixed inset-0 z-[100] flex h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-transparent p-0 shadow-none sm:max-w-none sm:p-2 md:p-3"
+        // `w-full`, not `w-screen`: the element is already pinned by `inset-0`
+        // and 100vw includes the scrollbar gutter.
+        className="fixed inset-0 z-[100] flex h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-transparent p-0 shadow-none sm:max-w-none sm:p-2 md:p-3"
       >
         <DialogTitle className="sr-only">{title} image viewer</DialogTitle>
         <DialogDescription className="sr-only">

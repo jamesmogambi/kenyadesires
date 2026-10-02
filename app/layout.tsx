@@ -42,6 +42,29 @@ export const instant = false;
 // ✅ Export metadata so Next.js picks it up
 export { metadata };
 
+/**
+ * Explicit viewport rather than relying on Next's default.
+ *
+ * - `viewportFit: "cover"` is what makes `env(safe-area-inset-bottom)` resolve
+ *   to a non-zero value on notched iPhones. Without it the safe-area padding on
+ *   the payment sheet is always 0px and the phone-number field sits under the
+ *   home indicator.
+ * - `interactiveWidget: "resizes-content"` shrinks the visual viewport when the
+ *   soft keyboard opens (Chrome Android). The Pesapal form lives in a
+ *   cross-origin iframe we cannot scroll ourselves, so the only way to keep the
+ *   focused field above the keyboard is for the viewport to give ground. iOS
+ *   ignores this key and already does the same thing.
+ *
+ * `maximumScale`/`userScalable` are deliberately left at their defaults. Pinch
+ * zoom stays available site-wide, which is the accessible choice.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
