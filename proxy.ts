@@ -29,6 +29,14 @@ const isPublicRoute = createRouteMatcher([
   '/register-escort/(.*)',
   '/register-business',
   '/register-business/(.*)',
+  // Marketing landing pages. Public and already listed in app/sitemap.ts, so
+  // leaving them protected meant every crawler and every signed-out visitor was
+  // bounced to sign-in for pages that are pure marketing copy with no auth call
+  // of their own.
+  '/join-agency',
+  '/join-agency/(.*)',
+  '/join-provider',
+  '/join-provider/(.*)',
   '/verify-email',
   '/verify-email/(.*)',
   '/verify-password-reset-email',
