@@ -14,25 +14,54 @@ import {
 } from "@/components/ui/dialog";
 
 /**
- * Checkout happens in a modal on every viewport.
+ * Checkout takes one of two routes, picked from the viewport at tap time.
  *
- * /api/pesapal/initiate submits the order with redirect_mode "PARENT_WINDOW",
- * so after payment Pesapal tries to navigate out of the embedded page. Mobile
- * browsers do not apply the iframe sandbox's allow-top-navigation rules
- * consistently, so that redirect is the part we cannot rely on — phones used
- * to abandon the modal entirely (full-page navigation to Pesapal) and, when
- * they stayed, froze on the "payment processing" screen because the redirect
- * never landed.
+ * Desktop (`>= INLINE_CHECKOUT_MIN_WIDTH`): a modal with the Pesapal checkout in
+ * an iframe. /api/pesapal/initiate submits with redirect_mode "PARENT_WINDOW",
+ * so after payment Pesapal tries to navigate the parent window out of the
+ * embedded page. The parent knows the order_tracking_id from the initiate
+ * response and polls /api/pesapal/callback (which verifies server-side with
+ * Pesapal) until the payment reaches a terminal state. The redirect is treated
+ * as an optimisation, not the contract, so a browser that ignores it still gets
+ * settled by the poller.
  *
- * So the redirect is treated as an optimisation, not the contract. The parent
- * window knows the order_tracking_id from the initiate response and polls
- * /api/pesapal/callback (which verifies server-side with Pesapal) until it
- * reaches a terminal state. That works identically on desktop and mobile,
- * keeps the customer inside the app, and still closes promptly when Pesapal's
- * redirect does land via postMessage.
+ * Phones (below the breakpoint): Pesapal's own hosted checkout, as a full-page
+ * navigation. There is no iframe at all, so none of the frame problems apply —
+ * no sandbox, no cross-origin focus for Radix to trap, and no inherited
+ * `pointer-events: none`. It also hands the phone-number field, the M-Pesa STK
+ * hand-off and the keyboard handling to Pesapal's own responsive page instead of
+ * asking a ~360px-wide iframe to behave like a desktop browser.
+ *
+ * `redirect_mode "TOP_WINDOW"` sends the browser to Pesapal and back to
+ * `callback_url` = /payment/callback, which is not in an iframe and so forwards
+ * to /api/pesapal/callback; that route verifies with Pesapal and issues the 302
+ * to /payment/success or /payment/failed. /payment/success dispatches the
+ * credits-updated / packages-updated events itself, so nothing is lost by not
+ * running `onPaymentComplete` on this route — the browser is a fresh document by
+ * then anyway.
  */
 const POLL_INTERVAL_MS = 4000;
 const POLL_TIMEOUT_MS = 15 * 60 * 1000;
+
+/**
+ * Matches Tailwind's `sm` breakpoint, which is also where this component's
+ * centred-card layout begins. Below it the sheet was a bottom bar and the frame
+ * was unusable, so those widths are exactly the ones that should be handed to
+ * Pesapal. Must stay in step with the `sm:` classes on DialogContent below.
+ */
+const INLINE_CHECKOUT_MIN_WIDTH = 640;
+
+/**
+ * Read at tap time, not on mount: the server has no viewport, and a user who
+ * rotates the device or resizes a desktop window should get the route that fits
+ * when they actually press Pay.
+ */
+function prefersInlineCheckout(): boolean {
+  if (typeof window === "undefined") return true;
+  return (
+    window.matchMedia(`(min-width: ${INLINE_CHECKOUT_MIN_WIDTH}px)`).matches
+  );
+}
 
 export interface PesapalCheckoutButtonProps {
   orderId: string;
@@ -209,6 +238,12 @@ export function PesapalCheckoutButton({
     setFinalizing(false);
     setPollExpired(false);
     settledRef.current = false;
+    const useInlineCheckout = prefersInlineCheckout();
+    // Set once we hand the browser to Pesapal. Clearing `loading` after that
+    // would flash the idle "Pay with Pesapal" button for however long the
+    // third-party page takes to paint, which reads as the tap not registering.
+    let navigatingAway = false;
+
     try {
       const res = await fetch("/api/pesapal/initiate", {
         method: "POST",
@@ -225,6 +260,7 @@ export function PesapalCheckoutButton({
           packageId,
           packageName,
           idType,
+          flow: useInlineCheckout ? "inline" : "redirect",
         }),
       });
 
@@ -233,13 +269,23 @@ export function PesapalCheckoutButton({
         throw new Error(data.error || data.detail || "Failed to initiate payment");
       }
 
+      // Phone: leave for Pesapal's hosted checkout rather than framing it. The
+      // order already exists server-side and carries our notification_id, so the
+      // return trip to callback_url resolves to the same success/failed pages
+      // the modal would have reached.
+      if (!useInlineCheckout) {
+        navigatingAway = true;
+        window.location.href = data.redirect_url;
+        return;
+      }
+
       setOrderTrackingId(data.order_tracking_id);
       setIframeSrc(data.redirect_url);
       setOpen(true);
     } catch (e: any) {
       setError(e?.message || "An error occurred");
     } finally {
-      setLoading(false);
+      if (!navigatingAway) setLoading(false);
     }
   };
 

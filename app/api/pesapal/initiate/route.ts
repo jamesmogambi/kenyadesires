@@ -90,6 +90,7 @@ export async function POST(req: Request) {
       packageId,
       packageName,
       idType,
+      flow,
     } = body as {
       orderId: string;
       amount: number | string;
@@ -101,7 +102,24 @@ export async function POST(req: Request) {
       packageId?: string;
       packageName?: string;
       idType?: string;
+      flow?: string;
     };
+
+    // How the customer is sent to Pesapal. This decides a top-level navigation,
+    // so it is whitelisted and never passed through from the request body.
+    //
+    //   "inline"   -> PARENT_WINDOW: checkout renders in our own modal's iframe
+    //                 (desktop). The frame is sized and styled by us.
+    //   "redirect" -> TOP_WINDOW:   Pesapal's own hosted checkout page takes
+    //                 over the browser (phones). No iframe, so no sandbox, no
+    //                 focus trap and no pointer-events fighting — the form is
+    //                 Pesapal's to lay out, and they already do it correctly at
+    //                 phone widths.
+    //
+    // Defaulting to "inline" keeps the existing desktop behaviour for any caller
+    // that has not been updated.
+    const checkoutFlow: "inline" | "redirect" =
+      flow === "redirect" ? "redirect" : "inline";
 
     // ---- Input validation ----
     const errors: string[] = [];
@@ -162,7 +180,7 @@ export async function POST(req: Request) {
       amount: baseAmount,
       description: String(description).slice(0, 100),
       callback_url: `${appUrl}/payment/callback`,
-      redirect_mode: "PARENT_WINDOW",
+      redirect_mode: checkoutFlow === "redirect" ? "TOP_WINDOW" : "PARENT_WINDOW",
       notification_id: process.env.PESAPAL_IPN_ID!,
       billing_address: {
         email_address: String(email),

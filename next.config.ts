@@ -96,7 +96,7 @@ const nextConfig = {
         hostname: "rahaescorts.com",
       },
 
-       // Backblaze storage
+      // Backblaze storage
       {
         protocol: "https",
         hostname: "mombasahot.s3.us-east-005.backblazeb2.com",
@@ -139,12 +139,16 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  allowedDevOrigins: ["local-origin.dev", "*.local-origin.dev"],
+  allowedDevOrigins: [
+    "local-origin.dev",
+    "*.local-origin.dev",
+    "2721-102-213-49-60.ngrok-free.app",
+  ],
 
   // Enable compression
   compress: true,
 
-cacheComponents: true,
+  cacheComponents: true,
   cacheLife: {
     daily: {
       stale: 3600, // 1 hour — client cache duration
