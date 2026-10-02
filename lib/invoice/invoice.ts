@@ -47,6 +47,11 @@ export interface InvoiceTransaction {
   accountReference?: string | null;
   transactionDesc?: string | null;
   receiptNumber?: string | null;
+  /** Address captured at checkout — who actually paid. */
+  email?: string | null;
+  /** Phone captured at checkout. Mirrors `phoneNumber`; kept for callers that
+   *  read the checkout-captured value. */
+  phone?: string | null;
   transactionDate?: number | string | null;
   resultCode?: number | null;
   resultDesc?: string | null;
@@ -229,8 +234,10 @@ export function buildInvoicePdf(
   doc.text("BILL TO", MARGIN, y, { size: 7.5, bold: true, color: COLORS.faint, tracking: 1 });
 
   const customerName = (customer.name || "").trim() || "KenyaDesires member";
-  const customerEmail = (customer.email || "").trim();
-  const customerPhone = (customer.phone || tx.phoneNumber || "").trim();
+  // Checkout-captured values win over the signed-in profile: an invoice has to
+  // identify who actually paid, and the profile email may have changed since.
+  const customerEmail = (tx.email || customer.email || "").trim();
+  const customerPhone = (customer.phone || tx.phone || tx.phoneNumber || "").trim();
 
   doc.text(customerName, MARGIN, y + 13, { size: 11.5, bold: true, color: COLORS.ink });
   if (customerEmail) {
@@ -367,7 +374,11 @@ export function buildInvoicePdf(
 
   const paymentRows: Array<[string, string]> = [
     ["Method", tx.paymentMethod || "M-Pesa / Card (Pesapal)"],
-    ["Phone", tx.phoneNumber || customerPhone || "—"],
+    // Checkout-captured contact details first, the signed-in profile only as a
+    // fallback — an invoice needs to say who paid even for older rows that
+    // predate capture.
+    ["Phone", tx.phone || tx.phoneNumber || customerPhone || "—"],
+    ["Email", tx.email || customerEmail || "—"],
     ["Receipt No", tx.receiptNumber || "—"],
     ["Transaction ID", tx.accountReference || tx.checkoutRequestId || "—"],
     ["Paid at", formatDateTime(tx.createdAt)],

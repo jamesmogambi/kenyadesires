@@ -9,6 +9,7 @@ import { sendPaymentConfirmationEmail } from "@/server-actions/email";
 import { encodeJsonColumn, executeQuery, executeTransaction } from "@/lib/neon";
 import { getAdPackageById, getCreditPackageById } from "@/lib/constants/packages";
 import { applyBoostPurchase, asQueryRunner } from "@/lib/boost";
+import { receiptNumberFor } from "@/lib/invoice/receipt";
 
 /**
  * GET|POST /api/pesapal/ipn
@@ -94,6 +95,11 @@ async function handleIPN(
       const adPackage = packageId ? getAdPackageById(packageId) : undefined;
       const creditPackage = packageId ? getCreditPackageById(packageId) : undefined;
 
+      // Hoisted out of the transaction below so the confirmation email can print
+      // the same receipt number the invoice will. Empty if this order was a
+      // credit top-up, which does not write a `transactions` row.
+      let receiptNumber = "";
+
       if (existing?.user_id && packageId) {
         try {
           if (adPackage && adPackage.type === "boost") {
@@ -123,13 +129,15 @@ async function handleIPN(
               const escortId = escortRows[0]?.[0]?.id || null;
               const agencyId = escortId ? null : agencyRows[0]?.[0]?.id || null;
 
+              const transactionId = crypto.randomUUID();
+              receiptNumber = receiptNumberFor(transactionId);
               await client.query(
                 `INSERT INTO transactions
                    (id, checkout_request_id, user_id, escort_id, agency_id, amount, currency,
                     status, payment_method, phone_number, metadata, created_at, updated_at)
                  VALUES ($1, $2, $3, $4, $5, $6, 'KES', 'completed', $7, $8, $9, NOW(), NOW())`,
                 [
-                  crypto.randomUUID(),
+                  transactionId,
                   orderTrackingId,
                   existing.user_id,
                   escortId,
@@ -147,7 +155,16 @@ async function handleIPN(
                       proratedCredits: result.proratedCredits,
                       boostAction: result.action,
                       orderTrackingId,
-                      receiptNumber: tx.merchant_reference || "",
+                      // Derived from the row id, so the receipt printed on the
+                      // invoice is the one on the confirmation email and the one
+                      // support quotes back.
+                      receiptNumber,
+                      // Who paid. `pesapal_orders.email` is what
+                      // /api/pesapal/initiate received, so this is the address
+                      // the customer actually entered at checkout — not a Clerk
+                      // profile value that may have changed since.
+                      email: existing.email || "",
+                      phone: existing.phone_number || "",
                     }),
                   ),
                 ],
@@ -198,7 +215,7 @@ async function handleIPN(
           to: existing?.email || "",
           name: `${existing?.email?.split("@")[0] || "Customer"}`,
           amount: Number(tx.amount) || 0,
-          receiptNumber: tx.merchant_reference || "",
+          receiptNumber: receiptNumber || tx.merchant_reference || "",
           packageName: tx.description || "Boost Package",
           transactionId: orderTrackingId,
           date: new Date().toLocaleDateString("en-KE", { year: "numeric", month: "long", day: "numeric" }),

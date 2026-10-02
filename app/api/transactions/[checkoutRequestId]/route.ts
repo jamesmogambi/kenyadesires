@@ -1,6 +1,7 @@
 import { connection, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { executeQuery } from "@/lib/neon";
+import { receiptNumberFor } from "@/lib/invoice/receipt";
 
 export async function GET(
   req: Request,
@@ -99,7 +100,12 @@ export async function GET(
       packageName: t.metadata?.packageName || t.metadata?.package_name,
       accountReference: t.metadata?.accountReference,
       transactionDesc: t.metadata?.transactionDesc,
-      receiptNumber: t.metadata?.receiptNumber,
+      receiptNumber:
+        t.metadata?.receiptNumber || receiptNumberFor(t.id, new Date(t.created_at)),
+      // Captured at checkout, not read back from the profile — see the note in
+      // app/api/transactions/route.ts.
+      email: t.metadata?.email || null,
+      phone: t.metadata?.phone || t.phone_number || null,
       transactionDate: t.metadata?.transactionDate,
       resultCode: t.metadata?.resultCode,
       resultDesc: t.metadata?.resultDesc,

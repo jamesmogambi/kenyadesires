@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { sendPaymentConfirmationEmail } from "./email";
 import { encodeJsonColumn, executeQuery, executeTransaction } from "@/lib/neon";
 import { applyBoostPurchase, asQueryRunner, getBoostHistory, getBoostOverview } from "@/lib/boost";
+import { receiptNumberFor } from "@/lib/invoice/receipt";
 
 export async function getUserCredits() {
   try {
@@ -224,6 +225,9 @@ export async function purchaseAdPackage(packageId: string) {
     }
 
     const checkoutRequestId = `AD-${Date.now()}`;
+    // Declared out here, not inside the transaction callback, so the
+    // confirmation email below can print the same number the invoice will.
+    let receiptNumber = "";
 
     const result = await executeTransaction(async (client) => {
       const boost = await applyBoostPurchase(asQueryRunner(client), {
@@ -235,6 +239,7 @@ export async function purchaseAdPackage(packageId: string) {
       }
 
       const transactionId = crypto.randomUUID();
+      receiptNumber = receiptNumberFor(transactionId);
       await client.query(
         `INSERT INTO transactions (id, checkout_request_id, user_id, ${userIdCol}, amount, currency, status, payment_method, phone_number, metadata, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
@@ -259,6 +264,13 @@ export async function purchaseAdPackage(packageId: string) {
               boostAction: boost.action,
               accountReference: `Ad-${adPackage.name}-${Date.now()}`,
               transactionDesc: `Buy ${adPackage.name} ad package`,
+              // Same generator as the Pesapal path, so both invoice types carry
+              // the same receipt format.
+              receiptNumber,
+              // Captured on the invoice so a downloaded PDF identifies who paid,
+              // not just what was bought.
+              email: user.email || "",
+              phone: user.whatsapp_phone || "",
             }),
           ),
         ],
@@ -272,7 +284,7 @@ export async function purchaseAdPackage(packageId: string) {
         to: user.email,
         name: user.name || "Valued Customer",
         amount: (result.creditsSpent || 0) * 10,
-        receiptNumber: `CREDIT-${Date.now()}`,
+        receiptNumber,
         packageName: adPackage.name,
         transactionId: checkoutRequestId,
         date: new Date().toLocaleString(),

@@ -1,6 +1,7 @@
 import { connection, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { executeQuery } from "@/lib/neon";
+import { receiptNumberFor } from "@/lib/invoice/receipt";
 
 export async function GET(req: Request) {
   // Request-time only: stops static generation from invoking this handler.
@@ -75,7 +76,16 @@ export async function GET(req: Request) {
       packageName: t.metadata?.packageName || t.metadata?.package_name,
       accountReference: t.metadata?.accountReference,
       transactionDesc: t.metadata?.transactionDesc,
-      receiptNumber: t.metadata?.receiptNumber,
+      // Prefer what was stored at purchase time; fall back to deriving one from
+      // the row id so rows written before receipts existed still print a number
+      // instead of "—". Same value either way for new rows.
+      receiptNumber:
+        t.metadata?.receiptNumber || receiptNumberFor(t.id, new Date(t.created_at)),
+      // The address captured at checkout, which is what belongs on a receipt.
+      // metadata.email is absent on older rows, so the Clerk profile email is
+      // only a display-time fallback.
+      email: t.metadata?.email || null,
+      phone: t.metadata?.phone || t.phone_number || null,
       transactionDate: t.metadata?.transactionDate,
       resultCode: t.metadata?.resultCode,
       resultDesc: t.metadata?.resultDesc,

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Loader2, ArrowRight, Download } from "lucide-react";
 import Link from "next/link";
-import FloatingFlowers from "./FloatingFlowers";
+import FloatingFlowers from "@/components/FloatingFlowers";
 import { useUser } from "@clerk/nextjs";
 import {
   downloadInvoice,

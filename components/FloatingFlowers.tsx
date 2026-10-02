@@ -4,6 +4,17 @@ import { useEffect, useRef } from "react";
 
 const FLOWERS = ["🌸", "🌺", "🌷", "🌻", "💐", "✨"];
 
+/**
+ * Celebratory emoji burst behind a page.
+ *
+ * Lives in `components/` rather than next to the payment-status route because
+ * every completed-payment surface shows it: /payment-status and
+ * /payment/success, so a phone that lands straight on the success page after a
+ * Pesapal redirect gets the same confirmation.
+ *
+ * Renders a fixed, pointer-events-none, z-0 layer, so the page content must sit
+ * above it (`relative z-10`) or the flowers paint over the card.
+ */
 export default function FloatingFlowers() {
   const containerRef = useRef<HTMLDivElement>(null);
 

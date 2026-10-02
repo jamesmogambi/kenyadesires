@@ -140,6 +140,12 @@ export default function InvoicesPage() {
                       <span>Amount: {tx.amount ? `KSH ${tx.amount}` : "—"}</span>
                       <span>Receipt: {tx.receiptNumber || "—"}</span>
                     </div>
+                    {(tx.email || tx.phone) && (
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                        {tx.email && <span>Email: {tx.email}</span>}
+                        {tx.phone && <span>Phone: {tx.phone}</span>}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Button
