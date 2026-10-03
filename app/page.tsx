@@ -15,9 +15,11 @@ import HomepageTracker from "@/components/analytics/HomepageTracker";
 export const instant = false;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+// title: "escort services in Kenya | female escorts | escort directory | Nairobi",
 
 export const metadata: Metadata = {
-  title: "KenyaDesires.xyz | Female Escorts & Companions in Kenya",
+  title:
+    "KenyaDesires.xyz | Female Escorts & Companions in Kenya | Nairobi | escort services in Kenya | female escorts | escort directory | Nairobi",
   description:
     "Browse verified female escort and companion profiles across Kenya. Explore photos, videos, locations and contact details on KenyaDesires.xyz.",
   alternates: {

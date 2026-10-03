@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
   title: {
     default:
-      "Kenya Desires - Hot Kenyan Escorts - KenyaDivas - Sexy Call Girls",
+      "escort services in Kenya | female escorts | escort directory | Nairobi",
     template: "%s | Kenya Desires",
   },
 
