@@ -175,6 +175,18 @@ const ImageLightbox = ({
               </button>
             </>
           )}
+
+          {/* Brand watermark — fixed at the bottom-right of the fullscreen viewer */}
+          <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex items-center justify-center rounded-md bg-black/50 px-3 py-2 ring-1 ring-white/25 backdrop-blur-sm opacity-55">
+            <Image
+              src="/logo.png"
+              alt="kenyadesires watermark"
+              width={136}
+              height={34}
+              className="object-contain"
+              loading="eager"
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

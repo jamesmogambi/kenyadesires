@@ -102,7 +102,19 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
               </div>
             </SwiperSlide>
           ))}
-        </Swiper>
+          </Swiper>
+
+        {/* Brand watermark — fixed at the bottom-right of the image display */}
+        <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex items-center justify-center rounded-md bg-black/50 px-3 py-2 ring-1 ring-white/25 backdrop-blur-sm opacity-55">
+          <Image
+            src="/logo.png"
+            alt="kenyadesires watermark"
+            width={136}
+            height={34}
+            className="object-contain"
+            loading="eager"
+          />
+        </div>
 
         {/* Main Navigation Buttons */}
         {photos.length > 1 && (
@@ -136,7 +148,7 @@ const PhotoGallery = ({ photos, title = "Gallery" }: Prop) => {
           type="button"
           onClick={() => setLightboxIndex(currentIndex)}
           aria-label="View current image full screen"
-          className="absolute bottom-6 right-4 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-primary"
+           className="absolute bottom-4 left-4 z-20 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-primary"
         >
           <Maximize2 size={18} />
         </button>
