@@ -49,6 +49,7 @@ const ImageLightbox = ({
   const [swiper, setSwiper] = useState<any>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failed, setFailed] = useState<Record<number, boolean>>({});
+  const [imgDims, setImgDims] = useState<Record<number, { w: number; h: number }>>({});
 
   // Seed from the requested index each time the lightbox opens, and reset the
   // per-image error state so a previously failed image is retried.
@@ -131,22 +132,59 @@ const ImageLightbox = ({
             onSlideChange={handleSlideChange}
             className="h-full w-full"
           >
-            {images.map((src, i) => (
-              <SwiperSlide key={`${src}-${i}`}>
-                <div className="relative h-full w-full">
-                  <Image
-                    src={failed[i] ? FALLBACK_IMAGE : src}
-                    alt={`${title} - Image ${i + 1}`}
-                    fill
-                    // contain, not cover: show the whole photo uncropped
-                    className="object-contain"
-                    sizes="100vw"
-                    priority={i === startIndex}
-                    onError={() => setFailed((prev) => ({ ...prev, [i]: true }))}
-                  />
-                </div>
-              </SwiperSlide>
-            ))}
+            {images.map((src, i) => {
+              const aspect = imgDims[i]
+                ? `${imgDims[i].w} / ${imgDims[i].h}`
+                : undefined;
+              return (
+                <SwiperSlide key={`${src}-${i}`}>
+                  <div className="relative h-full w-full">
+                    {/*
+                      Inner box sized to the image's own aspect ratio (once known)
+                      and centred, so the object-contain image fills it entirely
+                      with no letterbox. Anchoring the watermark here keeps it on
+                      the photo rather than drifting into the empty padding around
+                      it.
+                    */}
+                    <div
+                      className="absolute inset-0 m-auto"
+                      style={{ aspectRatio: aspect, maxWidth: "100%", maxHeight: "100%" }}
+                    >
+                      <Image
+                        src={failed[i] ? FALLBACK_IMAGE : src}
+                        alt={`${title} - Image ${i + 1}`}
+                        fill
+                        // contain, not cover: show the whole photo uncropped
+                        className="object-contain"
+                        sizes="100vw"
+                        priority={i === startIndex}
+                        onError={() => setFailed((prev) => ({ ...prev, [i]: true }))}
+                        onLoadingComplete={(result) =>
+                          setImgDims((prev) =>
+                            prev[i]
+                              ? prev
+                              : { ...prev, [i]: { w: result.naturalWidth, h: result.naturalHeight } },
+                          )
+                        }
+                      />
+                      {/* Brand watermark — fixed at the bottom-right of the image */}
+                      <div
+                        className="pointer-events-none absolute bottom-4 right-4 z-10 flex items-center justify-center rounded-md bg-black/50 px-3 py-2 backdrop-blur-sm opacity-50"
+                      >
+                        <Image
+                          src="/logo.png"
+                          alt="kenyadesires watermark"
+                          width={136}
+                          height={34}
+                          className="object-contain"
+                          loading="eager"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              );
+            })}
           </Swiper>
 
           {images.length > 1 && (
@@ -175,18 +213,6 @@ const ImageLightbox = ({
               </button>
             </>
           )}
-
-          {/* Brand watermark — fixed at the bottom-right of the fullscreen viewer */}
-          <div className="pointer-events-none absolute bottom-4 right-4 z-10 flex items-center justify-center rounded-md bg-black/50 px-3 py-2 ring-1 ring-white/25 backdrop-blur-sm opacity-55">
-            <Image
-              src="/logo.png"
-              alt="kenyadesires watermark"
-              width={136}
-              height={34}
-              className="object-contain"
-              loading="eager"
-            />
-          </div>
         </div>
       </DialogContent>
     </Dialog>
