@@ -144,7 +144,7 @@ const BioSection = ({ girl }: Prop) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => handleShare("facebook")}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary  hover:bg-primary hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
             aria-label="Share on Facebook Messenger"
           >
             <svg
@@ -169,7 +169,7 @@ const BioSection = ({ girl }: Prop) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => handleShare("whatsapp")}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary"
             aria-label="Share on WhatsApp"
           >
             <svg
