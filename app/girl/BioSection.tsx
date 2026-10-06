@@ -136,8 +136,8 @@ const BioSection = ({ girl }: Prop) => {
       </div>
 
       {/* Share section */}
-      <div className="mt-6 flex flex-row items-center gap-2">
-        <h3 className="font-bold text-lg text-primary">Share:</h3>
+      <div className="mt-6 flex flex-row items-center gap-4">
+        <h3 className="font-bold text-lg text-white/50">Share:</h3>
         <div className="flex items-center gap-3 mt-2">
           <a
             href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileUrl)}`}
