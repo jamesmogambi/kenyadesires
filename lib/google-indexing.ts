@@ -39,7 +39,7 @@ function loadServiceAccount(): ServiceAccount {
   if (keyFile) {
     const resolved = path.isAbsolute(keyFile)
       ? keyFile
-      : path.join(process.cwd(), keyFile);
+      : path.join(/* turbopackIgnore: true */ process.cwd(), keyFile);
 
     if (!fs.existsSync(resolved)) {
       throw new Error(

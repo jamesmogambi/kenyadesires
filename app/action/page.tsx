@@ -1,5 +1,6 @@
 import { sql } from '@/app/lib/db';
 import { revalidatePath } from 'next/cache';
+import { connection } from 'next/server';
 
 export default async function ActionPage() {
   async function createComment(formData: FormData) {
@@ -14,6 +15,8 @@ export default async function ActionPage() {
     const comments = await sql`SELECT * FROM comments`;
     return comments;
   }
+
+  await connection();
 
   return (
     <div>
