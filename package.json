@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev ",
     "build": "next build",
+    "prebuild": "rm -rf .next",
     "start": "next start",
     "lint": "next lint",
     "deploy:prepare": "bash scripts/prepare-deploy.sh",

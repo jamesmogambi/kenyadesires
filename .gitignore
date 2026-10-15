@@ -52,3 +52,6 @@ next-env.d.ts
 whatsapp-campaign-*.json
 *-service-account*.json
 service-account*.json
+
+# deployment artifacts
+deploy.zip

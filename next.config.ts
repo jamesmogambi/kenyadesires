@@ -3,6 +3,9 @@ const nextConfig = {
   // ✅ CRITICAL: Add standalone output for cPanel deployment
   output: "standalone",
 
+  // ✅ Disable source maps to reduce artifact size (fixes Zoho HTTP 400 on large zips)
+  productionBrowserSourceMaps: false,
+
   // ✅ Turbopack resolve alias for Clerk ESM modules
   turbopack: {
     resolveAlias: {
