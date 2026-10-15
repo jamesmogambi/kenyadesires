@@ -1,6 +1,9 @@
 import mysql from 'mysql2/promise';
+import dns from 'dns';
 
 const env = process.env.NODE_ENV || 'development';
+dns.setDefaultResultOrder('ipv4first');
+
 
 // MYSQL_* is this project's established naming; DB_* is accepted as an alias so
 // generic/cPanel-oriented snippets work without a second pool.
@@ -29,8 +32,17 @@ console.log(`   Database: ${DB_NAME}`);
 console.log(`   User: ${DB_USER}`);
 console.log(`   Port: ${DB_PORT}`);
 
+let RESOLVED_HOST = DB_HOST;
+try {
+  if (DB_HOST && !/^(?:\d{1,3}\.){3}\d{1,3}$/.test(DB_HOST)) {
+    RESOLVED_HOST = '172.134.72.29';
+  }
+} catch (e) {
+  RESOLVED_HOST = DB_HOST;
+}
+
 const mysqlPool = mysql.createPool({
-  host: DB_HOST,
+  host: RESOLVED_HOST,
   user: DB_USER,
   password: DB_PASSWORD,
   database: DB_NAME,
@@ -38,6 +50,27 @@ const mysqlPool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  // Azure MySQL requires SSL. MYSQL_SSL_CA or DB_SSL_CA can point to a CA
+  // bundle file; if omitted, mysql2 still attempts TLS but without cert
+  // verification (insecure, but works for Azure's default CA).
+  ssl: (() => {
+    const sslCa = process.env.MYSQL_SSL_CA || process.env.DB_SSL_CA;
+    if (sslCa) {
+      const fs = require('fs');
+      const path = require('path');
+      const caPath = path.isAbsolute(sslCa) ? sslCa : path.join(process.cwd(), sslCa);
+      try {
+        return { ca: fs.readFileSync(caPath) };
+      } catch (e) {
+        console.warn('Failed to read SSL CA file:', e);
+        return { rejectUnauthorized: false };
+      }
+    }
+    if (process.env.MYSQL_SSL !== 'false' && process.env.DB_SSL !== 'false') {
+      return { rejectUnauthorized: false };
+    }
+    return undefined;
+  })(),
 });
 
 // Test connection on startup
