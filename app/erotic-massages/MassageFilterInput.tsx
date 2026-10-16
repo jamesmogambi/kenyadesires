@@ -68,12 +68,17 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
 
   // ✅ Memoize filtered regions based on selected county and search
   const filteredRegionsByCounty = useMemo(() => {
-    if (!county) return [];
+    const term = regionSearch.toLowerCase();
+    if (!county) {
+      return fetchedRegions.filter((r: IRegion) =>
+        r.name.toLowerCase().includes(term),
+      );
+    }
     return fetchedRegions.filter(
       (region: IRegion) =>
         (region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
           region.county?.toLowerCase() === county.name?.toLowerCase()) &&
-        region.name.toLowerCase().includes(regionSearch.toLowerCase()),
+        region.name.toLowerCase().includes(term),
     );
   }, [county, fetchedRegions, regionSearch]);
 
@@ -171,10 +176,6 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
 
   // Handle region selection
   const handleRegion = (val: IRegion) => {
-    if (!county) {
-      alert("You must first select a county");
-      return;
-    }
     setRegion(val);
     setRegionSearch("");
     setRegionOpen(false);
@@ -313,7 +314,6 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
       <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
         <DropdownMenuTrigger
           className="self-end text-nowrap overflow-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md"
-          disabled={!county}
         >
           {region ? (
             <div className="flex items-center gap-2">
@@ -349,9 +349,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
           })}
           {regions.length === 0 ? (
             <div className="text-white/50 text-center py-4">
-              {county
-                ? "No regions found for this county"
-                : "Select a county first"}
+              {county ? "No regions found for this county" : "No regions available"}
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">

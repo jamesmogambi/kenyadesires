@@ -125,9 +125,6 @@ export const FilterInput = ({ className }: Prop) => {
   };
 
   const handleRegion = (val: any) => {
-    if (!county) {
-      alert("You must first select region");
-    }
     setRegion(val);
     setRegionSearch("");
     setRegionOpen(false);

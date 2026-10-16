@@ -56,12 +56,17 @@ const AgencyFilterInput = ({ className }: Prop) => {
 
   // ✅ Memoize filtered regions based on selected county and search
   const filteredRegionsByCounty = useMemo(() => {
-    if (!county) return [];
+    const term = regionSearch.toLowerCase();
+    if (!county) {
+      return fetchedRegions.filter((r: IRegion) =>
+        r.name.toLowerCase().includes(term),
+      );
+    }
     return fetchedRegions.filter(
       (region: IRegion) =>
         (region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
           region.county?.toLowerCase() === county.name?.toLowerCase()) &&
-        region.name.toLowerCase().includes(regionSearch.toLowerCase()),
+        region.name.toLowerCase().includes(term),
     );
   }, [county, fetchedRegions, regionSearch]);
 
@@ -169,10 +174,6 @@ const AgencyFilterInput = ({ className }: Prop) => {
 
   // Handle region selection
   const handleRegion = (val: IRegion) => {
-    if (!county) {
-      alert("You must first select a county");
-      return;
-    }
     setRegion(val);
     setRegionSearch("");
     setRegionOpen(false);
@@ -311,7 +312,6 @@ const AgencyFilterInput = ({ className }: Prop) => {
       <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
         <DropdownMenuTrigger
           className="self-end text-nowrap overflow-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md"
-          disabled={!county}
         >
           {region ? (
             <div className="flex items-center gap-2">
@@ -321,7 +321,7 @@ const AgencyFilterInput = ({ className }: Prop) => {
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">
-              {county ? "City or region" : "Select county first"}
+              City or region
             </span>
           )}
           <svg

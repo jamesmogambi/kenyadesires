@@ -8,21 +8,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useRouter, useSearchParams } from "next/navigation";
 import LocationInitializer from "@/components/FileInputInitializer";
 import { useVariantStore } from "@/store/variantStore";
 import { useFilterInputStore } from "../girls/filterInputStore";
 import { ICounty } from "@/server-actions/region.action";
 import { IRegion } from "@/types/region.types";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface Prop {
   className?: string;
@@ -46,7 +37,6 @@ const GirlFilterInput = ({ className }: Prop) => {
   const [regions, setRegions] = useState<IRegion[]>([]);
   const [practice, setPractice] = useState(initialpractice);
   const [practiceOpen, setPracticeOpen] = useState(false);
-  const [countyWarningOpen, setCountyWarningOpen] = useState(false);
   const [sort, setSort] = useState(initialSort);
   const [order, setOrder] = useState(initialOrder);
   const [sortOpen, setSortOpen] = useState(false);
@@ -78,12 +68,17 @@ const GirlFilterInput = ({ className }: Prop) => {
 
   // Memoize filtered regions based on selected county and search
   const filteredRegionsByCounty = useMemo(() => {
-    if (!county) return [];
+    const term = regionSearch.toLowerCase();
+    if (!county) {
+      return fetchedRegions.filter((r: IRegion) =>
+        r.name.toLowerCase().includes(term),
+      );
+    }
     return fetchedRegions.filter(
       (region: IRegion) =>
         (region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
           region.county?.toLowerCase() === county.name?.toLowerCase()) &&
-        region.name.toLowerCase().includes(regionSearch.toLowerCase()),
+        region.name.toLowerCase().includes(term),
     );
   }, [county, fetchedRegions, regionSearch]);
 
@@ -220,10 +215,6 @@ const GirlFilterInput = ({ className }: Prop) => {
 
   // Handle region selection
   const handleRegion = (val: IRegion) => {
-    if (!county) {
-      setCountyWarningOpen(true);
-      return;
-    }
     setRegion(val);
     setRegionSearch("");
     setRegionOpen(false);
@@ -286,28 +277,6 @@ const GirlFilterInput = ({ className }: Prop) => {
       )}
     >
       <LocationInitializer />
-
-      {/* County-required warning modal */}
-      <Dialog open={countyWarningOpen} onOpenChange={setCountyWarningOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Select a county first</DialogTitle>
-            <DialogDescription>
-              Please choose a county before selecting a city or region.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              onClick={() => {
-                setCountyWarningOpen(false);
-                setOpen(true);
-              }}
-            >
-              Select County
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* County Filter */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -386,10 +355,6 @@ const GirlFilterInput = ({ className }: Prop) => {
       <DropdownMenu
         open={regionOpen}
         onOpenChange={(next) => {
-          if (next && !county) {
-            setCountyWarningOpen(true);
-            return;
-          }
           setRegionOpen(next);
         }}
       >
@@ -445,7 +410,7 @@ const GirlFilterInput = ({ className }: Prop) => {
           })}
           {regions.length === 0 ? (
             <div className="text-gray-500 text-center py-4">
-              {county ? "No regions found for this county" : "Select a county first"}
+              {county ? "No regions found for this county" : "No regions available"}
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
