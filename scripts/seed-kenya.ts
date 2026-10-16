@@ -1,9 +1,22 @@
 import { counties, getWardsByCounty } from 'kenya-regions';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.development' });
+dotenv.config({ path: `.env.${process.env.NODE_ENV || 'development'}` });
 
-const POPULAR_COUNTIES = new Set(['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Uasin Gishu']);
+const POPULAR_COUNTIES = new Set([
+  'Nairobi',
+  'Mombasa',
+  'Kisumu',
+  'Nakuru',
+  'Uasin Gishu',
+  'Kiambu',
+  'Machakos',
+  'Meru',
+  'Kakamega',
+  'Bungoma',
+  'Kilifi',
+  'Homa Bay',
+]);
 const CHUNK_SIZE = 500;
 
 async function addConstraint(connection: any, sql: string, label: string): Promise<void> {

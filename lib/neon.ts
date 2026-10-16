@@ -1,7 +1,7 @@
 import mysqlPool from '@/lib/db';
 import { RowDataPacket, PoolConnection } from 'mysql2/promise';
 
-const MAX_QUERY_RETRIES = 2;
+const MAX_QUERY_RETRIES = 1;
 const BASE_RETRY_DELAY_MS = 500;
 const MAX_RETRY_DELAY_MS = 10000;
 

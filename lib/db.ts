@@ -9,7 +9,7 @@ const DB_USER = process.env.MYSQL_USER || process.env.DB_USER;
 const DB_PASSWORD = process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD;
 const DB_NAME = process.env.MYSQL_DATABASE || process.env.DB_NAME;
 const DB_PORT = process.env.MYSQL_PORT || process.env.DB_PORT || '3306';
-const CONNECT_TIMEOUT_MS = Number(process.env.MYSQL_CONNECT_TIMEOUT || process.env.DB_CONNECT_TIMEOUT || 5000);
+const CONNECT_TIMEOUT_MS = Number(process.env.MYSQL_CONNECT_TIMEOUT || process.env.DB_CONNECT_TIMEOUT || 3000);
 const IDLE_TIMEOUT_MS = Number(process.env.MYSQL_IDLE_TIMEOUT || process.env.DB_IDLE_TIMEOUT || 60000);
 
 const missing = [
@@ -42,7 +42,8 @@ const mysqlPool = mysql.createPool({
   queueLimit: 0,
   // Fail fast on unreachable/slow DB instead of hanging on mysql2's default 10s
   // TCP connect timeout so queued requests don't pile up and cascade into
-  // ETIMEDOUT across concurrent requests.
+  // ETIMEDOUT across concurrent requests. 3s per attempt keeps a dead DB from
+  // blocking requests for more than a few seconds.
   connectTimeout: CONNECT_TIMEOUT_MS,
   // Recycle connections idle longer than MySQL's wait_timeout so the pool never
   // hands out a stale connection that would throw ETIMEDOUT/ECONNRESET on use.
