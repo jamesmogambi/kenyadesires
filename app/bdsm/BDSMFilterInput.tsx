@@ -45,6 +45,11 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
   const [practice, setPractice] = useState(initialpractice);
   const [practiceOpen, setPracticeOpen] = useState(false);
 
+  // Search states for each dropdown
+  const [countySearch, setCountySearch] = useState("");
+  const [regionSearch, setRegionSearch] = useState("");
+  const [practiceSearch, setPracticeSearch] = useState("");
+
   // Get data from stores
   const {
     practices,
@@ -53,15 +58,32 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
   } = useFilterInputStore();
   const { bdsms: bdsmVariants } = useBDSMStore();
 
-  // ✅ Memoize filtered regions based on selected county
+  // ✅ Memoize filtered counties based on search
+  const filteredCounties = useMemo(() => {
+    const term = countySearch.toLowerCase();
+    return counties.filter(
+      (c: any) => c.name.toLowerCase().includes(term),
+    );
+  }, [counties, countySearch]);
+
+  // ✅ Memoize filtered regions based on selected county and search
   const filteredRegionsByCounty = useMemo(() => {
     if (!county) return [];
     return fetchedRegions.filter(
       (region: IRegion) =>
-        region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
-        region.county?.toLowerCase() === county.name?.toLowerCase(),
+        (region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
+          region.county?.toLowerCase() === county.name?.toLowerCase()) &&
+        region.name.toLowerCase().includes(regionSearch.toLowerCase()),
     );
-  }, [county, fetchedRegions]);
+  }, [county, fetchedRegions, regionSearch]);
+
+  // ✅ Memoize filtered BDSM practices based on search
+  const filteredBDSMs = useMemo(() => {
+    const term = practiceSearch.toLowerCase();
+    return bdsmVariants.filter(
+      (item: any) => (item.name || item.value).toLowerCase().includes(term),
+    );
+  }, [bdsmVariants, practiceSearch]);
 
   // Initialize from URL params on mount
   useEffect(() => {
@@ -105,12 +127,28 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
     }
   }, [county, filteredRegionsByCounty]);
 
+  // Reset search terms when dropdowns close
+  useEffect(() => {
+    if (!open) setCountySearch("");
+  }, [open]);
+
+  useEffect(() => {
+    if (!regionOpen) setRegionSearch("");
+  }, [regionOpen]);
+
+  useEffect(() => {
+    if (!practiceOpen) setPracticeSearch("");
+  }, [practiceOpen]);
+
   // Clear all filters
   const clearFilters = () => {
     setCounty(null);
     setRegion(null);
     setPractice("");
     setRegions([]);
+    setCountySearch("");
+    setRegionSearch("");
+    setPracticeSearch("");
 
     const targetUrl = buildFilterUrl("/bdsm", searchParams, {}, false);
     router.replace(targetUrl);
@@ -120,12 +158,15 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
   const handleCounty = (val: ICounty) => {
     setCounty(val);
     setRegion(null);
-    // Regions will be automatically updated by the useEffect above
+    setCountySearch("");
+    setOpen(false);
   };
 
   // Handle practice selection
   const handlepractice = (val: string) => {
     setPractice(val);
+    setPracticeSearch("");
+    setPracticeOpen(false);
   };
 
   // Handle region selection
@@ -135,6 +176,8 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
       return;
     }
     setRegion(val);
+    setRegionSearch("");
+    setRegionOpen(false);
   };
 
   // Update URL params helper
@@ -169,15 +212,36 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
     setCounty(null);
     setRegion(null);
     setRegions([]);
+    setCountySearch("");
   };
 
   const clearRegion = () => {
     setRegion(null);
+    setRegionSearch("");
   };
 
   const clearpractice = () => {
     setPractice("");
+    setPracticeSearch("");
   };
+
+  const searchInput = ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+  }) => (
+    <input
+      autoFocus
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
+    />
+  );
 
   return (
     <div
@@ -217,20 +281,31 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: countySearch,
+            onChange: (e) => setCountySearch(e.target.value),
+            placeholder: "Search counties...",
+          })}
           <div className="flex flex-row w-full gap-1.5 flex-wrap">
-            {counties.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleCounty(item);
-                  setOpen(false);
-                }}
-                key={item.code}
-              >
-                {formatSlugToTitle(item.name)}
-              </DropdownMenuItem>
-            ))}
+            {filteredCounties.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No counties found
+              </div>
+            ) : (
+              filteredCounties.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleCounty(item);
+                    setOpen(false);
+                  }}
+                  key={item.code}
+                >
+                  {formatSlugToTitle(item.name)}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -268,25 +343,36 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: regionSearch,
+            onChange: (e) => setRegionSearch(e.target.value),
+            placeholder: "Search regions...",
+          })}
           {regions.length === 0 ? (
             <div className="text-white/50 text-center py-4">
               {county ? "No regions found for this county" : "Select a county first"}
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {regions.map((item: IRegion) => (
-                <DropdownMenuItem
-                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleRegion(item);
-                    setRegionOpen(false);
-                  }}
-                  key={item.id}
-                >
-                  {formatSlugToTitle(item.name)}
-                </DropdownMenuItem>
-              ))}
+              {filteredRegionsByCounty.length === 0 ? (
+                <div className="text-gray-500 text-center py-2 text-sm">
+                  No regions found
+                </div>
+              ) : (
+                filteredRegionsByCounty.map((item: IRegion) => (
+                  <DropdownMenuItem
+                    className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleRegion(item);
+                      setRegionOpen(false);
+                    }}
+                    key={item.id}
+                  >
+                    {formatSlugToTitle(item.name)}
+                  </DropdownMenuItem>
+                ))
+              )}
             </div>
           )}
         </DropdownMenuContent>
@@ -320,20 +406,31 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
-           <div className="flex flex-wrap gap-1.5">
-            {bdsmVariants?.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] truncate max-w-full"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handlepractice(item.name || item.value);
-                  setPracticeOpen(false);
-                }}
-                key={item.id}
-              >
-                {formatPracticeName(item.name || item.value)}
-              </DropdownMenuItem>
-            ))}
+           {searchInput({
+            value: practiceSearch,
+            onChange: (e) => setPracticeSearch(e.target.value),
+            placeholder: "Search practices...",
+          })}
+          <div className="flex flex-wrap gap-1.5">
+            {filteredBDSMs.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No practices found
+              </div>
+            ) : (
+              filteredBDSMs.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] truncate max-w-full"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handlepractice(item.name || item.value);
+                    setPracticeOpen(false);
+                  }}
+                  key={item.id}
+                >
+                  {formatPracticeName(item.name || item.value)}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>

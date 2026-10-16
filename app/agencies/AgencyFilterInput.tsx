@@ -37,25 +37,45 @@ const AgencyFilterInput = ({ className }: Prop) => {
   const [business, setbusiness] = useState(initialbusiness);
   const [businessOpen, setbusinessOpen] = useState(false);
 
+  // Search states for each dropdown
+  const [countySearch, setCountySearch] = useState("");
+  const [regionSearch, setRegionSearch] = useState("");
+  const [businessSearch, setBusinessSearch] = useState("");
+
   // Get data from stores
   const { counties, regions: fetchedRegions } = useFilterInputStore();
   const { massage: massageVariants, bdsm: bdsmVariants } = useVariantStore();
 
-  // ✅ Memoize filtered regions based on selected county
+  // ✅ Memoize filtered counties based on search
+  const filteredCounties = useMemo(() => {
+    const term = countySearch.toLowerCase();
+    return counties.filter(
+      (c: any) => c.name.toLowerCase().includes(term),
+    );
+  }, [counties, countySearch]);
+
+  // ✅ Memoize filtered regions based on selected county and search
   const filteredRegionsByCounty = useMemo(() => {
     if (!county) return [];
     return fetchedRegions.filter(
       (region: IRegion) =>
-        region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
-        region.county?.toLowerCase() === county.name?.toLowerCase(),
+        (region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
+          region.county?.toLowerCase() === county.name?.toLowerCase()) &&
+        region.name.toLowerCase().includes(regionSearch.toLowerCase()),
     );
-  }, [county, fetchedRegions]);
+  }, [county, fetchedRegions, regionSearch]);
+
+  // ✅ Memoize filtered business types based on search
+  const filteredBusinessTypes = useMemo(() => {
+    const term = businessSearch.toLowerCase();
+    return BUSINESS_TYPES.filter(
+      (item: any) => item.label.toLowerCase().includes(term),
+    );
+  }, [BUSINESS_TYPES, businessSearch]);
 
   // Initialize from URL params on mount
   useEffect(() => {
     if (initialCountyCode && counties.length > 0) {
-      // `filterValuesMatch` folds the slug so `?county=taita-taveta` resolves to
-      // the `Taita Taveta` option.
       const foundCounty = counties.find(
         (c: ICounty) =>
           c.code?.toLowerCase() === initialCountyCode.toLowerCase() ||
@@ -85,8 +105,7 @@ const AgencyFilterInput = ({ className }: Prop) => {
     }
   }, [counties, fetchedRegions, initialCountyCode, initialRegionName]);
 
-  // Resolve `?business=` back to its canonical value so the chip label and the
-  // emitted `business_type` stay in the vocabulary the table actually stores.
+  // Resolve `?business=` back to its canonical value
   useEffect(() => {
     if (!initialbusiness) return;
     const match = BUSINESS_TYPES.find((item: any) =>
@@ -106,12 +125,28 @@ const AgencyFilterInput = ({ className }: Prop) => {
     }
   }, [county, filteredRegionsByCounty]);
 
+  // Reset search terms when dropdowns close
+  useEffect(() => {
+    if (!open) setCountySearch("");
+  }, [open]);
+
+  useEffect(() => {
+    if (!regionOpen) setRegionSearch("");
+  }, [regionOpen]);
+
+  useEffect(() => {
+    if (!businessOpen) setBusinessSearch("");
+  }, [businessOpen]);
+
   // Clear all filters
   const clearFilters = () => {
     setCounty(null);
     setRegion(null);
     setbusiness("");
     setRegions([]);
+    setCountySearch("");
+    setRegionSearch("");
+    setBusinessSearch("");
 
     const targetUrl = buildFilterUrl("/agencies", searchParams, {}, false);
     router.replace(targetUrl);
@@ -121,12 +156,15 @@ const AgencyFilterInput = ({ className }: Prop) => {
   const handleCounty = (val: ICounty) => {
     setCounty(val);
     setRegion(null);
-    // Regions will be automatically updated by the useEffect above
+    setCountySearch("");
+    setOpen(false);
   };
 
   // Handle business type selection
   const handlebusiness = (val: string) => {
     setbusiness(val);
+    setBusinessSearch("");
+    setbusinessOpen(false);
   };
 
   // Handle region selection
@@ -136,6 +174,8 @@ const AgencyFilterInput = ({ className }: Prop) => {
       return;
     }
     setRegion(val);
+    setRegionSearch("");
+    setRegionOpen(false);
   };
 
   // Update URL params helper
@@ -159,7 +199,7 @@ const AgencyFilterInput = ({ className }: Prop) => {
       county: county?.name || "",
       region: region?.name || "",
       business: business,
-      page: "1", // Reset to first page on new filter
+      page: "1",
     };
 
     updateURLParams(params);
@@ -170,15 +210,36 @@ const AgencyFilterInput = ({ className }: Prop) => {
     setCounty(null);
     setRegion(null);
     setRegions([]);
+    setCountySearch("");
   };
 
   const clearRegion = () => {
     setRegion(null);
+    setRegionSearch("");
   };
 
   const clearbusiness = () => {
     setbusiness("");
+    setBusinessSearch("");
   };
+
+  const searchInput = ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+  }) => (
+    <input
+      autoFocus
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
+    />
+  );
 
   return (
     <div
@@ -217,20 +278,31 @@ const AgencyFilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: countySearch,
+            onChange: (e) => setCountySearch(e.target.value),
+            placeholder: "Search counties...",
+          })}
           <div className="flex flex-row w-full gap-1.5 flex-wrap">
-            {counties.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleCounty(item);
-                  setOpen(false);
-                }}
-                key={item.code}
-              >
-                {formatSlugToTitle(item.name)}
-              </DropdownMenuItem>
-            ))}
+            {filteredCounties.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No counties found
+              </div>
+            ) : (
+              filteredCounties.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleCounty(item);
+                    setOpen(false);
+                  }}
+                  key={item.code}
+                >
+                  {formatSlugToTitle(item.name)}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -268,21 +340,32 @@ const AgencyFilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: regionSearch,
+            onChange: (e) => setRegionSearch(e.target.value),
+            placeholder: "Search regions...",
+          })}
           <div className="flex flex-wrap gap-1.5">
             {regions.length > 0 ? (
-              regions.map((item: IRegion) => (
-                <DropdownMenuItem
-                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleRegion(item);
-                    setRegionOpen(false);
-                  }}
-                  key={item.id}
-                >
-                  {formatSlugToTitle(item.name)}
-                </DropdownMenuItem>
-              ))
+              filteredRegionsByCounty.length === 0 ? (
+                <div className="text-gray-500 text-center py-2 text-sm">
+                  No regions found
+                </div>
+              ) : (
+                filteredRegionsByCounty.map((item: IRegion) => (
+                  <DropdownMenuItem
+                    className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleRegion(item);
+                      setRegionOpen(false);
+                    }}
+                    key={item.id}
+                  >
+                    {formatSlugToTitle(item.name)}
+                  </DropdownMenuItem>
+                ))
+              )
             ) : (
               <span className="text-white/50 text-sm p-2">
                 No regions found
@@ -322,20 +405,31 @@ const AgencyFilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: businessSearch,
+            onChange: (e) => setBusinessSearch(e.target.value),
+            placeholder: "Search businesses...",
+          })}
           <div className="flex flex-wrap gap-1.5">
-            {BUSINESS_TYPES.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handlebusiness(item.value);
-                  setbusinessOpen(false);
-                }}
-                key={item.label}
-              >
-                {item.icon} {item.label}
-              </DropdownMenuItem>
-            ))}
+            {filteredBusinessTypes.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No businesses found
+              </div>
+            ) : (
+              filteredBusinessTypes.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handlebusiness(item.value);
+                    setbusinessOpen(false);
+                  }}
+                  key={item.label}
+                >
+                  {item.icon} {item.label}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -1,6 +1,6 @@
 "use client";
 import { cn, formatSlugToTitle } from "@/lib/utils";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 
 import {
   DropdownMenu,
@@ -11,11 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { X } from "lucide-react";
-// import { practices } from "@/fixtures/practice";
 import { useFilterInputStore } from "@/app/girls/filterInputStore";
-import regionInitializer from "./FileInputInitializer";
 import { useRouter, useSearchParams } from "next/navigation";
-import LocationInitializer from "./FileInputInitializer";
 
 interface Prop {
   className?: string;
@@ -24,7 +21,8 @@ interface Prop {
 interface IRegion {
   _id: string;
   name: string;
-  countyCode: string;
+  county_code: string;
+  county: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -34,7 +32,7 @@ export interface ICounty {
   name: string;
   code: string;
   description?: string;
-  isPopular?: boolean;
+  is_popular?: boolean;
   population?: number;
   area?: string;
   capital?: string;
@@ -42,8 +40,7 @@ export interface ICounty {
   updatedAt?: Date;
 }
 
-// TODO: // UPDATE TO RENDER UPDATAED regionS AND PRACTICES FROM DB
-const FilterInput = ({ className }: Prop) => {
+export const FilterInput = ({ className }: Prop) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -56,13 +53,46 @@ const FilterInput = ({ className }: Prop) => {
   const [practice, setPractice] = useState("");
   const [practiceOpen, setPracticeOpen] = React.useState(false);
 
+  // Search states for each dropdown
+  const [countySearch, setCountySearch] = useState("");
+  const [regionSearch, setRegionSearch] = useState("");
+  const [practiceSearch, setPracticeSearch] = useState("");
+
   const {
     practices,
     counties,
     regions: fetchedRegions,
   } = useFilterInputStore();
+
+  // Memoize filtered counties based on search
+  const filteredCounties = useMemo(() => {
+    const term = countySearch.toLowerCase();
+    return counties.filter(
+      (item: any) => item.name.toLowerCase().includes(term),
+    );
+  }, [counties, countySearch]);
+
+  // Memoize filtered regions based on selected county and search
+  const filteredRegions = useMemo(() => {
+    const term = regionSearch.toLowerCase();
+    return regions.filter(
+      (item: IRegion) => item.name.toLowerCase().includes(term),
+    );
+  }, [regions, regionSearch]);
+
+  // Memoize filtered practices based on search
+  const filteredPractices = useMemo(() => {
+    const term = practiceSearch.toLowerCase();
+    return practices.filter(
+      (item: any) => item.name.toLowerCase().includes(term),
+    );
+  }, [practices, practiceSearch]);
+
   const clearFilters = () => {
     (setCounty(null), setRegion(null), setPractice(""), setRegions([]));
+    setCountySearch("");
+    setRegionSearch("");
+    setPracticeSearch("");
     const params = new URLSearchParams(searchParams.toString());
     params.delete("county");
     params.delete("region");
@@ -72,35 +102,26 @@ const FilterInput = ({ className }: Prop) => {
 
   const handleCounty = (val: any) => {
     (setRegion(null), setRegions([]));
-    // Update region state
     setCounty(val);
+    setCountySearch("");
+    setOpen(false);
 
-    // Update query params
     const params = new URLSearchParams(searchParams.toString());
     params.delete("region");
-    params.delete("region"); // Optional: remove stale region param
-    params.delete("practice"); // Optional: remove stale practice param
+    params.delete("region");
+    params.delete("practice");
     router.replace(`?${params.toString()}`);
 
-    // Filter regions based on selected region
-    // const filteredRegions = fetchedRegions.filter(
-    //   (region: { region: { name: string } }) => region.region.name === val.code,
-    // );
-
-    console.log("regions from store", fetchedRegions);
-    console.log("seleceted value", val);
     const filteredRegions = fetchedRegions.filter(
-      (region: any) => region.countyCode === val.code,
+      (region: any) => region.county_code === val.code,
     );
-    console.log("filteredregions", filteredRegions);
     setRegions(filteredRegions);
   };
 
   const handlePractice = (val: string) => {
-    // const params = new URLSearchParams(searchParams.toString());
     setPractice(val);
-    // params.set("practice", val);
-    // router.replace(`?${params.toString()}`);
+    setPracticeSearch("");
+    setPracticeOpen(false);
   };
 
   const handleRegion = (val: any) => {
@@ -108,6 +129,8 @@ const FilterInput = ({ className }: Prop) => {
       alert("You must first select region");
     }
     setRegion(val);
+    setRegionSearch("");
+    setRegionOpen(false);
   };
 
   const onFilter = () => {
@@ -118,6 +141,25 @@ const FilterInput = ({ className }: Prop) => {
     params.set("practice", practice);
     router.replace(`?${params.toString()}`);
   };
+
+  const searchInput = ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+  }) => (
+    <input
+      autoFocus
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
+    />
+  );
+
   return (
     <div
       className={cn(
@@ -125,7 +167,6 @@ const FilterInput = ({ className }: Prop) => {
         className,
       )}
     >
-      <LocationInitializer />
       {/* Counties */}
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger className=" self-end  cursor-pointer border-0 flex w-full lg:w-62.5 justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
@@ -153,19 +194,29 @@ const FilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          //   side="left"
           className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-225 bg-gray-1 "
         >
+          {searchInput({
+            value: countySearch,
+            onChange: (e) => setCountySearch(e.target.value),
+            placeholder: "Search counties...",
+          })}
           <div className="flex flex-row w-full gap-1.5  flex-wrap">
-            {counties.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => handleCounty(item)}
-                key={item.code}
-              >
-                {formatSlugToTitle(item.name)}
-              </DropdownMenuItem>
-            ))}
+            {filteredCounties.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No counties found
+              </div>
+            ) : (
+              filteredCounties.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => handleCounty(item)}
+                  key={item.code}
+                >
+                  {formatSlugToTitle(item.name)}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
 
           <button
@@ -181,7 +232,6 @@ const FilterInput = ({ className }: Prop) => {
       </DropdownMenu>
 
       {/* region, city or region */}
-
       <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
         <DropdownMenuTrigger className="self-end text-nowrap text-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-62.5 justify-between items-center p-2 text-base px-5 bg-gray-1 rounded-md ">
           {region ? (
@@ -210,20 +260,29 @@ const FilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          //   side="left"
           className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-225 bg-gray-1 "
         >
+          {searchInput({
+            value: regionSearch,
+            onChange: (e) => setRegionSearch(e.target.value),
+            placeholder: "Search regions...",
+          })}
           <div className="flex -2 gap-1.5 flex-wrap">
-            {/* TODO: RENDER REGIONS BASED ON SELECTED COUNTY */}
-            {regions.map((item: IRegion) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => handleRegion(item)}
-                key={item._id}
-              >
-                {item.name}
-              </DropdownMenuItem>
-            ))}
+            {filteredRegions.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No regions found
+              </div>
+            ) : (
+              filteredRegions.map((item: IRegion) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => handleRegion(item)}
+                  key={item._id}
+                >
+                  {item.name}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
 
           <button
@@ -265,21 +324,31 @@ const FilterInput = ({ className }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-          //   side="left"
           className="flex border-0 flex-col outline-none p-2 gap-3 w-screen  lg:max-w-225 bg-gray-1 "
         >
+          {searchInput({
+            value: practiceSearch,
+            onChange: (e) => setPracticeSearch(e.target.value),
+            placeholder: "Search practices...",
+          })}
           <div className="flex -2 gap-1.5 flex-wrap">
-            {practices?.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => {
-                  handlePractice(item.name);
-                }}
-                key={item.id}
-              >
-                {item.name}
-              </DropdownMenuItem>
-            ))}
+            {filteredPractices.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No practices found
+              </div>
+            ) : (
+              filteredPractices.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    handlePractice(item.name);
+                  }}
+                  key={item.id}
+                >
+                  {item.name}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
 
           <button

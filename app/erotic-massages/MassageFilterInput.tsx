@@ -45,6 +45,11 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   const [massageType, setMassageType] = useState(initialMassageType);
   const [massageTypeOpen, setMassageTypeOpen] = useState(false);
 
+  // Search states for each dropdown
+  const [countySearch, setCountySearch] = useState("");
+  const [regionSearch, setRegionSearch] = useState("");
+  const [massageSearch, setMassageSearch] = useState("");
+
   // Get data from stores
   const {
     practices,
@@ -53,20 +58,36 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   } = useFilterInputStore();
   const { massages: massageVariants } = useMassageStore();
 
-  // ✅ Memoize filtered regions based on selected county (same pattern as GirlFIlterInput)
+  // ✅ Memoize filtered counties based on search
+  const filteredCounties = useMemo(() => {
+    const term = countySearch.toLowerCase();
+    return counties.filter(
+      (c: any) => c.name.toLowerCase().includes(term),
+    );
+  }, [counties, countySearch]);
+
+  // ✅ Memoize filtered regions based on selected county and search
   const filteredRegionsByCounty = useMemo(() => {
     if (!county) return [];
     return fetchedRegions.filter(
       (region: IRegion) =>
-        region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
-        region.county?.toLowerCase() === county.name?.toLowerCase(),
+        (region.countyCode?.toLowerCase() === county.code?.toLowerCase() ||
+          region.county?.toLowerCase() === county.name?.toLowerCase()) &&
+        region.name.toLowerCase().includes(regionSearch.toLowerCase()),
     );
-  }, [county, fetchedRegions]);
+  }, [county, fetchedRegions, regionSearch]);
+
+  // ✅ Memoize filtered massage types based on search
+  const filteredMassages = useMemo(() => {
+    const term = massageSearch.toLowerCase();
+    return massageVariants.filter(
+      (item: any) => (item.name || item.value).toLowerCase().includes(term),
+    );
+  }, [massageVariants, massageSearch]);
 
   // Initialize from URL params on mount
   useEffect(() => {
     if (initialCountyCode && counties.length > 0) {
-      // Find county by code (slug) or name
       const foundCounty = counties.find(
         (c: ICounty) =>
           c.code?.toLowerCase() === initialCountyCode.toLowerCase() ||
@@ -76,7 +97,6 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
       if (foundCounty) {
         setCounty(foundCounty);
 
-        // Filter regions based on found county
         const filtered = fetchedRegions.filter(
           (region: IRegion) =>
             region.countyCode?.toLowerCase() ===
@@ -106,12 +126,28 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
     }
   }, [county, filteredRegionsByCounty]);
 
+  // Reset search terms when dropdowns close
+  useEffect(() => {
+    if (!open) setCountySearch("");
+  }, [open]);
+
+  useEffect(() => {
+    if (!regionOpen) setRegionSearch("");
+  }, [regionOpen]);
+
+  useEffect(() => {
+    if (!massageTypeOpen) setMassageSearch("");
+  }, [massageTypeOpen]);
+
   // Clear all filters
   const clearFilters = () => {
     setCounty(null);
     setRegion(null);
     setMassageType("");
     setRegions([]);
+    setCountySearch("");
+    setRegionSearch("");
+    setMassageSearch("");
 
     const targetUrl = buildFilterUrl("/erotic-massages", searchParams, {}, false);
     router.replace(targetUrl);
@@ -121,12 +157,16 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   const handleCounty = (val: ICounty) => {
     setCounty(val);
     setRegion(null); // Reset region when county changes
+    setCountySearch("");
+    setOpen(false);
     // Regions will be automatically updated by the useEffect above
   };
 
   // Handle massage type selection
   const handleMassageType = (val: string) => {
     setMassageType(val);
+    setMassageSearch("");
+    setMassageTypeOpen(false);
   };
 
   // Handle region selection
@@ -136,6 +176,8 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
       return;
     }
     setRegion(val);
+    setRegionSearch("");
+    setRegionOpen(false);
   };
 
   // Update URL params helper
@@ -169,15 +211,36 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
     setCounty(null);
     setRegion(null);
     setRegions([]);
+    setCountySearch("");
   };
 
   const clearRegion = () => {
     setRegion(null);
+    setRegionSearch("");
   };
 
   const clearMassageType = () => {
     setMassageType("");
+    setMassageSearch("");
   };
+
+  const searchInput = ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+  }) => (
+    <input
+      autoFocus
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
+    />
+  );
 
   return (
     <div
@@ -217,20 +280,31 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: countySearch,
+            onChange: (e) => setCountySearch(e.target.value),
+            placeholder: "Search counties...",
+          })}
           <div className="flex flex-row w-full gap-1.5 flex-wrap">
-            {counties.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleCounty(item);
-                  setOpen(false);
-                }}
-                key={item.code}
-              >
-                {formatSlugToTitle(item.name)}
-              </DropdownMenuItem>
-            ))}
+            {filteredCounties.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No counties found
+              </div>
+            ) : (
+              filteredCounties.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleCounty(item);
+                    setOpen(false);
+                  }}
+                  key={item.code}
+                >
+                  {formatSlugToTitle(item.name)}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -268,6 +342,11 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: regionSearch,
+            onChange: (e) => setRegionSearch(e.target.value),
+            placeholder: "Search regions...",
+          })}
           {regions.length === 0 ? (
             <div className="text-white/50 text-center py-4">
               {county
@@ -276,19 +355,25 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {regions.map((item: IRegion) => (
-                <DropdownMenuItem
-                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    handleRegion(item);
-                    setRegionOpen(false);
-                  }}
-                  key={item.id}
-                >
-                  {formatSlugToTitle(item.name)}
-                </DropdownMenuItem>
-              ))}
+              {filteredRegionsByCounty.length === 0 ? (
+                <div className="text-gray-500 text-center py-2 text-sm">
+                  No regions found
+                </div>
+              ) : (
+                filteredRegionsByCounty.map((item: IRegion) => (
+                  <DropdownMenuItem
+                    className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      handleRegion(item);
+                      setRegionOpen(false);
+                    }}
+                    key={item.id}
+                  >
+                    {formatSlugToTitle(item.name)}
+                  </DropdownMenuItem>
+                ))
+              )}
             </div>
           )}
         </DropdownMenuContent>
@@ -324,20 +409,31 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
           </svg>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+          {searchInput({
+            value: massageSearch,
+            onChange: (e) => setMassageSearch(e.target.value),
+            placeholder: "Search massage types...",
+          })}
           <div className="flex flex-wrap gap-1.5">
-            {massageVariants?.map((item: any) => (
-              <DropdownMenuItem
-                className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] truncate max-w-full"
-                onSelect={(e) => {
-                  e.preventDefault();
-                  handleMassageType(item.name || item.value);
-                  setMassageTypeOpen(false);
-                }}
-                key={item.id}
-              >
-                {formatMassageName(item.name || item.value)}
-              </DropdownMenuItem>
-            ))}
+            {filteredMassages.length === 0 ? (
+              <div className="text-gray-500 text-center py-2 text-sm">
+                No massage types found
+              </div>
+            ) : (
+              filteredMassages.map((item: any) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322] truncate max-w-full"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleMassageType(item.name || item.value);
+                    setMassageTypeOpen(false);
+                  }}
+                  key={item.id}
+                >
+                  {formatMassageName(item.name || item.value)}
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
