@@ -32,11 +32,13 @@ import {
 /** Hard cap per sitemap file (sitemap protocol limit is 50,000). */
 const MAX_URLS = 45000;
 
-const baseUrl = () =>
-  (process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz").replace(
-    /\/$/,
-    ""
-  );
+const baseUrl = () => {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  return process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://kenyadesires.xyz";
+};
 
 /** Serialize entries to a valid XML sitemap document. */
 function toSitemapXml(entries: MetadataRoute.Sitemap): string {
@@ -374,7 +376,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { section: string } }
 ) {
-  const section = params.section;
+  const { section } = await params;
   const fetchEntries = SECTION_FETCHERS[section];
 
   let entries: MetadataRoute.Sitemap = [];
@@ -386,7 +388,17 @@ export async function GET(
       console.error(`[sitemaps/${section}] generation failed:`, error);
       entries = [];
     }
+  } else {
+    console.error(`[sitemaps/${section}] unknown section — no fetcher registered`);
   }
+
+  if (entries.length === 0) {
+    console.warn(
+      `[sitemaps/${section}] returning empty sitemap (0 URLs). Check server logs above for the cause.`,
+    );
+  }
+
+  console.log(`[sitemaps/${section}] serving ${entries.length} URLs`);
 
   const xml = toSitemapXml(entries);
 

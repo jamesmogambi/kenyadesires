@@ -11,7 +11,7 @@ import Link from "next/link";
 import GirlProfile from "../GirlProfile";
 import { Metadata, ResolvingMetadata } from "next";
 import { formatSlugToTitle, buildListingHref } from "@/lib/utils";
-import { generateEscortStructuredData } from "./utils";
+import { generateEscortPersonSchema } from "./utils";
 import { getEscortByIdentifier } from "@/server-actions/girl.action";
 import ProfileTracker from "@/components/analytics/ProfileTracker";
 
@@ -268,7 +268,7 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
   const hasCleanedImages = cleanedImages.length > 0;
 
   // Generate structured data with cleaned images
-  const structuredData = generateEscortStructuredData({
+  const structuredData = generateEscortPersonSchema({
     ...escort,
     images: hasCleanedImages ? cleanedImages : escort.images,
   });
@@ -309,48 +309,6 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
     ],
   };
 
-  // Generate FAQ structured data
-  const faqData = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `Where is ${displayName} located?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${displayName} is based in ${location}. Services available for incall and outcall.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `What services does ${displayName} offer?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: normalizeArray(escort.categories).length
-            ? `${displayName} offers: ${normalizeArray(escort.categories).join(", ")}. Contact directly for specific services and availability.`
-            : `Contact ${displayName} directly for available services and packages.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `How can I book ${displayName}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `You can book ${displayName} through KenyaDesires by contacting them directly via the contact information provided on their profile.`,
-        },
-      },
-      {
-        "@type": "Question",
-        name: `Is ${displayName} verified on KenyaDesires?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, all escorts on KenyaDesires go through a strict verification process to ensure authenticity and quality service.",
-        },
-      },
-    ],
-  };
-
   // Get the identifier for display (use ID if available, otherwise use the slug)
   const profileIdentifier = escort.id || slug;
 
@@ -377,10 +335,6 @@ const EscortProfilePage = async ({ params }: EscortPageProps) => {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqData) }}
       />
 
       {/* Main Content */}

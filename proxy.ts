@@ -58,6 +58,7 @@ const isPublicRoute = createRouteMatcher([
   '/favicon.ico',
   '/robots.txt',
   '/sitemap.xml',
+  '/sitemaps/(.*)',
   '/icon',
   '/spaceship-test',
   '/action',

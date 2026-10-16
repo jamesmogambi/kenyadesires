@@ -11,21 +11,24 @@ import { MetadataRoute } from "next";
  * Next.js renders this as `/sitemap.xml` with `application/xml` content type.
  */
 
-const BASE_URL =
-  (process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz").replace(
-    /\/$/,
-    "",
-  );
+const baseUrl = () => {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) return configured.replace(/\/$/, "");
+  return process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://kenyadesires.xyz";
+};
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const base = baseUrl();
 
   return [
-    { url: `${BASE_URL}/sitemaps/static`, lastModified: now },
-    { url: `${BASE_URL}/sitemaps/blog`, lastModified: now },
-    { url: `${BASE_URL}/sitemaps/agencies`, lastModified: now },
-    { url: `${BASE_URL}/sitemaps/counties`, lastModified: now },
-    { url: `${BASE_URL}/sitemaps/practices`, lastModified: now },
-    { url: `${BASE_URL}/sitemaps/combos`, lastModified: now },
+    { url: `${base}/sitemaps/static`, lastModified: now },
+    { url: `${base}/sitemaps/blog`, lastModified: now },
+    { url: `${base}/sitemaps/agencies`, lastModified: now },
+    { url: `${base}/sitemaps/counties`, lastModified: now },
+    { url: `${base}/sitemaps/practices`, lastModified: now },
+    { url: `${base}/sitemaps/combos`, lastModified: now },
   ];
 }
