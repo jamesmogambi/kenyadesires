@@ -266,6 +266,77 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       console.error(`❌ Error fetching regions for sitemap:`, error);
     }
 
+    // ==================== 8. COUNTY + PRACTICE COMBO PAGES ====================
+    let countyPracticeEntries: MetadataRoute.Sitemap = [];
+    try {
+      const { getAllCounties } = await import("@/server-actions/region.action");
+      const { getPracticesFromCleanedEscorts } = await import(
+        "@/server-actions/cleaned-escorts.action",
+      );
+      const [countiesRes, practicesRes] = await Promise.all([
+        getAllCounties(),
+        getPracticesFromCleanedEscorts(),
+      ]);
+      const counties = countiesRes?.data || [];
+      const practices = practicesRes || [];
+
+      for (const county of counties) {
+        for (const p of practices) {
+          if (!county?.name || !p?.practice) continue;
+          countyPracticeEntries.push({
+            url: sanitizeUrl(
+              baseUrl,
+              buildListingHref("/girls", { county: county.name, practice: p.practice }),
+            ),
+            lastModified: new Date(),
+            changeFrequency: "daily" as const,
+            priority: 0.5,
+          });
+        }
+      }
+      console.log(
+        `✅ Added ${countyPracticeEntries.length} county+practice combo girls pages to sitemap`,
+      );
+    } catch (error) {
+      console.error(`❌ Error building county+practice sitemap entries:`, error);
+    }
+
+    // ==================== 9. REGION + PRACTICE COMBO PAGES ====================
+    let regionPracticeEntries: MetadataRoute.Sitemap = [];
+    try {
+      const { getAllRegions } = await import("@/server-actions/region.action");
+      const { getPracticesFromCleanedEscorts } = await import(
+        "@/server-actions/cleaned-escorts.action",
+      );
+      const [regionsRes, practicesRes] = await Promise.all([
+        getAllRegions(),
+        getPracticesFromCleanedEscorts(),
+      ]);
+      const regions = regionsRes?.data || [];
+      const practices = practicesRes || [];
+
+      for (const r of regions) {
+        if (!r?.county || !r?.name) continue;
+        for (const p of practices) {
+          if (!p?.practice) continue;
+          regionPracticeEntries.push({
+            url: sanitizeUrl(
+              baseUrl,
+              buildListingHref("/girls", { county: r.county, region: r.name, practice: p.practice }),
+            ),
+            lastModified: new Date(),
+            changeFrequency: "daily" as const,
+            priority: 0.4,
+          });
+        }
+      }
+      console.log(
+        `✅ Added ${regionPracticeEntries.length} county+region+practice combo girls pages to sitemap`,
+      );
+    } catch (error) {
+      console.error(`❌ Error building region+practice sitemap entries:`, error);
+    }
+
     // ==================== 5. COMBINE AND VALIDATE ====================
     const allEntries = [
       ...staticEntries,
@@ -274,6 +345,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ...countyEntries,
       ...practiceEntries,
       ...comboEntries,
+      ...countyPracticeEntries,
+      ...regionPracticeEntries,
     ];
 
     // Validate entries
