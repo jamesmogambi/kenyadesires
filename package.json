@@ -34,7 +34,8 @@
     "migrate:import": "tsx scripts/migrate/7-import.ts",
     "zoho-campaigns": "tsx scripts/create-zoho-campaigns.ts",
     "zoho-retry": "tsx scripts/zoho-sync-retry.ts",
-    "indexnow": "tsx scripts/indexnow-submit.ts"
+    "indexnow": "tsx scripts/indexnow-submit.ts",
+    "seed:kenya": "tsx scripts/seed-kenya.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.31.8",
@@ -57,9 +58,9 @@
     "@react-email/components": "^0.5.2",
     "@sanity/client": "^7.23.0",
     "@sanity/image-url": "^2.1.1",
+    "@tailwindcss/postcss": "^4",
     "@tiptap/react": "^3.3.0",
     "@tiptap/starter-kit": "^3.3.0",
-    "@tailwindcss/postcss": "^4",
     "@types/quill": "^2.0.14",
     "axios": "^1.18.1",
     "cheerio": "^1.1.2",
@@ -71,6 +72,7 @@
     "gray-matter": "^4.0.3",
     "https-proxy-agent": "^9.0.0",
     "input-otp": "^1.4.2",
+    "kenya-regions": "^2.2.0",
     "lucide-react": "^0.534.0",
     "multer": "^2.2.0",
     "mysql2": "^3.24.4",

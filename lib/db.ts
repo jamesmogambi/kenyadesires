@@ -9,6 +9,8 @@ const DB_USER = process.env.MYSQL_USER || process.env.DB_USER;
 const DB_PASSWORD = process.env.MYSQL_PASSWORD || process.env.DB_PASSWORD;
 const DB_NAME = process.env.MYSQL_DATABASE || process.env.DB_NAME;
 const DB_PORT = process.env.MYSQL_PORT || process.env.DB_PORT || '3306';
+const CONNECT_TIMEOUT_MS = Number(process.env.MYSQL_CONNECT_TIMEOUT || process.env.DB_CONNECT_TIMEOUT || 5000);
+const IDLE_TIMEOUT_MS = Number(process.env.MYSQL_IDLE_TIMEOUT || process.env.DB_IDLE_TIMEOUT || 60000);
 
 const missing = [
   ['DB_HOST', DB_HOST],
@@ -38,6 +40,13 @@ const mysqlPool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  // Fail fast on unreachable/slow DB instead of hanging on mysql2's default 10s
+  // TCP connect timeout so queued requests don't pile up and cascade into
+  // ETIMEDOUT across concurrent requests.
+  connectTimeout: CONNECT_TIMEOUT_MS,
+  // Recycle connections idle longer than MySQL's wait_timeout so the pool never
+  // hands out a stale connection that would throw ETIMEDOUT/ECONNRESET on use.
+  idleTimeout: IDLE_TIMEOUT_MS,
   // Azure MySQL requires TLS. MYSQL_SSL_CA or DB_SSL_CA can point to a CA bundle;
   // rejectUnauthorized is false because Azure presents a self-signed/internally-signed
   // cert that won't chain to any public CA bundle. Setting ca without
