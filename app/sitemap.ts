@@ -12,7 +12,10 @@ import { MetadataRoute } from "next";
  */
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz";
+  (process.env.NEXT_PUBLIC_SITE_URL || "https://kenyadesires.xyz").replace(
+    /\/$/,
+    "",
+  );
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

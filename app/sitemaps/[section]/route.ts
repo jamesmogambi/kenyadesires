@@ -101,7 +101,7 @@ async function blogEntries(): Promise<MetadataRoute.Sitemap> {
     const posts = await getBlogPostsForSitemap();
 
     const featuredIds = new Set(
-      (featuredPosts || []).map((fp: any) => fp._id)
+      (featuredPosts || []).map((fp: any) => fp._id),
     );
 
     for (const post of posts || []) {
@@ -116,8 +116,10 @@ async function blogEntries(): Promise<MetadataRoute.Sitemap> {
         priority: isFeatured ? 0.9 : 0.7,
       });
     }
-  } catch {
-    // Sanity unavailable — return empty, never crash the sitemap
+
+    console.log(`[sitemaps/blog] ${posts?.length ?? 0} blog URLs`);
+  } catch (error) {
+    console.error("[sitemaps/blog] generation error:", error);
   }
 
   return entries;
@@ -134,7 +136,14 @@ async function agencyEntries(): Promise<MetadataRoute.Sitemap> {
     );
     const agencies = await getAgenciesForSitemap();
 
-    for (const agency of agencies || []) {
+    if (!Array.isArray(agencies)) {
+      console.error(
+        `[sitemaps/agencies] getAgenciesForSitemap returned non-array: ${typeof agencies}`,
+      );
+      return entries;
+    }
+
+    for (const agency of agencies) {
       if (!agency?.id) continue;
       entries.push({
         url: sanitizeUrl(base, `agencies/${agency.id}`),
@@ -145,8 +154,10 @@ async function agencyEntries(): Promise<MetadataRoute.Sitemap> {
         priority: 0.8,
       });
     }
-  } catch {
-    // DB unavailable — return empty
+
+    console.log(`[sitemaps/agencies] ${agencies.length} agency URLs`);
+  } catch (error) {
+    console.error("[sitemaps/agencies] generation error:", error);
   }
 
   return entries;
@@ -160,22 +171,34 @@ async function countyEntries(): Promise<MetadataRoute.Sitemap> {
   try {
     const { getAllCounties } = await import("@/server-actions/region.action");
     const res = await getAllCounties();
-    const counties = res?.data || [];
 
-    for (const county of counties || []) {
+    if (!res?.success || !Array.isArray(res.data)) {
+      console.error(
+        `[sitemaps/counties] getAllCounties failed: success=${
+          res?.success
+        }, data=${Array.isArray(res?.data) ? res.data.length : "undefined"}`,
+      );
+      return entries;
+    }
+
+    const counties = res.data;
+
+    for (const county of counties) {
       if (!county?.name) continue;
       entries.push({
         url: sanitizeUrl(
           base,
-          buildListingHref("/girls", { county: county.name })
+          buildListingHref("/girls", { county: county.name }),
         ),
         lastModified: new Date(),
         changeFrequency: "daily",
         priority: 0.7,
       });
     }
-  } catch {
-    // DB unavailable — return empty
+
+    console.log(`[sitemaps/counties] ${counties.length} county URLs`);
+  } catch (error) {
+    console.error("[sitemaps/counties] generation error:", error);
   }
 
   return entries;
@@ -192,20 +215,29 @@ async function practiceEntries(): Promise<MetadataRoute.Sitemap> {
     );
     const practices = await getPracticesFromCleanedEscorts();
 
-    for (const p of practices || []) {
+    if (!Array.isArray(practices)) {
+      console.error(
+        `[sitemaps/practices] getPracticesFromCleanedEscorts returned non-array: ${typeof practices}`,
+      );
+      return entries;
+    }
+
+    for (const p of practices) {
       if (!p?.practice) continue;
       entries.push({
         url: sanitizeUrl(
           base,
-          buildListingHref("/girls", { practice: p.practice })
+          buildListingHref("/girls", { practice: p.practice }),
         ),
         lastModified: new Date(),
         changeFrequency: "daily",
         priority: 0.6,
       });
     }
-  } catch {
-    // DB unavailable — return empty
+
+    console.log(`[sitemaps/practices] ${practices.length} practice URLs`);
+  } catch (error) {
+    console.error("[sitemaps/practices] generation error:", error);
   }
 
   return entries;
@@ -233,17 +265,41 @@ async function comboEntries(): Promise<MetadataRoute.Sitemap> {
       getPracticesFromCleanedEscorts(),
     ]);
 
-    const counties = countiesRes?.data || [];
-    const regions = regionsRes?.data || [];
-    const practices = practicesRes || [];
+    if (!countiesRes?.success || !Array.isArray(countiesRes.data)) {
+      console.error(
+        `[sitemaps/combos] counties failed: success=${
+          countiesRes?.success
+        }, data=${Array.isArray(countiesRes?.data) ? countiesRes.data.length : "undefined"}`,
+      );
+    }
+    if (!regionsRes?.success || !Array.isArray(regionsRes.data)) {
+      console.error(
+        `[sitemaps/combos] regions failed: success=${
+          regionsRes?.success
+        }, data=${Array.isArray(regionsRes?.data) ? regionsRes.data.length : "undefined"}`,
+      );
+    }
+    if (!Array.isArray(practicesRes)) {
+      console.error(
+        `[sitemaps/combos] practices returned non-array: ${typeof practicesRes}`,
+      );
+    }
+
+    const counties = countiesRes?.success && Array.isArray(countiesRes.data)
+      ? countiesRes.data
+      : [];
+    const regions = regionsRes?.success && Array.isArray(regionsRes.data)
+      ? regionsRes.data
+      : [];
+    const practices = Array.isArray(practicesRes) ? practicesRes : [];
 
     // County + region combos
-    for (const r of regions || []) {
+    for (const r of regions) {
       if (!r?.county || !r?.name) continue;
       entries.push({
         url: sanitizeUrl(
           base,
-          buildListingHref("/girls", { county: r.county, region: r.name })
+          buildListingHref("/girls", { county: r.county, region: r.name }),
         ),
         lastModified: new Date(),
         changeFrequency: "daily",
@@ -252,9 +308,9 @@ async function comboEntries(): Promise<MetadataRoute.Sitemap> {
     }
 
     // County + practice combos
-    for (const c of counties || []) {
+    for (const c of counties) {
       if (!c?.name) continue;
-      for (const p of practices || []) {
+      for (const p of practices) {
         if (!p?.practice) continue;
         entries.push({
           url: sanitizeUrl(
@@ -262,7 +318,7 @@ async function comboEntries(): Promise<MetadataRoute.Sitemap> {
             buildListingHref("/girls", {
               county: c.name,
               practice: p.practice,
-            })
+            }),
           ),
           lastModified: new Date(),
           changeFrequency: "daily",
@@ -272,9 +328,9 @@ async function comboEntries(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Region + practice combos
-    for (const r of regions || []) {
+    for (const r of regions) {
       if (!r?.county || !r?.name) continue;
-      for (const p of practices || []) {
+      for (const p of practices) {
         if (!p?.practice) continue;
         entries.push({
           url: sanitizeUrl(
@@ -283,7 +339,7 @@ async function comboEntries(): Promise<MetadataRoute.Sitemap> {
               county: r.county,
               region: r.name,
               practice: p.practice,
-            })
+            }),
           ),
           lastModified: new Date(),
           changeFrequency: "daily",
@@ -291,8 +347,12 @@ async function comboEntries(): Promise<MetadataRoute.Sitemap> {
         });
       }
     }
-  } catch {
-    // DB unavailable — return empty
+
+    console.log(
+      `[sitemaps/combos] ${entries.length} combo URLs (${counties.length} counties, ${regions.length} regions, ${practices.length} practices)`,
+    );
+  } catch (error) {
+    console.error("[sitemaps/combos] generation error:", error);
   }
 
   return entries;
