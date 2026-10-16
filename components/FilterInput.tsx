@@ -149,7 +149,6 @@ export const FilterInput = ({ className }: Prop) => {
     placeholder: string;
   }) => (
     <input
-      autoFocus
       value={value}
       onChange={onChange}
       placeholder={placeholder}

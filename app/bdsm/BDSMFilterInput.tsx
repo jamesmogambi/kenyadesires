@@ -236,7 +236,6 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
     placeholder: string;
   }) => (
     <input
-      autoFocus
       value={value}
       onChange={onChange}
       placeholder={placeholder}
@@ -348,31 +347,25 @@ const BDSMFilterInput = ({ className, initialBDSMs }: Prop) => {
             onChange: (e) => setRegionSearch(e.target.value),
             placeholder: "Search regions...",
           })}
-          {regions.length === 0 ? (
-            <div className="text-white/50 text-center py-4">
-              {county ? "No regions found for this county" : "No regions available"}
+          {filteredRegionsByCounty.length === 0 ? (
+            <div className="text-gray-500 text-center py-2 text-sm">
+              No regions found
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              {filteredRegionsByCounty.length === 0 ? (
-                <div className="text-gray-500 text-center py-2 text-sm">
-                  No regions found
-                </div>
-              ) : (
-                filteredRegionsByCounty.map((item: IRegion) => (
-                  <DropdownMenuItem
-                    className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      handleRegion(item);
-                      setRegionOpen(false);
-                    }}
-                    key={item.id}
-                  >
-                    {formatSlugToTitle(item.name)}
-                  </DropdownMenuItem>
-                ))
-              )}
+              {filteredRegionsByCounty.map((item: IRegion) => (
+                <DropdownMenuItem
+                  className="rounded-lg cursor-pointer hover:bg-[#262322] p-1.5 px-6 text-white/70 text-base font-medium bg-[#262322]"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleRegion(item);
+                    setRegionOpen(false);
+                  }}
+                  key={item.id}
+                >
+                  {formatSlugToTitle(item.name)}
+                </DropdownMenuItem>
+              ))}
             </div>
           )}
         </DropdownMenuContent>
