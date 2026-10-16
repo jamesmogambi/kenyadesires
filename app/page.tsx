@@ -48,7 +48,7 @@ export default async function Home({ searchParams }: PageProps) {
       region: params.region,
       practice: params.practice,
       limit: 20,
-      sortOrder: "desc",
+      sortOrder: "asc",
     });
     escorts = result.escorts;
     total = result.total;

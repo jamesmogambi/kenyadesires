@@ -264,6 +264,7 @@ const GirlFilterInput = ({ className }: Prop) => {
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      autoFocus
       className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
     />
   );
@@ -321,7 +322,8 @@ const GirlFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
+        <DropdownMenuContent
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
           {searchInput({
             value: countySearch,
             onChange: (e) => setCountySearch(e.target.value),
@@ -401,7 +403,8 @@ const GirlFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
+        <DropdownMenuContent
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
           {searchInput({
             value: regionSearch,
             onChange: (e) => setRegionSearch(e.target.value),
@@ -475,7 +478,8 @@ const GirlFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
+        <DropdownMenuContent
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-225 bg-gray-1 max-h-100 overflow-y-auto">
           {searchInput({
             value: practiceSearch,
             onChange: (e) => setPracticeSearch(e.target.value),

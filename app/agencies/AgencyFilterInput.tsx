@@ -237,6 +237,7 @@ const AgencyFilterInput = ({ className }: Prop) => {
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      autoFocus
       className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
     />
   );
@@ -277,7 +278,8 @@ const AgencyFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+        <DropdownMenuContent
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {searchInput({
             value: countySearch,
             onChange: (e) => setCountySearch(e.target.value),
@@ -338,7 +340,8 @@ const AgencyFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+        <DropdownMenuContent
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {searchInput({
             value: regionSearch,
             onChange: (e) => setRegionSearch(e.target.value),
@@ -397,7 +400,8 @@ const AgencyFilterInput = ({ className }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+        <DropdownMenuContent
+          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {searchInput({
             value: businessSearch,
             onChange: (e) => setBusinessSearch(e.target.value),

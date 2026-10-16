@@ -26,7 +26,6 @@ import {
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 export const instant = false;
 
-
 interface PageProps {
   searchParams: Promise<{
     county?: string;
@@ -345,7 +344,7 @@ const MassageEscortsPage = async ({ searchParams }: PageProps) => {
     region: params.region,
     massageType: params.massageType,
     isActive: true,
-    sortOrder: "asc",
+    sortOrder: "desc",
   });
 
   // ✅ Fetch massage types from cleaned escorts (server-side)

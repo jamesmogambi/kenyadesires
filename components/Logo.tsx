@@ -23,7 +23,7 @@ const Logo = ({
       href={path}
     >
       {/* icon */}
-      <div className="size-12 rounded-sm  flex justify-center items-center bg-primary text-white">
+      <div className="size-12 rounded-md  flex justify-center items-center bg-primary text-white">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="72"

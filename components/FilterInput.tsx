@@ -152,6 +152,7 @@ export const FilterInput = ({ className }: Prop) => {
       value={value}
       onChange={onChange}
       placeholder={placeholder}
+      autoFocus
       className="w-full bg-[#262322] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-1 focus:ring-primary transition-colors mb-2"
     />
   );
