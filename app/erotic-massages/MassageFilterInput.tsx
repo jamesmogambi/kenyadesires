@@ -61,9 +61,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   // ✅ Memoize filtered counties based on search
   const filteredCounties = useMemo(() => {
     const term = countySearch.toLowerCase();
-    return counties.filter(
-      (c: any) => c.name.toLowerCase().includes(term),
-    );
+    return counties.filter((c: any) => c.name.toLowerCase().includes(term));
   }, [counties, countySearch]);
 
   // ✅ Memoize filtered regions based on selected county and search
@@ -85,8 +83,8 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
   // ✅ Memoize filtered massage types based on search
   const filteredMassages = useMemo(() => {
     const term = massageSearch.toLowerCase();
-    return massageVariants.filter(
-      (item: any) => (item.name || item.value).toLowerCase().includes(term),
+    return massageVariants.filter((item: any) =>
+      (item.name || item.value).toLowerCase().includes(term),
     );
   }, [massageVariants, massageSearch]);
 
@@ -154,7 +152,12 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
     setRegionSearch("");
     setMassageSearch("");
 
-    const targetUrl = buildFilterUrl("/erotic-massages", searchParams, {}, false);
+    const targetUrl = buildFilterUrl(
+      "/erotic-massages",
+      searchParams,
+      {},
+      false,
+    );
     router.replace(targetUrl);
   };
 
@@ -280,8 +283,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {searchInput({
             value: countySearch,
             onChange: (e) => setCountySearch(e.target.value),
@@ -313,9 +315,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
 
       {/* Region/City Filter */}
       <DropdownMenu open={regionOpen} onOpenChange={setRegionOpen}>
-        <DropdownMenuTrigger
-          className="self-end text-nowrap overflow-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md"
-        >
+        <DropdownMenuTrigger className="self-end text-nowrap overflow-ellipsis pr-2 cursor-pointer border-0 flex w-full lg:w-1/5 justify-between items-center p-2 px-5 bg-gray-1 rounded-md">
           {region ? (
             <div className="flex items-center gap-2">
               <span className="text-slate-100 text-lg font-bold">
@@ -324,7 +324,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">
-              {county ? "City or region" : "Select county first"}
+              {county ? "City or region" : "Select City or Region"}
             </span>
           )}
           <svg
@@ -342,8 +342,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {searchInput({
             value: regionSearch,
             onChange: (e) => setRegionSearch(e.target.value),
@@ -402,8 +401,7 @@ const MassageTypeFilterInput = ({ className, initialMassages }: Prop) => {
             ></path>
           </svg>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
+        <DropdownMenuContent className="flex border-0 flex-col outline-none p-2 gap-3 w-screen lg:max-w-[900px] bg-gray-1">
           {searchInput({
             value: massageSearch,
             onChange: (e) => setMassageSearch(e.target.value),

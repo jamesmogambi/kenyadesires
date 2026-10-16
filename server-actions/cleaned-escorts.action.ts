@@ -40,6 +40,23 @@ function getEscortListingSelect(): string {
   return LISTING_COLUMNS.map((c) => `escorts.${c}`).join(", ");
 }
 
+/**
+ * Resolve a county name to its county_code via the counties table.
+ * Falls back to null if the county isn't found (the folded-name match on
+ * escorts.county still applies).
+ */
+async function resolveCountyCode(countyName: string): Promise<string | null> {
+  try {
+    const rows: any[] = await executeQuery(
+      `SELECT code FROM counties WHERE ${normalizedEquals("name", 1, "")} LIMIT 1`,
+      [countyName],
+    );
+    return rows[0]?.code || null;
+  } catch {
+    return null;
+  }
+}
+
 async function getCleanedEscortsBase(
   params: GetEscortsParams & { paginateInSql?: boolean },
 ): Promise<{ rows: any[]; total: number }> {
@@ -51,6 +68,7 @@ async function getCleanedEscortsBase(
   const params_arr: any[] = [];
   let paramIndex = 1;
 
+  // --- Boolean flags ---
   if (params.isActive !== undefined) {
     conditions.push(`escorts.is_active = $${paramIndex}`);
     params_arr.push(params.isActive);
@@ -66,18 +84,31 @@ async function getCleanedEscortsBase(
     params_arr.push(params.isFeatured);
     paramIndex++;
   }
+
+  // --- County: match display name (folded) OR county_code (exact) ---
+  // Resolve the county_code from the counties table so a URL slug like
+  // `taita-taveta` matches both the stored name `Taita Taveta` and the code.
   if (params.county && params.county !== "all") {
-    // Folded both sides: the URL carries a slug (`taita-taveta`) but rows store
-    // the display name, which is `Taita Taveta` on this table.
-    conditions.push(normalizedEquals("county", paramIndex, "escorts."));
+    const countyCode = await resolveCountyCode(params.county);
+    const countyClause = normalizedEquals("county", paramIndex, "escorts.");
     params_arr.push(params.county);
     paramIndex++;
+    if (countyCode) {
+      conditions.push(
+        `(${countyClause} OR escorts.county_code = $${paramIndex})`,
+      );
+      params_arr.push(countyCode);
+      paramIndex++;
+    } else {
+      conditions.push(countyClause);
+    }
   }
   if (params.countyCode && params.countyCode !== "all") {
     conditions.push(`escorts.county_code = $${paramIndex}`);
     params_arr.push(params.countyCode);
     paramIndex++;
   }
+
   if (params.nationality && params.nationality !== "all") {
     conditions.push(`escorts.nationality = $${paramIndex}`);
     params_arr.push(params.nationality);
@@ -99,8 +130,6 @@ async function getCleanedEscortsBase(
     paramIndex++;
   }
   if (params.practice && params.practice !== "all") {
-    // See lib/escort-filters.ts: the previous JSON_TABLE-in-EXISTS form never
-    // correlated on MySQL, so this filter silently matched nothing.
     const built = buildAnyColumnCondition(
       SERVICE_COLUMNS,
       params.practice,
@@ -143,18 +172,16 @@ async function getCleanedEscortsBase(
     params_arr.push(params.gender.toLowerCase().trim());
     paramIndex++;
   }
+  // --- Region: match primary_region (folded equals) OR regions JSON array ---
   if (params.region && params.region !== "all") {
-    // `regions` stores slugs ("nairobi_kilimani") while `primary_region` stores the
-    // display name, and `locations` carries per-place town/estate.
-    const built = buildAnyColumnCondition(
-      REGION_COLUMNS,
-      params.region,
-      paramIndex,
-      "escorts.",
-    );
-    conditions.push(built.clause);
-    params_arr.push(...built.params);
-    paramIndex = built.nextIndex;
+    const regionClauses: string[] = [];
+    regionClauses.push(normalizedEquals("primary_region", paramIndex, "escorts."));
+    params_arr.push(params.region);
+    paramIndex++;
+    regionClauses.push(`JSON_CONTAINS(escorts.regions, $${paramIndex}, '$')`);
+    params_arr.push(JSON.stringify(params.region));
+    paramIndex++;
+    conditions.push(`(${regionClauses.join(" OR ")})`);
   }
   if (params.town && params.town !== "all") {
     conditions.push(normalizedJsonLike("locations", paramIndex, "escorts."));
@@ -185,9 +212,6 @@ async function getCleanedEscortsBase(
   const validSortFields = ["created_at", "updated_at", "age", "total_views", "rating", "total_bookings"];
   const safeSort = validSortFields.includes(sortField) ? sortField : "created_at";
 
-  // Live boosts rank first; the caller's sort decides the rest. Expired boosts
-  // fall back to priority 0 inside the CASE, so ranking is always correct
-  // without a cleanup job having run.
   const orderBy = boostOrderBy("escorts", `escorts.${safeSort}`, sortOrder);
 
   let rows: any[] = [];
@@ -202,95 +226,6 @@ async function getCleanedEscortsBase(
   }
 
   return { rows, total };
-}
-
-function applyClientFilters(escorts: Escort[], params: GetEscortsParams): Escort[] {
-  let filtered = escorts;
-
-  if (params.county && params.county !== "all") {
-    const countyLower = normalizeFilter(params.county);
-    filtered = filtered.filter((e) => normalizeFilter(e.county) === countyLower);
-  }
-
-  if (params.region && params.region !== "all") {
-    const regionLower = normalizeFilter(params.region);
-    filtered = filtered.filter((e) =>
-      (e.regions || []).some((r) => normalizeFilter(r) === regionLower) ||
-      normalizeFilter(e.primaryRegion) === regionLower,
-    );
-  }
-
-  if (params.town && params.town !== "all") {
-    const townLower = normalizeFilter(params.town);
-    filtered = filtered.filter((e) =>
-      e.locations?.some((loc) => normalizeFilter(loc.town) === townLower),
-    );
-  }
-
-  if (params.estate && params.estate !== "all") {
-    const estateLower = normalizeFilter(params.estate);
-    filtered = filtered.filter((e) =>
-      e.locations?.some((loc) => normalizeFilter(loc.estate) === estateLower),
-    );
-  }
-
-  if (params.practice && params.practice !== "all") {
-    const practiceLower = normalizeFilter(params.practice);
-    filtered = filtered.filter((e) =>
-      (e.practices || []).some((p) => normalizeFilter(p) === practiceLower) ||
-      (e.bdsm || []).some((p) => normalizeFilter(p) === practiceLower) ||
-      (e.massage || []).some((p) => normalizeFilter(p) === practiceLower) ||
-      (e.extraServices || []).some((p) => normalizeFilter(p) === practiceLower)
-    );
-  }
-
-  if (params.practices && params.practices.length > 0) {
-    const practicesLower = params.practices.map(normalizeFilter);
-    filtered = filtered.filter((e) =>
-      (e.practices || []).some((p) => practicesLower.includes(normalize(p))) ||
-      (e.bdsm || []).some((p) => practicesLower.includes(normalize(p))) ||
-      (e.massage || []).some((p) => practicesLower.includes(normalize(p))) ||
-      (e.extraServices || []).some((p) => practicesLower.includes(normalize(p)))
-    );
-  }
-
-  if (params.category && params.category !== "all") {
-    const categoryLower = normalize(params.category);
-    filtered = filtered.filter((e) =>
-      e.categories?.some((c) => normalize(c) === categoryLower),
-    );
-  }
-
-  if (params.categories && params.categories.length > 0) {
-    const categoriesLower = params.categories.map(normalize);
-    filtered = filtered.filter((e) =>
-      e.categories?.some((c) => categoriesLower.includes(normalize(c))),
-    );
-  }
-
-  if (params.minAge) {
-    filtered = filtered.filter((e) => parseInt(e.age || "0") >= params.minAge!);
-  }
-
-  if (params.maxAge) {
-    filtered = filtered.filter((e) => parseInt(e.age || "0") <= params.maxAge!);
-  }
-
-  if (params.minRating) {
-    filtered = filtered.filter((e) => (e.rating || 0) >= params.minRating!);
-  }
-
-  if (params.search) {
-    const searchLower = params.search.toLowerCase();
-    filtered = filtered.filter(
-      (e) =>
-        e.name?.toLowerCase().includes(searchLower) ||
-        e.username?.toLowerCase().includes(searchLower) ||
-        e.about?.toLowerCase().includes(searchLower),
-    );
-  }
-
-  return filtered;
 }
 
 function applyPagination(
