@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FormControl,
   FormField,
@@ -25,7 +25,7 @@ import { RefreshCw } from "lucide-react";
 import { useFormStore } from "@/store/formStore";
 import { useSettingStore } from "@/store/settingStore";
 import { useVariantStore } from "@/store/variantStore";
-import countiesAndRegions from "@/data/development/countiesAndRegions.json";
+import { useFilterInputStore } from "@/app/girls/filterInputStore";
 
 interface Prop {
   className?: string;
@@ -46,22 +46,52 @@ const IntroSection = ({ form, className, isEscort }: Prop) => {
 
   const { availability: variantAvailability } = useVariantStore();
 
+  // County/region data is sourced from the DB-backed zustand store (populated by
+  // LocationInitializer in the root layout) rather than the static JSON fixture,
+  // so the dropdowns always reflect the current `counties`/`regions` tables.
+  const { counties: dbCounties, regions: dbRegions } = useFilterInputStore();
+
   const variantGender = form.watch("variantGender");
 
-  const allRegions = countiesAndRegions.flatMap((c) =>
-    c.regions.map((r) => ({
-      countyCode: c.countyCode,
-      countyName: c.countyName,
-      name: r,
-    })),
-  );
+  const countiesAndRegions = useMemo(() => {
+    const grouped: Record<
+      string,
+      { countyName: string; countyCode: string; regions: string[] }
+    > = {};
+
+    for (const r of dbRegions as any[]) {
+      const countyName = r?.county || "";
+      if (!countyName) continue;
+      if (!grouped[countyName]) {
+        grouped[countyName] = {
+          countyName,
+          countyCode: r?.countyCode || "",
+          regions: [],
+        };
+      }
+      const name = r?.name || "";
+      if (name && !grouped[countyName].regions.includes(name)) {
+        grouped[countyName].regions.push(name);
+      }
+    }
+
+    // Include counties that exist in the DB but have no regions listed yet
+    for (const c of dbCounties as any[]) {
+      const name = c?.name || "";
+      if (name && !grouped[name]) {
+        grouped[name] = { countyName: name, countyCode: c?.code || "", regions: [] };
+      }
+    }
+
+    return Object.values(grouped);
+  }, [dbCounties, dbRegions]);
 
   const selectedCountyData = countiesAndRegions.find(
     (c) => c.countyName === county,
   );
 
   const countyOtherRegions = selectedCountyData
-    ? selectedCountyData.regions.filter((r) => r !== region)
+    ? selectedCountyData.regions
     : [];
 
   const handleSelectRegion = (regionName: string) => {
