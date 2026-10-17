@@ -385,7 +385,7 @@ const GirlFilterInput = ({ className }: Prop) => {
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">
-              City or Region
+              {county ? "City or Region" : "Select county first"}
             </span>
           )}
           <svg
@@ -410,7 +410,11 @@ const GirlFilterInput = ({ className }: Prop) => {
             onChange: (e) => setRegionSearch(e.target.value),
             placeholder: "Search regions...",
           })}
-          {filteredRegionsByCounty.length === 0 ? (
+          {!county ? (
+            <div className="text-yellow-400 text-center py-2 text-sm">
+              Please select a county first
+            </div>
+          ) : filteredRegionsByCounty.length === 0 ? (
             <div className="text-gray-500 text-center py-2 text-sm">
               No regions found
             </div>

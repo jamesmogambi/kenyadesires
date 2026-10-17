@@ -322,7 +322,7 @@ const AgencyFilterInput = ({ className }: Prop) => {
             </div>
           ) : (
             <span className="text-white/50 text-lg font-medium">
-              City or region
+              {county ? "City or region" : "Select county first"}
             </span>
           )}
           <svg
@@ -348,7 +348,11 @@ const AgencyFilterInput = ({ className }: Prop) => {
             placeholder: "Search regions...",
           })}
           <div className="flex flex-wrap gap-1.5">
-            {filteredRegionsByCounty.length === 0 ? (
+            {!county ? (
+              <div className="text-yellow-400 text-center py-2 text-sm w-full">
+                Please select a county first
+              </div>
+            ) : filteredRegionsByCounty.length === 0 ? (
               <div className="text-gray-500 text-center py-2 text-sm">
                 No regions found
               </div>
