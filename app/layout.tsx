@@ -214,7 +214,7 @@ export default async function RootLayout({
         >
           <AttributionCapture />
           <UtmCapture />
-          <AgeVerificationModal />
+          {/* <AgeVerificationModal /> */}
 
           {/* Fixed Grayscale Background */}
           <div
