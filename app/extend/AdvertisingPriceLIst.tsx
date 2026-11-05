@@ -16,7 +16,11 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { PaystackPayButton } from "@/app/components/PaystackPayButton";
+import dynamic from "next/dynamic";
+const PaystackPayButton = dynamic(
+  () => import("@/app/components/PaystackPayButton").then((m) => m.default ?? m.PaystackPayButton),
+  { ssr: false },
+);
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
 import {
@@ -651,6 +655,7 @@ const AdvertisingPriceLIst = ({
                           amount={
                             (selectedView?.price ?? selectedPkg.credits * 10) * 100
                           }
+                          onTrigger={() => setOpen(false)}
                           className="w-full"
                           onSuccess={() => {
                             setOpen(false);

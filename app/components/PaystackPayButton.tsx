@@ -16,6 +16,7 @@ export interface PaystackPayButtonProps {
   metadata?: Record<string, any>;
   className?: string;
   children?: React.ReactNode;
+  onTrigger?: () => void;
   onSuccess?: (reference: string) => void;
   onClose?: () => void;
 }
@@ -28,6 +29,7 @@ export function PaystackPayButton({
   metadata,
   className,
   children,
+  onTrigger,
   onSuccess,
   onClose,
 }: PaystackPayButtonProps) {
@@ -51,6 +53,7 @@ export function PaystackPayButton({
         const data = await res.json();
         if (data?.verified) {
           onSuccess?.(ref);
+          window.location.href = `/payment/success?reference=${encodeURIComponent(ref || "")}&type=paystack`;
         } else {
           console.error("Paystack verification failed", data);
         }
@@ -67,7 +70,7 @@ export function PaystackPayButton({
   return (
     <Button
       type="button"
-      onClick={() => initializePayment()}
+      onClick={() => { onTrigger?.(); initializePayment(); }}
       className={cn("w-full bg-red-700 hover:bg-red-800 text-white font-semibold", className)}
     >
       <CreditCard className="mr-2 h-4 w-4" />
