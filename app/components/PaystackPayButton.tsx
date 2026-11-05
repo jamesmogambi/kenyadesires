@@ -44,22 +44,18 @@ export function PaystackPayButton({
     // dashboard defaults apply. Requested: mobile_money, card, bank_transfer.
     onSuccess: async (response: any) => {
       const ref = response?.reference;
+      // Redirect immediately after successful payment.
+      window.location.href = `/payment/success?reference=${encodeURIComponent(ref || "")}&type=paystack`;
       try {
-        const res = await fetch("/api/paystack/verify", {
+        await fetch("/api/paystack/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reference: ref }),
         });
-        const data = await res.json();
-        if (data?.verified) {
-          onSuccess?.(ref);
-          window.location.href = `/payment/success?reference=${encodeURIComponent(ref || "")}&type=paystack`;
-        } else {
-          console.error("Paystack verification failed", data);
-        }
       } catch (err) {
         console.error("Paystack verify request failed", err);
       }
+      onSuccess?.(ref);
     },
     onClose: () => {
       console.log("Paystack payment closed/cancelled");

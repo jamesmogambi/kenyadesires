@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -95,7 +95,7 @@ const AdvertisingPriceLIst = ({
   userPhone = "",
   userProfile,
 }: Prop) => {
-  const router = useRouter();
+  const { user } = useUser();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -656,7 +656,12 @@ const AdvertisingPriceLIst = ({
                             (selectedView?.price ?? selectedPkg.credits * 10) * 100
                           }
                           onTrigger={() => setOpen(false)}
-                          className="w-full"
+                          metadata={{
+                            userId: user?.id,
+                            packageId: selectedPkg.id,
+                            packageName: selectedPkg.name,
+                            credits: selectedNetCredits,
+                          }}
                           onSuccess={() => {
                             setOpen(false);
                             setSelectedPackage(null);
