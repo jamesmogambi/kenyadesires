@@ -16,7 +16,7 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { PesapalCheckoutButton } from "@/components/PesapalCheckoutButton";
+import { PaystackPayButton } from "@/app/components/PaystackPayButton";
 import { toast } from "sonner";
 import { AD_PACKAGES } from "@/lib/constants/packages";
 import {
@@ -611,7 +611,7 @@ const AdvertisingPriceLIst = ({
                   {selectedPkg && userCredits < selectedNetCredits && (
                     <p className="text-sm text-orange-600 mt-2">
                       You need {selectedNetCredits - userCredits} more credits.
-                      Purchase with Pesapal below.
+                      Purchase with Paystack below.
                     </p>
                   )}
                 </div>
@@ -646,40 +646,26 @@ const AdvertisingPriceLIst = ({
                     {selectedPkg &&
                       profileValid &&
                       selectedStatus !== "blocked" && (
-                        <PesapalCheckoutButton
-                          orderId={`AD-${selectedPkg.id}-${Date.now()}`}
-                          amount={
-                            selectedView?.price ?? selectedPkg.credits * 10
-                          }
+                        <PaystackPayButton
                           email={userProfile?.email || ""}
-                          phone={userPhone}
-                          firstName={firstName}
-                          lastName={lastName}
-                          description={`${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} boost package`}
-                          packageId={selectedPkg.id}
-                          packageName={selectedPkg.name}
-                          idType={userProfile?.idType || undefined}
+                          amount={
+                            (selectedView?.price ?? selectedPkg.credits * 10) * 100
+                          }
                           className="w-full"
-                          onPaymentComplete={(status) => {
-                            if (status === "completed") {
-                              setOpen(false);
-                              setSelectedPackage(null);
-                              setStatus("idle");
-                              setMessage("");
-                              onPurchaseSuccess?.();
-                              window.dispatchEvent(
-                                new Event("credits-updated"),
-                              );
-                              window.dispatchEvent(
-                                new Event("packages-updated"),
-                              );
-                            }
+                          onSuccess={() => {
+                            setOpen(false);
+                            setSelectedPackage(null);
+                            setStatus("idle");
+                            setMessage("");
+                            onPurchaseSuccess?.();
+                            window.dispatchEvent(new Event("credits-updated"));
+                            window.dispatchEvent(new Event("packages-updated"));
                           }}
                         >
                           {selectedStatus === "available"
                             ? `Purchase ${selectedPkg.name} Now`
                             : `${STATUS_LABEL[selectedStatus]} ${selectedPkg.name} Now`}
-                        </PesapalCheckoutButton>
+                        </PaystackPayButton>
                       )}
 
                     {selectedPkg && !profileValid && (
